@@ -1,11 +1,12 @@
 # Runtime data - don't commit your actual project database
-data/*.db
-data/*.db-journal
-data/*.db-wal
-data/*.db-shm
+app/data/*.db
+app/data/*.db-journal
+app/data/*.db-wal
+app/data/*.db-shm
 
 # Python
 __pycache__/
+**/__pycache__/
 *.pyc
 
 # OS cruft

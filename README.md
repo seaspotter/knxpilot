@@ -1,240 +1,307 @@
-# KNX Group Address Generator (v2)
+# KNX Gruppenadressen-Generator (v2)
 
-Built directly from analysis of real ETS6 exports. Workflow:
+Direkt aus der Analyse echter ETS6-Exporte entwickelt. Ablauf:
 
-**Floors → Rooms → Points (lights / sockets / windows / heating) → done.**
-Central and general functions (date/time, weather station, "all lights off"
-per floor, etc.) are generated automatically from templates — you normally
-never touch those per project.
+**Geschosse → Räume → Punkte (Licht / Steckdosen / Fenster / Heizung) → fertig.**
+Zentral- und Allgemeinfunktionen (Datum/Uhrzeit, Wetterstation, "alle Lichter
+aus" je Geschoss usw.) werden automatisch aus Vorlagen erzeugt — normalerweise
+muss man das pro Projekt gar nicht anfassen.
 
-## Addressing model (matches your real projects)
+## Adressierungsmodell (entspricht Ihren echten Projekten)
 
-| KNX level    | Mapped to |
-|--------------|-----------|
-| Main Group   | Function category: `Allgemein, Beleuchtung, Steckdosen, Heizung, Rollo, Tore` |
-| Middle Group | `Zentralfunktionen` (central/collective) + one per Floor |
-| Sub Group    | One address block per physical point: `{Room} {Label} {Suffix}` |
+| KNX-Ebene       | Zuordnung |
+|-----------------|-----------|
+| Hauptgruppe     | Funktionskategorie: `Allgemein, Beleuchtung, Steckdosen, Heizung, Rollo, Tore` |
+| Mittelgruppe    | `Zentralfunktionen` + eine je Geschoss |
+| Untergruppe     | Ein Adressblock je physischem Punkt: `{Raum} {Label} {Suffix}` |
 
-Each point reserves a **fixed address block** (default 5, or 10 for blinds
-with slats/Lamelle) and pads unused slots with `res` for future expansion —
-exactly like your existing projects.
+Jeder Punkt reserviert einen **festen Adressblock** (Standard 5, oder 10 bei
+Jalousien mit Lamelle) und füllt ungenutzte Plätze mit `res` für spätere
+Erweiterungen auf — genau wie in Ihren bestehenden Projekten.
 
-## CSV format — verified against your real exports
+## CSV-Format — anhand Ihrer echten Exporte verifiziert
 
-Tab-separated, every field quoted, header row included, columns:
+Tab-getrennt, jedes Feld in Anführungszeichen, mit Kopfzeile, Spalten:
 ```
 Main  Middle  Sub  Address  Central  Unfiltered  Description  DatapointType  Security
 ```
-DPTs are written as `DPST-x-y`. `Security` is always `Auto`. This was
-checked byte-for-byte against `Landes.csv`, `Steiner.csv`, and
-`Mayrhofer.csv` — all three used an identical format, so this should import
-directly via ETS6 → right-click **Group Addresses** → **Import Group
-Addresses**.
+DPTs werden als `DPST-x-y` geschrieben. `Security` ist immer `Auto`. Dies
+wurde Byte für Byte gegen `Landes.csv`, `Steiner.csv` und `Mayrhofer.csv`
+geprüft — alle drei verwenden ein identisches Format, daher sollte der
+Import direkt über ETS6 funktionieren: Rechtsklick auf **Gruppenadressen**
+→ **Gruppenadressen importieren**.
 
-If you ever change conventions in ETS and imports start getting skipped,
-re-export a small test project and diff it against the tool's output —
-the CSV writer is isolated in `export_csv()` in `app/main.py`.
+Falls sich Ihre Konventionen in ETS jemals ändern und Importe anfangen,
+Zeilen zu überspringen: ein kleines Testprojekt exportieren und mit der
+Ausgabe des Tools vergleichen — der CSV-Schreiber ist in `export_csv()`
+in `app/main.py` isoliert.
 
-## How to use it
+## Verwendung
 
-The tool has four tabs:
+Das Tool hat vier Tabs:
 
-- **Gruppenadressen** — build projects (Floors → Rooms → Points), preview,
-  and export the ETS6 Group Address CSV. This was previously called
-  "Projects".
-- **Abgangsliste** — pick a project, add the actuators you're installing,
-  and wire each circuit to a channel.
-- **Aktoren** — your global actuator hardware catalog (Hersteller / Modell /
-  Type / Channels), shared across every project.
-- **Setup** — Categories, Point Types, and Central/General Templates.
-  Rarely touched day-to-day; seeded with your conventions already.
+- **Gruppenadressen** — Projekte aufbauen (Geschosse → Räume → Punkte),
+  Vorschau ansehen und die ETS6-Gruppenadressen-CSV exportieren.
+- **Abgangsliste** — Projekt wählen, die verbauten Aktoren anlegen und
+  jeden Abgang einem Kanal zuordnen.
+- **Aktoren** — der globale Aktor-Gerätekatalog (Hersteller / Modell /
+  Type / Kanäle), gemeinsam für alle Projekte genutzt.
+- **Setup** — Kategorien, Punkttypen und Zentral-/Allgemeinfunktions-
+  Vorlagen. Wird im Alltag selten angefasst, ist bereits mit Ihren
+  Konventionen vorbelegt.
 
-### Setup tab
+### Setup-Tab
 
-- **Categories** — the 6 Main Groups, pre-seeded.
-- **Point Types** — reusable definitions like "Licht (Dimmen)", "Rollo
-  (einfach)", "Jalousie (mit Lamelle)", "Heizkreis", each with its
-  datapoints, reserved block size, and a **channel type** (e.g. `Schalten`,
-  `Dimmen`, `Rollo`, `Heizung`, `Tor`) that links it to matching Actor
-  Types for the Abgangsliste.
-- **Central/General Templates** — auto-generated blocks:
-  - `scope: building` → one block for the whole project
-  - `scope: floor` → one block per floor (e.g. "Zentral EG", "Zentral OG")
-  - `scope: room_multi` → one block **per room**, only for rooms with at
-    least a set number of points in that category (default 2). E.g.
-    Rollo has this pre-configured: any room with 2+ blinds automatically
-    gets its own "{Room} Zentral Auf/Ab/Stop/Position" (padded to a block
-    size, e.g. 5) plus a single "{Room} Sperre" address for a
-    Langschläfer/sleep-in override — driven purely by how many blinds
-    you add to that room, no manual setup needed.
-  - "Skip outdoor/unheated floors" (floor scope only) → excludes floors
-    marked as outdoor (e.g. "Fahrzeitmessung" or "Sommer/Winter Status"
-    per floor makes no sense for "Aussen")
-  - Allgemein category templates (Datum/Uhrzeit, Klima) each become their
-    own Middle Group, generated once per project regardless of floor count.
-- **A category's whole Main Group is only generated if it's actually
-  used** in the project — e.g. if you never add a Steckdose, no
-  Steckdosen Main Group or its central function appears at all.
+- **Kategorien** — die 6 Hauptgruppen, vorbelegt.
+- **Punkttypen** — wiederverwendbare Definitionen wie "Licht (Dimmen)",
+  "Rollo (einfach)", "Jalousie (mit Lamelle)", "Heizkreis", jeweils mit
+  Datenpunkten, reserviertem Blockumfang und einem **Kanaltyp** (z.B.
+  `Schalten`, `Dimmen`, `Rollo`, `Heizung`, `Tor`), der den Punkt mit
+  passenden Aktortypen für die Abgangsliste verknüpft.
+- **Zentral-/Allgemeinfunktions-Vorlagen** — automatisch erzeugte Blöcke:
+  - `scope: building` → ein Block für das gesamte Projekt
+  - `scope: floor` → ein Block je Geschoss (z.B. "Zentral EG", "Zentral OG")
+  - `scope: room_multi` → ein Block **pro Raum**, nur für Räume mit einer
+    Mindestanzahl an Punkten dieser Kategorie (Standard 2). Bei Rollo ist
+    das bereits vorkonfiguriert: jeder Raum mit 2+ Jalousien erhält
+    automatisch eine eigene "{Raum} Zentral Auf/Ab/Stop/Position" (auf
+    einen Blockumfang wie 5 aufgefüllt) sowie eine einzelne "{Raum} Sperre"-
+    Adresse für einen Langschläfer-Modus — rein abhängig davon, wie viele
+    Jalousien Sie diesem Raum hinzufügen, ohne manuellen Aufwand.
+  - "Aussen-/unbeheizte Geschosse überspringen" (nur bei scope: floor) →
+    schliesst als Aussen markierte Geschosse aus (z.B. macht eine
+    "Fahrzeitmessung" oder ein "Sommer/Winter Status" je Geschoss für
+    "Aussen" keinen Sinn)
+  - Vorlagen der Kategorie Allgemein (Datum/Uhrzeit, Klima) werden jeweils
+    zu einer eigenen Mittelgruppe, unabhängig von der Geschossanzahl
+    einmal je Projekt erzeugt.
+- **Die Hauptgruppe einer Kategorie wird nur erzeugt, wenn sie im Projekt
+  tatsächlich verwendet wird** — z.B. erscheint keine Hauptgruppe
+  Steckdosen samt Zentralfunktion, wenn nie eine Steckdose hinzugefügt wird.
 
-### Gruppenadressen tab
+### Gruppenadressen-Tab
 
-- Create a project, add your Floors (Stockwerke). Mark a floor as
-  **Outdoor/unheated** (e.g. "Aussen", "Garage") if it should be excluded
-  from templates flagged that way.
-- Add Rooms per floor.
-- For each room, add Points: pick a Point Type (e.g. "Licht (Dimmen)"),
-  give it a label (e.g. "Spots", "Decke", "Nord" for a window), a
-  quantity if you want several identical ones at once, and tick **+BWM**
-  if that point needs a motion sensor address.
-- **Anything special** (a one-off scene, a custom central group for a
-  specific room like "Kind1 Zentral") goes in **Special / Extra
-  Addresses** — pick the category, choose whether it belongs in
-  `Zentralfunktionen` or a specific floor, name it, and give it its
-  datapoints.
-- **Preview** to sanity check the tree, then **Download CSV** for ETS6.
-- **⭳ Backup (JSON)** saves the full project definition (floors, rooms,
-  points, specials) as a `.json` file — separate from the ETS CSV, this
-  is for backing up / duplicating / moving a project between installs.
-  **⭱ Restore from Backup** on the Projects list re-creates a project
-  from that file. It matches Point Types/Categories by name against
-  what exists on the destination install; anything that doesn't match
-  is skipped and reported, never silently guessed at. If a project with
-  the same name already exists, the import is saved as "<name>
-  (imported)" rather than overwriting it.
-- **× Close** collapses the open project's detail view without deleting
-  anything — useful once you have several projects and the page gets long.
+- Projekt anlegen, Geschosse (Stockwerke) hinzufügen. Ein Geschoss als
+  **Aussen/unbeheizt** markieren (z.B. "Aussen", "Garage"), wenn es von
+  entsprechend markierten Vorlagen ausgeschlossen werden soll.
+- Räume je Geschoss hinzufügen.
+- Für jeden Raum Punkte hinzufügen: Punkttyp wählen (z.B. "Licht
+  (Dimmen)"), ein Label vergeben (z.B. "Spots", "Decke", "Nord" für ein
+  Fenster), bei Bedarf eine Anzahl für mehrere gleiche auf einmal, und
+  **+BWM** ankreuzen, falls dieser Punkt eine Bewegungsmelder-Adresse
+  braucht.
+- **Alles Spezielle** (eine Einzel-Szene, eine spezielle Zentralgruppe für
+  einen bestimmten Raum wie "Kind1 Zentral") kommt unter **Sonder-/
+  Zusatzadressen** — Kategorie wählen, festlegen ob es zu
+  `Zentralfunktionen` oder einem bestimmten Geschoss gehört, benennen und
+  die Datenpunkte angeben.
+- **Vorschau** zur Kontrolle, dann **CSV für ETS6 herunterladen**.
+- **⭳ Sichern (JSON)** speichert die komplette Projektdefinition
+  (Geschosse, Räume, Punkte, Sonderadressen) als `.json`-Datei — getrennt
+  von der ETS-CSV, gedacht zum Sichern / Duplizieren / Umziehen eines
+  Projekts zwischen Installationen. **⭱ Aus Sicherung wiederherstellen**
+  in der Projektliste erstellt ein Projekt aus dieser Datei neu. Punkttypen/
+  Kategorien werden dabei per Name mit der Zielinstallation abgeglichen;
+  was nicht übereinstimmt, wird übersprungen und gemeldet, nie einfach
+  angenommen. Existiert bereits ein Projekt mit gleichem Namen, wird der
+  Import als "<Name> (imported)" gespeichert statt es zu überschreiben.
+- **× Schliessen** klappt die geöffnete Projektansicht ein, ohne etwas zu
+  löschen — praktisch, sobald mehrere Projekte angelegt sind und die
+  Seite lang wird.
 
-### Aktoren tab
+### Aktoren-Tab
 
-Your actuator hardware catalog — **global, shared across every project**
-(same list whichever project you're wiring). Each entry has:
+Ihr Aktor-Gerätekatalog — **global, gemeinsam für alle Projekte**
+(dieselbe Liste, unabhängig davon welches Projekt gerade verdrahtet wird).
+Jeder Eintrag hat:
 
-- **Hersteller** (manufacturer, e.g. "MDT")
-- **Modell** (model, e.g. "AKS-2016.03")
-- **Type** — must match a Point Type's channel type (`Schalten`, `Dimmen`,
-  `Rollo`, `Heizung`, `Tor`, or a custom one you've added) to be assignable
-  to it
-- **Channels** — how many physical outputs it has
+- **Hersteller** (z.B. "MDT")
+- **Modell** (z.B. "AKS-2016.03")
+- **Type** — muss dem Kanaltyp eines Punkttyps entsprechen (`Schalten`,
+  `Dimmen`, `Rollo`, `Heizung`, `Tor`, oder ein selbst angelegter), um
+  diesem zuordenbar zu sein
+- **Kanäle** — wie viele physische Ausgänge das Gerät hat
 
-**⭳ Export catalog (JSON)** / **⭱ Import catalog (JSON)** let you back up
-or share this catalog. Import matches by (Hersteller, Modell): if that
-combination already exists it updates the Type/Channel count in place,
-otherwise it adds a new entry — safe to re-import the same file repeatedly.
+**⭳ Katalog exportieren (JSON)** / **⭱ Katalog importieren (JSON)** zum
+Sichern oder Teilen dieses Katalogs. Der Import gleicht nach (Hersteller,
+Modell) ab: existiert diese Kombination schon, werden Type/Kanalzahl
+aktualisiert, sonst wird ein neuer Eintrag angelegt — dieselbe Datei
+mehrfach zu importieren ist unbedenklich.
 
-### Where projects are actually stored
+### Wo Projekte tatsächlich gespeichert werden
 
-Projects live in the SQLite file `app/data/knx_ga.db`, which is bind-mounted
-via `docker-compose.yml` to `./data` on the host — so it survives container
-rebuilds/restarts as long as that folder isn't deleted. The JSON backup/
-restore feature above is for explicit portability (moving a project to
-another machine, or keeping an external copy), not required for normal
-day-to-day persistence.
+Projekte liegen in der SQLite-Datei `app/data/knx_ga.db`, die über
+`docker-compose.yml` in den Container eingebunden wird — sie übersteht
+also Container-Neubauten/-Neustarts, solange dieser Ordner nicht gelöscht
+wird. Die JSON-Sicherung/-Wiederherstellung oben ist für explizite
+Portabilität gedacht (ein Projekt auf eine andere Maschine bringen, eine
+externe Kopie behalten), nicht für die normale Persistenz im Alltag nötig.
 
-### Abgangsliste (Actuator wiring / circuit list)
+### Abgangsliste (Aktoren-Verdrahtung / Kanalliste)
 
-Once your project has rooms and points defined, the tool already knows every
-physical output you need (every switch, dimmer, blind, and heating channel).
-The **Abgangsliste** tab turns that into a wiring list for the electrician:
+Sobald ein Projekt Räume und Punkte enthält, kennt das Tool bereits jeden
+physischen Ausgang, der benötigt wird (jeder Schalt-, Dimm-, Jalousie- und
+Heizkanal). Der **Abgangsliste**-Tab macht daraus eine Verdrahtungsliste
+für den Elektriker:
 
-1. **Setup → Point Types**: each point type has a **channel type** (e.g.
-   `Schalten`, `Dimmen`, `Rollo`, `Heizung`, `Tor`) and **channels needed**
-   (usually 1). This is pre-filled for all the built-in point types.
-2. **Aktoren tab**: define your actuator hardware catalog — e.g.
-   Hersteller "MDT", Modell "AKS-2016.03", Type `Schalten`, 20 channels.
-   The Type must match a Point Type's channel type to be assignable to it.
-   This catalog is global and shared across every project.
-3. **Abgangsliste tab**: pick a project from the dropdown, then add the
-   actual **Actuators** you're installing (pick the Actor Type, which
-   floor/UV it lives in, its location label, and physical KNX address like
-   `1.1.2`).
-4. Every **Circuit** (one row per physical output your rooms need) shows up
-   below with a dropdown of all channels from matching actuators. Pick one
-   manually, or click **Auto-assign all** to fill every unassigned circuit
-   into the first free matching channel automatically (in floor/room order).
-5. **Download Abgangsliste (CSV)** exports a sheet with columns `Geschoss,
-   Raum/UV, Aktor, Physikalische Adr., Kanal, Funktion` — every channel of
-   every actuator is listed, with unused ones marked `RESERVE`, matching the
-   layout of a hand-built electrician's wiring sheet.
+1. **Setup → Punkttypen**: jeder Punkttyp hat einen **Kanaltyp** (z.B.
+   `Schalten`, `Dimmen`, `Rollo`, `Heizung`, `Tor`) und **benötigte
+   Kanäle** (meist 1). Für alle mitgelieferten Punkttypen bereits ausgefüllt.
+2. **Aktoren-Tab**: den Aktor-Gerätekatalog anlegen — z.B. Hersteller
+   "MDT", Modell "AKS-2016.03", Type `Schalten`, 20 Kanäle. Der Type muss
+   dem Kanaltyp eines Punkttyps entsprechen, um zuordenbar zu sein. Dieser
+   Katalog ist global und gilt für alle Projekte.
+3. **Abgangsliste-Tab**: Projekt aus der Liste wählen, dann die
+   tatsächlich verbauten **Aktoren** hinzufügen (Aktortyp wählen, in
+   welchem Geschoss/welcher UV er sitzt, Standortbezeichnung, physische
+   KNX-Adresse wie `1.1.2`).
+4. Jeder **Abgang** (eine Zeile je benötigtem physischen Ausgang) erscheint
+   darunter mit einer Auswahl aller Kanäle passender Aktoren. Einen manuell
+   wählen, oder **Alle automatisch zuordnen** klicken, um jeden noch nicht
+   zugeordneten Abgang automatisch dem ersten freien passenden Kanal
+   zuzuweisen (in Geschoss-/Raum-Reihenfolge).
+5. **Abgangsliste herunterladen (CSV)** exportiert eine Tabelle mit den
+   Spalten `Geschoss, Raum/UV, Aktor, Physikalische Adr., Kanal, Funktion`
+   — jeder Kanal jedes Aktors wird aufgeführt, unbelegte mit `RESERVE`
+   markiert, im Layout einer handgemachten Verdrahtungsliste.
 
-This is a separate export from the ETS Group Address CSV — one is for
-programming the bus, the other is for wiring the panel.
+Dies ist ein eigener Export, getrennt von der ETS-Gruppenadressen-CSV —
+der eine dient der Busprogrammierung, der andere der Schaltschrank-
+Verdrahtung.
 
-### A note on customer documentation exports
+### Hinweis zu Kundendokumentations-Exporten
 
-You mentioned possibly wanting a customer-facing documentation export later
-(nicer formatting, descriptions, etc.) — the current CSV export is
-ETS-import-focused, not meant for that. When you're ready, this is a
-natural next addition (e.g. a formatted Word/PDF or Markdown table per room
-built on the same `build_ga_tree()` data used for the CSV) — happy to build
-that whenever you want it.
+Ein kundenseitiger Dokumentations-Export (schöneres Format, Beschreibungen
+usw.) wurde als mögliche zukünftige Erweiterung erwähnt — der aktuelle
+CSV-Export ist auf den ETS-Import ausgerichtet, nicht dafür gedacht. Das
+wäre ein naheliegender nächster Schritt (z.B. eine formatierte Word/PDF-
+oder Markdown-Tabelle je Raum, auf denselben Daten von `build_ga_tree()`
+aufbauend, die auch die CSV nutzt) — jederzeit gerne umsetzbar.
 
-## Running with Docker
+## Selbst-Update über Git
+
+Der Header oben in der App zeigt den aktuellen Stand und, falls auf
+GitHub eine neuere Version vorliegt, einen **⭱ Aktualisieren**-Button.
+
+So funktioniert es: `docker-compose.yml` bindet das **gesamte Repository**
+in den Container unter `/app` ein. Ein `git pull` (ausgeführt vom
+Aktualisieren-Button, innerhalb des Containers gegen dasselbe
+eingebundene Verzeichnis) aktualisiert den laufenden Code sofort — ein
+Neustart übernimmt ihn, ohne dass ein Image-Rebuild nötig ist. Die
+Datenbank liegt unter `app/data/knx_ga.db`, also innerhalb derselben
+Einbindung, und bleibt beim Update unangetastet.
+
+**Wichtige Einschränkung:** ändern sich `requirements.txt` oder das
+`Dockerfile`, führt der Button **keinen** automatischen Neustart durch
+(neue Abhängigkeiten wären ja noch nicht installiert) — stattdessen zeigt
+er eine Meldung, dass ein vollständiger Rebuild nötig ist:
+```bash
+docker compose up -d --build
+```
+
+**Voraussetzung für ein privates GitHub-Repository:** damit `git pull`
+innerhalb des Containers funktioniert, braucht der Container Zugriff auf
+Ihre Git-Zugangsdaten. In `docker-compose.yml` sind zwei Varianten als
+Kommentar vorbereitet — je nachdem, ob Sie HTTPS mit Personal Access
+Token oder SSH verwenden, die passende Zeile einkommentieren:
+```yaml
+# HTTPS mit Personal Access Token (im Credential Store des Hosts zwischengespeichert):
+# - ~/.git-credentials:/root/.git-credentials:ro
+# - ~/.gitconfig:/root/.gitconfig:ro
+
+# SSH-Deploy-Key stattdessen:
+# - ~/.ssh:/root/.ssh:ro
+```
+
+Damit der Update-Status korrekt erkannt wird, muss der Branch einen
+Tracking-Branch gesetzt haben (einmalig auf dem Server):
+```bash
+git branch --set-upstream-to=origin/main main
+```
+
+## Mit Docker starten
 
 ```bash
 docker compose up -d --build
 ```
-Open `http://<host>:8000`. Data persists in `./data/knx_ga.db` (bind mount).
+`http://<host>:8000` öffnen. Daten bleiben in `app/data/knx_ga.db`
+(über die Repository-Einbindung) erhalten.
 
-## Upgrading from an earlier version of this tool
+## Update von einer früheren Version dieses Tools
 
-The database schema auto-migrates (adds new columns) on startup, so an
-existing `knx_ga.db` keeps working. However, the *seed data* (Point Types,
-Central Templates) is only inserted once, when the categories table is
-empty — so naming fixes like "Schalten Status" or the restructured
-Sommer/Winter templates won't retroactively appear in an existing install.
-Since this tool has likely not accumulated real project data yet, the
-simplest path is to delete `./data/knx_ga.db` and let it reseed fresh:
+Das Datenbankschema migriert beim Start automatisch (neue Spalten werden
+ergänzt), eine bestehende `knx_ga.db` funktioniert also weiter. Die
+*Vorbelegungsdaten* (Punkttypen, Zentralvorlagen) werden allerdings nur
+einmalig eingefügt, wenn die Kategorien-Tabelle leer ist — Namenskorrekturen
+wie "Schalten Status" oder die überarbeiteten Sommer/Winter-Vorlagen
+erscheinen also nicht rückwirkend in einer bestehenden Installation.
+Solange sich hier noch keine echten Projektdaten angesammelt haben, ist
+der einfachste Weg, `app/data/knx_ga.db` zu löschen und neu vorbelegen zu
+lassen:
 
 ```bash
 docker compose down
-rm ./data/knx_ga.db
+rm app/data/knx_ga.db
 docker compose up -d --build
 ```
 
-If you do have real projects saved, back them up first with the new
-**⭳ Backup (JSON)** button on each project before wiping the database, then
-restore them afterward via **⭱ Restore from Backup**.
+Bei bereits gespeicherten echten Projekten: zuerst mit dem
+**⭳ Sichern (JSON)**-Button je Projekt sichern, dann die Datenbank
+löschen, danach über **⭱ Aus Sicherung wiederherstellen** zurückspielen.
 
-## Deploying on Proxmox
+## Bereitstellung auf Proxmox
 
-Same as before — a lightweight LXC with Docker is the simplest option:
+Wie bisher — ein schlankes LXC mit Docker ist die einfachste Variante:
 
-1. Create an unprivileged Debian/Ubuntu LXC (1 vCPU / 512MB–1GB RAM is plenty).
-2. Enable **nesting** (Options → Features) so Docker can run inside the LXC.
+1. Ein unprivilegiertes Debian/Ubuntu-LXC anlegen (1 vCPU / 512MB–1GB RAM
+   reicht).
+2. **Nesting** aktivieren (Optionen → Features), damit Docker im LXC
+   laufen kann.
 3. `apt update && apt install -y docker.io docker-compose-plugin`
-4. Copy this folder in, `cd` into it, `docker compose up -d --build`.
-5. Browse to `http://<lxc-ip>:8000`.
+   (oder die `docker-ce`-Pakete von Docker direkt, siehe frühere
+   Chat-Historie bei Problemen mit `docker-compose-plugin`).
+4. Dieses Verzeichnis (per `git clone`) hineinkopieren, hineinwechseln,
+   `docker compose up -d --build`.
+5. `http://<lxc-ip>:8000` aufrufen.
 
-The LXC's filesystem (including `./data`) is covered by your normal Proxmox
-backup jobs automatically.
+Das Dateisystem des LXC (inkl. der Datenbank) wird automatisch von den
+üblichen Proxmox-Backup-Jobs erfasst.
 
-## Notes / limitations
+## Hinweise / Einschränkungen
 
-- Single-user, no auth — keep it on your internal network.
-- No `.knxproj` manipulation — only the officially-supported CSV import path.
-- ETS's import always overwrites matching entries and never deletes ones
-  missing from the file — regenerating/reimporting won't clean up addresses
-  you've since removed from the tool; do that manually in ETS if needed.
-- Reserved `res` blocks are a deliberate choice from your existing
-  convention (future-proofing) — if a point type (plus BWM, if ticked) ever
-  needs more suffixes than its block size, the tool just continues past the
-  block boundary without padding, so following points shift down. Keep
-  block sizes generous enough for the point types you actually use.
-- A category's Main Group only appears if something in the project actually
-  uses it (a point, or a special item). Central templates for an unused
-  category are not generated either.
-- "Skip outdoor/unheated floors" on a central template is per-template, not
-  a blanket floor exclusion — e.g. Beleuchtung's "Zentral {Floor}" still
-  includes an outdoor floor unless you tick that box for it too.
+- Einzelbenutzer, keine Authentifizierung — nur im eigenen internen
+  Netzwerk betreiben.
+- Keine `.knxproj`-Manipulation — nur der offiziell unterstützte
+  CSV-Importweg.
+- Der ETS-Import überschreibt passende Einträge immer und löscht nie
+  Einträge, die in der Datei fehlen — ein erneuter Export/Import räumt
+  also keine Adressen auf, die im Tool zwischenzeitlich entfernt wurden;
+  das bei Bedarf manuell in ETS erledigen.
+- Reservierte `res`-Blöcke sind eine bewusste Übernahme Ihrer bestehenden
+  Konvention (Zukunftssicherheit) — braucht ein Punkttyp (plus BWM, falls
+  angehakt) irgendwann mehr Suffixe als sein Blockumfang, geht das Tool
+  einfach über die Blockgrenze hinaus ohne aufzufüllen, wodurch
+  nachfolgende Punkte sich verschieben. Blockgrössen grosszügig genug für
+  die tatsächlich verwendeten Punkttypen wählen.
+- Die Hauptgruppe einer Kategorie erscheint nur, wenn im Projekt
+  tatsächlich etwas sie nutzt (ein Punkt oder eine Sonderadresse).
+  Zentralvorlagen einer ungenutzten Kategorie werden ebenfalls nicht
+  erzeugt.
+- "Aussen-/unbeheizte Geschosse überspringen" gilt je Vorlage, nicht
+  pauschal für alle — z.B. bezieht Beleuchtungs "Zentral {Geschoss}"
+  ein Aussen-Geschoss weiterhin ein, solange dieses Häkchen nicht auch
+  dort gesetzt wird.
 
-## License
+## Lizenz
 
-GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later) — see
-[`LICENSE`](./LICENSE). Chosen specifically because this is a network
-service (a web app): AGPL closes the "SaaS loophole" that plain GPL has —
-if someone runs a modified version of this tool as a hosted service, they
-must make that modified source available to its users too, not just to
-people they hand a compiled copy to.
+GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later) —
+siehe [`LICENSE`](./LICENSE). Bewusst gewählt, weil dies ein Netzwerkdienst
+ist (eine Webanwendung): AGPL schliesst die "SaaS-Lücke", die die einfache
+GPL hat — betreibt jemand eine geänderte Version dieses Tools als
+gehosteten Dienst, muss der geänderte Quellcode auch dessen Nutzern zur
+Verfügung gestellt werden, nicht nur jenen, denen eine Kopie ausgehändigt
+wird.
 
-Before publishing, replace "the project author(s)" in the license header
-at the top of `app/main.py` with your actual name or company.
+Vor einer Veröffentlichung "the project author(s)" im Lizenz-Header am
+Anfang von `app/main.py` durch den tatsächlichen Namen bzw. die Firma
+ersetzen.

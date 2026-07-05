@@ -6,4 +6,21 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./data:/app/app/data
+      # Mount the ENTIRE repo into the container. This means `git pull` (run either
+      # on the host or via the in-app Update button, which runs it inside the
+      # container against this same mounted directory) updates the running code
+      # immediately - a restart picks it up, no rebuild needed for pure code changes.
+      # Your database at app/data/knx_ga.db lives inside this same mount, so it's
+      # automatically persisted without a separate volume line.
+      - .:/app
+
+      # Uncomment ONE of these so `git pull` works from inside the container too
+      # (only needed if your GitHub repo is private):
+
+      # If you authenticate over HTTPS with a Personal Access Token and it's
+      # cached via git's credential store on the host (~/.git-credentials):
+      # - ~/.git-credentials:/root/.git-credentials:ro
+      # - ~/.gitconfig:/root/.gitconfig:ro
+
+      # If you authenticate via SSH deploy key instead:
+      # - ~/.ssh:/root/.ssh:ro

@@ -60,30 +60,34 @@
 <body>
 <header>
   <div>
-    <h1>KNX Group Address Generator</h1>
-    <p>Floors → Rooms → Points. Central &amp; general functions auto-generated from your templates.</p>
+    <h1>KNX Gruppenadressen-Generator</h1>
+    <p>Geschosse → Räume → Punkte. Zentral- &amp; Allgemeinfunktionen werden automatisch aus Ihren Vorlagen erzeugt.</p>
   </div>
-  <button id="theme-toggle" onclick="toggleTheme()">☀️ Light mode</button>
+  <div class="row" style="margin:0; align-items:center;">
+    <span class="muted" id="update-status"></span>
+    <button id="update-btn" class="btn secondary small" onclick="performUpdate()" style="display:none;">⭱ Aktualisieren</button>
+    <button id="theme-toggle" onclick="toggleTheme()">☀️ Hell</button>
+  </div>
 </header>
 <nav>
   <button data-tab="projects" class="active">Gruppenadressen</button>
   <button data-tab="abgangsliste">Abgangsliste</button>
   <button data-tab="aktoren">Aktoren</button>
-  <button data-tab="setup">Setup (Categories &amp; Templates)</button>
+  <button data-tab="setup">Setup (Kategorien &amp; Vorlagen)</button>
 </nav>
 <main>
 
   <!-- GRUPPENADRESSEN TAB -->
   <div class="tab active" id="tab-projects">
     <div class="card">
-      <h3>Projects</h3>
+      <h3>Projekte</h3>
       <div class="row">
-        <input type="text" id="proj-name" placeholder="New project name">
-        <button class="btn" onclick="createProject()">Create Project</button>
+        <input type="text" id="proj-name" placeholder="Neuer Projektname">
+        <button class="btn" onclick="createProject()">Projekt erstellen</button>
       </div>
       <div class="row">
         <input type="file" id="import-json-file" accept="application/json">
-        <button class="btn secondary" onclick="importProjectJson()">⭱ Restore from Backup (JSON)</button>
+        <button class="btn secondary" onclick="importProjectJson()">⭱ Aus Sicherung wiederherstellen (JSON)</button>
       </div>
       <ul class="list" id="projects-list"></ul>
     </div>
@@ -91,42 +95,42 @@
     <div id="project-detail" style="display:none;">
       <div class="card">
         <div class="row" style="justify-content:space-between;">
-          <h3 id="project-detail-title" style="margin:0;">Project</h3>
+          <h3 id="project-detail-title" style="margin:0;">Projekt</h3>
           <div class="row" style="margin:0;">
-            <button class="btn secondary small" onclick="exportProjectJson()">⭳ Backup (JSON)</button>
-            <button class="btn secondary small" onclick="closeProject()">× Close</button>
+            <button class="btn secondary small" onclick="exportProjectJson()">⭳ Sichern (JSON)</button>
+            <button class="btn secondary small" onclick="closeProject()">× Schliessen</button>
           </div>
         </div>
 
         <div class="row">
-          <input type="text" id="floor-name" placeholder="Floor name, e.g. Erdgeschoss (EG)">
-          <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="floor-outdoor"> Outdoor / unheated (e.g. Aussen, Garage)</label>
-          <button class="btn secondary" onclick="addFloor()">+ Add Floor</button>
+          <input type="text" id="floor-name" placeholder="Geschossname, z.B. Erdgeschoss (EG)">
+          <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="floor-outdoor"> Aussen / unbeheizt (z.B. Aussen, Garage)</label>
+          <button class="btn secondary" onclick="addFloor()">+ Geschoss hinzufügen</button>
         </div>
 
         <div id="floors-container"></div>
       </div>
 
       <div class="card">
-        <h3>Special / Extra Addresses</h3>
-        <p class="muted">Anything that doesn't fit the standard pattern — one-off scenes, custom central groups, etc.</p>
+        <h3>Sonder- / Zusatzadressen</h3>
+        <p class="muted">Alles, was nicht ins Standardschema passt — Einzel-Szenen, spezielle Zentralgruppen usw.</p>
         <div class="row">
           <select id="special-category"></select>
           <select id="special-location" class="wide"></select>
-          <input type="text" id="special-name" placeholder="Name, e.g. Langschläfer Kind1">
+          <input type="text" id="special-name" placeholder="Name, z.B. Langschläfer Kind1">
         </div>
         <div id="special-suffixes"></div>
-        <button class="btn secondary small" onclick="addSpecialSuffixRow()">+ Add datapoint</button>
-        <div style="margin-top:8px;"><button class="btn secondary" onclick="createSpecial()">Add Special Item</button></div>
+        <button class="btn secondary small" onclick="addSpecialSuffixRow()">+ Datenpunkt hinzufügen</button>
+        <div style="margin-top:8px;"><button class="btn secondary" onclick="createSpecial()">Sonderadresse hinzufügen</button></div>
         <ul class="list" id="specials-list" style="margin-top:10px;"></ul>
       </div>
 
       <div class="card">
         <div class="row" style="justify-content:space-between;">
-          <h3 style="margin:0;">Preview &amp; Export</h3>
+          <h3 style="margin:0;">Vorschau &amp; Export</h3>
           <div class="row" style="margin:0;">
-            <button class="btn secondary" onclick="previewGA()">Preview</button>
-            <button class="btn" onclick="downloadCSV()">Download CSV for ETS6</button>
+            <button class="btn secondary" onclick="previewGA()">Vorschau</button>
+            <button class="btn" onclick="downloadCSV()">CSV für ETS6 herunterladen</button>
           </div>
         </div>
         <div class="error" id="gen-error"></div>
@@ -138,8 +142,8 @@
   <!-- ABGANGSLISTE TAB -->
   <div class="tab" id="tab-abgangsliste">
     <div class="card">
-      <h3>Abgangsliste (Actuator wiring)</h3>
-      <p class="muted">Pick a project, add the actuators you're physically installing, then wire each circuit (light, blind, socket, heating channel) to one of their channels.</p>
+      <h3>Abgangsliste (Aktoren-Verdrahtung)</h3>
+      <p class="muted">Projekt wählen, die tatsächlich verbauten Aktoren anlegen und jeden Abgang (Licht, Jalousie, Steckdose, Heizkanal) einem Kanal zuordnen.</p>
       <div class="row">
         <select id="abgang-project-select" class="wide" onchange="onAbgangProjectChange(this.value)"></select>
       </div>
@@ -147,24 +151,24 @@
 
     <div id="abgang-detail" style="display:none;">
       <div class="card">
-        <h4>Actuators in this project</h4>
+        <h4>Aktoren in diesem Projekt</h4>
         <div class="row">
           <select id="ai-actortype" class="wide"></select>
           <select id="ai-floor"></select>
-          <input type="text" id="ai-location" placeholder="Location, e.g. EG Technik Verteilung" style="width:220px;">
-          <input type="text" id="ai-address" placeholder="Physical address, e.g. 1.1.2" style="width:140px;">
-          <button class="btn secondary" onclick="addActorInstance()">+ Add Actuator</button>
+          <input type="text" id="ai-location" placeholder="Standort, z.B. EG Technik Verteilung" style="width:220px;">
+          <input type="text" id="ai-address" placeholder="Physikalische Adresse, z.B. 1.1.2" style="width:140px;">
+          <button class="btn secondary" onclick="addActorInstance()">+ Aktor hinzufügen</button>
         </div>
         <ul class="list" id="actor-instances-list"></ul>
       </div>
 
       <div class="card">
-        <h4>Circuits</h4>
+        <h4>Abgänge</h4>
         <div class="row" style="justify-content:space-between;">
           <span class="muted" id="circuits-summary"></span>
           <div class="row" style="margin:0;">
-            <button class="btn secondary" onclick="autoAssignCircuits()">Auto-assign all</button>
-            <button class="btn" onclick="downloadAbgangsliste()">Download Abgangsliste (CSV)</button>
+            <button class="btn secondary" onclick="autoAssignCircuits()">Alle automatisch zuordnen</button>
+            <button class="btn" onclick="downloadAbgangsliste()">Abgangsliste herunterladen (CSV)</button>
           </div>
         </div>
         <ul class="list" id="circuits-list"></ul>
@@ -175,19 +179,19 @@
   <!-- AKTOREN TAB -->
   <div class="tab" id="tab-aktoren">
     <div class="card">
-      <h3>Actor Types (Actuator hardware catalog)</h3>
-      <p class="muted">Global catalog shared across every project — e.g. a "Schaltaktor" from MDT with 20 channels. The "Type" must match a Point Type's channel type (Setup tab) to be assignable to it in a project's Abgangsliste.</p>
+      <h3>Aktortypen (Geräte-Katalog)</h3>
+      <p class="muted">Globaler Katalog, gemeinsam für alle Projekte genutzt — z.B. ein Schaltaktor von MDT mit 20 Kanälen. Der "Type" muss dem Kanaltyp eines Punkttyps (Setup-Tab) entsprechen, damit er in der Abgangsliste eines Projekts zuordenbar ist.</p>
       <div class="row">
-        <input type="text" id="actortype-manufacturer" placeholder="Hersteller, e.g. MDT">
-        <input type="text" id="actortype-model" placeholder="Modell, e.g. AKS-2016.03">
-        <input type="text" id="actortype-channeltype" placeholder="Type, e.g. Schalten">
-        <label style="display:flex; align-items:center; gap:4px;">Channels <input type="number" id="actortype-count" value="8" min="1" style="width:60px;"></label>
-        <button class="btn" onclick="createActorType()">Save Actor Type</button>
+        <input type="text" id="actortype-manufacturer" placeholder="Hersteller, z.B. MDT">
+        <input type="text" id="actortype-model" placeholder="Modell, z.B. AKS-2016.03">
+        <input type="text" id="actortype-channeltype" placeholder="Type, z.B. Schalten">
+        <label style="display:flex; align-items:center; gap:4px;">Kanäle <input type="number" id="actortype-count" value="8" min="1" style="width:60px;"></label>
+        <button class="btn" onclick="createActorType()">Aktortyp speichern</button>
       </div>
       <div class="row">
-        <button class="btn secondary small" onclick="exportActorTypesJson()">⭳ Export catalog (JSON)</button>
+        <button class="btn secondary small" onclick="exportActorTypesJson()">⭳ Katalog exportieren (JSON)</button>
         <input type="file" id="import-actortypes-file" accept="application/json">
-        <button class="btn secondary small" onclick="importActorTypesJson()">⭱ Import catalog (JSON)</button>
+        <button class="btn secondary small" onclick="importActorTypesJson()">⭱ Katalog importieren (JSON)</button>
       </div>
       <ul class="list" id="actor-types-list"></ul>
     </div>
@@ -196,54 +200,54 @@
   <!-- SETUP TAB -->
   <div class="tab" id="tab-setup">
     <div class="card">
-      <h3>Categories (Main Groups)</h3>
-      <p class="muted">Your standard function categories. Order = Main Group number. Usually set once and left alone.</p>
+      <h3>Kategorien (Hauptgruppen)</h3>
+      <p class="muted">Ihre Standard-Funktionskategorien. Reihenfolge = Hauptgruppennummer. Normalerweise einmalig festgelegt und danach unverändert.</p>
       <ul class="list" id="categories-list"></ul>
     </div>
 
     <div class="card">
-      <h3>Point Types</h3>
-      <p class="muted">Reusable building blocks (a light, a blind, a socket...) with their datapoints and reserved block size. "Channel type" links a point to matching Actor Types below, so it can be wired to a physical actuator channel in a project's Abgangsliste.</p>
+      <h3>Punkttypen</h3>
+      <p class="muted">Wiederverwendbare Bausteine (ein Licht, eine Jalousie, eine Steckdose...) mit ihren Datenpunkten und reserviertem Blockumfang. Der "Kanaltyp" verknüpft einen Punkt mit passenden Aktortypen weiter unten, damit er in der Abgangsliste eines Projekts einem physischen Aktorkanal zugeordnet werden kann.</p>
       <div class="row">
         <select id="pt-category"></select>
-        <input type="text" id="pt-name" placeholder="Name, e.g. Licht (Dimmen)">
-        <input type="number" id="pt-blocksize" value="5" title="Block size (reserved addresses)">
+        <input type="text" id="pt-name" placeholder="Name, z.B. Licht (Dimmen)">
+        <input type="number" id="pt-blocksize" value="5" title="Blockgrösse (reservierte Adressen)">
       </div>
       <div class="row">
-        <input type="text" id="pt-channeltype" placeholder="Channel type, e.g. Schalten, Dimmen, Rollo, Heizung, Tor (blank = no physical channel)">
-        <label style="display:flex; align-items:center; gap:4px;">Channels needed <input type="number" id="pt-channelsneeded" value="1" min="1" style="width:60px;"></label>
+        <input type="text" id="pt-channeltype" placeholder="Kanaltyp, z.B. Schalten, Dimmen, Rollo, Heizung, Tor (leer = kein physischer Kanal)">
+        <label style="display:flex; align-items:center; gap:4px;">Benötigte Kanäle <input type="number" id="pt-channelsneeded" value="1" min="1" style="width:60px;"></label>
       </div>
       <div id="pt-suffixes"></div>
-      <button class="btn secondary small" onclick="addPtSuffixRow()">+ Add datapoint</button>
-      <div style="margin-top:8px;"><button class="btn" onclick="createPointType()">Save Point Type</button></div>
+      <button class="btn secondary small" onclick="addPtSuffixRow()">+ Datenpunkt hinzufügen</button>
+      <div style="margin-top:8px;"><button class="btn" onclick="createPointType()">Punkttyp speichern</button></div>
       <hr class="sep">
       <ul class="list" id="point-types-list"></ul>
     </div>
 
     <div class="card">
-      <h3>Central / General Function Templates</h3>
+      <h3>Zentral-/Allgemeinfunktions-Vorlagen</h3>
       <p class="muted">
-        Auto-generated every project. "building" scope = one block for the whole project.
-        "floor" scope = one block per floor (e.g. "Zentral EG", "Zentral OG").
-        "room_multi" scope = one block PER ROOM, only for rooms that have several points in
-        this category (e.g. a room with 2+ blinds gets its own combined "Zentral" control).
-        Allgemein category templates each become their own Middle Group.
+        Werden in jedem Projekt automatisch erzeugt. Geltungsbereich "building" = ein Block für das ganze Projekt.
+        "floor" = ein Block je Geschoss (z.B. "Zentral EG", "Zentral OG").
+        "room_multi" = ein Block PRO RAUM, nur für Räume mit mehreren Punkten dieser
+        Kategorie (z.B. erhält ein Raum mit 2+ Jalousien eine eigene kombinierte "Zentral"-Steuerung).
+        Vorlagen der Kategorie Allgemein werden jeweils zu einer eigenen Mittelgruppe.
       </p>
       <div class="row">
         <select id="ct-category"></select>
         <select id="ct-scope" onchange="onCtScopeChange()">
-          <option value="building">building (once per project)</option>
-          <option value="floor">floor (once per floor)</option>
-          <option value="room_multi">room_multi (once per room, if enough points)</option>
+          <option value="building">building (einmal je Projekt)</option>
+          <option value="floor">floor (einmal je Geschoss)</option>
+          <option value="room_multi">room_multi (einmal je Raum, wenn genug Punkte)</option>
         </select>
-        <input type="text" id="ct-name" placeholder="Name, e.g. Zentral (blank = no prefix)">
-        <label id="ct-skip-outdoor-label" style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="ct-skip-outdoor"> Skip outdoor/unheated floors</label>
-        <label id="ct-blocksize-label" style="display:none; align-items:center; gap:4px;">Block size <input type="number" id="ct-blocksize" placeholder="e.g. 5" style="width:60px;"></label>
-        <label id="ct-trigger-label" style="display:none; align-items:center; gap:4px;">Trigger at <input type="number" id="ct-trigger" value="2" style="width:60px;"> points</label>
+        <input type="text" id="ct-name" placeholder="Name, z.B. Zentral (leer = kein Präfix)">
+        <label id="ct-skip-outdoor-label" style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="ct-skip-outdoor"> Aussen-/unbeheizte Geschosse überspringen</label>
+        <label id="ct-blocksize-label" style="display:none; align-items:center; gap:4px;">Blockgrösse <input type="number" id="ct-blocksize" placeholder="z.B. 5" style="width:60px;"></label>
+        <label id="ct-trigger-label" style="display:none; align-items:center; gap:4px;">Auslösen ab <input type="number" id="ct-trigger" value="2" style="width:60px;"> Punkten</label>
       </div>
       <div id="ct-suffixes"></div>
-      <button class="btn secondary small" onclick="addCtSuffixRow()">+ Add datapoint</button>
-      <div style="margin-top:8px;"><button class="btn" onclick="createCentralTemplate()">Save Template</button></div>
+      <button class="btn secondary small" onclick="addCtSuffixRow()">+ Datenpunkt hinzufügen</button>
+      <div style="margin-top:8px;"><button class="btn" onclick="createCentralTemplate()">Vorlage speichern</button></div>
       <hr class="sep">
       <ul class="list" id="central-templates-list"></ul>
     </div>
@@ -255,7 +259,7 @@
 // ---------- Theme ----------
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  document.getElementById('theme-toggle').textContent = theme === 'light' ? '🌙 Dark mode' : '☀️ Light mode';
+  document.getElementById('theme-toggle').textContent = theme === 'light' ? '🌙 Dunkel' : '☀️ Hell';
   localStorage.setItem('knx-ga-theme', theme);
 }
 function toggleTheme() {
@@ -289,7 +293,7 @@ async function loadCategories() {
   CATEGORIES = await api('/categories');
   const ul = document.getElementById('categories-list');
   ul.innerHTML = CATEGORIES.map(c => `
-    <li><span><b>${c.main_label ?? ''}</b> ${c.order_idx}. ${c.name} ${c.is_allgemein ? '<span class="pill">Allgemein preset</span>' : ''}</span></li>
+    <li><span><b>${c.main_label ?? ''}</b> ${c.order_idx}. ${c.name} ${c.is_allgemein ? '<span class="pill">Allgemein-Vorlage</span>' : ''}</span></li>
   `).join('');
   const catSelects = ['pt-category', 'ct-category', 'special-category'];
   catSelects.forEach(id => {
@@ -302,8 +306,8 @@ function addPtSuffixRow(suffix='', dpt='') {
   const div = document.createElement('div');
   div.className = 'row';
   div.innerHTML = `
-    <input type="text" placeholder="Suffix e.g. Schalten" class="pt-suf-name" value="${suffix}">
-    <input type="text" placeholder="DPT e.g. DPST-1-1" class="pt-suf-dpt" value="${dpt}">
+    <input type="text" placeholder="Suffix z.B. Schalten" class="pt-suf-name" value="${suffix}">
+    <input type="text" placeholder="DPT z.B. DPST-1-1" class="pt-suf-dpt" value="${dpt}">
     <button class="btn danger small" onclick="this.parentElement.remove()">x</button>`;
   document.getElementById('pt-suffixes').appendChild(div);
 }
@@ -318,7 +322,7 @@ async function createPointType() {
     suffix: r.querySelector('.pt-suf-name').value.trim(),
     dpt: r.querySelector('.pt-suf-dpt').value.trim()
   })).filter(s => s.suffix);
-  if (!name || suffixes.length === 0) return alert('Name and at least one datapoint required');
+  if (!name || suffixes.length === 0) return alert('Name und mindestens ein Datenpunkt erforderlich');
   await api('/point-types', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category_id, name, suffixes, block_size, channel_type, channels_needed})});
   document.getElementById('pt-name').value = '';
   document.getElementById('pt-channeltype').value = '';
@@ -333,17 +337,17 @@ async function loadPointTypes() {
   ul.innerHTML = POINT_TYPES.map(pt => {
     const cat = CATEGORIES.find(c => c.id === pt.category_id);
     return `<li>
-      <div><b>${pt.name}</b> <span class="pill">${cat?.name||'?'}</span> <span class="pill">block ${pt.block_size}</span>
-        ${pt.channel_type ? `<span class="pill">channel: ${pt.channel_type} ×${pt.channels_needed}</span>` : ''}
+      <div><b>${pt.name}</b> <span class="pill">${cat?.name||'?'}</span> <span class="pill">Block ${pt.block_size}</span>
+        ${pt.channel_type ? `<span class="pill">Kanal: ${pt.channel_type} ×${pt.channels_needed}</span>` : ''}
         ${pt.suffixes.map(s=>`<span class="pill">${s.suffix} · ${s.dpt}</span>`).join('')}
       </div>
-      <button class="btn danger small" onclick="deletePointType(${pt.id})">Delete</button>
+      <button class="btn danger small" onclick="deletePointType(${pt.id})">Löschen</button>
     </li>`;
-  }).join('') || '<li class="muted">No point types yet</li>';
+  }).join('') || '<li class="muted">Noch keine Punkttypen</li>';
 }
 
 async function deletePointType(id) {
-  if (!confirm('Delete this point type?')) return;
+  if (!confirm('Diesen Punkttyp löschen?')) return;
   await api('/point-types/' + id, {method:'DELETE'});
   await loadPointTypes();
 }
@@ -354,7 +358,7 @@ async function createActorType() {
   const model = document.getElementById('actortype-model').value.trim();
   const channel_type = document.getElementById('actortype-channeltype').value.trim();
   const channel_count = parseInt(document.getElementById('actortype-count').value) || 1;
-  if (!model || !channel_type) return alert('Modell and Type are required');
+  if (!model || !channel_type) return alert('Modell und Type sind erforderlich');
   await api('/actor-types', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({manufacturer, model, channel_type, channel_count})});
   document.getElementById('actortype-manufacturer').value = '';
   document.getElementById('actortype-model').value = '';
@@ -367,13 +371,13 @@ async function loadActorTypes() {
   const ul = document.getElementById('actor-types-list');
   ul.innerHTML = ACTOR_TYPES.map(at => `
     <li>
-      <div><b>${[at.manufacturer, at.model].filter(Boolean).join(' ')}</b> <span class="pill">${at.channel_type}</span> <span class="pill">${at.channel_count} channels</span></div>
-      <button class="btn danger small" onclick="deleteActorType(${at.id})">Delete</button>
-    </li>`).join('') || '<li class="muted">No actor types yet</li>';
+      <div><b>${[at.manufacturer, at.model].filter(Boolean).join(' ')}</b> <span class="pill">${at.channel_type}</span> <span class="pill">${at.channel_count} Kanäle</span></div>
+      <button class="btn danger small" onclick="deleteActorType(${at.id})">Löschen</button>
+    </li>`).join('') || '<li class="muted">Noch keine Aktortypen</li>';
 }
 
 async function deleteActorType(id) {
-  if (!confirm('Delete this actor type?')) return;
+  if (!confirm('Diesen Aktortyp löschen?')) return;
   await api('/actor-types/' + id, {method:'DELETE'});
   await loadActorTypes();
 }
@@ -385,18 +389,18 @@ function exportActorTypesJson() {
 async function importActorTypesJson() {
   const fileInput = document.getElementById('import-actortypes-file');
   const file = fileInput.files[0];
-  if (!file) return alert('Choose a catalog .json file first');
+  if (!file) return alert('Bitte zuerst eine Katalog-.json-Datei auswählen');
   const text = await file.text();
   let payload;
   try {
     payload = JSON.parse(text);
   } catch (e) {
-    return alert('That file is not valid JSON');
+    return alert('Diese Datei ist kein gültiges JSON');
   }
   const result = await api('/actor-types/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
   fileInput.value = '';
   await loadActorTypes();
-  alert(`Imported: ${result.imported} new, ${result.updated} updated.`);
+  alert(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert.`);
 }
 
 // ---------- Setup: Central Templates ----------
@@ -404,8 +408,8 @@ function addCtSuffixRow(suffix='', dpt='') {
   const div = document.createElement('div');
   div.className = 'row';
   div.innerHTML = `
-    <input type="text" placeholder="Suffix e.g. Ein/Aus" class="ct-suf-name" value="${suffix}">
-    <input type="text" placeholder="DPT e.g. DPST-1-1" class="ct-suf-dpt" value="${dpt}">
+    <input type="text" placeholder="Suffix z.B. Ein/Aus" class="ct-suf-name" value="${suffix}">
+    <input type="text" placeholder="DPT z.B. DPST-1-1" class="ct-suf-dpt" value="${dpt}">
     <button class="btn danger small" onclick="this.parentElement.remove()">x</button>`;
   document.getElementById('ct-suffixes').appendChild(div);
 }
@@ -430,7 +434,7 @@ async function createCentralTemplate() {
     suffix: r.querySelector('.ct-suf-name').value.trim(),
     dpt: r.querySelector('.ct-suf-dpt').value.trim()
   })).filter(s => s.suffix);
-  if (suffixes.length === 0) return alert('At least one datapoint required');
+  if (suffixes.length === 0) return alert('Mindestens ein Datenpunkt erforderlich');
   await api('/central-templates', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category_id, name, scope, suffixes, skip_outdoor_floors, block_size, trigger_count})});
   document.getElementById('ct-name').value = '';
   document.getElementById('ct-skip-outdoor').checked = false;
@@ -446,22 +450,22 @@ async function loadCentralTemplates() {
   ul.innerHTML = CENTRAL_TEMPLATES.map(ct => {
     const cat = CATEGORIES.find(c => c.id === ct.category_id);
     const extra = [];
-    if (ct.skip_outdoor_floors) extra.push('<span class="pill">skips outdoor</span>');
+    if (ct.skip_outdoor_floors) extra.push('<span class="pill">ohne Aussen</span>');
     if (ct.scope === 'room_multi') {
-      extra.push(`<span class="pill">trigger ≥${ct.trigger_count || 2}</span>`);
-      if (ct.block_size) extra.push(`<span class="pill">block ${ct.block_size}</span>`);
+      extra.push(`<span class="pill">ab ${ct.trigger_count || 2} Punkten</span>`);
+      if (ct.block_size) extra.push(`<span class="pill">Block ${ct.block_size}</span>`);
     }
     return `<li>
-      <div><b>${ct.name || '(no prefix)'}</b> <span class="pill">${cat?.name||'?'}</span> <span class="pill">${ct.scope}</span> ${extra.join(' ')}
-        ${ct.suffixes.map(s=>`<span class="pill">${s.suffix || '(none)'} · ${s.dpt}</span>`).join('')}
+      <div><b>${ct.name || '(kein Präfix)'}</b> <span class="pill">${cat?.name||'?'}</span> <span class="pill">${ct.scope}</span> ${extra.join(' ')}
+        ${ct.suffixes.map(s=>`<span class="pill">${s.suffix || '(keiner)'} · ${s.dpt}</span>`).join('')}
       </div>
-      <button class="btn danger small" onclick="deleteCentralTemplate(${ct.id})">Delete</button>
+      <button class="btn danger small" onclick="deleteCentralTemplate(${ct.id})">Löschen</button>
     </li>`;
-  }).join('') || '<li class="muted">No templates yet</li>';
+  }).join('') || '<li class="muted">Noch keine Vorlagen</li>';
 }
 
 async function deleteCentralTemplate(id) {
-  if (!confirm('Delete this template?')) return;
+  if (!confirm('Diese Vorlage löschen?')) return;
   await api('/central-templates/' + id, {method:'DELETE'});
   await loadCentralTemplates();
 }
@@ -482,15 +486,15 @@ async function loadProjects() {
     <li>
       <div><b>${p.name}</b></div>
       <div>
-        <button class="btn secondary small" onclick="openProject(${p.id}, '${p.name.replace(/'/g,"\\'")}')">Open</button>
-        <button class="btn danger small" onclick="deleteProject(${p.id})">Delete</button>
+        <button class="btn secondary small" onclick="openProject(${p.id}, '${p.name.replace(/'/g,"\\'")}')">Öffnen</button>
+        <button class="btn danger small" onclick="deleteProject(${p.id})">Löschen</button>
       </div>
-    </li>`).join('') || '<li class="muted">No projects yet</li>';
+    </li>`).join('') || '<li class="muted">Noch keine Projekte</li>';
   if (document.getElementById('abgang-project-select')) await renderAbgangProjectSelect();
 }
 
 async function deleteProject(id) {
-  if (!confirm('Delete this project and everything in it?')) return;
+  if (!confirm('Dieses Projekt und alles darin löschen?')) return;
   await api('/projects/' + id, {method:'DELETE'});
   if (CURRENT_PROJECT === id) {
     document.getElementById('project-detail').style.display = 'none';
@@ -541,16 +545,16 @@ async function renderFloors() {
   container.innerHTML = tree.floors.map(floor => `
     <div class="floor-card">
       <div class="row" style="justify-content:space-between;">
-        <b>${floor.name}</b> ${floor.is_outdoor ? '<span class="pill">outdoor/unheated</span>' : ''}
+        <b>${floor.name}</b> ${floor.is_outdoor ? '<span class="pill">Aussen/unbeheizt</span>' : ''}
         <div>
-          <input type="text" placeholder="Room name" id="room-name-${floor.id}" style="width:140px;">
-          <button class="btn secondary small" onclick="addRoom(${floor.id})">+ Add Room</button>
-          <button class="btn danger small" onclick="deleteFloor(${floor.id})">Delete Floor</button>
+          <input type="text" placeholder="Raumname" id="room-name-${floor.id}" style="width:140px;">
+          <button class="btn secondary small" onclick="addRoom(${floor.id})">+ Raum hinzufügen</button>
+          <button class="btn danger small" onclick="deleteFloor(${floor.id})">Geschoss löschen</button>
         </div>
       </div>
-      ${floor.rooms.map(room => renderRoom(room)).join('') || '<p class="muted">No rooms yet</p>'}
+      ${floor.rooms.map(room => renderRoom(room)).join('') || '<p class="muted">Noch keine Räume</p>'}
     </div>
-  `).join('') || '<p class="muted">No floors yet — add one above.</p>';
+  `).join('') || '<p class="muted">Noch keine Geschosse — oben eines hinzufügen.</p>';
 }
 
 function renderRoom(room) {
@@ -561,25 +565,25 @@ function renderRoom(room) {
   });
   const pointsHtml = Object.entries(pointsByType).map(([ptId, pts]) => {
     const pt = POINT_TYPES.find(p => p.id === parseInt(ptId));
-    const labels = pts.map(p => `<span class="pill">${p.label || '(no label)'}${p.has_bwm ? ' +BWM' : ''} <a href="#" onclick="deleteRoomPoint(event, ${p.id})" style="color:var(--danger); text-decoration:none;">×</a></span>`).join('');
+    const labels = pts.map(p => `<span class="pill">${p.label || '(kein Label)'}${p.has_bwm ? ' +BWM' : ''} <a href="#" onclick="deleteRoomPoint(event, ${p.id})" style="color:var(--danger); text-decoration:none;">×</a></span>`).join('');
     return `<div style="margin:4px 0;"><b>${pt?.name || '?'}</b>: ${labels}</div>`;
-  }).join('') || '<p class="muted" style="margin:4px 0;">No points yet</p>';
+  }).join('') || '<p class="muted" style="margin:4px 0;">Noch keine Punkte</p>';
 
   return `
     <div class="room-card">
       <div class="row" style="justify-content:space-between;">
         <b>${room.name}</b>
-        <button class="btn danger small" onclick="deleteRoom(${room.id})">Delete Room</button>
+        <button class="btn danger small" onclick="deleteRoom(${room.id})">Raum löschen</button>
       </div>
       ${pointsHtml}
       <div class="quick-add">
         <select id="ptype-${room.id}" class="wide">
           ${POINT_TYPES.map(pt => `<option value="${pt.id}">${CATEGORIES.find(c=>c.id===pt.category_id)?.name} — ${pt.name}</option>`).join('')}
         </select>
-        <input type="text" id="label-${room.id}" placeholder="Label e.g. Decke, Spots, Nord (blank = none)" style="width:210px;">
-        <input type="number" id="qty-${room.id}" value="1" min="1" title="Quantity">
+        <input type="text" id="label-${room.id}" placeholder="Label z.B. Decke, Spots, Nord (leer = keins)" style="width:210px;">
+        <input type="number" id="qty-${room.id}" value="1" min="1" title="Anzahl">
         <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="bwm-${room.id}"> +BWM</label>
-        <button class="btn secondary small" onclick="addPoint(${room.id})">+ Add</button>
+        <button class="btn secondary small" onclick="addPoint(${room.id})">+ Hinzufügen</button>
       </div>
     </div>
   `;
@@ -621,8 +625,8 @@ function addSpecialSuffixRow(suffix='', dpt='') {
   const div = document.createElement('div');
   div.className = 'row';
   div.innerHTML = `
-    <input type="text" placeholder="Suffix e.g. Auf/Ab" class="sp-suf-name" value="${suffix}">
-    <input type="text" placeholder="DPT e.g. DPST-1-8" class="sp-suf-dpt" value="${dpt}">
+    <input type="text" placeholder="Suffix z.B. Auf/Ab" class="sp-suf-name" value="${suffix}">
+    <input type="text" placeholder="DPT z.B. DPST-1-8" class="sp-suf-dpt" value="${dpt}">
     <button class="btn danger small" onclick="this.parentElement.remove()">x</button>`;
   document.getElementById('special-suffixes').appendChild(div);
 }
@@ -630,8 +634,8 @@ function addSpecialSuffixRow(suffix='', dpt='') {
 async function renderSpecialLocationOptions() {
   const tree = await api(`/projects/${CURRENT_PROJECT}/tree`);
   const sel = document.getElementById('special-location');
-  sel.innerHTML = `<option value="central">Zentralfunktionen (category-wide)</option>` +
-    tree.floors.map(f => `<option value="${f.id}">Floor: ${f.name}</option>`).join('');
+  sel.innerHTML = `<option value="central">Zentralfunktionen (ganze Kategorie)</option>` +
+    tree.floors.map(f => `<option value="${f.id}">Geschoss: ${f.name}</option>`).join('');
 }
 
 async function createSpecial() {
@@ -642,7 +646,7 @@ async function createSpecial() {
     suffix: r.querySelector('.sp-suf-name').value.trim(),
     dpt: r.querySelector('.sp-suf-dpt').value.trim()
   })).filter(s => s.suffix);
-  if (!name || suffixes.length === 0) return alert('Name and at least one datapoint required');
+  if (!name || suffixes.length === 0) return alert('Name und mindestens ein Datenpunkt erforderlich');
   await api(`/projects/${CURRENT_PROJECT}/specials`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category_id, location, name, suffixes})});
   document.getElementById('special-name').value = '';
   document.getElementById('special-suffixes').innerHTML = '';
@@ -655,12 +659,12 @@ async function renderSpecials() {
   ul.innerHTML = specials.map(s => {
     const cat = CATEGORIES.find(c => c.id === s.category_id);
     return `<li>
-      <div><b>${s.name}</b> <span class="pill">${cat?.name||'?'}</span> <span class="pill">${s.location === 'central' ? 'Zentral' : 'Floor'}</span>
+      <div><b>${s.name}</b> <span class="pill">${cat?.name||'?'}</span> <span class="pill">${s.location === 'central' ? 'Zentral' : 'Geschoss'}</span>
         ${s.suffixes.map(x=>`<span class="pill">${x.suffix} · ${x.dpt}</span>`).join('')}
       </div>
-      <button class="btn danger small" onclick="deleteSpecial(${s.id})">Delete</button>
+      <button class="btn danger small" onclick="deleteSpecial(${s.id})">Löschen</button>
     </li>`;
-  }).join('') || '<li class="muted">None yet</li>';
+  }).join('') || '<li class="muted">Noch keine</li>';
 }
 
 async function deleteSpecial(id) {
@@ -672,7 +676,7 @@ async function deleteSpecial(id) {
 async function renderAbgangProjectSelect() {
   if (!PROJECTS_LIST.length) PROJECTS_LIST = await api('/projects');
   const sel = document.getElementById('abgang-project-select');
-  sel.innerHTML = '<option value="">— select a project —</option>' +
+  sel.innerHTML = '<option value="">— Projekt wählen —</option>' +
     PROJECTS_LIST.map(p => `<option value="${p.id}" ${CURRENT_PROJECT === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
   if (CURRENT_PROJECT && PROJECTS_LIST.some(p => p.id === CURRENT_PROJECT)) {
     await loadAbgangForCurrentProject();
@@ -701,15 +705,15 @@ async function loadAbgangForCurrentProject() {
 async function renderActorInstanceForm() {
   const tree = await api(`/projects/${CURRENT_PROJECT}/tree`);
   document.getElementById('ai-actortype').innerHTML = ACTOR_TYPES.map(at =>
-    `<option value="${at.id}">${[at.manufacturer, at.model].filter(Boolean).join(' ')} (${at.channel_type}, ${at.channel_count} ch)</option>`).join('') ||
-    '<option value="">No Actor Types defined yet - add one in the Aktoren tab</option>';
-  document.getElementById('ai-floor').innerHTML = '<option value="">(no floor)</option>' +
+    `<option value="${at.id}">${[at.manufacturer, at.model].filter(Boolean).join(' ')} (${at.channel_type}, ${at.channel_count} Kanäle)</option>`).join('') ||
+    '<option value="">Noch keine Aktortypen definiert - im Aktoren-Tab anlegen</option>';
+  document.getElementById('ai-floor').innerHTML = '<option value="">(kein Geschoss)</option>' +
     tree.floors.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
 }
 
 async function addActorInstance() {
   const actor_type_id = parseInt(document.getElementById('ai-actortype').value);
-  if (!actor_type_id) return alert('Add an Actor Type in Setup first');
+  if (!actor_type_id) return alert('Zuerst einen Aktortyp im Aktoren-Tab anlegen');
   const floorVal = document.getElementById('ai-floor').value;
   const floor_id = floorVal ? parseInt(floorVal) : null;
   const location_label = document.getElementById('ai-location').value.trim();
@@ -730,14 +734,14 @@ async function renderActorInstances() {
         ${ai.floor_name ? `<span class="pill">${ai.floor_name}</span>` : ''}
         ${ai.location_label ? `<span class="pill">${ai.location_label}</span>` : ''}
         ${ai.physical_address ? `<span class="pill">${ai.physical_address}</span>` : ''}
-        <span class="pill">${ai.channels_used}/${ai.channel_count} used</span>
+        <span class="pill">${ai.channels_used}/${ai.channel_count} belegt</span>
       </div>
-      <button class="btn danger small" onclick="deleteActorInstance(${ai.id})">Delete</button>
-    </li>`).join('') || '<li class="muted">No actuators added yet</li>';
+      <button class="btn danger small" onclick="deleteActorInstance(${ai.id})">Löschen</button>
+    </li>`).join('') || '<li class="muted">Noch keine Aktoren hinzugefügt</li>';
 }
 
 async function deleteActorInstance(id) {
-  if (!confirm('Delete this actuator? Any circuits wired to it will become unassigned.')) return;
+  if (!confirm('Diesen Aktor löschen? Zugeordnete Abgänge werden dadurch nicht mehr zugeordnet.')) return;
   await api('/actor-instances/' + id, {method:'DELETE'});
   await renderActorInstances();
   await renderCircuits();
@@ -751,12 +755,12 @@ async function renderCircuits() {
   ]);
   const assignedCount = circuits.filter(c => c.assignment).length;
   document.getElementById('circuits-summary').textContent =
-    `${assignedCount} / ${circuits.length} circuits assigned`;
+    `${assignedCount} / ${circuits.length} Abgänge zugeordnet`;
 
   const ul = document.getElementById('circuits-list');
   ul.innerHTML = circuits.map(c => {
     const matching = instances.filter(ai => ai.channel_type === c.channel_type);
-    const options = ['<option value="">— unassigned —</option>'];
+    const options = ['<option value="">— nicht zugeordnet —</option>'];
     matching.forEach(ai => {
       const usedLetters = new Set(); // filled below via data attr trick isn't needed; server rejects duplicates anyway
       for (let i = 1; i <= ai.channel_count; i++) {
@@ -768,11 +772,11 @@ async function renderCircuits() {
     const selectedValue = c.assignment ? `${c.assignment.actor_instance_id}|${c.assignment.channel_letter}` : '';
     return `<li>
       <div>${c.floor_name} / <b>${c.function_name}</b> <span class="pill">${c.channel_type}</span> <span class="pill">${c.point_type_name}</span></div>
-      <select onchange="onCircuitAssignChange(${c.room_point_id}, ${c.channel_seq}, this.value)" ${matching.length === 0 ? 'disabled title="No matching actuator added yet"' : ''}>
+      <select onchange="onCircuitAssignChange(${c.room_point_id}, ${c.channel_seq}, this.value)" ${matching.length === 0 ? 'disabled title="Noch kein passender Aktor hinzugefügt"' : ''}>
         ${options.join('')}
       </select>
     </li>`;
-  }).join('') || '<li class="muted">No circuits yet — add rooms and points above</li>';
+  }).join('') || '<li class="muted">Noch keine Abgänge — oben Räume und Punkte hinzufügen</li>';
 
   // Ensure each select reflects current assignment (re-set value since duplicate option values across selects is fine per-select)
   [...ul.querySelectorAll('select')].forEach((sel, i) => {
@@ -813,11 +817,11 @@ async function autoAssignCircuits() {
   await renderCircuits();
   await renderActorInstances();
   if (result.unassigned.length) {
-    alert(`Assigned ${result.assigned} circuit(s).\n\nCould not assign (no free matching actuator channel):\n- ${result.unassigned.join('\n- ')}`);
+    alert(`${result.assigned} Abgang/Abgänge zugeordnet.\n\nNicht zuordenbar (kein freier passender Aktorkanal):\n- ${result.unassigned.join('\n- ')}`);
   } else if (result.assigned) {
-    alert(`Assigned ${result.assigned} circuit(s).`);
+    alert(`${result.assigned} Abgang/Abgänge zugeordnet.`);
   } else {
-    alert('Nothing to assign — everything is already wired up.');
+    alert('Nichts zuzuordnen — bereits vollständig verdrahtet.');
   }
 }
 
@@ -852,22 +856,93 @@ function exportProjectJson() {
 async function importProjectJson() {
   const fileInput = document.getElementById('import-json-file');
   const file = fileInput.files[0];
-  if (!file) return alert('Choose a backup .json file first');
+  if (!file) return alert('Bitte zuerst eine Sicherungs-.json-Datei auswählen');
   const text = await file.text();
   let payload;
   try {
     payload = JSON.parse(text);
   } catch (e) {
-    return alert('That file is not valid JSON');
+    return alert('Diese Datei ist kein gültiges JSON');
   }
   const result = await api('/projects/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
   fileInput.value = '';
   await loadProjects();
   if (result.skipped && result.skipped.length) {
-    alert(`Imported as "${result.name}".\n\nSome items were skipped because their Point Type/Category wasn't found on this install:\n- ${result.skipped.join('\n- ')}`);
+    alert(`Importiert als "${result.name}".\n\nEinige Elemente wurden übersprungen, da ihr Punkttyp/ihre Kategorie auf dieser Installation nicht existiert:\n- ${result.skipped.join('\n- ')}`);
   } else {
-    alert(`Imported as "${result.name}".`);
+    alert(`Importiert als "${result.name}".`);
   }
+}
+
+// ---------- Self-update ----------
+async function checkForUpdate() {
+  const statusEl = document.getElementById('update-status');
+  const btn = document.getElementById('update-btn');
+  statusEl.textContent = 'Suche nach Updates...';
+  try {
+    const status = await api('/system/status');
+    if (status.error) {
+      statusEl.textContent = '';
+      btn.style.display = 'none';
+      return;
+    }
+    if (status.update_available) {
+      statusEl.textContent = `Update verfügbar (${status.current} → ${status.latest})`;
+      btn.style.display = 'inline-block';
+    } else {
+      statusEl.textContent = `Aktuell (${status.current})`;
+      btn.style.display = 'none';
+    }
+  } catch (e) {
+    statusEl.textContent = '';
+    btn.style.display = 'none';
+  }
+}
+
+async function performUpdate() {
+  if (!confirm('Neueste Version laden und die App jetzt neu starten?')) return;
+  const statusEl = document.getElementById('update-status');
+  const btn = document.getElementById('update-btn');
+  btn.disabled = true;
+  statusEl.textContent = 'Aktualisiere...';
+  try {
+    const result = await api('/system/update', {method: 'POST'});
+    if (!result.ok) {
+      alert('Update fehlgeschlagen:\n\n' + result.message);
+      statusEl.textContent = '';
+      btn.disabled = false;
+      return;
+    }
+    if (result.restarting) {
+      statusEl.textContent = 'Startet neu...';
+      await waitForRestartThenReload();
+    } else {
+      alert(result.message);
+      statusEl.textContent = '';
+      btn.disabled = false;
+      await checkForUpdate();
+    }
+  } catch (e) {
+    alert('Update fehlgeschlagen: ' + e.message);
+    statusEl.textContent = '';
+    btn.disabled = false;
+  }
+}
+
+async function waitForRestartThenReload() {
+  // Poll until the server comes back up (docker's restart policy brings it back
+  // within a second or two), then reload the page to get the fresh frontend too.
+  for (let i = 0; i < 30; i++) {
+    await new Promise(r => setTimeout(r, 1000));
+    try {
+      const r = await fetch('/api/categories');
+      if (r.ok) {
+        window.location.reload();
+        return;
+      }
+    } catch (e) { /* server still restarting - keep polling */ }
+  }
+  document.getElementById('update-status').textContent = 'Startet noch... bitte in Kürze manuell neu laden.';
 }
 
 // ---------- Init ----------
@@ -877,6 +952,7 @@ async function importProjectJson() {
   await loadCentralTemplates();
   await loadActorTypes();
   await loadProjects();
+  await checkForUpdate();
 })();
 </script>
 </body>
