@@ -1,0 +1,13 @@
+# Runtime data - don't commit your actual project database
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+
+# Python
+__pycache__/
+*.pyc
+
+# OS cruft
+.DS_Store
+Thumbs.db

@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>KNX GA Generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --panel2: #0b1220; --panel3: #111c30; --border: #334155;
+    --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; --accent2: #22c55e;
+    --danger: #f87171; --warn: #fbbf24; --btn-text: #0b1220;
+  }
+  :root[data-theme="light"] {
+    --bg: #f8fafc; --panel: #ffffff; --panel2: #f1f5f9; --panel3: #eef2f7; --border: #cbd5e1;
+    --text: #0f172a; --muted: #55647a; --accent: #0284c7; --accent2: #16a34a;
+    --danger: #dc2626; --warn: #b45309; --btn-text: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--text); }
+  header { padding: 18px 28px; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:flex-start; }
+  header h1 { margin:0; font-size:19px; }
+  header p { margin:4px 0 0; color:var(--muted); font-size:13px; }
+  #theme-toggle { background:var(--panel2); border:1px solid var(--border); color:var(--text); padding:7px 12px; border-radius:8px; cursor:pointer; font-size:13px; white-space:nowrap; }
+  nav { display:flex; gap:4px; padding: 0 24px; border-bottom:1px solid var(--border); }
+  nav button { background:none; border:none; color:var(--muted); padding:12px 16px; cursor:pointer; font-size:14px; border-bottom:2px solid transparent; }
+  nav button.active { color:var(--text); border-bottom-color:var(--accent); }
+  main { padding: 20px; max-width: 1100px; margin: 0 auto; }
+  .tab { display:none; }
+  .tab.active { display:block; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:14px; }
+  .card h3 { margin:0 0 10px; font-size:14px; color:var(--accent); }
+  .card h4 { margin:0 0 8px; font-size:13px; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+  input, select { background:var(--panel2); border:1px solid var(--border); color:var(--text); padding:6px 9px; border-radius:6px; font-size:13px; }
+  input[type=text] { min-width: 140px; }
+  input[type=number] { width: 60px; }
+  button.btn { background:var(--accent); border:none; color:var(--btn-text); padding:7px 13px; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px; }
+  button.btn.secondary { background:transparent; border:1px solid var(--border); color:var(--text); }
+  button.btn.danger { background:transparent; border:1px solid var(--danger); color:var(--danger); }
+  button.btn.small { padding:3px 8px; font-size:12px; }
+  ul.list { list-style:none; padding:0; margin:0; }
+  ul.list li { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border); font-size:13px; }
+  ul.list li:last-child { border-bottom:none; }
+  .muted { color:var(--muted); font-size:12px; }
+  .pill { background:var(--panel2); border:1px solid var(--border); border-radius:999px; padding:2px 8px; font-size:11px; margin-right:4px; display:inline-block; margin-bottom:2px; }
+  .floor-card { background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:10px; }
+  .room-card { background:var(--panel3); border:1px solid var(--border); border-radius:8px; padding:10px; margin: 8px 0; }
+  .tree { font-family: ui-monospace, monospace; font-size:12.5px; line-height:1.55; white-space: pre; overflow-x:auto; }
+  .tree .main { color:var(--accent); font-weight:700; }
+  .tree .middle { color:var(--accent2); }
+  .tree .sub { color:var(--text); }
+  .tree .res { color:var(--muted); font-style:italic; }
+  .tree .addr { color:var(--muted); }
+  .error { color:var(--danger); font-size:13px; margin-top:8px; }
+  .quick-add { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+  select.wide { min-width: 180px; }
+  hr.sep { border:none; border-top:1px solid var(--border); margin:14px 0; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>KNX Group Address Generator</h1>
+    <p>Floors → Rooms → Points. Central &amp; general functions auto-generated from your templates.</p>
+  </div>
+  <button id="theme-toggle" onclick="toggleTheme()">☀️ Light mode</button>
+</header>
+<nav>
+  <button data-tab="projects" class="active">Gruppenadressen</button>
+  <button data-tab="abgangsliste">Abgangsliste</button>
+  <button data-tab="aktoren">Aktoren</button>
+  <button data-tab="setup">Setup (Categories &amp; Templates)</button>
+</nav>
+<main>
+
+  <!-- GRUPPENADRESSEN TAB -->
+  <div class="tab active" id="tab-projects">
+    <div class="card">
+      <h3>Projects</h3>
+      <div class="row">
+        <input type="text" id="proj-name" placeholder="New project name">
+        <button class="btn" onclick="createProject()">Create Project</button>
+      </div>
+      <div class="row">
+        <input type="file" id="import-json-file" accept="application/json">
+        <button class="btn secondary" onclick="importProjectJson()">⭱ Restore from Backup (JSON)</button>
+      </div>
+      <ul class="list" id="projects-list"></ul>
+    </div>
+
+    <div id="project-detail" style="display:none;">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;">
+          <h3 id="project-detail-title" style="margin:0;">Project</h3>
+          <div class="row" style="margin:0;">
+            <button class="btn secondary small" onclick="exportProjectJson()">⭳ Backup (JSON)</button>
+            <button class="btn secondary small" onclick="closeProject()">× Close</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <input type="text" id="floor-name" placeholder="Floor name, e.g. Erdgeschoss (EG)">
+          <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="floor-outdoor"> Outdoor / unheated (e.g. Aussen, Garage)</label>
+          <button class="btn secondary" onclick="addFloor()">+ Add Floor</button>
+        </div>
+
+        <div id="floors-container"></div>
+      </div>
+
+      <div class="card">
+        <h3>Special / Extra Addresses</h3>
+        <p class="muted">Anything that doesn't fit the standard pattern — one-off scenes, custom central groups, etc.</p>
+        <div class="row">
+          <select id="special-category"></select>
+          <select id="special-location" class="wide"></select>
+          <input type="text" id="special-name" placeholder="Name, e.g. Langschläfer Kind1">
+        </div>
+        <div id="special-suffixes"></div>
+        <button class="btn secondary small" onclick="addSpecialSuffixRow()">+ Add datapoint</button>
+        <div style="margin-top:8px;"><button class="btn secondary" onclick="createSpecial()">Add Special Item</button></div>
+        <ul class="list" id="specials-list" style="margin-top:10px;"></ul>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between;">
+          <h3 style="margin:0;">Preview &amp; Export</h3>
+          <div class="row" style="margin:0;">
+            <button class="btn secondary" onclick="previewGA()">Preview</button>
+            <button class="btn" onclick="downloadCSV()">Download CSV for ETS6</button>
+          </div>
+        </div>
+        <div class="error" id="gen-error"></div>
+        <div class="tree" id="ga-preview"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABGANGSLISTE TAB -->
+  <div class="tab" id="tab-abgangsliste">
+    <div class="card">
+      <h3>Abgangsliste (Actuator wiring)</h3>
+      <p class="muted">Pick a project, add the actuators you're physically installing, then wire each circuit (light, blind, socket, heating channel) to one of their channels.</p>
+      <div class="row">
+        <select id="abgang-project-select" class="wide" onchange="onAbgangProjectChange(this.value)"></select>
+      </div>
+    </div>
+
+    <div id="abgang-detail" style="display:none;">
+      <div class="card">
+        <h4>Actuators in this project</h4>
+        <div class="row">
+          <select id="ai-actortype" class="wide"></select>
+          <select id="ai-floor"></select>
+          <input type="text" id="ai-location" placeholder="Location, e.g. EG Technik Verteilung" style="width:220px;">
+          <input type="text" id="ai-address" placeholder="Physical address, e.g. 1.1.2" style="width:140px;">
+          <button class="btn secondary" onclick="addActorInstance()">+ Add Actuator</button>
+        </div>
+        <ul class="list" id="actor-instances-list"></ul>
+      </div>
+
+      <div class="card">
+        <h4>Circuits</h4>
+        <div class="row" style="justify-content:space-between;">
+          <span class="muted" id="circuits-summary"></span>
+          <div class="row" style="margin:0;">
+            <button class="btn secondary" onclick="autoAssignCircuits()">Auto-assign all</button>
+            <button class="btn" onclick="downloadAbgangsliste()">Download Abgangsliste (CSV)</button>
+          </div>
+        </div>
+        <ul class="list" id="circuits-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- AKTOREN TAB -->
+  <div class="tab" id="tab-aktoren">
+    <div class="card">
+      <h3>Actor Types (Actuator hardware catalog)</h3>
+      <p class="muted">Global catalog shared across every project — e.g. a "Schaltaktor" from MDT with 20 channels. The "Type" must match a Point Type's channel type (Setup tab) to be assignable to it in a project's Abgangsliste.</p>
+      <div class="row">
+        <input type="text" id="actortype-manufacturer" placeholder="Hersteller, e.g. MDT">
+        <input type="text" id="actortype-model" placeholder="Modell, e.g. AKS-2016.03">
+        <input type="text" id="actortype-channeltype" placeholder="Type, e.g. Schalten">
+        <label style="display:flex; align-items:center; gap:4px;">Channels <input type="number" id="actortype-count" value="8" min="1" style="width:60px;"></label>
+        <button class="btn" onclick="createActorType()">Save Actor Type</button>
+      </div>
+      <div class="row">
+        <button class="btn secondary small" onclick="exportActorTypesJson()">⭳ Export catalog (JSON)</button>
+        <input type="file" id="import-actortypes-file" accept="application/json">
+        <button class="btn secondary small" onclick="importActorTypesJson()">⭱ Import catalog (JSON)</button>
+      </div>
+      <ul class="list" id="actor-types-list"></ul>
+    </div>
+  </div>
+
+  <!-- SETUP TAB -->
+  <div class="tab" id="tab-setup">
+    <div class="card">
+      <h3>Categories (Main Groups)</h3>
+      <p class="muted">Your standard function categories. Order = Main Group number. Usually set once and left alone.</p>
+      <ul class="list" id="categories-list"></ul>
+    </div>
+
+    <div class="card">
+      <h3>Point Types</h3>
+      <p class="muted">Reusable building blocks (a light, a blind, a socket...) with their datapoints and reserved block size. "Channel type" links a point to matching Actor Types below, so it can be wired to a physical actuator channel in a project's Abgangsliste.</p>
+      <div class="row">
+        <select id="pt-category"></select>
+        <input type="text" id="pt-name" placeholder="Name, e.g. Licht (Dimmen)">
+        <input type="number" id="pt-blocksize" value="5" title="Block size (reserved addresses)">
+      </div>
+      <div class="row">
+        <input type="text" id="pt-channeltype" placeholder="Channel type, e.g. Schalten, Dimmen, Rollo, Heizung, Tor (blank = no physical channel)">
+        <label style="display:flex; align-items:center; gap:4px;">Channels needed <input type="number" id="pt-channelsneeded" value="1" min="1" style="width:60px;"></label>
+      </div>
+      <div id="pt-suffixes"></div>
+      <button class="btn secondary small" onclick="addPtSuffixRow()">+ Add datapoint</button>
+      <div style="margin-top:8px;"><button class="btn" onclick="createPointType()">Save Point Type</button></div>
+      <hr class="sep">
+      <ul class="list" id="point-types-list"></ul>
+    </div>
+
+    <div class="card">
+      <h3>Central / General Function Templates</h3>
+      <p class="muted">
+        Auto-generated every project. "building" scope = one block for the whole project.
+        "floor" scope = one block per floor (e.g. "Zentral EG", "Zentral OG").
+        "room_multi" scope = one block PER ROOM, only for rooms that have several points in
+        this category (e.g. a room with 2+ blinds gets its own combined "Zentral" control).
+        Allgemein category templates each become their own Middle Group.
+      </p>
+      <div class="row">
+        <select id="ct-category"></select>
+        <select id="ct-scope" onchange="onCtScopeChange()">
+          <option value="building">building (once per project)</option>
+          <option value="floor">floor (once per floor)</option>
+          <option value="room_multi">room_multi (once per room, if enough points)</option>
+        </select>
+        <input type="text" id="ct-name" placeholder="Name, e.g. Zentral (blank = no prefix)">
+        <label id="ct-skip-outdoor-label" style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="ct-skip-outdoor"> Skip outdoor/unheated floors</label>
+        <label id="ct-blocksize-label" style="display:none; align-items:center; gap:4px;">Block size <input type="number" id="ct-blocksize" placeholder="e.g. 5" style="width:60px;"></label>
+        <label id="ct-trigger-label" style="display:none; align-items:center; gap:4px;">Trigger at <input type="number" id="ct-trigger" value="2" style="width:60px;"> points</label>
+      </div>
+      <div id="ct-suffixes"></div>
+      <button class="btn secondary small" onclick="addCtSuffixRow()">+ Add datapoint</button>
+      <div style="margin-top:8px;"><button class="btn" onclick="createCentralTemplate()">Save Template</button></div>
+      <hr class="sep">
+      <ul class="list" id="central-templates-list"></ul>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ---------- Theme ----------
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('theme-toggle').textContent = theme === 'light' ? '🌙 Dark mode' : '☀️ Light mode';
+  localStorage.setItem('knx-ga-theme', theme);
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(current === 'light' ? 'dark' : 'light');
+}
+applyTheme(localStorage.getItem('knx-ga-theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+
+const api = (path, opts) => fetch('/api' + path, opts).then(async r => {
+  if (!r.ok) { const t = await r.json().catch(()=>({detail:r.statusText})); throw new Error(t.detail || 'Error'); }
+  return r.headers.get('content-type')?.includes('json') ? r.json() : r;
+});
+
+let CATEGORIES = [], POINT_TYPES = [], CENTRAL_TEMPLATES = [], ACTOR_TYPES = [], PROJECTS_LIST = [];
+let CURRENT_PROJECT = null;
+
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.onclick = async () => {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'abgangsliste') {
+      await renderAbgangProjectSelect();
+    }
+  };
+});
+
+// ---------- Setup: Categories ----------
+async function loadCategories() {
+  CATEGORIES = await api('/categories');
+  const ul = document.getElementById('categories-list');
+  ul.innerHTML = CATEGORIES.map(c => `
+    <li><span><b>${c.main_label ?? ''}</b> ${c.order_idx}. ${c.name} ${c.is_allgemein ? '<span class="pill">Allgemein preset</span>' : ''}</span></li>
+  `).join('');
+  const catSelects = ['pt-category', 'ct-category', 'special-category'];
+  catSelects.forEach(id => {
+    document.getElementById(id).innerHTML = CATEGORIES.map(c => `<option value="${c.id}">${c.order_idx}. ${c.name}</option>`).join('');
+  });
+}
+
+// ---------- Setup: Point Types ----------
+function addPtSuffixRow(suffix='', dpt='') {
+  const div = document.createElement('div');
+  div.className = 'row';
+  div.innerHTML = `
+    <input type="text" placeholder="Suffix e.g. Schalten" class="pt-suf-name" value="${suffix}">
+    <input type="text" placeholder="DPT e.g. DPST-1-1" class="pt-suf-dpt" value="${dpt}">
+    <button class="btn danger small" onclick="this.parentElement.remove()">x</button>`;
+  document.getElementById('pt-suffixes').appendChild(div);
+}
+
+async function createPointType() {
+  const category_id = parseInt(document.getElementById('pt-category').value);
+  const name = document.getElementById('pt-name').value.trim();
+  const block_size = parseInt(document.getElementById('pt-blocksize').value) || 5;
+  const channel_type = document.getElementById('pt-channeltype').value.trim();
+  const channels_needed = parseInt(document.getElementById('pt-channelsneeded').value) || 1;
+  const suffixes = [...document.querySelectorAll('#pt-suffixes .row')].map(r => ({
+    suffix: r.querySelector('.pt-suf-name').value.trim(),
+    dpt: r.querySelector('.pt-suf-dpt').value.trim()
+  })).filter(s => s.suffix);
+  if (!name || suffixes.length === 0) return alert('Name and at least one datapoint required');
+  await api('/point-types', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category_id, name, suffixes, block_size, channel_type, channels_needed})});
+  document.getElementById('pt-name').value = '';
+  document.getElementById('pt-channeltype').value = '';
+  document.getElementById('pt-channelsneeded').value = '1';
+  document.getElementById('pt-suffixes').innerHTML = '';
+  await loadPointTypes();
+}
+
+async function loadPointTypes() {
+  POINT_TYPES = await api('/point-types');
+  const ul = document.getElementById('point-types-list');
+  ul.innerHTML = POINT_TYPES.map(pt => {
+    const cat = CATEGORIES.find(c => c.id === pt.category_id);
+    return `<li>
+      <div><b>${pt.name}</b> <span class="pill">${cat?.name||'?'}</span> <span class="pill">block ${pt.block_size}</span>
+        ${pt.channel_type ? `<span class="pill">channel: ${pt.channel_type} ×${pt.channels_needed}</span>` : ''}
+        ${pt.suffixes.map(s=>`<span class="pill">${s.suffix} · ${s.dpt}</span>`).join('')}
+      </div>
+      <button class="btn danger small" onclick="deletePointType(${pt.id})">Delete</button>
+    </li>`;
+  }).join('') || '<li class="muted">No point types yet</li>';
+}
+
+async function deletePointType(id) {
+  if (!confirm('Delete this point type?')) return;
+  await api('/point-types/' + id, {method:'DELETE'});
+  await loadPointTypes();
+}
+
+// ---------- Aktoren: Actor Types ----------
+async function createActorType() {
+  const manufacturer = document.getElementById('actortype-manufacturer').value.trim();
+  const model = document.getElementById('actortype-model').value.trim();
+  const channel_type = document.getElementById('actortype-channeltype').value.trim();
+  const channel_count = parseInt(document.getElementById('actortype-count').value) || 1;
+  if (!model || !channel_type) return alert('Modell and Type are required');
+  await api('/actor-types', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({manufacturer, model, channel_type, channel_count})});
+  document.getElementById('actortype-manufacturer').value = '';
+  document.getElementById('actortype-model').value = '';
+  document.getElementById('actortype-channeltype').value = '';
+  await loadActorTypes();
+}
+
+async function loadActorTypes() {
+  ACTOR_TYPES = await api('/actor-types');
+  const ul = document.getElementById('actor-types-list');
+  ul.innerHTML = ACTOR_TYPES.map(at => `
+    <li>
+      <div><b>${[at.manufacturer, at.model].filter(Boolean).join(' ')}</b> <span class="pill">${at.channel_type}</span> <span class="pill">${at.channel_count} channels</span></div>
+      <button class="btn danger small" onclick="deleteActorType(${at.id})">Delete</button>
+    </li>`).join('') || '<li class="muted">No actor types yet</li>';
+}
+
+async function deleteActorType(id) {
+  if (!confirm('Delete this actor type?')) return;
+  await api('/actor-types/' + id, {method:'DELETE'});
+  await loadActorTypes();
+}
+
+function exportActorTypesJson() {
+  window.location.href = `/api/actor-types/export-json`;
+}
+
+async function importActorTypesJson() {
+  const fileInput = document.getElementById('import-actortypes-file');
+  const file = fileInput.files[0];
+  if (!file) return alert('Choose a catalog .json file first');
+  const text = await file.text();
+  let payload;
+  try {
+    payload = JSON.parse(text);
+  } catch (e) {
+    return alert('That file is not valid JSON');
+  }
+  const result = await api('/actor-types/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+  fileInput.value = '';
+  await loadActorTypes();
+  alert(`Imported: ${result.imported} new, ${result.updated} updated.`);
+}
+
+// ---------- Setup: Central Templates ----------
+function addCtSuffixRow(suffix='', dpt='') {
+  const div = document.createElement('div');
+  div.className = 'row';
+  div.innerHTML = `
+    <input type="text" placeholder="Suffix e.g. Ein/Aus" class="ct-suf-name" value="${suffix}">
+    <input type="text" placeholder="DPT e.g. DPST-1-1" class="ct-suf-dpt" value="${dpt}">
+    <button class="btn danger small" onclick="this.parentElement.remove()">x</button>`;
+  document.getElementById('ct-suffixes').appendChild(div);
+}
+
+function onCtScopeChange() {
+  const scope = document.getElementById('ct-scope').value;
+  document.getElementById('ct-skip-outdoor-label').style.display = scope === 'floor' ? 'flex' : 'none';
+  document.getElementById('ct-blocksize-label').style.display = scope === 'room_multi' ? 'flex' : 'none';
+  document.getElementById('ct-trigger-label').style.display = scope === 'room_multi' ? 'flex' : 'none';
+}
+
+async function createCentralTemplate() {
+  const category_id = parseInt(document.getElementById('ct-category').value);
+  const scope = document.getElementById('ct-scope').value;
+  const name = document.getElementById('ct-name').value.trim();
+  const skip_outdoor_floors = document.getElementById('ct-skip-outdoor').checked;
+  const blockSizeVal = document.getElementById('ct-blocksize').value.trim();
+  const triggerVal = document.getElementById('ct-trigger').value.trim();
+  const block_size = scope === 'room_multi' && blockSizeVal ? parseInt(blockSizeVal) : null;
+  const trigger_count = scope === 'room_multi' && triggerVal ? parseInt(triggerVal) : null;
+  const suffixes = [...document.querySelectorAll('#ct-suffixes .row')].map(r => ({
+    suffix: r.querySelector('.ct-suf-name').value.trim(),
+    dpt: r.querySelector('.ct-suf-dpt').value.trim()
+  })).filter(s => s.suffix);
+  if (suffixes.length === 0) return alert('At least one datapoint required');
+  await api('/central-templates', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category_id, name, scope, suffixes, skip_outdoor_floors, block_size, trigger_count})});
+  document.getElementById('ct-name').value = '';
+  document.getElementById('ct-skip-outdoor').checked = false;
+  document.getElementById('ct-blocksize').value = '';
+  document.getElementById('ct-trigger').value = '2';
+  document.getElementById('ct-suffixes').innerHTML = '';
+  await loadCentralTemplates();
+}
+
+async function loadCentralTemplates() {
+  CENTRAL_TEMPLATES = await api('/central-templates');
+  const ul = document.getElementById('central-templates-list');
+  ul.innerHTML = CENTRAL_TEMPLATES.map(ct => {
+    const cat = CATEGORIES.find(c => c.id === ct.category_id);
+    const extra = [];
+    if (ct.skip_outdoor_floors) extra.push('<span class="pill">skips outdoor</span>');
+    if (ct.scope === 'room_multi') {
+      extra.push(`<span class="pill">trigger ≥${ct.trigger_count || 2}</span>`);
+      if (ct.block_size) extra.push(`<span class="pill">block ${ct.block_size}</span>`);
+    }
+    return `<li>
+      <div><b>${ct.name || '(no prefix)'}</b> <span class="pill">${cat?.name||'?'}</span> <span class="pill">${ct.scope}</span> ${extra.join(' ')}
+        ${ct.suffixes.map(s=>`<span class="pill">${s.suffix || '(none)'} · ${s.dpt}</span>`).join('')}
+      </div>
+      <button class="btn danger small" onclick="deleteCentralTemplate(${ct.id})">Delete</button>
+    </li>`;
+  }).join('') || '<li class="muted">No templates yet</li>';
+}
+
+async function deleteCentralTemplate(id) {
+  if (!confirm('Delete this template?')) return;
+  await api('/central-templates/' + id, {method:'DELETE'});
+  await loadCentralTemplates();
+}
+
+// ---------- Projects ----------
+async function createProject() {
+  const name = document.getElementById('proj-name').value.trim();
+  if (!name) return;
+  await api('/projects', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})});
+  document.getElementById('proj-name').value = '';
+  await loadProjects();
+}
+
+async function loadProjects() {
+  PROJECTS_LIST = await api('/projects');
+  const ul = document.getElementById('projects-list');
+  ul.innerHTML = PROJECTS_LIST.map(p => `
+    <li>
+      <div><b>${p.name}</b></div>
+      <div>
+        <button class="btn secondary small" onclick="openProject(${p.id}, '${p.name.replace(/'/g,"\\'")}')">Open</button>
+        <button class="btn danger small" onclick="deleteProject(${p.id})">Delete</button>
+      </div>
+    </li>`).join('') || '<li class="muted">No projects yet</li>';
+  if (document.getElementById('abgang-project-select')) await renderAbgangProjectSelect();
+}
+
+async function deleteProject(id) {
+  if (!confirm('Delete this project and everything in it?')) return;
+  await api('/projects/' + id, {method:'DELETE'});
+  if (CURRENT_PROJECT === id) {
+    document.getElementById('project-detail').style.display = 'none';
+    CURRENT_PROJECT = null;
+  }
+  await loadProjects();
+}
+
+async function openProject(id, name) {
+  CURRENT_PROJECT = id;
+  document.getElementById('project-detail').style.display = 'block';
+  document.getElementById('project-detail-title').textContent = name;
+  document.getElementById('ga-preview').innerHTML = '';
+  document.getElementById('gen-error').textContent = '';
+  await renderFloors();
+  await renderSpecialLocationOptions();
+  await renderSpecials();
+}
+
+function closeProject() {
+  document.getElementById('project-detail').style.display = 'none';
+}
+
+async function addFloor() {
+  const name = document.getElementById('floor-name').value.trim();
+  const is_outdoor = document.getElementById('floor-outdoor').checked;
+  if (!name) return;
+  await api(`/projects/${CURRENT_PROJECT}/floors`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, is_outdoor})});
+  document.getElementById('floor-name').value = '';
+  document.getElementById('floor-outdoor').checked = false;
+  await renderFloors();
+  await renderSpecialLocationOptions();
+  await renderActorInstanceForm();
+  await renderCircuits();
+}
+
+async function deleteFloor(id) {
+  await api('/floors/' + id, {method:'DELETE'});
+  await renderFloors();
+  await renderSpecialLocationOptions();
+  await renderActorInstanceForm();
+  await renderCircuits();
+}
+
+async function renderFloors() {
+  const tree = await api(`/projects/${CURRENT_PROJECT}/tree`);
+  const container = document.getElementById('floors-container');
+  container.innerHTML = tree.floors.map(floor => `
+    <div class="floor-card">
+      <div class="row" style="justify-content:space-between;">
+        <b>${floor.name}</b> ${floor.is_outdoor ? '<span class="pill">outdoor/unheated</span>' : ''}
+        <div>
+          <input type="text" placeholder="Room name" id="room-name-${floor.id}" style="width:140px;">
+          <button class="btn secondary small" onclick="addRoom(${floor.id})">+ Add Room</button>
+          <button class="btn danger small" onclick="deleteFloor(${floor.id})">Delete Floor</button>
+        </div>
+      </div>
+      ${floor.rooms.map(room => renderRoom(room)).join('') || '<p class="muted">No rooms yet</p>'}
+    </div>
+  `).join('') || '<p class="muted">No floors yet — add one above.</p>';
+}
+
+function renderRoom(room) {
+  const pointsByType = {};
+  room.points.forEach(p => {
+    pointsByType[p.point_type_id] = pointsByType[p.point_type_id] || [];
+    pointsByType[p.point_type_id].push(p);
+  });
+  const pointsHtml = Object.entries(pointsByType).map(([ptId, pts]) => {
+    const pt = POINT_TYPES.find(p => p.id === parseInt(ptId));
+    const labels = pts.map(p => `<span class="pill">${p.label || '(no label)'}${p.has_bwm ? ' +BWM' : ''} <a href="#" onclick="deleteRoomPoint(event, ${p.id})" style="color:var(--danger); text-decoration:none;">×</a></span>`).join('');
+    return `<div style="margin:4px 0;"><b>${pt?.name || '?'}</b>: ${labels}</div>`;
+  }).join('') || '<p class="muted" style="margin:4px 0;">No points yet</p>';
+
+  return `
+    <div class="room-card">
+      <div class="row" style="justify-content:space-between;">
+        <b>${room.name}</b>
+        <button class="btn danger small" onclick="deleteRoom(${room.id})">Delete Room</button>
+      </div>
+      ${pointsHtml}
+      <div class="quick-add">
+        <select id="ptype-${room.id}" class="wide">
+          ${POINT_TYPES.map(pt => `<option value="${pt.id}">${CATEGORIES.find(c=>c.id===pt.category_id)?.name} — ${pt.name}</option>`).join('')}
+        </select>
+        <input type="text" id="label-${room.id}" placeholder="Label e.g. Decke, Spots, Nord (blank = none)" style="width:210px;">
+        <input type="number" id="qty-${room.id}" value="1" min="1" title="Quantity">
+        <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="bwm-${room.id}"> +BWM</label>
+        <button class="btn secondary small" onclick="addPoint(${room.id})">+ Add</button>
+      </div>
+    </div>
+  `;
+}
+
+async function addRoom(floorId) {
+  const name = document.getElementById(`room-name-${floorId}`).value.trim();
+  if (!name) return;
+  await api(`/floors/${floorId}/rooms`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})});
+  await renderFloors();
+  await renderCircuits();
+}
+
+async function deleteRoom(id) {
+  await api('/rooms/' + id, {method:'DELETE'});
+  await renderFloors();
+  await renderCircuits();
+}
+
+async function addPoint(roomId) {
+  const point_type_id = parseInt(document.getElementById(`ptype-${roomId}`).value);
+  const label = document.getElementById(`label-${roomId}`).value.trim();
+  const quantity = parseInt(document.getElementById(`qty-${roomId}`).value) || 1;
+  const has_bwm = document.getElementById(`bwm-${roomId}`).checked;
+  await api(`/rooms/${roomId}/points`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({point_type_id, label, quantity, has_bwm})});
+  await renderFloors();
+  await renderCircuits();
+}
+
+async function deleteRoomPoint(ev, id) {
+  ev.preventDefault();
+  await api('/room-points/' + id, {method:'DELETE'});
+  await renderFloors();
+  await renderCircuits();
+}
+
+// ---------- Specials ----------
+function addSpecialSuffixRow(suffix='', dpt='') {
+  const div = document.createElement('div');
+  div.className = 'row';
+  div.innerHTML = `
+    <input type="text" placeholder="Suffix e.g. Auf/Ab" class="sp-suf-name" value="${suffix}">
+    <input type="text" placeholder="DPT e.g. DPST-1-8" class="sp-suf-dpt" value="${dpt}">
+    <button class="btn danger small" onclick="this.parentElement.remove()">x</button>`;
+  document.getElementById('special-suffixes').appendChild(div);
+}
+
+async function renderSpecialLocationOptions() {
+  const tree = await api(`/projects/${CURRENT_PROJECT}/tree`);
+  const sel = document.getElementById('special-location');
+  sel.innerHTML = `<option value="central">Zentralfunktionen (category-wide)</option>` +
+    tree.floors.map(f => `<option value="${f.id}">Floor: ${f.name}</option>`).join('');
+}
+
+async function createSpecial() {
+  const category_id = parseInt(document.getElementById('special-category').value);
+  const location = document.getElementById('special-location').value;
+  const name = document.getElementById('special-name').value.trim();
+  const suffixes = [...document.querySelectorAll('#special-suffixes .row')].map(r => ({
+    suffix: r.querySelector('.sp-suf-name').value.trim(),
+    dpt: r.querySelector('.sp-suf-dpt').value.trim()
+  })).filter(s => s.suffix);
+  if (!name || suffixes.length === 0) return alert('Name and at least one datapoint required');
+  await api(`/projects/${CURRENT_PROJECT}/specials`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category_id, location, name, suffixes})});
+  document.getElementById('special-name').value = '';
+  document.getElementById('special-suffixes').innerHTML = '';
+  await renderSpecials();
+}
+
+async function renderSpecials() {
+  const specials = await api(`/projects/${CURRENT_PROJECT}/specials`);
+  const ul = document.getElementById('specials-list');
+  ul.innerHTML = specials.map(s => {
+    const cat = CATEGORIES.find(c => c.id === s.category_id);
+    return `<li>
+      <div><b>${s.name}</b> <span class="pill">${cat?.name||'?'}</span> <span class="pill">${s.location === 'central' ? 'Zentral' : 'Floor'}</span>
+        ${s.suffixes.map(x=>`<span class="pill">${x.suffix} · ${x.dpt}</span>`).join('')}
+      </div>
+      <button class="btn danger small" onclick="deleteSpecial(${s.id})">Delete</button>
+    </li>`;
+  }).join('') || '<li class="muted">None yet</li>';
+}
+
+async function deleteSpecial(id) {
+  await api('/specials/' + id, {method:'DELETE'});
+  await renderSpecials();
+}
+
+// ---------- Abgangsliste: Project selector ----------
+async function renderAbgangProjectSelect() {
+  if (!PROJECTS_LIST.length) PROJECTS_LIST = await api('/projects');
+  const sel = document.getElementById('abgang-project-select');
+  sel.innerHTML = '<option value="">— select a project —</option>' +
+    PROJECTS_LIST.map(p => `<option value="${p.id}" ${CURRENT_PROJECT === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
+  if (CURRENT_PROJECT && PROJECTS_LIST.some(p => p.id === CURRENT_PROJECT)) {
+    await loadAbgangForCurrentProject();
+  } else {
+    document.getElementById('abgang-detail').style.display = 'none';
+  }
+}
+
+async function onAbgangProjectChange(value) {
+  CURRENT_PROJECT = value ? parseInt(value) : null;
+  if (CURRENT_PROJECT) {
+    await loadAbgangForCurrentProject();
+  } else {
+    document.getElementById('abgang-detail').style.display = 'none';
+  }
+}
+
+async function loadAbgangForCurrentProject() {
+  document.getElementById('abgang-detail').style.display = 'block';
+  await renderActorInstanceForm();
+  await renderActorInstances();
+  await renderCircuits();
+}
+
+// ---------- Abgangsliste: Actor Instances ----------
+async function renderActorInstanceForm() {
+  const tree = await api(`/projects/${CURRENT_PROJECT}/tree`);
+  document.getElementById('ai-actortype').innerHTML = ACTOR_TYPES.map(at =>
+    `<option value="${at.id}">${[at.manufacturer, at.model].filter(Boolean).join(' ')} (${at.channel_type}, ${at.channel_count} ch)</option>`).join('') ||
+    '<option value="">No Actor Types defined yet - add one in the Aktoren tab</option>';
+  document.getElementById('ai-floor').innerHTML = '<option value="">(no floor)</option>' +
+    tree.floors.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+}
+
+async function addActorInstance() {
+  const actor_type_id = parseInt(document.getElementById('ai-actortype').value);
+  if (!actor_type_id) return alert('Add an Actor Type in Setup first');
+  const floorVal = document.getElementById('ai-floor').value;
+  const floor_id = floorVal ? parseInt(floorVal) : null;
+  const location_label = document.getElementById('ai-location').value.trim();
+  const physical_address = document.getElementById('ai-address').value.trim();
+  await api(`/projects/${CURRENT_PROJECT}/actor-instances`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({actor_type_id, floor_id, location_label, physical_address})});
+  document.getElementById('ai-location').value = '';
+  document.getElementById('ai-address').value = '';
+  await renderActorInstances();
+  await renderCircuits();
+}
+
+async function renderActorInstances() {
+  const instances = await api(`/projects/${CURRENT_PROJECT}/actor-instances`);
+  const ul = document.getElementById('actor-instances-list');
+  ul.innerHTML = instances.map(ai => `
+    <li>
+      <div><b>${ai.actor_type_name}</b> <span class="pill">${ai.channel_type}</span>
+        ${ai.floor_name ? `<span class="pill">${ai.floor_name}</span>` : ''}
+        ${ai.location_label ? `<span class="pill">${ai.location_label}</span>` : ''}
+        ${ai.physical_address ? `<span class="pill">${ai.physical_address}</span>` : ''}
+        <span class="pill">${ai.channels_used}/${ai.channel_count} used</span>
+      </div>
+      <button class="btn danger small" onclick="deleteActorInstance(${ai.id})">Delete</button>
+    </li>`).join('') || '<li class="muted">No actuators added yet</li>';
+}
+
+async function deleteActorInstance(id) {
+  if (!confirm('Delete this actuator? Any circuits wired to it will become unassigned.')) return;
+  await api('/actor-instances/' + id, {method:'DELETE'});
+  await renderActorInstances();
+  await renderCircuits();
+}
+
+// ---------- Abgangsliste: Circuits ----------
+async function renderCircuits() {
+  const [circuits, instances] = await Promise.all([
+    api(`/projects/${CURRENT_PROJECT}/circuits`),
+    api(`/projects/${CURRENT_PROJECT}/actor-instances`),
+  ]);
+  const assignedCount = circuits.filter(c => c.assignment).length;
+  document.getElementById('circuits-summary').textContent =
+    `${assignedCount} / ${circuits.length} circuits assigned`;
+
+  const ul = document.getElementById('circuits-list');
+  ul.innerHTML = circuits.map(c => {
+    const matching = instances.filter(ai => ai.channel_type === c.channel_type);
+    const options = ['<option value="">— unassigned —</option>'];
+    matching.forEach(ai => {
+      const usedLetters = new Set(); // filled below via data attr trick isn't needed; server rejects duplicates anyway
+      for (let i = 1; i <= ai.channel_count; i++) {
+        const letter = toChannelLetter(i);
+        const isCurrent = c.assignment && c.assignment.actor_instance_id === ai.id && c.assignment.channel_letter === letter;
+        options.push(`<option value="${ai.id}|${letter}" ${isCurrent ? 'selected' : ''}>${ai.actor_type_name} (${ai.physical_address || ai.location_label || ai.id}) — ${letter}</option>`);
+      }
+    });
+    const selectedValue = c.assignment ? `${c.assignment.actor_instance_id}|${c.assignment.channel_letter}` : '';
+    return `<li>
+      <div>${c.floor_name} / <b>${c.function_name}</b> <span class="pill">${c.channel_type}</span> <span class="pill">${c.point_type_name}</span></div>
+      <select onchange="onCircuitAssignChange(${c.room_point_id}, ${c.channel_seq}, this.value)" ${matching.length === 0 ? 'disabled title="No matching actuator added yet"' : ''}>
+        ${options.join('')}
+      </select>
+    </li>`;
+  }).join('') || '<li class="muted">No circuits yet — add rooms and points above</li>';
+
+  // Ensure each select reflects current assignment (re-set value since duplicate option values across selects is fine per-select)
+  [...ul.querySelectorAll('select')].forEach((sel, i) => {
+    const c = circuits[i];
+    if (c && c.assignment) sel.value = `${c.assignment.actor_instance_id}|${c.assignment.channel_letter}`;
+    else sel.value = '';
+  });
+}
+
+function toChannelLetter(i) {
+  let label = '';
+  let x = i;
+  while (x > 0) {
+    const rem = (x - 1) % 26;
+    label = String.fromCharCode(65 + rem) + label;
+    x = Math.floor((x - 1) / 26);
+  }
+  return label;
+}
+
+async function onCircuitAssignChange(room_point_id, channel_seq, value) {
+  if (!value) {
+    await api(`/projects/${CURRENT_PROJECT}/circuits/${room_point_id}/${channel_seq}`, {method:'DELETE'});
+  } else {
+    const [actor_instance_id, channel_letter] = value.split('|');
+    try {
+      await api(`/projects/${CURRENT_PROJECT}/circuits/assign`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({room_point_id, channel_seq, actor_instance_id: parseInt(actor_instance_id), channel_letter})});
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+  await renderCircuits();
+  await renderActorInstances();
+}
+
+async function autoAssignCircuits() {
+  const result = await api(`/projects/${CURRENT_PROJECT}/circuits/auto-assign`, {method:'POST'});
+  await renderCircuits();
+  await renderActorInstances();
+  if (result.unassigned.length) {
+    alert(`Assigned ${result.assigned} circuit(s).\n\nCould not assign (no free matching actuator channel):\n- ${result.unassigned.join('\n- ')}`);
+  } else if (result.assigned) {
+    alert(`Assigned ${result.assigned} circuit(s).`);
+  } else {
+    alert('Nothing to assign — everything is already wired up.');
+  }
+}
+
+function downloadAbgangsliste() {
+  window.location.href = `/api/projects/${CURRENT_PROJECT}/export-abgangsliste.csv`;
+}
+
+// ---------- Preview / Export ----------
+async function previewGA() {
+  document.getElementById('gen-error').textContent = '';
+  try {
+    const data = await api(`/projects/${CURRENT_PROJECT}/preview`);
+    const el = document.getElementById('ga-preview');
+    el.innerHTML = data.main_groups.map(m => `
+<span class="main">${m.main} ${m.name}</span>
+${m.middles.map(mid => `  <span class="middle">${m.main}/${mid.middle} ${mid.name}</span>
+${mid.subs.map(s => `    <span class="${s.name.endsWith('res') ? 'res' : 'sub'}">${m.main}/${mid.middle}/${s.sub} ${s.name}${s.dpt ? ' <span class=\"addr\">('+s.dpt+')</span>' : ''}</span>`).join('\n')}`).join('\n')}
+    `).join('\n');
+  } catch (e) {
+    document.getElementById('gen-error').textContent = e.message;
+  }
+}
+
+function downloadCSV() {
+  window.location.href = `/api/projects/${CURRENT_PROJECT}/export.csv`;
+}
+
+function exportProjectJson() {
+  window.location.href = `/api/projects/${CURRENT_PROJECT}/export-json`;
+}
+
+async function importProjectJson() {
+  const fileInput = document.getElementById('import-json-file');
+  const file = fileInput.files[0];
+  if (!file) return alert('Choose a backup .json file first');
+  const text = await file.text();
+  let payload;
+  try {
+    payload = JSON.parse(text);
+  } catch (e) {
+    return alert('That file is not valid JSON');
+  }
+  const result = await api('/projects/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+  fileInput.value = '';
+  await loadProjects();
+  if (result.skipped && result.skipped.length) {
+    alert(`Imported as "${result.name}".\n\nSome items were skipped because their Point Type/Category wasn't found on this install:\n- ${result.skipped.join('\n- ')}`);
+  } else {
+    alert(`Imported as "${result.name}".`);
+  }
+}
+
+// ---------- Init ----------
+(async function init() {
+  await loadCategories();
+  await loadPointTypes();
+  await loadCentralTemplates();
+  await loadActorTypes();
+  await loadProjects();
+})();
+</script>
+</body>
+</html>
