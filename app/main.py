@@ -244,6 +244,7 @@ def init_db():
             db.execute("PRAGMA foreign_keys = OFF")
             db.executescript(
                 """
+                DROP TABLE IF EXISTS actor_types_new;
                 CREATE TABLE actor_types_new (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     manufacturer TEXT NOT NULL DEFAULT '',
