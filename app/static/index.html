@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>KNX GA Generator</title>
+<title>KNX Projekttool</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root {
@@ -64,7 +64,7 @@
 <body>
 <header>
   <div>
-    <h1>KNX Gruppenadressen-Generator</h1>
+    <h1>KNX Projekttool</h1>
     <p>Geschosse → Räume → Punkte. Zentral- &amp; Allgemeinfunktionen werden automatisch aus Ihren Vorlagen erzeugt.</p>
   </div>
   <div class="row" style="margin:0; align-items:center;">
@@ -76,7 +76,8 @@
 <nav>
   <button data-tab="projects" class="active">Gruppenadressen</button>
   <button data-tab="abgangsliste">Abgangsliste</button>
-  <button data-tab="aktoren">Aktoren</button>
+  <button data-tab="geraeteplanung">Geräteplanung</button>
+  <button data-tab="aktoren">Geräte</button>
   <button data-tab="setup">Setup (Kategorien &amp; Vorlagen)</button>
 </nav>
 <main>
@@ -187,24 +188,57 @@
     </div>
   </div>
 
-  <!-- AKTOREN TAB -->
+  <!-- AKTOREN/GERÄTE TAB -->
   <div class="tab" id="tab-aktoren">
     <div class="card">
-      <h3>Aktortypen (Geräte-Katalog)</h3>
-      <p class="muted">Globaler Katalog, gemeinsam für alle Projekte genutzt — z.B. ein Schaltaktor von MDT mit 20 Kanälen. Der "Type" muss dem Kanaltyp eines Punkttyps (Setup-Tab) entsprechen, damit er in der Abgangsliste eines Projekts zuordenbar ist.</p>
+      <h3>Geräte-Katalog</h3>
+      <p class="muted">Globaler Katalog, gemeinsam für alle Projekte genutzt — Aktoren, Sensoren, Wetterstationen, Bedienelemente usw. Kanaltyp/Kanäle sind nur für die Gruppe "Aktor" nötig und müssen dann dem Kanaltyp eines Punkttyps (Setup-Tab) entsprechen, damit der Aktor in der Abgangsliste eines Projekts zuordenbar ist.</p>
       <div class="row">
         <input type="text" id="actortype-manufacturer" placeholder="Hersteller, z.B. MDT">
         <input type="text" id="actortype-model" placeholder="Modell, z.B. AKS-2016.03">
-        <input type="text" id="actortype-channeltype" placeholder="Type, z.B. Schalten">
-        <label style="display:flex; align-items:center; gap:4px;">Kanäle <input type="number" id="actortype-count" value="8" min="1" style="width:60px;"></label>
-        <button class="btn" onclick="createActorType()">Aktortyp speichern</button>
+        <input type="text" id="actortype-group" list="group-suggestions" placeholder="Gruppe, z.B. Aktor" value="Aktor" onchange="onDeviceGroupChange()" oninput="onDeviceGroupChange()">
+        <datalist id="group-suggestions">
+          <option value="Aktor">
+          <option value="Sensor">
+          <option value="Wetterstation">
+          <option value="Bedienelement">
+          <option value="Sonstiges">
+        </datalist>
+        <label id="actortype-channeltype-label" style="display:flex; align-items:center; gap:4px;">Type <input type="text" id="actortype-channeltype" placeholder="z.B. Schalten" style="width:110px;"></label>
+        <label id="actortype-count-label" style="display:flex; align-items:center; gap:4px;">Kanäle <input type="number" id="actortype-count" value="8" min="1" style="width:60px;"></label>
+      </div>
+      <div class="row">
+        <input type="text" id="actortype-description" placeholder="Beschreibung (optional)" style="min-width:300px; flex:1;">
+        <button class="btn" onclick="createActorType()">Gerät speichern</button>
       </div>
       <div class="row">
         <button class="btn secondary small" onclick="exportActorTypesJson()">⭳ Katalog exportieren (JSON)</button>
         <input type="file" id="import-actortypes-file" accept="application/json">
         <button class="btn secondary small" onclick="importActorTypesJson()">⭱ Katalog importieren (JSON)</button>
       </div>
-      <ul class="list" id="actor-types-list"></ul>
+      <div id="actor-types-groups"></div>
+    </div>
+  </div>
+
+  <!-- GERÄTEPLANUNG TAB -->
+  <div class="tab" id="tab-geraeteplanung">
+    <div class="card">
+      <h3>Geräteplanung</h3>
+      <p class="muted">Projekt wählen, dann je Raum festlegen, welche Sensoren, Bedienelemente, Aktoren usw. dort verbaut werden. Unten erscheint eine Gesamtübersicht (Stückliste) über alle benötigten Geräte im Projekt.</p>
+      <div class="row">
+        <select id="geraeteplanung-project-select" class="wide" onchange="onGeraeteplanungProjectChange(this.value)"></select>
+      </div>
+    </div>
+
+    <div id="geraeteplanung-detail" style="display:none;">
+      <div class="card">
+        <h4>Stückliste (gesamtes Projekt)</h4>
+        <ul class="list" id="device-summary-list"></ul>
+      </div>
+      <div class="card">
+        <h4>Geräte je Raum</h4>
+        <div id="geraeteplanung-rooms"></div>
+      </div>
     </div>
   </div>
 
@@ -296,6 +330,9 @@ document.querySelectorAll('nav button').forEach(btn => {
     if (btn.dataset.tab === 'abgangsliste') {
       await renderAbgangProjectSelect();
     }
+    if (btn.dataset.tab === 'geraeteplanung') {
+      await renderGeraeteplanungProjectSelect();
+    }
   };
 });
 
@@ -364,31 +401,60 @@ async function deletePointType(id) {
 }
 
 // ---------- Aktoren: Actor Types ----------
+function onDeviceGroupChange() {
+  const group = document.getElementById('actortype-group').value.trim();
+  const isAktor = group === 'Aktor';
+  document.getElementById('actortype-channeltype-label').style.display = isAktor ? 'flex' : 'none';
+  document.getElementById('actortype-count-label').style.display = isAktor ? 'flex' : 'none';
+}
+
 async function createActorType() {
   const manufacturer = document.getElementById('actortype-manufacturer').value.trim();
   const model = document.getElementById('actortype-model').value.trim();
-  const channel_type = document.getElementById('actortype-channeltype').value.trim();
-  const channel_count = parseInt(document.getElementById('actortype-count').value) || 1;
-  if (!model || !channel_type) return alert('Modell und Type sind erforderlich');
-  await api('/actor-types', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({manufacturer, model, channel_type, channel_count})});
+  const group_name = document.getElementById('actortype-group').value.trim() || 'Aktor';
+  const description = document.getElementById('actortype-description').value.trim();
+  const isAktor = group_name === 'Aktor';
+  const channel_type = isAktor ? document.getElementById('actortype-channeltype').value.trim() : '';
+  const channel_count = isAktor ? (parseInt(document.getElementById('actortype-count').value) || 1) : null;
+  if (!model) return alert('Modell ist erforderlich');
+  if (isAktor && !channel_type) return alert('Type ist für die Gruppe "Aktor" erforderlich');
+  await api('/actor-types', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({manufacturer, model, group_name, description, channel_type, channel_count})});
   document.getElementById('actortype-manufacturer').value = '';
   document.getElementById('actortype-model').value = '';
   document.getElementById('actortype-channeltype').value = '';
+  document.getElementById('actortype-description').value = '';
   await loadActorTypes();
 }
 
 async function loadActorTypes() {
   ACTOR_TYPES = await api('/actor-types');
-  const ul = document.getElementById('actor-types-list');
-  ul.innerHTML = ACTOR_TYPES.map(at => `
-    <li>
-      <div><b>${[at.manufacturer, at.model].filter(Boolean).join(' ')}</b> <span class="pill">${at.channel_type}</span> <span class="pill">${at.channel_count} Kanäle</span></div>
-      <button class="btn danger small" onclick="deleteActorType(${at.id})">Löschen</button>
-    </li>`).join('') || '<li class="muted">Noch keine Aktortypen</li>';
+  const container = document.getElementById('actor-types-groups');
+  const groups = {};
+  ACTOR_TYPES.forEach(at => {
+    const g = at.group_name || 'Sonstiges';
+    groups[g] = groups[g] || [];
+    groups[g].push(at);
+  });
+  const groupNames = Object.keys(groups).sort();
+  container.innerHTML = groupNames.map(g => `
+    <h4 style="margin:14px 0 6px;">${g}</h4>
+    <ul class="list">
+      ${groups[g].map(at => `
+        <li>
+          <div>
+            <b>${[at.manufacturer, at.model].filter(Boolean).join(' ')}</b>
+            ${at.channel_type ? `<span class="pill">${at.channel_type}</span>` : ''}
+            ${at.channel_count ? `<span class="pill">${at.channel_count} Kanäle</span>` : ''}
+            ${at.description ? `<div class="muted" style="margin-top:2px;">${at.description}</div>` : ''}
+          </div>
+          <button class="btn danger small" onclick="deleteActorType(${at.id})">Löschen</button>
+        </li>`).join('')}
+    </ul>
+  `).join('') || '<p class="muted">Noch keine Geräte</p>';
 }
 
 async function deleteActorType(id) {
-  if (!confirm('Diesen Aktortyp löschen?')) return;
+  if (!confirm('Dieses Gerät löschen?')) return;
   await api('/actor-types/' + id, {method:'DELETE'});
   await loadActorTypes();
 }
@@ -502,6 +568,7 @@ async function loadProjects() {
       </div>
     </li>`).join('') || '<li class="muted">Noch keine Projekte</li>';
   if (document.getElementById('abgang-project-select')) await renderAbgangProjectSelect();
+  if (document.getElementById('geraeteplanung-project-select')) await renderGeraeteplanungProjectSelect();
 }
 
 async function deleteProject(id) {
@@ -736,9 +803,10 @@ async function renderChannelSummary() {
 // ---------- Abgangsliste: Actor Instances ----------
 async function renderActorInstanceForm() {
   const tree = await api(`/projects/${CURRENT_PROJECT}/tree`);
-  document.getElementById('ai-actortype').innerHTML = ACTOR_TYPES.map(at =>
+  const actorsOnly = ACTOR_TYPES.filter(at => at.group_name === 'Aktor');
+  document.getElementById('ai-actortype').innerHTML = actorsOnly.map(at =>
     `<option value="${at.id}">${[at.manufacturer, at.model].filter(Boolean).join(' ')} (${at.channel_type}, ${at.channel_count} Kanäle)</option>`).join('') ||
-    '<option value="">Noch keine Aktortypen definiert - im Aktoren-Tab anlegen</option>';
+    '<option value="">Noch keine Aktoren definiert - im Geräte-Tab anlegen (Gruppe: Aktor)</option>';
   document.getElementById('ai-floor').innerHTML = '<option value="">(kein Geschoss)</option>' +
     tree.floors.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
 }
@@ -992,6 +1060,92 @@ async function waitForRestartThenReload() {
     } catch (e) { /* server still restarting - keep polling */ }
   }
   document.getElementById('update-status').textContent = 'Startet noch... bitte in Kürze manuell neu laden.';
+}
+
+// ---------- Geräteplanung ----------
+async function renderGeraeteplanungProjectSelect() {
+  if (!PROJECTS_LIST.length) PROJECTS_LIST = await api('/projects');
+  const sel = document.getElementById('geraeteplanung-project-select');
+  sel.innerHTML = '<option value="">— Projekt wählen —</option>' +
+    PROJECTS_LIST.map(p => `<option value="${p.id}" ${CURRENT_PROJECT === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
+  if (CURRENT_PROJECT && PROJECTS_LIST.some(p => p.id === CURRENT_PROJECT)) {
+    await loadGeraeteplanungForCurrentProject();
+  } else {
+    document.getElementById('geraeteplanung-detail').style.display = 'none';
+  }
+}
+
+async function onGeraeteplanungProjectChange(value) {
+  CURRENT_PROJECT = value ? parseInt(value) : null;
+  if (CURRENT_PROJECT) {
+    await loadGeraeteplanungForCurrentProject();
+  } else {
+    document.getElementById('geraeteplanung-detail').style.display = 'none';
+  }
+}
+
+async function loadGeraeteplanungForCurrentProject() {
+  document.getElementById('geraeteplanung-detail').style.display = 'block';
+  await renderDeviceSummary();
+  await renderGeraeteplanungRooms();
+}
+
+async function renderDeviceSummary() {
+  const summary = await api(`/projects/${CURRENT_PROJECT}/device-summary`);
+  const ul = document.getElementById('device-summary-list');
+  ul.innerHTML = summary.map(s => `
+    <li>
+      <div><b>${s.device_name}</b> <span class="pill">${s.group_name}</span></div>
+      <div><span class="pill">${s.total} Stück</span></div>
+    </li>`).join('') || '<li class="muted">Noch keine Geräte geplant</li>';
+}
+
+async function renderGeraeteplanungRooms() {
+  const tree = await api(`/projects/${CURRENT_PROJECT}/tree`);
+  const container = document.getElementById('geraeteplanung-rooms');
+  const sections = [];
+  for (const floor of tree.floors) {
+    const roomBlocks = [];
+    for (const room of floor.rooms) {
+      const devices = await api(`/rooms/${room.id}/devices`);
+      const devicesHtml = devices.map(d => `
+        <span class="pill">${d.quantity}× ${d.device_name}${d.note ? ' — ' + d.note : ''} <a href="#" onclick="deleteRoomDevice(event, ${d.id})" style="color:var(--danger); text-decoration:none;">×</a></span>
+      `).join('') || '<span class="muted">Keine Geräte</span>';
+      roomBlocks.push(`
+        <div class="room-card">
+          <b>${room.name}</b>
+          <div style="margin:6px 0;">${devicesHtml}</div>
+          <div class="quick-add">
+            <select id="rd-device-${room.id}" class="wide">
+              ${ACTOR_TYPES.map(at => `<option value="${at.id}">${at.group_name} — ${[at.manufacturer, at.model].filter(Boolean).join(' ')}</option>`).join('')}
+            </select>
+            <input type="number" id="rd-qty-${room.id}" value="1" min="1" title="Anzahl">
+            <input type="text" id="rd-note-${room.id}" placeholder="Notiz (optional)" style="width:160px;">
+            <button class="btn secondary small" onclick="addRoomDevice(${room.id})">+ Hinzufügen</button>
+          </div>
+        </div>
+      `);
+    }
+    sections.push(`<div class="floor-card"><b>${floor.name}</b>${roomBlocks.join('') || '<p class="muted">Noch keine Räume</p>'}</div>`);
+  }
+  container.innerHTML = sections.join('') || '<p class="muted">Noch keine Geschosse in diesem Projekt</p>';
+}
+
+async function addRoomDevice(roomId) {
+  const device_type_id = parseInt(document.getElementById(`rd-device-${roomId}`).value);
+  const quantity = parseInt(document.getElementById(`rd-qty-${roomId}`).value) || 1;
+  const note = document.getElementById(`rd-note-${roomId}`).value.trim();
+  if (!device_type_id) return alert('Zuerst ein Gerät im Geräte-Tab anlegen');
+  await api(`/rooms/${roomId}/devices`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({device_type_id, quantity, note})});
+  await renderGeraeteplanungRooms();
+  await renderDeviceSummary();
+}
+
+async function deleteRoomDevice(ev, id) {
+  ev.preventDefault();
+  await api('/room-devices/' + id, {method:'DELETE'});
+  await renderGeraeteplanungRooms();
+  await renderDeviceSummary();
 }
 
 // ---------- Init ----------

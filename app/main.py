@@ -1,5 +1,5 @@
 """
-KNX Group Address Generator v2
+KNX Projekttool
 --------------------------------
 Modeled directly on real exported ETS6 projects.
 
@@ -44,7 +44,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 DB_PATH = Path(__file__).parent / "data" / "knx_ga.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-app = FastAPI(title="KNX GA Generator")
+app = FastAPI(title="KNX Projekttool")
 
 
 def join_parts(*parts):
@@ -162,7 +162,9 @@ def init_db():
                 order_idx INTEGER NOT NULL DEFAULT 0
             );
 
-            -- Physical actuator hardware catalog (global, shared across every project).
+            -- Physical device catalog (global, shared across every project): actuators,
+            -- sensors, weather stations, touch panels, etc. channel_type/channel_count are
+            -- only meaningful for devices in the "Aktor" group (see group_name).
             CREATE TABLE IF NOT EXISTS actor_types (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL DEFAULT '',      -- legacy, unused (kept for old-DB compatibility)
@@ -195,6 +197,19 @@ def init_db():
                 UNIQUE(room_point_id, channel_seq),
                 UNIQUE(actor_instance_id, channel_letter)
             );
+
+            -- Which devices (any group - sensor, touch panel, weather station, actuator...)
+            -- are planned for a given room. Separate from channel wiring - this is a simple
+            -- "what goes where, how many" planning list, used to build a project-wide bill
+            -- of materials (device-summary endpoint).
+            CREATE TABLE IF NOT EXISTS room_devices (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                room_id INTEGER NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+                device_type_id INTEGER NOT NULL REFERENCES actor_types(id),
+                quantity INTEGER NOT NULL DEFAULT 1,
+                note TEXT NOT NULL DEFAULT '',
+                order_idx INTEGER NOT NULL DEFAULT 0
+            );
             """
         )
 
@@ -218,6 +233,33 @@ def init_db():
         # One-time backfill: any actor_types created before manufacturer/model existed had
         # everything in the old "name" column - carry that into "model" so nothing is lost.
         db.execute("UPDATE actor_types SET model = name WHERE model = '' AND name != ''")
+
+        # One-time table rebuild: add group_name/description and make channel_count nullable
+        # (channels only apply to the "Aktor" group - sensors, weather stations, touch panels
+        # etc. don't have them). SQLite can't relax a NOT NULL constraint via ALTER TABLE, so
+        # this recreates the table, preserving every existing row's id (actor_instances.actor_type_id
+        # keeps pointing at the same rows).
+        cols = [r["name"] for r in db.execute("PRAGMA table_info(actor_types)").fetchall()]
+        if "group_name" not in cols:
+            db.execute("PRAGMA foreign_keys = OFF")
+            db.executescript(
+                """
+                CREATE TABLE actor_types_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    manufacturer TEXT NOT NULL DEFAULT '',
+                    model TEXT NOT NULL DEFAULT '',
+                    group_name TEXT NOT NULL DEFAULT 'Aktor',
+                    description TEXT NOT NULL DEFAULT '',
+                    channel_type TEXT NOT NULL DEFAULT '',
+                    channel_count INTEGER
+                );
+                INSERT INTO actor_types_new (id, manufacturer, model, channel_type, channel_count)
+                    SELECT id, manufacturer, model, channel_type, channel_count FROM actor_types;
+                DROP TABLE actor_types;
+                ALTER TABLE actor_types_new RENAME TO actor_types;
+                """
+            )
+            db.execute("PRAGMA foreign_keys = ON")
 
         (count,) = db.execute("SELECT COUNT(*) FROM categories").fetchone()
         if count == 0:
@@ -511,8 +553,10 @@ class SpecialItemIn(BaseModel):
 class ActorTypeIn(BaseModel):
     manufacturer: str = ""
     model: str
-    channel_type: str
-    channel_count: int
+    group_name: str = "Aktor"    # "Aktor", "Sensor", "Wetterstation", "Bedienelement", or custom
+    description: str = ""
+    channel_type: str = ""       # only meaningful for group_name == "Aktor"
+    channel_count: int | None = None  # only meaningful for group_name == "Aktor"
 
 
 class ActorInstanceIn(BaseModel):
@@ -527,6 +571,12 @@ class ChannelAssignIn(BaseModel):
     channel_seq: int = 0
     actor_instance_id: int
     channel_letter: str
+
+
+class RoomDeviceIn(BaseModel):
+    device_type_id: int
+    quantity: int = 1
+    note: str = ""
 
 
 # --------------------------------------------------------------------------
@@ -632,15 +682,17 @@ def delete_central_template(ct_id: int):
 
 
 # --------------------------------------------------------------------------
-# Actor Types (global catalog of actuator hardware, shared across all projects)
+# Device Types (global catalog shared across all projects: Aktoren, Sensoren,
+# Wetterstation, Bedienelemente, etc. Channel info only applies to "Aktor".)
 # --------------------------------------------------------------------------
 @app.get("/api/actor-types")
 def list_actor_types():
     with get_db() as db:
-        rows = db.execute("SELECT * FROM actor_types ORDER BY id").fetchall()
+        rows = db.execute("SELECT * FROM actor_types ORDER BY group_name, id").fetchall()
         return [
             {
                 "id": r["id"], "manufacturer": r["manufacturer"], "model": r["model"],
+                "group_name": r["group_name"], "description": r["description"],
                 "channel_type": r["channel_type"], "channel_count": r["channel_count"],
             }
             for r in rows
@@ -651,8 +703,9 @@ def list_actor_types():
 def create_actor_type(at: ActorTypeIn):
     with get_db() as db:
         cur = db.execute(
-            "INSERT INTO actor_types (manufacturer, model, channel_type, channel_count) VALUES (?, ?, ?, ?)",
-            (at.manufacturer, at.model, at.channel_type, at.channel_count),
+            "INSERT INTO actor_types (manufacturer, model, group_name, description, channel_type, channel_count) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (at.manufacturer, at.model, at.group_name, at.description, at.channel_type, at.channel_count),
         )
         return {"id": cur.lastrowid}
 
@@ -661,8 +714,9 @@ def create_actor_type(at: ActorTypeIn):
 def update_actor_type(at_id: int, at: ActorTypeIn):
     with get_db() as db:
         db.execute(
-            "UPDATE actor_types SET manufacturer=?, model=?, channel_type=?, channel_count=? WHERE id=?",
-            (at.manufacturer, at.model, at.channel_type, at.channel_count, at_id),
+            "UPDATE actor_types SET manufacturer=?, model=?, group_name=?, description=?, "
+            "channel_type=?, channel_count=? WHERE id=?",
+            (at.manufacturer, at.model, at.group_name, at.description, at.channel_type, at.channel_count, at_id),
         )
     return {"ok": True}
 
@@ -679,10 +733,11 @@ def export_actor_types_json():
     with get_db() as db:
         rows = db.execute("SELECT * FROM actor_types ORDER BY id").fetchall()
         payload = {
-            "format": "knx-actor-types-v1",
+            "format": "knx-actor-types-v2",
             "actor_types": [
                 {
                     "manufacturer": r["manufacturer"], "model": r["model"],
+                    "group_name": r["group_name"], "description": r["description"],
                     "channel_type": r["channel_type"], "channel_count": r["channel_count"],
                 }
                 for r in rows
@@ -694,14 +749,14 @@ def export_actor_types_json():
         return StreamingResponse(
             iter([buf.getvalue().encode("utf-8")]),
             media_type="application/json",
-            headers={"Content-Disposition": 'attachment; filename="actor_types_catalog.json"'},
+            headers={"Content-Disposition": 'attachment; filename="geraete_katalog.json"'},
         )
 
 
 @app.post("/api/actor-types/import-json")
 def import_actor_types_json(payload: dict):
-    """Upserts by (manufacturer, model): updates channel_type/channel_count if that
-    combination already exists, otherwise inserts a new actor type."""
+    """Upserts by (manufacturer, model): updates group/description/channel info if that
+    combination already exists, otherwise inserts a new device type."""
     with get_db() as db:
         imported = 0
         updated = 0
@@ -713,14 +768,17 @@ def import_actor_types_json(payload: dict):
             ).fetchone()
             if existing:
                 db.execute(
-                    "UPDATE actor_types SET channel_type=?, channel_count=? WHERE id=?",
-                    (at.get("channel_type", ""), at.get("channel_count", 1), existing["id"]),
+                    "UPDATE actor_types SET group_name=?, description=?, channel_type=?, channel_count=? WHERE id=?",
+                    (at.get("group_name", "Aktor"), at.get("description", ""),
+                     at.get("channel_type", ""), at.get("channel_count"), existing["id"]),
                 )
                 updated += 1
             else:
                 db.execute(
-                    "INSERT INTO actor_types (manufacturer, model, channel_type, channel_count) VALUES (?, ?, ?, ?)",
-                    (manufacturer, model, at.get("channel_type", ""), at.get("channel_count", 1)),
+                    "INSERT INTO actor_types (manufacturer, model, group_name, description, channel_type, channel_count) "
+                    "VALUES (?, ?, ?, ?, ?, ?)",
+                    (manufacturer, model, at.get("group_name", "Aktor"), at.get("description", ""),
+                     at.get("channel_type", ""), at.get("channel_count")),
                 )
                 imported += 1
         return {"imported": imported, "updated": updated}
@@ -811,6 +869,86 @@ def delete_room_point(rp_id: int):
     with get_db() as db:
         db.execute("DELETE FROM room_points WHERE id=?", (rp_id,))
     return {"ok": True}
+
+
+# --------------------------------------------------------------------------
+# Room Devices (device planning: which sensors/actuators/panels/etc. go in
+# which room - separate from GA points and from channel wiring)
+# --------------------------------------------------------------------------
+@app.get("/api/rooms/{room_id}/devices")
+def list_room_devices(room_id: int):
+    with get_db() as db:
+        device_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM actor_types").fetchall()}
+        rows = db.execute(
+            "SELECT * FROM room_devices WHERE room_id=? ORDER BY order_idx", (room_id,)
+        ).fetchall()
+        result = []
+        for r in rows:
+            dt = device_types.get(r["device_type_id"], {})
+            result.append(
+                {
+                    "id": r["id"], "device_type_id": r["device_type_id"],
+                    "device_name": join_parts(dt.get("manufacturer", ""), dt.get("model", "")) or "?",
+                    "group_name": dt.get("group_name", ""),
+                    "quantity": r["quantity"], "note": r["note"],
+                }
+            )
+        return result
+
+
+@app.post("/api/rooms/{room_id}/devices")
+def add_room_device(room_id: int, rd: RoomDeviceIn):
+    with get_db() as db:
+        (count,) = db.execute("SELECT COUNT(*) FROM room_devices WHERE room_id=?", (room_id,)).fetchone()
+        cur = db.execute(
+            "INSERT INTO room_devices (room_id, device_type_id, quantity, note, order_idx) VALUES (?, ?, ?, ?, ?)",
+            (room_id, rd.device_type_id, max(1, rd.quantity), rd.note, count),
+        )
+        return {"id": cur.lastrowid}
+
+
+@app.delete("/api/room-devices/{rd_id}")
+def delete_room_device(rd_id: int):
+    with get_db() as db:
+        db.execute("DELETE FROM room_devices WHERE id=?", (rd_id,))
+    return {"ok": True}
+
+
+@app.get("/api/projects/{project_id}/device-summary")
+def device_summary(project_id: int):
+    """Project-wide bill of materials: total quantity needed per device type,
+    plus which rooms use it - built from the room_devices planning list."""
+    with get_db() as db:
+        device_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM actor_types").fetchall()}
+        floors = db.execute("SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall()
+
+        totals = {}  # device_type_id -> {"total": int, "rooms": [...]}
+        for floor in floors:
+            rooms = db.execute("SELECT * FROM rooms WHERE floor_id=? ORDER BY order_idx", (floor["id"],)).fetchall()
+            for room in rooms:
+                devices = db.execute(
+                    "SELECT * FROM room_devices WHERE room_id=? ORDER BY order_idx", (room["id"],)
+                ).fetchall()
+                for rd in devices:
+                    entry = totals.setdefault(rd["device_type_id"], {"total": 0, "rooms": []})
+                    entry["total"] += rd["quantity"]
+                    entry["rooms"].append(
+                        {"floor_name": floor["name"], "room_name": room["name"], "quantity": rd["quantity"]}
+                    )
+
+        result = []
+        for device_type_id, entry in totals.items():
+            dt = device_types.get(device_type_id, {})
+            result.append(
+                {
+                    "device_type_id": device_type_id,
+                    "device_name": join_parts(dt.get("manufacturer", ""), dt.get("model", "")) or "?",
+                    "group_name": dt.get("group_name", ""),
+                    "total": entry["total"], "rooms": entry["rooms"],
+                }
+            )
+        result.sort(key=lambda r: (r["group_name"], r["device_name"]))
+        return result
 
 
 @app.get("/api/projects/{project_id}/tree")

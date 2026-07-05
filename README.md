@@ -1,4 +1,4 @@
-# KNX Gruppenadressen-Generator (v2)
+# KNX Projekttool
 
 Direkt aus der Analyse echter ETS6-Exporte entwickelt. Ablauf:
 
@@ -109,24 +109,48 @@ Das Tool hat vier Tabs:
   löschen — praktisch, sobald mehrere Projekte angelegt sind und die
   Seite lang wird.
 
-### Aktoren-Tab
+### Geräte-Tab
 
-Ihr Aktor-Gerätekatalog — **global, gemeinsam für alle Projekte**
-(dieselbe Liste, unabhängig davon welches Projekt gerade verdrahtet wird).
-Jeder Eintrag hat:
+Ihr Gerätekatalog — **global, gemeinsam für alle Projekte** (dieselbe
+Liste, unabhängig davon welches Projekt gerade bearbeitet wird). Deckt
+nicht nur Aktoren ab, sondern auch Sensoren, Wetterstationen,
+Bedienelemente usw. — beliebig gruppierbar. Jeder Eintrag hat:
 
 - **Hersteller** (z.B. "MDT")
 - **Modell** (z.B. "AKS-2016.03")
-- **Type** — muss dem Kanaltyp eines Punkttyps entsprechen (`Schalten`,
-  `Dimmen`, `Rollo`, `Heizung`, `Tor`, oder ein selbst angelegter), um
-  diesem zuordenbar zu sein
-- **Kanäle** — wie viele physische Ausgänge das Gerät hat
+- **Gruppe** — frei wählbar (Vorschläge: Aktor, Sensor, Wetterstation,
+  Bedienelement, Sonstiges); bestimmt, wo das Gerät in der Liste erscheint
+- **Beschreibung** — optionale Notiz, z.B. was das Gerät genau macht
+- **Type** und **Kanäle** — **nur bei der Gruppe "Aktor" relevant**: der
+  Type muss dem Kanaltyp eines Punkttyps entsprechen (`Schalten`,
+  `Dimmen`, `LED`, `Rollo`, `Heizung`, `Tor`, oder ein selbst angelegter),
+  damit das Gerät in der Abgangsliste zuordenbar ist. Bei anderen Gruppen
+  bleiben diese Felder leer/ausgeblendet.
+
+Nur Geräte der Gruppe "Aktor" erscheinen als Auswahl beim Hinzufügen
+eines Aktors in der Abgangsliste — Sensoren & Co. haben dort schlicht
+keine Kanäle zum Verdrahten.
 
 **⭳ Katalog exportieren (JSON)** / **⭱ Katalog importieren (JSON)** zum
 Sichern oder Teilen dieses Katalogs. Der Import gleicht nach (Hersteller,
-Modell) ab: existiert diese Kombination schon, werden Type/Kanalzahl
-aktualisiert, sonst wird ein neuer Eintrag angelegt — dieselbe Datei
-mehrfach zu importieren ist unbedenklich.
+Modell) ab: existiert diese Kombination schon, werden Gruppe/Beschreibung/
+Type/Kanalzahl aktualisiert, sonst wird ein neuer Eintrag angelegt —
+dieselbe Datei mehrfach zu importieren ist unbedenklich.
+
+### Geräteplanung-Tab
+
+Getrennt von der Abgangsliste (die nur Aktoren mit physischen Kanälen
+betrifft): hier wird festgelegt, welche Geräte — **jeder Gruppe**,
+also auch Sensoren, Wetterstationen, Bedienelemente — in welchem Raum
+verbaut werden, unabhängig davon ob dafür eine Gruppenadresse oder ein
+Aktorkanal existiert.
+
+1. Projekt aus der Liste wählen.
+2. Für jeden Raum Geräte mit Anzahl und optionaler Notiz hinzufügen (z.B.
+   "2× Bewegungsmelder — Ecken", "1× Touchpanel — Eingang").
+3. Oben erscheint automatisch eine **Stückliste** — die Gesamtanzahl
+   jedes benötigten Geräts über das ganze Projekt hinweg, nach Gruppe
+   sortiert. Praktisch für die Bestellung oder Angebotskalkulation.
 
 ### Wo Projekte tatsächlich gespeichert werden
 
