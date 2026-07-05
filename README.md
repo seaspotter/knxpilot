@@ -140,30 +140,44 @@ externe Kopie behalten), nicht für die normale Persistenz im Alltag nötig.
 ### Abgangsliste (Aktoren-Verdrahtung / Kanalliste)
 
 Sobald ein Projekt Räume und Punkte enthält, kennt das Tool bereits jeden
-physischen Ausgang, der benötigt wird (jeder Schalt-, Dimm-, Jalousie- und
-Heizkanal). Der **Abgangsliste**-Tab macht daraus eine Verdrahtungsliste
-für den Elektriker:
+physischen Ausgang, der benötigt wird (jeder Schalt-, Dimm-, LED-,
+Jalousie- und Heizkanal). Der **Abgangsliste**-Tab macht daraus eine
+Verdrahtungsliste für den Elektriker:
 
 1. **Setup → Punkttypen**: jeder Punkttyp hat einen **Kanaltyp** (z.B.
-   `Schalten`, `Dimmen`, `Rollo`, `Heizung`, `Tor`) und **benötigte
-   Kanäle** (meist 1). Für alle mitgelieferten Punkttypen bereits ausgefüllt.
+   `Schalten`, `Dimmen`, `LED`, `Rollo`, `Heizung`, `Tor`) und **benötigte
+   Kanäle** (meist 1). Für alle mitgelieferten Punkttypen bereits
+   ausgefüllt. `LED (Tunable White)` hat einen eigenen Kanaltyp `LED`
+   (nicht `Dimmen`), da dafür üblicherweise eigene Aktoren verbaut werden.
 2. **Aktoren-Tab**: den Aktor-Gerätekatalog anlegen — z.B. Hersteller
    "MDT", Modell "AKS-2016.03", Type `Schalten`, 20 Kanäle. Der Type muss
    dem Kanaltyp eines Punkttyps entsprechen, um zuordenbar zu sein. Dieser
    Katalog ist global und gilt für alle Projekte.
-3. **Abgangsliste-Tab**: Projekt aus der Liste wählen, dann die
-   tatsächlich verbauten **Aktoren** hinzufügen (Aktortyp wählen, in
+3. **Abgangsliste-Tab**: Projekt aus der Liste wählen. Die
+   **Bedarfsübersicht** zeigt sofort, wie viele Kanäle je Geschoss und
+   Kanaltyp tatsächlich benötigt werden (benötigt/zugeordnet/offen) — so
+   lässt sich die richtige Aktorgrösse wählen, bevor überhaupt ein Aktor
+   angelegt wird.
+4. Die tatsächlich verbauten **Aktoren** hinzufügen (Aktortyp wählen, in
    welchem Geschoss/welcher UV er sitzt, Standortbezeichnung, physische
-   KNX-Adresse wie `1.1.2`).
-4. Jeder **Abgang** (eine Zeile je benötigtem physischen Ausgang) erscheint
+   KNX-Adresse wie `1.1.2`). Jeder Aktor zeigt eine kleine visuelle
+   Kanalübersicht (grün = belegt mit Funktionsname beim Hovern, grau =
+   frei).
+5. Jeder **Abgang** (eine Zeile je benötigtem physischen Ausgang) erscheint
    darunter mit einer Auswahl aller Kanäle passender Aktoren. Einen manuell
    wählen, oder **Alle automatisch zuordnen** klicken, um jeden noch nicht
    zugeordneten Abgang automatisch dem ersten freien passenden Kanal
-   zuzuweisen (in Geschoss-/Raum-Reihenfolge).
-5. **Abgangsliste herunterladen (CSV)** exportiert eine Tabelle mit den
-   Spalten `Geschoss, Raum/UV, Aktor, Physikalische Adr., Kanal, Funktion`
-   — jeder Kanal jedes Aktors wird aufgeführt, unbelegte mit `RESERVE`
-   markiert, im Layout einer handgemachten Verdrahtungsliste.
+   zuzuweisen. **Automatisch zuordnen mischt dabei nie Geschosse** — ein
+   Abgang im EG wird nur einem Aktor im EG zugeordnet, selbst wenn dessen
+   Kanäle voll sind und ein Aktor im OG noch frei wäre. Aktoren ohne
+   zugewiesenes Geschoss werden von der Automatik ebenfalls nicht
+   verwendet; solche Fälle bitte manuell zuordnen.
+6. **CSV herunterladen** exportiert eine Tabelle mit den Spalten
+   `Geschoss, Raum/UV, Aktor, Physikalische Adr., Kanal, Funktion` — jeder
+   Kanal jedes Aktors wird aufgeführt, unbelegte mit `RESERVE` markiert.
+   **PDF herunterladen** exportiert dieselben Daten als formatiertes,
+   nach Geschoss und Aktor gegliedertes PDF-Dokument (ein Geschoss pro
+   Seite) zum direkten Ausdrucken oder Weitergeben.
 
 Dies ist ein eigener Export, getrennt von der ETS-Gruppenadressen-CSV —
 der eine dient der Busprogrammierung, der andere der Schaltschrank-

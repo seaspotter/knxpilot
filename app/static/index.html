@@ -43,6 +43,10 @@
   ul.list li:last-child { border-bottom:none; }
   .muted { color:var(--muted); font-size:12px; }
   .pill { background:var(--panel2); border:1px solid var(--border); border-radius:999px; padding:2px 8px; font-size:11px; margin-right:4px; display:inline-block; margin-bottom:2px; }
+  .channel-map { display:flex; flex-wrap:wrap; gap:3px; margin-top:6px; }
+  .channel-box { width:22px; height:22px; border-radius:4px; font-size:9px; display:flex; align-items:center; justify-content:center; font-weight:600; cursor:default; border:1px solid var(--border); }
+  .channel-box.used { background:var(--accent2); color:#ffffff; border-color:var(--accent2); }
+  .channel-box.free { background:var(--panel2); color:var(--muted); }
   .floor-card { background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:10px; }
   .room-card { background:var(--panel3); border:1px solid var(--border); border-radius:8px; padding:10px; margin: 8px 0; }
   .tree { font-family: ui-monospace, monospace; font-size:12.5px; line-height:1.55; white-space: pre; overflow-x:auto; }
@@ -151,6 +155,12 @@
 
     <div id="abgang-detail" style="display:none;">
       <div class="card">
+        <h4>Bedarfsübersicht</h4>
+        <p class="muted">Wie viele Kanäle je Geschoss und Kanaltyp tatsächlich benötigt werden — hilft bei der Wahl der richtigen Aktorgrösse, bevor verdrahtet wird.</p>
+        <ul class="list" id="channel-summary-list"></ul>
+      </div>
+
+      <div class="card">
         <h4>Aktoren in diesem Projekt</h4>
         <div class="row">
           <select id="ai-actortype" class="wide"></select>
@@ -168,7 +178,8 @@
           <span class="muted" id="circuits-summary"></span>
           <div class="row" style="margin:0;">
             <button class="btn secondary" onclick="autoAssignCircuits()">Alle automatisch zuordnen</button>
-            <button class="btn" onclick="downloadAbgangsliste()">Abgangsliste herunterladen (CSV)</button>
+            <button class="btn secondary" onclick="downloadAbgangsliste()">CSV herunterladen</button>
+            <button class="btn" onclick="downloadAbgangslistePdf()">PDF herunterladen</button>
           </div>
         </div>
         <ul class="list" id="circuits-list"></ul>
@@ -529,6 +540,7 @@ async function addFloor() {
   await renderSpecialLocationOptions();
   await renderActorInstanceForm();
   await renderCircuits();
+  await renderChannelSummary();
 }
 
 async function deleteFloor(id) {
@@ -537,6 +549,7 @@ async function deleteFloor(id) {
   await renderSpecialLocationOptions();
   await renderActorInstanceForm();
   await renderCircuits();
+  await renderChannelSummary();
 }
 
 async function renderFloors() {
@@ -595,12 +608,14 @@ async function addRoom(floorId) {
   await api(`/floors/${floorId}/rooms`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})});
   await renderFloors();
   await renderCircuits();
+  await renderChannelSummary();
 }
 
 async function deleteRoom(id) {
   await api('/rooms/' + id, {method:'DELETE'});
   await renderFloors();
   await renderCircuits();
+  await renderChannelSummary();
 }
 
 async function addPoint(roomId) {
@@ -611,6 +626,7 @@ async function addPoint(roomId) {
   await api(`/rooms/${roomId}/points`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({point_type_id, label, quantity, has_bwm})});
   await renderFloors();
   await renderCircuits();
+  await renderChannelSummary();
 }
 
 async function deleteRoomPoint(ev, id) {
@@ -618,6 +634,7 @@ async function deleteRoomPoint(ev, id) {
   await api('/room-points/' + id, {method:'DELETE'});
   await renderFloors();
   await renderCircuits();
+  await renderChannelSummary();
 }
 
 // ---------- Specials ----------
@@ -697,8 +714,23 @@ async function onAbgangProjectChange(value) {
 async function loadAbgangForCurrentProject() {
   document.getElementById('abgang-detail').style.display = 'block';
   await renderActorInstanceForm();
+  await renderChannelSummary();
   await renderActorInstances();
   await renderCircuits();
+}
+
+async function renderChannelSummary() {
+  const summary = await api(`/projects/${CURRENT_PROJECT}/channel-summary`);
+  const ul = document.getElementById('channel-summary-list');
+  ul.innerHTML = summary.map(s => `
+    <li>
+      <div><b>${s.floor_name}</b> <span class="pill">${s.channel_type}</span></div>
+      <div>
+        <span class="pill">${s.needed} benötigt</span>
+        <span class="pill">${s.assigned} zugeordnet</span>
+        <span class="pill" style="${s.open > 0 ? 'color:var(--warn);' : ''}">${s.open} offen</span>
+      </div>
+    </li>`).join('') || '<li class="muted">Noch keine Abgänge vorhanden</li>';
 }
 
 // ---------- Abgangsliste: Actor Instances ----------
@@ -723,21 +755,31 @@ async function addActorInstance() {
   document.getElementById('ai-address').value = '';
   await renderActorInstances();
   await renderCircuits();
+  await renderChannelSummary();
 }
 
 async function renderActorInstances() {
   const instances = await api(`/projects/${CURRENT_PROJECT}/actor-instances`);
   const ul = document.getElementById('actor-instances-list');
-  ul.innerHTML = instances.map(ai => `
-    <li>
-      <div><b>${ai.actor_type_name}</b> <span class="pill">${ai.channel_type}</span>
-        ${ai.floor_name ? `<span class="pill">${ai.floor_name}</span>` : ''}
-        ${ai.location_label ? `<span class="pill">${ai.location_label}</span>` : ''}
-        ${ai.physical_address ? `<span class="pill">${ai.physical_address}</span>` : ''}
-        <span class="pill">${ai.channels_used}/${ai.channel_count} belegt</span>
+  ul.innerHTML = instances.map(ai => {
+    const grid = ai.channel_map.map(ch => {
+      const isUsed = !!ch.function;
+      const title = isUsed ? ch.function : 'Frei';
+      return `<div class="channel-box ${isUsed ? 'used' : 'free'}" title="${ch.letter}: ${title}">${ch.letter}</div>`;
+    }).join('');
+    return `<li style="flex-direction:column; align-items:stretch;">
+      <div class="row" style="justify-content:space-between; margin-bottom:0;">
+        <div><b>${ai.actor_type_name}</b> <span class="pill">${ai.channel_type}</span>
+          ${ai.floor_name ? `<span class="pill">${ai.floor_name}</span>` : ''}
+          ${ai.location_label ? `<span class="pill">${ai.location_label}</span>` : ''}
+          ${ai.physical_address ? `<span class="pill">${ai.physical_address}</span>` : ''}
+          <span class="pill">${ai.channels_used}/${ai.channel_count} belegt</span>
+        </div>
+        <button class="btn danger small" onclick="deleteActorInstance(${ai.id})">Löschen</button>
       </div>
-      <button class="btn danger small" onclick="deleteActorInstance(${ai.id})">Löschen</button>
-    </li>`).join('') || '<li class="muted">Noch keine Aktoren hinzugefügt</li>';
+      <div class="channel-map">${grid}</div>
+    </li>`;
+  }).join('') || '<li class="muted">Noch keine Aktoren hinzugefügt</li>';
 }
 
 async function deleteActorInstance(id) {
@@ -745,6 +787,7 @@ async function deleteActorInstance(id) {
   await api('/actor-instances/' + id, {method:'DELETE'});
   await renderActorInstances();
   await renderCircuits();
+  await renderChannelSummary();
 }
 
 // ---------- Abgangsliste: Circuits ----------
@@ -810,14 +853,16 @@ async function onCircuitAssignChange(room_point_id, channel_seq, value) {
   }
   await renderCircuits();
   await renderActorInstances();
+  await renderChannelSummary();
 }
 
 async function autoAssignCircuits() {
   const result = await api(`/projects/${CURRENT_PROJECT}/circuits/auto-assign`, {method:'POST'});
   await renderCircuits();
   await renderActorInstances();
+  await renderChannelSummary();
   if (result.unassigned.length) {
-    alert(`${result.assigned} Abgang/Abgänge zugeordnet.\n\nNicht zuordenbar (kein freier passender Aktorkanal):\n- ${result.unassigned.join('\n- ')}`);
+    alert(`${result.assigned} Abgang/Abgänge zugeordnet.\n\nNicht zuordenbar (kein freier passender Aktorkanal auf demselben Geschoss):\n- ${result.unassigned.join('\n- ')}`);
   } else if (result.assigned) {
     alert(`${result.assigned} Abgang/Abgänge zugeordnet.`);
   } else {
@@ -827,6 +872,10 @@ async function autoAssignCircuits() {
 
 function downloadAbgangsliste() {
   window.location.href = `/api/projects/${CURRENT_PROJECT}/export-abgangsliste.csv`;
+}
+
+function downloadAbgangslistePdf() {
+  window.location.href = `/api/projects/${CURRENT_PROJECT}/export-abgangsliste.pdf`;
 }
 
 // ---------- Preview / Export ----------
