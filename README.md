@@ -151,6 +151,34 @@ Aktorkanal existiert.
 3. Oben erscheint automatisch eine **Stückliste** — die Gesamtanzahl
    jedes benötigten Geräts über das ganze Projekt hinweg, nach Gruppe
    sortiert. Praktisch für die Bestellung oder Angebotskalkulation.
+4. **PDF herunterladen** exportiert diese Stückliste als Bestellliste,
+   plus eine Aufschlüsselung je Raum, im selben Design wie die
+   Abgangsliste (siehe unten).
+
+### Pflichtenheft-Tab
+
+Dokumentiert, was für das Projekt tatsächlich vereinbart/umgesetzt wurde —
+gedacht als Referenz für Kunde und Elektriker, getrennt von den
+technischen GA-/Verdrahtungsdetails:
+
+1. Projekt wählen — eine Textvorschau zeigt sofort, was im PDF stehen wird.
+2. **PDF herunterladen** erzeugt ein mehrseitiges Dokument mit:
+   - je Geschoss/Raum: die geplanten Funktionen (aus den Gruppenadressen-
+     Punkten, nach Kategorie gruppiert, z.B. "Beleuchtung: Decke (Licht
+     (Dimmen))") sowie die geplanten Geräte (aus der Geräteplanung)
+   - einer Übersicht der Zentral-/Allgemeinfunktionen (z.B. "Rollo:
+     Beschattung Freigabe (projektweit), Zentral (je Geschoss)")
+   - der Geräte-Stückliste als Abschluss
+
+### Einheitliches PDF-Design
+
+Alle drei PDF-Exporte (Abgangsliste, Geräteliste, Pflichtenheft) nutzen
+dieselbe Gestaltung: ein dunkler Banner-Titelkopf, eine einheitliche
+Tabellenoptik, und eine Fusszeile mit Projektname sowie **Seite X von Y**
+auf jeder Seite. Der gemeinsame Code dafür liegt in `app/main.py` unter
+`pdf_styles()`, `pdf_title_banner()`, `pdf_table_style()` und
+`make_numbered_canvas()` — Änderungen dort wirken sich auf alle drei
+Exporte gleichzeitig aus.
 
 ### Wo Projekte tatsächlich gespeichert werden
 
@@ -329,6 +357,34 @@ Das Dateisystem des LXC (inkl. der Datenbank) wird automatisch von den
   pauschal für alle — z.B. bezieht Beleuchtungs "Zentral {Geschoss}"
   ein Aussen-Geschoss weiterhin ein, solange dieses Häkchen nicht auch
   dort gesetzt wird.
+
+## Code-Struktur
+
+Das Backend ist modular aufgeteilt (statt einer einzigen grossen Datei):
+
+```
+app/
+  main.py               — erstellt die App, bindet alle Router ein, mountet die Frontend-Dateien
+  db.py                 — Datenbankverbindung, Schema, Migrationen, Standard-Vorbelegung
+  models.py             — alle Pydantic-Schemas für Request-Bodies
+  ga_logic.py            — Gruppenadressen-Baum-Generierung, Abgänge, Pflichtenheft-Hilfsfunktionen
+  pdf_design.py          — gemeinsames PDF-Design (Banner, Tabellenstil, Seitenzahlen)
+  utils.py               — kleine Hilfsfunktionen ohne eigene Abhängigkeiten
+  routers/
+    setup.py             — Kategorien, Punkttypen, Zentral-Vorlagen (Setup-Tab)
+    geraete.py           — globaler Gerätekatalog (Geräte-Tab)
+    projects.py          — Projekte/Geschosse/Räume/Punkte, Sicherung, GA-Export (Gruppenadressen-Tab)
+    abgangsliste.py       — Aktoren, Abgänge, Kanalzuordnung, CSV/PDF-Export (Abgangsliste-Tab)
+    geraeteplanung.py     — Geräteplanung je Raum, Stückliste, PDF-Export
+    pflichtenheft.py      — Pflichtenheft-PDF-Export
+    system.py             — Selbst-Update über Git
+```
+
+Diese Aufteilung folgt bewusst den Tabs der Oberfläche — wer eine Funktion
+in der App sieht, findet den zugehörigen Code im gleichnamigen Modul.
+Für Docker ändert sich dadurch nichts: `COPY app ./app` im Dockerfile und
+die Repo-weite Einbindung in `docker-compose.yml` funktionieren beide
+rekursiv, unabhängig von der internen Ordnerstruktur.
 
 ## Lizenz
 

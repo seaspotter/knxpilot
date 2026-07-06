@@ -77,6 +77,7 @@
   <button data-tab="projects" class="active">Gruppenadressen</button>
   <button data-tab="abgangsliste">Abgangsliste</button>
   <button data-tab="geraeteplanung">Geräteplanung</button>
+  <button data-tab="pflichtenheft">Pflichtenheft</button>
   <button data-tab="aktoren">Geräte</button>
   <button data-tab="setup">Setup (Kategorien &amp; Vorlagen)</button>
 </nav>
@@ -196,14 +197,15 @@
       <div class="row">
         <input type="text" id="actortype-manufacturer" placeholder="Hersteller, z.B. MDT">
         <input type="text" id="actortype-model" placeholder="Modell, z.B. AKS-2016.03">
-        <input type="text" id="actortype-group" list="group-suggestions" placeholder="Gruppe, z.B. Aktor" value="Aktor" onchange="onDeviceGroupChange()" oninput="onDeviceGroupChange()">
-        <datalist id="group-suggestions">
-          <option value="Aktor">
-          <option value="Sensor">
-          <option value="Wetterstation">
-          <option value="Bedienelement">
-          <option value="Sonstiges">
-        </datalist>
+        <select id="actortype-group" onchange="onDeviceGroupChange()">
+          <option value="Aktor">Aktor</option>
+          <option value="Sensor">Sensor</option>
+          <option value="Wetterstation">Wetterstation</option>
+          <option value="Bedienelement">Bedienelement</option>
+          <option value="Sonstiges">Sonstiges</option>
+          <option value="__custom__">Andere (eingeben)...</option>
+        </select>
+        <input type="text" id="actortype-group-custom" placeholder="Eigene Gruppe" style="display:none; width:140px;" oninput="onDeviceGroupChange()">
         <label id="actortype-channeltype-label" style="display:flex; align-items:center; gap:4px;">Type <input type="text" id="actortype-channeltype" placeholder="z.B. Schalten" style="width:110px;"></label>
         <label id="actortype-count-label" style="display:flex; align-items:center; gap:4px;">Kanäle <input type="number" id="actortype-count" value="8" min="1" style="width:60px;"></label>
       </div>
@@ -232,12 +234,36 @@
 
     <div id="geraeteplanung-detail" style="display:none;">
       <div class="card">
-        <h4>Stückliste (gesamtes Projekt)</h4>
+        <div class="row" style="justify-content:space-between;">
+          <h4 style="margin:0;">Stückliste (gesamtes Projekt)</h4>
+          <button class="btn" onclick="downloadGeraeteliste()">PDF herunterladen</button>
+        </div>
         <ul class="list" id="device-summary-list"></ul>
       </div>
       <div class="card">
         <h4>Geräte je Raum</h4>
         <div id="geraeteplanung-rooms"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PFLICHTENHEFT TAB -->
+  <div class="tab" id="tab-pflichtenheft">
+    <div class="card">
+      <h3>Pflichtenheft</h3>
+      <p class="muted">Dokumentiert je Raum die vereinbarten Funktionen (Beleuchtung, Beschattung, Heizung usw.) und Geräte, plus eine Übersicht der Zentral-/Allgemeinfunktionen und die Geräte-Stückliste — als Referenz, was tatsächlich bestellt/umgesetzt wurde.</p>
+      <div class="row">
+        <select id="pflichtenheft-project-select" class="wide" onchange="onPflichtenheftProjectChange(this.value)"></select>
+      </div>
+    </div>
+
+    <div id="pflichtenheft-detail" style="display:none;">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;">
+          <h4 style="margin:0;">Vorschau</h4>
+          <button class="btn" onclick="downloadPflichtenheft()">PDF herunterladen</button>
+        </div>
+        <div id="pflichtenheft-preview" class="tree"></div>
       </div>
     </div>
   </div>
@@ -333,6 +359,9 @@ document.querySelectorAll('nav button').forEach(btn => {
     if (btn.dataset.tab === 'geraeteplanung') {
       await renderGeraeteplanungProjectSelect();
     }
+    if (btn.dataset.tab === 'pflichtenheft') {
+      await renderPflichtenheftProjectSelect();
+    }
   };
 });
 
@@ -402,16 +431,28 @@ async function deletePointType(id) {
 
 // ---------- Aktoren: Actor Types ----------
 function onDeviceGroupChange() {
-  const group = document.getElementById('actortype-group').value.trim();
-  const isAktor = group === 'Aktor';
+  const select = document.getElementById('actortype-group');
+  const customInput = document.getElementById('actortype-group-custom');
+  const isCustom = select.value === '__custom__';
+  customInput.style.display = isCustom ? 'inline-block' : 'none';
+  const effectiveGroup = isCustom ? customInput.value.trim() : select.value;
+  const isAktor = effectiveGroup === 'Aktor';
   document.getElementById('actortype-channeltype-label').style.display = isAktor ? 'flex' : 'none';
   document.getElementById('actortype-count-label').style.display = isAktor ? 'flex' : 'none';
+}
+
+function getEffectiveDeviceGroup() {
+  const select = document.getElementById('actortype-group');
+  if (select.value === '__custom__') {
+    return document.getElementById('actortype-group-custom').value.trim() || 'Sonstiges';
+  }
+  return select.value;
 }
 
 async function createActorType() {
   const manufacturer = document.getElementById('actortype-manufacturer').value.trim();
   const model = document.getElementById('actortype-model').value.trim();
-  const group_name = document.getElementById('actortype-group').value.trim() || 'Aktor';
+  const group_name = getEffectiveDeviceGroup();
   const description = document.getElementById('actortype-description').value.trim();
   const isAktor = group_name === 'Aktor';
   const channel_type = isAktor ? document.getElementById('actortype-channeltype').value.trim() : '';
@@ -569,6 +610,7 @@ async function loadProjects() {
     </li>`).join('') || '<li class="muted">Noch keine Projekte</li>';
   if (document.getElementById('abgang-project-select')) await renderAbgangProjectSelect();
   if (document.getElementById('geraeteplanung-project-select')) await renderGeraeteplanungProjectSelect();
+  if (document.getElementById('pflichtenheft-project-select')) await renderPflichtenheftProjectSelect();
 }
 
 async function deleteProject(id) {
@@ -1146,6 +1188,75 @@ async function deleteRoomDevice(ev, id) {
   await api('/room-devices/' + id, {method:'DELETE'});
   await renderGeraeteplanungRooms();
   await renderDeviceSummary();
+}
+
+function downloadGeraeteliste() {
+  window.location.href = `/api/projects/${CURRENT_PROJECT}/export-geraeteliste.pdf`;
+}
+
+// ---------- Pflichtenheft ----------
+async function renderPflichtenheftProjectSelect() {
+  if (!PROJECTS_LIST.length) PROJECTS_LIST = await api('/projects');
+  const sel = document.getElementById('pflichtenheft-project-select');
+  sel.innerHTML = '<option value="">— Projekt wählen —</option>' +
+    PROJECTS_LIST.map(p => `<option value="${p.id}" ${CURRENT_PROJECT === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
+  if (CURRENT_PROJECT && PROJECTS_LIST.some(p => p.id === CURRENT_PROJECT)) {
+    await loadPflichtenheftForCurrentProject();
+  } else {
+    document.getElementById('pflichtenheft-detail').style.display = 'none';
+  }
+}
+
+async function onPflichtenheftProjectChange(value) {
+  CURRENT_PROJECT = value ? parseInt(value) : null;
+  if (CURRENT_PROJECT) {
+    await loadPflichtenheftForCurrentProject();
+  } else {
+    document.getElementById('pflichtenheft-detail').style.display = 'none';
+  }
+}
+
+async function loadPflichtenheftForCurrentProject() {
+  document.getElementById('pflichtenheft-detail').style.display = 'block';
+  await renderPflichtenheftPreview();
+}
+
+async function renderPflichtenheftPreview() {
+  const tree = await api(`/projects/${CURRENT_PROJECT}/tree`);
+  const el = document.getElementById('pflichtenheft-preview');
+  let lines = [];
+  for (const floor of tree.floors) {
+    lines.push(`<span class="main">${floor.name}</span>`);
+    for (const room of floor.rooms) {
+      lines.push(`  <span class="middle">${room.name}</span>`);
+      const byCategory = {};
+      room.points.forEach(p => {
+        const pt = POINT_TYPES.find(x => x.id === p.point_type_id);
+        if (!pt) return;
+        const cat = CATEGORIES.find(c => c.id === pt.category_id);
+        const catName = cat ? cat.name : '?';
+        const desc = p.label ? `${p.label} (${pt.name})` : pt.name;
+        byCategory[catName] = byCategory[catName] || [];
+        byCategory[catName].push(desc + (p.has_bwm ? ' +BWM' : ''));
+      });
+      for (const [cat, items] of Object.entries(byCategory)) {
+        lines.push(`    <span class="sub">${cat}: ${items.join(', ')}</span>`);
+      }
+      const devices = await api(`/rooms/${room.id}/devices`);
+      if (devices.length) {
+        const deviceList = devices.map(d => `${d.quantity}× ${d.device_name}${d.note ? ' — ' + d.note : ''}`).join(', ');
+        lines.push(`    <span class="sub">Geräte: ${deviceList}</span>`);
+      }
+      if (Object.keys(byCategory).length === 0 && devices.length === 0) {
+        lines.push(`    <span class="res">Keine Funktionen oder Geräte geplant</span>`);
+      }
+    }
+  }
+  el.innerHTML = lines.join('\n') || '<p class="muted">Noch keine Geschosse in diesem Projekt</p>';
+}
+
+function downloadPflichtenheft() {
+  window.location.href = `/api/projects/${CURRENT_PROJECT}/export-pflichtenheft.pdf`;
 }
 
 // ---------- Init ----------
