@@ -26,10 +26,10 @@ Tab-getrennt, jedes Feld in Anführungszeichen, mit Kopfzeile, Spalten:
 Main  Middle  Sub  Address  Central  Unfiltered  Description  DatapointType  Security
 ```
 DPTs werden als `DPST-x-y` geschrieben. `Security` ist immer `Auto`. Dies
-wurde Byte für Byte gegen `Landes.csv`, `Steiner.csv` und `Mayrhofer.csv`
-geprüft — alle drei verwenden ein identisches Format, daher sollte der
-Import direkt über ETS6 funktionieren: Rechtsklick auf **Gruppenadressen**
-→ **Gruppenadressen importieren**.
+wurde Byte für Byte gegen mehrere echte ETS6-Exporte geprüft — alle
+verwenden ein identisches Format, daher sollte der Import direkt über
+ETS6 funktionieren: Rechtsklick auf **Gruppenadressen** →
+**Gruppenadressen importieren**.
 
 Falls sich Ihre Konventionen in ETS jemals ändern und Importe anfangen,
 Zeilen zu überspringen: ein kleines Testprojekt exportieren und mit der
@@ -38,17 +38,25 @@ in `app/main.py` isoliert.
 
 ## Verwendung
 
-Das Tool hat vier Tabs:
+Das Tool hat sieben Tabs:
 
 - **Gruppenadressen** — Projekte aufbauen (Geschosse → Räume → Punkte),
   Vorschau ansehen und die ETS6-Gruppenadressen-CSV exportieren.
 - **Abgangsliste** — Projekt wählen, die verbauten Aktoren anlegen und
   jeden Abgang einem Kanal zuordnen.
-- **Aktoren** — der globale Aktor-Gerätekatalog (Hersteller / Modell /
-  Type / Kanäle), gemeinsam für alle Projekte genutzt.
+- **Geräteplanung** — je Raum festlegen, welche Geräte (jeder Gruppe)
+  verbaut werden, plus eine projektweite Stückliste.
+- **Pflichtenheft** — dokumentiert je Raum die vereinbarten Funktionen
+  und Geräte als PDF-Referenz für Kunde und Elektriker.
+- **Geräte** — der globale Gerätekatalog (Hersteller / Modell / Gruppe /
+  Type / Kanäle), gemeinsam für alle Projekte genutzt. Vorbelegt mit
+  einem Startkatalog gängiger KNX-Geräte, den Sie bearbeiten, ergänzen
+  oder löschen können.
 - **Setup** — Kategorien, Punkttypen und Zentral-/Allgemeinfunktions-
   Vorlagen. Wird im Alltag selten angefasst, ist bereits mit Ihren
   Konventionen vorbelegt.
+- **Update** — prüft auf Wunsch, ob auf GitHub eine neuere Version
+  vorliegt, und installiert sie.
 
 ### Setup-Tab
 
@@ -131,11 +139,22 @@ Nur Geräte der Gruppe "Aktor" erscheinen als Auswahl beim Hinzufügen
 eines Aktors in der Abgangsliste — Sensoren & Co. haben dort schlicht
 keine Kanäle zum Verdrahten.
 
+Jeder Eintrag hat einen **Bearbeiten**-Button, der ihn ins Formular
+oben lädt — Änderungen speichern aktualisiert das bestehende Gerät,
+statt ein neues anzulegen (kein Löschen-und-neu-Anlegen nötig).
+
 **⭳ Katalog exportieren (JSON)** / **⭱ Katalog importieren (JSON)** zum
 Sichern oder Teilen dieses Katalogs. Der Import gleicht nach (Hersteller,
 Modell) ab: existiert diese Kombination schon, werden Gruppe/Beschreibung/
 Type/Kanalzahl aktualisiert, sonst wird ein neuer Eintrag angelegt —
 dieselbe Datei mehrfach zu importieren ist unbedenklich.
+
+Bei einer frischen Installation (leerer Katalog) wird beim ersten Start
+automatisch ein Startkatalog gängiger KNX-Geräte eingefügt (u.a. MDT-
+Aktoren/Bedienelemente, Busch-Jaeger, Theben, Elsner Elektronik, Gira,
+Phoenix Contact, Hörmann — siehe `DEFAULT_ACTOR_TYPES` in `app/db.py`).
+Das passiert nur einmalig, wenn die Tabelle leer ist — ein bereits
+befüllter oder bewusst geleerter Katalog wird dadurch nie überschrieben.
 
 ### Geräteplanung-Tab
 
@@ -246,16 +265,28 @@ aufbauend, die auch die CSV nutzt) — jederzeit gerne umsetzbar.
 
 ## Selbst-Update über Git
 
-Der Header oben in der App zeigt den aktuellen Stand und, falls auf
-GitHub eine neuere Version vorliegt, einen **⭱ Aktualisieren**-Button.
+Der **Update**-Tab (**⟲ Nach Updates suchen** / **⭱ Update
+installieren**) prüft **nur auf Klick** — nichts läuft automatisch im
+Hintergrund. Voraussetzung, einmalig auf dem Server:
+
+```bash
+git branch --set-upstream-to=origin/main main
+```
+
+Das Repository ist öffentlich, daher funktioniert `git fetch`/`git pull`
+anonym — es sind keine Git-Zugangsdaten im Container nötig.
 
 So funktioniert es: `docker-compose.yml` bindet das **gesamte Repository**
 in den Container unter `/app` ein. Ein `git pull` (ausgeführt vom
-Aktualisieren-Button, innerhalb des Containers gegen dasselbe
+Update-installieren-Button, innerhalb des Containers gegen dasselbe
 eingebundene Verzeichnis) aktualisiert den laufenden Code sofort — ein
 Neustart übernimmt ihn, ohne dass ein Image-Rebuild nötig ist. Die
 Datenbank liegt unter `app/data/knx_ga.db`, also innerhalb derselben
 Einbindung, und bleibt beim Update unangetastet.
+
+Schlägt die Prüfung dennoch fehl, zeigt der Tab die tatsächliche
+Fehlermeldung an (z.B. ein Netzwerkproblem) statt kommentarlos "kein
+Update verfügbar" zu behaupten — beides sähe sonst gleich aus.
 
 **Wichtige Einschränkung:** ändern sich `requirements.txt` oder das
 `Dockerfile`, führt der Button **keinen** automatischen Neustart durch
@@ -265,11 +296,16 @@ er eine Meldung, dass ein vollständiger Rebuild nötig ist:
 docker compose up -d --build
 ```
 
-**Voraussetzung für ein privates GitHub-Repository:** damit `git pull`
-innerhalb des Containers funktioniert, braucht der Container Zugriff auf
-Ihre Git-Zugangsdaten. In `docker-compose.yml` sind zwei Varianten als
-Kommentar vorbereitet — je nachdem, ob Sie HTTPS mit Personal Access
-Token oder SSH verwenden, die passende Zeile einkommentieren:
+<details>
+<summary>Falls das Repository später wieder privat wird</summary>
+
+Dann braucht der Container Zugriff auf Ihre Git-Zugangsdaten, sonst
+schlägt jede Prüfung mit einer Fehlermeldung wie `could not read
+Username for 'https://github.com'` fehl. In `docker-compose.yml` sind
+zwei Varianten als Kommentar vorbereitet — je nachdem, ob Sie HTTPS mit
+Personal Access Token oder SSH verwenden, die passende Zeile
+einkommentieren:
+
 ```yaml
 # HTTPS mit Personal Access Token (im Credential Store des Hosts zwischengespeichert):
 # - ~/.git-credentials:/root/.git-credentials:ro
@@ -279,11 +315,7 @@ Token oder SSH verwenden, die passende Zeile einkommentieren:
 # - ~/.ssh:/root/.ssh:ro
 ```
 
-Damit der Update-Status korrekt erkannt wird, muss der Branch einen
-Tracking-Branch gesetzt haben (einmalig auf dem Server):
-```bash
-git branch --set-upstream-to=origin/main main
-```
+</details>
 
 ## Mit Docker starten
 
