@@ -27,6 +27,11 @@
   main { padding: 20px; max-width: 1100px; margin: 0 auto; }
   .tab { display:none; }
   .tab.active { display:block; }
+  .subnav { display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:14px; }
+  .subnav button { background:none; border:none; color:var(--muted); padding:9px 14px; cursor:pointer; font-size:13px; border-bottom:2px solid transparent; }
+  .subnav button.active { color:var(--text); border-bottom-color:var(--accent); }
+  .subtab { display:none; }
+  .subtab.active { display:block; }
   .card { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:14px; }
   .card h3 { margin:0 0 10px; font-size:14px; color:var(--accent); }
   .card h4 { margin:0 0 8px; font-size:13px; }
@@ -72,27 +77,42 @@
   </div>
 </header>
 <nav>
-  <button data-tab="projects" class="active">Gruppenadressen</button>
-  <button data-tab="abgangsliste">Abgangsliste</button>
-  <button data-tab="geraeteplanung">Geräteplanung</button>
-  <button data-tab="pflichtenheft">Pflichtenheft</button>
+  <button data-tab="projects" class="active">Projekte</button>
   <button data-tab="aktoren">Geräte</button>
   <button data-tab="setup">Setup (Kategorien &amp; Vorlagen)</button>
   <button data-tab="update">Update</button>
 </nav>
 <main>
 
-  <!-- GRUPPENADRESSEN TAB -->
+  <!-- PROJEKTE TAB -->
   <div class="tab active" id="tab-projects">
     <div class="card">
       <h3>Projekte</h3>
       <div class="row">
         <input type="text" id="proj-name" placeholder="Neuer Projektname">
+        <input type="text" id="proj-customer" placeholder="Kunde">
+        <input type="text" id="proj-location" placeholder="Standort">
+        <select id="proj-status">
+          <option value="">— Status —</option>
+          <option value="In Planung">In Planung</option>
+          <option value="In Ausführung">In Ausführung</option>
+          <option value="Abgeschlossen">Abgeschlossen</option>
+          <option value="Pausiert">Pausiert</option>
+        </select>
+        <input type="text" id="proj-order-number" placeholder="Bestellnummer">
+      </div>
+      <div class="row">
+        <input type="text" id="proj-comment" placeholder="Kommentar (optional)" style="min-width:300px; flex:1;">
         <button class="btn" onclick="createProject()">Projekt erstellen</button>
       </div>
       <div class="row">
         <input type="file" id="import-json-file" accept="application/json">
         <button class="btn secondary" onclick="importProjectJson()">⭱ Aus Sicherung wiederherstellen (JSON)</button>
+      </div>
+      <hr class="sep">
+      <div class="row">
+        <input type="text" id="project-filter" placeholder="🔍 Suchen (Name, Kunde, Standort, Status, Bestellnummer)..." style="min-width:320px; flex:1;" oninput="renderProjectsList()">
+        <span class="muted" id="project-filter-count"></span>
       </div>
       <ul class="list" id="projects-list"></ul>
     </div>
@@ -106,84 +126,138 @@
             <button class="btn secondary small" onclick="closeProject()">× Schliessen</button>
           </div>
         </div>
-
-        <div class="row">
-          <input type="text" id="floor-name" placeholder="Geschossname, z.B. Erdgeschoss (EG)">
-          <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="floor-outdoor"> Aussen / unbeheizt (z.B. Aussen, Garage)</label>
-          <button class="btn secondary" onclick="addFloor()">+ Geschoss hinzufügen</button>
+        <div id="project-meta-view">
+          <div class="row" id="project-meta-pills"></div>
+          <p class="muted" id="project-meta-comment"></p>
+          <button class="btn secondary small" onclick="editProjectMeta()">Bearbeiten</button>
         </div>
-
-        <div id="floors-container"></div>
-      </div>
-
-      <div class="card">
-        <h3>Sonder- / Zusatzadressen</h3>
-        <p class="muted">Alles, was nicht ins Standardschema passt — Einzel-Szenen, spezielle Zentralgruppen usw.</p>
-        <div class="row">
-          <select id="special-category"></select>
-          <select id="special-location" class="wide"></select>
-          <input type="text" id="special-name" placeholder="Name, z.B. Langschläfer Kind1">
-        </div>
-        <div id="special-suffixes"></div>
-        <button class="btn secondary small" onclick="addSpecialSuffixRow()">+ Datenpunkt hinzufügen</button>
-        <div style="margin-top:8px;"><button class="btn secondary" onclick="createSpecial()">Sonderadresse hinzufügen</button></div>
-        <ul class="list" id="specials-list" style="margin-top:10px;"></ul>
-      </div>
-
-      <div class="card">
-        <div class="row" style="justify-content:space-between;">
-          <h3 style="margin:0;">Vorschau &amp; Export</h3>
-          <div class="row" style="margin:0;">
-            <button class="btn secondary" onclick="previewGA()">Vorschau</button>
-            <button class="btn" onclick="downloadCSV()">CSV für ETS6 herunterladen</button>
+        <div id="project-meta-edit" style="display:none;">
+          <div class="row">
+            <input type="text" id="pm-name" placeholder="Projektname">
+            <input type="text" id="pm-customer" placeholder="Kunde">
+            <input type="text" id="pm-location" placeholder="Standort">
+            <select id="pm-status">
+              <option value="">— Status —</option>
+              <option value="In Planung">In Planung</option>
+              <option value="In Ausführung">In Ausführung</option>
+              <option value="Abgeschlossen">Abgeschlossen</option>
+              <option value="Pausiert">Pausiert</option>
+            </select>
+            <input type="text" id="pm-order-number" placeholder="Bestellnummer">
+          </div>
+          <div class="row">
+            <input type="text" id="pm-comment" placeholder="Kommentar (optional)" style="min-width:300px; flex:1;">
+            <button class="btn" onclick="saveProjectMeta()">Änderungen speichern</button>
+            <button class="btn secondary small" onclick="cancelEditProjectMeta()">Abbrechen</button>
           </div>
         </div>
-        <div class="error" id="gen-error"></div>
-        <div class="tree" id="ga-preview"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ABGANGSLISTE TAB -->
-  <div class="tab" id="tab-abgangsliste">
-    <div class="card">
-      <h3>Abgangsliste (Aktoren-Verdrahtung)</h3>
-      <p class="muted">Projekt wählen, die tatsächlich verbauten Aktoren anlegen und jeden Abgang (Licht, Jalousie, Steckdose, Heizkanal) einem Kanal zuordnen.</p>
-      <div class="row">
-        <select id="abgang-project-select" class="wide" onchange="onAbgangProjectChange(this.value)"></select>
-      </div>
-    </div>
-
-    <div id="abgang-detail" style="display:none;">
-      <div class="card">
-        <h4>Bedarfsübersicht</h4>
-        <p class="muted">Wie viele Kanäle je Geschoss und Kanaltyp tatsächlich benötigt werden — hilft bei der Wahl der richtigen Aktorgrösse, bevor verdrahtet wird.</p>
-        <ul class="list" id="channel-summary-list"></ul>
       </div>
 
-      <div class="card">
-        <h4>Aktoren in diesem Projekt</h4>
-        <div class="row">
-          <select id="ai-actortype" class="wide"></select>
-          <select id="ai-floor"></select>
-          <input type="text" id="ai-location" placeholder="Standort, z.B. EG Technik Verteilung" style="width:220px;">
-          <input type="text" id="ai-address" placeholder="Physikalische Adresse, z.B. 1.1.2" style="width:140px;">
-          <button class="btn secondary" onclick="addActorInstance()">+ Aktor hinzufügen</button>
+      <div class="subnav" id="workspace-subnav">
+        <button data-subtab="ga" class="active">Gruppenadressen</button>
+        <button data-subtab="abgangsliste">Abgangsliste</button>
+        <button data-subtab="geraeteplanung">Geräteplanung</button>
+        <button data-subtab="pflichtenheft">Pflichtenheft</button>
+      </div>
+
+      <div class="subtab active" id="subtab-ga">
+        <div class="card">
+          <div class="row">
+            <input type="text" id="floor-name" placeholder="Geschossname, z.B. Erdgeschoss (EG)">
+            <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="floor-outdoor"> Aussen / unbeheizt (z.B. Aussen, Garage)</label>
+            <button class="btn secondary" onclick="addFloor()">+ Geschoss hinzufügen</button>
+          </div>
+          <div id="floors-container"></div>
         </div>
-        <ul class="list" id="actor-instances-list"></ul>
+
+        <div class="card">
+          <h3>Sonder- / Zusatzadressen</h3>
+          <p class="muted">Alles, was nicht ins Standardschema passt — Einzel-Szenen, spezielle Zentralgruppen usw.</p>
+          <div class="row">
+            <select id="special-category"></select>
+            <select id="special-location" class="wide"></select>
+            <input type="text" id="special-name" placeholder="Name, z.B. Langschläfer Kind1">
+          </div>
+          <div id="special-suffixes"></div>
+          <button class="btn secondary small" onclick="addSpecialSuffixRow()">+ Datenpunkt hinzufügen</button>
+          <div style="margin-top:8px;"><button class="btn secondary" onclick="createSpecial()">Sonderadresse hinzufügen</button></div>
+          <ul class="list" id="specials-list" style="margin-top:10px;"></ul>
+        </div>
+
+        <div class="card">
+          <div class="row" style="justify-content:space-between;">
+            <h3 style="margin:0;">Vorschau &amp; Export</h3>
+            <div class="row" style="margin:0;">
+              <button class="btn secondary" onclick="previewGA()">Vorschau</button>
+              <button class="btn" onclick="downloadCSV()">CSV für ETS6 herunterladen</button>
+            </div>
+          </div>
+          <div class="error" id="gen-error"></div>
+          <div class="tree" id="ga-preview"></div>
+        </div>
       </div>
 
-      <div class="card">
-        <h4>Abgänge</h4>
-        <div class="row" style="justify-content:space-between;">
-          <span class="muted" id="circuits-summary"></span>
-          <div class="row" style="margin:0;">
-            <button class="btn secondary" onclick="autoAssignCircuits()">Alle automatisch zuordnen</button>
-            <button class="btn secondary" onclick="downloadAbgangsliste()">CSV herunterladen</button>
-            <button class="btn" onclick="downloadAbgangslistePdf()">PDF herunterladen</button>
+      <div class="subtab" id="subtab-abgangsliste">
+        <div id="abgang-detail" style="display:none;">
+          <div class="card">
+            <h4>Bedarfsübersicht</h4>
+            <p class="muted">Wie viele Kanäle je Geschoss und Kanaltyp tatsächlich benötigt werden — hilft bei der Wahl der richtigen Aktorgrösse, bevor verdrahtet wird.</p>
+            <ul class="list" id="channel-summary-list"></ul>
+          </div>
+
+          <div class="card">
+            <h4>Aktoren in diesem Projekt</h4>
+            <div class="row">
+              <select id="ai-actortype" class="wide"></select>
+              <select id="ai-floor"></select>
+              <input type="text" id="ai-location" placeholder="Standort, z.B. EG Technik Verteilung" style="width:220px;">
+              <input type="text" id="ai-address" placeholder="Physikalische Adresse, z.B. 1.1.2" style="width:140px;">
+              <button class="btn secondary" onclick="addActorInstance()">+ Aktor hinzufügen</button>
+            </div>
+            <ul class="list" id="actor-instances-list"></ul>
+          </div>
+
+          <div class="card">
+            <h4>Abgänge</h4>
+            <div class="row" style="justify-content:space-between;">
+              <span class="muted" id="circuits-summary"></span>
+              <div class="row" style="margin:0;">
+                <button class="btn secondary" onclick="autoAssignCircuits()">Alle automatisch zuordnen</button>
+                <button class="btn secondary" onclick="downloadAbgangsliste()">CSV herunterladen</button>
+                <button class="btn" onclick="downloadAbgangslistePdf()">PDF herunterladen</button>
+              </div>
+            </div>
+            <ul class="list" id="circuits-list"></ul>
           </div>
         </div>
-        <ul class="list" id="circuits-list"></ul>
+      </div>
+
+      <div class="subtab" id="subtab-geraeteplanung">
+        <div id="geraeteplanung-detail" style="display:none;">
+          <div class="card">
+            <div class="row" style="justify-content:space-between;">
+              <h4 style="margin:0;">Stückliste (gesamtes Projekt)</h4>
+              <button class="btn" onclick="downloadGeraeteliste()">PDF herunterladen</button>
+            </div>
+            <ul class="list" id="device-summary-list"></ul>
+          </div>
+          <div class="card">
+            <h4>Geräte je Raum</h4>
+            <div id="geraeteplanung-rooms"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subtab" id="subtab-pflichtenheft">
+        <div id="pflichtenheft-detail" style="display:none;">
+          <div class="card">
+            <div class="row" style="justify-content:space-between;">
+              <h4 style="margin:0;">Vorschau</h4>
+              <button class="btn" onclick="downloadPflichtenheft()">PDF herunterladen</button>
+            </div>
+            <div id="pflichtenheft-preview" class="tree"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -218,53 +292,12 @@
         <input type="file" id="import-actortypes-file" accept="application/json">
         <button class="btn secondary small" onclick="importActorTypesJson()">⭱ Katalog importieren (JSON)</button>
       </div>
+      <hr class="sep">
+      <div class="row">
+        <input type="text" id="actortype-filter" placeholder="🔍 Suchen (Hersteller, Modell, Beschreibung, Gruppe, Type)..." style="min-width:320px; flex:1;" oninput="renderActorTypesList()">
+        <span class="muted" id="actortype-filter-count"></span>
+      </div>
       <div id="actor-types-groups"></div>
-    </div>
-  </div>
-
-  <!-- GERÄTEPLANUNG TAB -->
-  <div class="tab" id="tab-geraeteplanung">
-    <div class="card">
-      <h3>Geräteplanung</h3>
-      <p class="muted">Projekt wählen, dann je Raum festlegen, welche Sensoren, Bedienelemente, Aktoren usw. dort verbaut werden. Unten erscheint eine Gesamtübersicht (Stückliste) über alle benötigten Geräte im Projekt.</p>
-      <div class="row">
-        <select id="geraeteplanung-project-select" class="wide" onchange="onGeraeteplanungProjectChange(this.value)"></select>
-      </div>
-    </div>
-
-    <div id="geraeteplanung-detail" style="display:none;">
-      <div class="card">
-        <div class="row" style="justify-content:space-between;">
-          <h4 style="margin:0;">Stückliste (gesamtes Projekt)</h4>
-          <button class="btn" onclick="downloadGeraeteliste()">PDF herunterladen</button>
-        </div>
-        <ul class="list" id="device-summary-list"></ul>
-      </div>
-      <div class="card">
-        <h4>Geräte je Raum</h4>
-        <div id="geraeteplanung-rooms"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PFLICHTENHEFT TAB -->
-  <div class="tab" id="tab-pflichtenheft">
-    <div class="card">
-      <h3>Pflichtenheft</h3>
-      <p class="muted">Dokumentiert je Raum die vereinbarten Funktionen (Beleuchtung, Beschattung, Heizung usw.) und Geräte, plus eine Übersicht der Zentral-/Allgemeinfunktionen und die Geräte-Stückliste — als Referenz, was tatsächlich bestellt/umgesetzt wurde.</p>
-      <div class="row">
-        <select id="pflichtenheft-project-select" class="wide" onchange="onPflichtenheftProjectChange(this.value)"></select>
-      </div>
-    </div>
-
-    <div id="pflichtenheft-detail" style="display:none;">
-      <div class="card">
-        <div class="row" style="justify-content:space-between;">
-          <h4 style="margin:0;">Vorschau</h4>
-          <button class="btn" onclick="downloadPflichtenheft()">PDF herunterladen</button>
-        </div>
-        <div id="pflichtenheft-preview" class="tree"></div>
-      </div>
     </div>
   </div>
 
@@ -367,15 +400,18 @@ document.querySelectorAll('nav button').forEach(btn => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    if (btn.dataset.tab === 'abgangsliste') {
-      await renderAbgangProjectSelect();
-    }
-    if (btn.dataset.tab === 'geraeteplanung') {
-      await renderGeraeteplanungProjectSelect();
-    }
-    if (btn.dataset.tab === 'pflichtenheft') {
-      await renderPflichtenheftProjectSelect();
-    }
+  };
+});
+
+document.querySelectorAll('#workspace-subnav button').forEach(btn => {
+  btn.onclick = async () => {
+    document.querySelectorAll('#workspace-subnav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#project-detail .subtab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('subtab-' + btn.dataset.subtab).classList.add('active');
+    if (btn.dataset.subtab === 'abgangsliste') await loadAbgangForCurrentProject();
+    if (btn.dataset.subtab === 'geraeteplanung') await loadGeraeteplanungForCurrentProject();
+    if (btn.dataset.subtab === 'pflichtenheft') await loadPflichtenheftForCurrentProject();
   };
 });
 
@@ -524,9 +560,21 @@ function cancelEditActorType() {
 
 async function loadActorTypes() {
   ACTOR_TYPES = await api('/actor-types');
+  renderActorTypesList();
+}
+
+function renderActorTypesList() {
   const container = document.getElementById('actor-types-groups');
+  const countEl = document.getElementById('actortype-filter-count');
+  const query = document.getElementById('actortype-filter').value.trim().toLowerCase();
+  const filtered = !query ? ACTOR_TYPES : ACTOR_TYPES.filter(at =>
+    [at.manufacturer, at.model, at.group_name, at.description, at.channel_type]
+      .some(field => (field || '').toLowerCase().includes(query))
+  );
+  countEl.textContent = query ? `${filtered.length} von ${ACTOR_TYPES.length} Geräten` : '';
+
   const groups = {};
-  ACTOR_TYPES.forEach(at => {
+  filtered.forEach(at => {
     const g = at.group_name || 'Sonstiges';
     groups[g] = groups[g] || [];
     groups[g].push(at);
@@ -549,7 +597,9 @@ async function loadActorTypes() {
           </div>
         </li>`).join('')}
     </ul>
-  `).join('') || '<p class="muted">Noch keine Geräte</p>';
+  `).join('') || (query
+    ? '<p class="muted">Keine Geräte gefunden</p>'
+    : '<p class="muted">Noch keine Geräte</p>');
 }
 
 async function deleteActorType(id) {
@@ -651,25 +701,52 @@ async function deleteCentralTemplate(id) {
 async function createProject() {
   const name = document.getElementById('proj-name').value.trim();
   if (!name) return;
-  await api('/projects', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})});
+  const customer = document.getElementById('proj-customer').value.trim();
+  const location = document.getElementById('proj-location').value.trim();
+  const status = document.getElementById('proj-status').value;
+  const order_number = document.getElementById('proj-order-number').value.trim();
+  const comment = document.getElementById('proj-comment').value.trim();
+  await api('/projects', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, customer, location, status, order_number, comment})});
   document.getElementById('proj-name').value = '';
+  document.getElementById('proj-customer').value = '';
+  document.getElementById('proj-location').value = '';
+  document.getElementById('proj-status').value = '';
+  document.getElementById('proj-order-number').value = '';
+  document.getElementById('proj-comment').value = '';
   await loadProjects();
 }
 
 async function loadProjects() {
   PROJECTS_LIST = await api('/projects');
+  renderProjectsList();
+}
+
+function renderProjectsList() {
   const ul = document.getElementById('projects-list');
-  ul.innerHTML = PROJECTS_LIST.map(p => `
+  const countEl = document.getElementById('project-filter-count');
+  const query = document.getElementById('project-filter').value.trim().toLowerCase();
+  const filtered = !query ? PROJECTS_LIST : PROJECTS_LIST.filter(p =>
+    [p.name, p.customer, p.location, p.status, p.order_number]
+      .some(field => (field || '').toLowerCase().includes(query))
+  );
+  countEl.textContent = query ? `${filtered.length} von ${PROJECTS_LIST.length} Projekten` : '';
+
+  ul.innerHTML = filtered.map(p => `
     <li>
-      <div><b>${p.name}</b></div>
+      <div>
+        <b>${p.name}</b>
+        ${p.customer ? `<span class="pill">${p.customer}</span>` : ''}
+        ${p.location ? `<span class="pill">${p.location}</span>` : ''}
+        ${p.status ? `<span class="pill">${p.status}</span>` : ''}
+        ${p.order_number ? `<span class="pill">${p.order_number}</span>` : ''}
+      </div>
       <div>
         <button class="btn secondary small" onclick="openProject(${p.id}, '${p.name.replace(/'/g,"\\'")}')">Öffnen</button>
         <button class="btn danger small" onclick="deleteProject(${p.id})">Löschen</button>
       </div>
-    </li>`).join('') || '<li class="muted">Noch keine Projekte</li>';
-  if (document.getElementById('abgang-project-select')) await renderAbgangProjectSelect();
-  if (document.getElementById('geraeteplanung-project-select')) await renderGeraeteplanungProjectSelect();
-  if (document.getElementById('pflichtenheft-project-select')) await renderPflichtenheftProjectSelect();
+    </li>`).join('') || (query
+      ? '<li class="muted">Keine Projekte gefunden</li>'
+      : '<li class="muted">Noch keine Projekte</li>');
 }
 
 async function deleteProject(id) {
@@ -688,6 +765,14 @@ async function openProject(id, name) {
   document.getElementById('project-detail-title').textContent = name;
   document.getElementById('ga-preview').innerHTML = '';
   document.getElementById('gen-error').textContent = '';
+  cancelEditProjectMeta();
+  renderProjectMeta();
+
+  document.querySelectorAll('#workspace-subnav button').forEach(b => b.classList.remove('active'));
+  document.querySelector('#workspace-subnav button[data-subtab="ga"]').classList.add('active');
+  document.querySelectorAll('#project-detail .subtab').forEach(t => t.classList.remove('active'));
+  document.getElementById('subtab-ga').classList.add('active');
+
   await renderFloors();
   await renderSpecialLocationOptions();
   await renderSpecials();
@@ -695,6 +780,53 @@ async function openProject(id, name) {
 
 function closeProject() {
   document.getElementById('project-detail').style.display = 'none';
+  CURRENT_PROJECT = null;
+}
+
+// ---------- Project metadata (edit-in-place) ----------
+function renderProjectMeta() {
+  const p = PROJECTS_LIST.find(p => p.id === CURRENT_PROJECT);
+  if (!p) return;
+  document.getElementById('project-detail-title').textContent = p.name;
+  const pills = [p.customer, p.location, p.status, p.order_number]
+    .filter(Boolean).map(v => `<span class="pill">${v}</span>`).join('');
+  document.getElementById('project-meta-pills').innerHTML = pills;
+  document.getElementById('project-meta-comment').textContent = p.comment || '';
+}
+
+function editProjectMeta() {
+  const p = PROJECTS_LIST.find(p => p.id === CURRENT_PROJECT);
+  if (!p) return;
+  document.getElementById('pm-name').value = p.name || '';
+  document.getElementById('pm-customer').value = p.customer || '';
+  document.getElementById('pm-location').value = p.location || '';
+  document.getElementById('pm-status').value = p.status || '';
+  document.getElementById('pm-order-number').value = p.order_number || '';
+  document.getElementById('pm-comment').value = p.comment || '';
+  document.getElementById('project-meta-view').style.display = 'none';
+  document.getElementById('project-meta-edit').style.display = '';
+}
+
+function cancelEditProjectMeta() {
+  document.getElementById('project-meta-view').style.display = '';
+  document.getElementById('project-meta-edit').style.display = 'none';
+}
+
+async function saveProjectMeta() {
+  const name = document.getElementById('pm-name').value.trim();
+  if (!name) return alert('Projektname ist erforderlich');
+  const body = JSON.stringify({
+    name,
+    customer: document.getElementById('pm-customer').value.trim(),
+    location: document.getElementById('pm-location').value.trim(),
+    status: document.getElementById('pm-status').value,
+    order_number: document.getElementById('pm-order-number').value.trim(),
+    comment: document.getElementById('pm-comment').value.trim(),
+  });
+  await api('/projects/' + CURRENT_PROJECT, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
+  await loadProjects();
+  cancelEditProjectMeta();
+  renderProjectMeta();
 }
 
 async function addFloor() {
@@ -857,28 +989,7 @@ async function deleteSpecial(id) {
   await renderSpecials();
 }
 
-// ---------- Abgangsliste: Project selector ----------
-async function renderAbgangProjectSelect() {
-  if (!PROJECTS_LIST.length) PROJECTS_LIST = await api('/projects');
-  const sel = document.getElementById('abgang-project-select');
-  sel.innerHTML = '<option value="">— Projekt wählen —</option>' +
-    PROJECTS_LIST.map(p => `<option value="${p.id}" ${CURRENT_PROJECT === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
-  if (CURRENT_PROJECT && PROJECTS_LIST.some(p => p.id === CURRENT_PROJECT)) {
-    await loadAbgangForCurrentProject();
-  } else {
-    document.getElementById('abgang-detail').style.display = 'none';
-  }
-}
-
-async function onAbgangProjectChange(value) {
-  CURRENT_PROJECT = value ? parseInt(value) : null;
-  if (CURRENT_PROJECT) {
-    await loadAbgangForCurrentProject();
-  } else {
-    document.getElementById('abgang-detail').style.display = 'none';
-  }
-}
-
+// ---------- Abgangsliste (project sub-tab) ----------
 async function loadAbgangForCurrentProject() {
   document.getElementById('abgang-detail').style.display = 'block';
   await renderActorInstanceForm();
@@ -1168,28 +1279,7 @@ async function waitForRestartThenReload() {
   document.getElementById('update-status').textContent = 'Startet noch... bitte in Kürze manuell neu laden.';
 }
 
-// ---------- Geräteplanung ----------
-async function renderGeraeteplanungProjectSelect() {
-  if (!PROJECTS_LIST.length) PROJECTS_LIST = await api('/projects');
-  const sel = document.getElementById('geraeteplanung-project-select');
-  sel.innerHTML = '<option value="">— Projekt wählen —</option>' +
-    PROJECTS_LIST.map(p => `<option value="${p.id}" ${CURRENT_PROJECT === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
-  if (CURRENT_PROJECT && PROJECTS_LIST.some(p => p.id === CURRENT_PROJECT)) {
-    await loadGeraeteplanungForCurrentProject();
-  } else {
-    document.getElementById('geraeteplanung-detail').style.display = 'none';
-  }
-}
-
-async function onGeraeteplanungProjectChange(value) {
-  CURRENT_PROJECT = value ? parseInt(value) : null;
-  if (CURRENT_PROJECT) {
-    await loadGeraeteplanungForCurrentProject();
-  } else {
-    document.getElementById('geraeteplanung-detail').style.display = 'none';
-  }
-}
-
+// ---------- Geräteplanung (project sub-tab) ----------
 async function loadGeraeteplanungForCurrentProject() {
   document.getElementById('geraeteplanung-detail').style.display = 'block';
   await renderDeviceSummary();
@@ -1258,28 +1348,7 @@ function downloadGeraeteliste() {
   window.location.href = `/api/projects/${CURRENT_PROJECT}/export-geraeteliste.pdf`;
 }
 
-// ---------- Pflichtenheft ----------
-async function renderPflichtenheftProjectSelect() {
-  if (!PROJECTS_LIST.length) PROJECTS_LIST = await api('/projects');
-  const sel = document.getElementById('pflichtenheft-project-select');
-  sel.innerHTML = '<option value="">— Projekt wählen —</option>' +
-    PROJECTS_LIST.map(p => `<option value="${p.id}" ${CURRENT_PROJECT === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
-  if (CURRENT_PROJECT && PROJECTS_LIST.some(p => p.id === CURRENT_PROJECT)) {
-    await loadPflichtenheftForCurrentProject();
-  } else {
-    document.getElementById('pflichtenheft-detail').style.display = 'none';
-  }
-}
-
-async function onPflichtenheftProjectChange(value) {
-  CURRENT_PROJECT = value ? parseInt(value) : null;
-  if (CURRENT_PROJECT) {
-    await loadPflichtenheftForCurrentProject();
-  } else {
-    document.getElementById('pflichtenheft-detail').style.display = 'none';
-  }
-}
-
+// ---------- Pflichtenheft (project sub-tab) ----------
 async function loadPflichtenheftForCurrentProject() {
   document.getElementById('pflichtenheft-detail').style.display = 'block';
   await renderPflichtenheftPreview();

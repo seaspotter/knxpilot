@@ -29,6 +29,11 @@ class CentralTemplateIn(BaseModel):
 
 class ProjectIn(BaseModel):
     name: str
+    location: str = ""
+    customer: str = ""
+    status: str = ""
+    comment: str = ""
+    order_number: str = ""
 
 
 class FloorIn(BaseModel):

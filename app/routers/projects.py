@@ -30,10 +30,27 @@ def list_projects():
 def create_project(p: ProjectIn):
     with get_db() as db:
         try:
-            cur = db.execute("INSERT INTO projects (name) VALUES (?)", (p.name,))
+            cur = db.execute(
+                "INSERT INTO projects (name, location, customer, status, comment, order_number) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (p.name, p.location, p.customer, p.status, p.comment, p.order_number),
+            )
         except sqlite3.IntegrityError:
             raise HTTPException(400, "A project with that name already exists")
         return {"id": cur.lastrowid}
+
+
+@router.put("/api/projects/{project_id}")
+def update_project(project_id: int, p: ProjectIn):
+    with get_db() as db:
+        try:
+            db.execute(
+                "UPDATE projects SET name=?, location=?, customer=?, status=?, comment=?, order_number=? WHERE id=?",
+                (p.name, p.location, p.customer, p.status, p.comment, p.order_number, project_id),
+            )
+        except sqlite3.IntegrityError:
+            raise HTTPException(400, "A project with that name already exists")
+    return {"ok": True}
 
 
 @router.delete("/api/projects/{project_id}")
@@ -241,7 +258,17 @@ def export_project_json(project_id: int):
                 }
             )
 
-        payload = {"format": "knx-ga-project-v1", "project_name": project["name"], "floors": floors_out, "specials": specials_out}
+        payload = {
+            "format": "knx-ga-project-v1.1",
+            "project_name": project["name"],
+            "location": project["location"],
+            "customer": project["customer"],
+            "status": project["status"],
+            "comment": project["comment"],
+            "order_number": project["order_number"],
+            "floors": floors_out,
+            "specials": specials_out,
+        }
         buf = io.StringIO()
         buf.write(json.dumps(payload, ensure_ascii=False, indent=2))
         buf.seek(0)
@@ -273,7 +300,18 @@ def import_project_json(payload: dict):
             (r["category_id"], r["name"]): r["id"] for r in db.execute("SELECT * FROM point_types").fetchall()
         }
 
-        cur = db.execute("INSERT INTO projects (name) VALUES (?)", (name,))
+        cur = db.execute(
+            "INSERT INTO projects (name, location, customer, status, comment, order_number) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                name,
+                payload.get("location", ""),
+                payload.get("customer", ""),
+                payload.get("status", ""),
+                payload.get("comment", ""),
+                payload.get("order_number", ""),
+            ),
+        )
         project_id = cur.lastrowid
         skipped = []
 

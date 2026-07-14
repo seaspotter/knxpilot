@@ -69,6 +69,11 @@ def init_db():
             CREATE TABLE IF NOT EXISTS projects (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL UNIQUE,
+                location TEXT NOT NULL DEFAULT '',
+                customer TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT '',
+                comment TEXT NOT NULL DEFAULT '',
+                order_number TEXT NOT NULL DEFAULT '',
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
 
@@ -172,6 +177,11 @@ def init_db():
             ("point_types", "channels_needed", "ALTER TABLE point_types ADD COLUMN channels_needed INTEGER NOT NULL DEFAULT 1"),
             ("actor_types", "manufacturer", "ALTER TABLE actor_types ADD COLUMN manufacturer TEXT NOT NULL DEFAULT ''"),
             ("actor_types", "model", "ALTER TABLE actor_types ADD COLUMN model TEXT NOT NULL DEFAULT ''"),
+            ("projects", "location", "ALTER TABLE projects ADD COLUMN location TEXT NOT NULL DEFAULT ''"),
+            ("projects", "customer", "ALTER TABLE projects ADD COLUMN customer TEXT NOT NULL DEFAULT ''"),
+            ("projects", "status", "ALTER TABLE projects ADD COLUMN status TEXT NOT NULL DEFAULT ''"),
+            ("projects", "comment", "ALTER TABLE projects ADD COLUMN comment TEXT NOT NULL DEFAULT ''"),
+            ("projects", "order_number", "ALTER TABLE projects ADD COLUMN order_number TEXT NOT NULL DEFAULT ''"),
         ]:
             cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]
             if column not in cols:
