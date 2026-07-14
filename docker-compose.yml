@@ -1,7 +1,7 @@
 services:
-  knx-ga-generator:
+  knxpilot:
     build: .
-    container_name: knx-ga-generator
+    container_name: knxpilot
     restart: unless-stopped
     ports:
       - "8000:8000"

@@ -1,4 +1,4 @@
-# KNX Projekttool
+# KNXpilot
 
 Direkt aus der Analyse echter ETS6-Exporte entwickelt. Ablauf:
 
@@ -38,16 +38,16 @@ in `app/main.py` isoliert.
 
 ## Verwendung
 
-Das Tool hat sieben Tabs:
+Das Tool hat vier Tabs:
 
-- **Gruppenadressen** — Projekte aufbauen (Geschosse → Räume → Punkte),
-  Vorschau ansehen und die ETS6-Gruppenadressen-CSV exportieren.
-- **Abgangsliste** — Projekt wählen, die verbauten Aktoren anlegen und
-  jeden Abgang einem Kanal zuordnen.
-- **Geräteplanung** — je Raum festlegen, welche Geräte (jeder Gruppe)
-  verbaut werden, plus eine projektweite Stückliste.
-- **Pflichtenheft** — dokumentiert je Raum die vereinbarten Funktionen
-  und Geräte als PDF-Referenz für Kunde und Elektriker.
+- **Projekte** — Projekte anlegen/suchen/bearbeiten (Name, Kunde, Standort,
+  Status, Bestellnummer, Kommentar) und öffnen. Ein geöffnetes Projekt zeigt
+  einen eigenen Arbeitsbereich mit vier Unterreitern: **Gruppenadressen**
+  (Geschosse → Räume → Punkte, ETS6-CSV-Export), **Abgangsliste** (Aktoren
+  anlegen, Abgänge Kanälen zuordnen), **Geräteplanung** (je Raum, welche
+  Geräte verbaut werden, plus Stückliste) und **Pflichtenheft**
+  (PDF-Referenz für Kunde und Elektriker). Alle vier arbeiten am selben
+  geöffneten Projekt — kein erneutes Projekt-Auswählen beim Wechseln.
 - **Geräte** — der globale Gerätekatalog (Hersteller / Modell / Gruppe /
   Type / Kanäle), gemeinsam für alle Projekte genutzt. Vorbelegt mit
   einem Startkatalog gängiger KNX-Geräte, den Sie bearbeiten, ergänzen
@@ -87,35 +87,49 @@ Das Tool hat sieben Tabs:
   tatsächlich verwendet wird** — z.B. erscheint keine Hauptgruppe
   Steckdosen samt Zentralfunktion, wenn nie eine Steckdose hinzugefügt wird.
 
-### Gruppenadressen-Tab
+### Projekte-Tab
 
-- Projekt anlegen, Geschosse (Stockwerke) hinzufügen. Ein Geschoss als
-  **Aussen/unbeheizt** markieren (z.B. "Aussen", "Garage"), wenn es von
-  entsprechend markierten Vorlagen ausgeschlossen werden soll.
-- Räume je Geschoss hinzufügen.
-- Für jeden Raum Punkte hinzufügen: Punkttyp wählen (z.B. "Licht
-  (Dimmen)"), ein Label vergeben (z.B. "Spots", "Decke", "Nord" für ein
-  Fenster), bei Bedarf eine Anzahl für mehrere gleiche auf einmal, und
-  **+BWM** ankreuzen, falls dieser Punkt eine Bewegungsmelder-Adresse
-  braucht.
-- **Alles Spezielle** (eine Einzel-Szene, eine spezielle Zentralgruppe für
-  einen bestimmten Raum wie "Kind1 Zentral") kommt unter **Sonder-/
-  Zusatzadressen** — Kategorie wählen, festlegen ob es zu
-  `Zentralfunktionen` oder einem bestimmten Geschoss gehört, benennen und
-  die Datenpunkte angeben.
-- **Vorschau** zur Kontrolle, dann **CSV für ETS6 herunterladen**.
-- **⭳ Sichern (JSON)** speichert die komplette Projektdefinition
-  (Geschosse, Räume, Punkte, Sonderadressen) als `.json`-Datei — getrennt
-  von der ETS-CSV, gedacht zum Sichern / Duplizieren / Umziehen eines
-  Projekts zwischen Installationen. **⭱ Aus Sicherung wiederherstellen**
-  in der Projektliste erstellt ein Projekt aus dieser Datei neu. Punkttypen/
+**Projektliste** (Standardansicht): Projekt anlegen mit Name, Kunde, Standort,
+Status (Dropdown: In Planung / In Ausführung / Abgeschlossen / Pausiert),
+Bestellnummer und Kommentar — alle Felder ausser Name optional. Ein
+Suchfeld filtert live nach allen diesen Feldern, praktisch sobald mehrere
+Projekte angelegt sind; Kunde/Standort/Status/Bestellnummer erscheinen als
+Badges neben jedem Projektnamen in der Liste.
+
+- **⭱ Aus Sicherung wiederherstellen (JSON)** legt aus einer zuvor
+  exportierten `.json`-Datei ein neues Projekt an (siehe unten). Punkttypen/
   Kategorien werden dabei per Name mit der Zielinstallation abgeglichen;
   was nicht übereinstimmt, wird übersprungen und gemeldet, nie einfach
   angenommen. Existiert bereits ein Projekt mit gleichem Namen, wird der
   Import als "<Name> (imported)" gespeichert statt es zu überschreiben.
-- **× Schliessen** klappt die geöffnete Projektansicht ein, ohne etwas zu
-  löschen — praktisch, sobald mehrere Projekte angelegt sind und die
-  Seite lang wird.
+
+**Öffnen** eines Projekts zeigt dessen Arbeitsbereich: oben die
+Projekt-Metadaten (mit **Bearbeiten**-Button, ändert Name/Kunde/Standort/
+Status/Bestellnummer/Kommentar nachträglich, ohne das Projekt zu löschen
+und neu anzulegen), daneben **⭳ Sichern (JSON)** und **× Schliessen**.
+Darunter vier Unterreiter, die alle am selben geöffneten Projekt arbeiten:
+
+- **Gruppenadressen** — Geschosse (Stockwerke) hinzufügen, ein Geschoss als
+  **Aussen/unbeheizt** markieren (z.B. "Aussen", "Garage"), wenn es von
+  entsprechend markierten Vorlagen ausgeschlossen werden soll; Räume je
+  Geschoss hinzufügen; für jeden Raum Punkte hinzufügen (Punkttyp wählen,
+  z.B. "Licht (Dimmen)", Label vergeben wie "Spots"/"Decke"/"Nord", bei
+  Bedarf eine Anzahl für mehrere gleiche auf einmal, **+BWM** ankreuzen
+  falls eine Bewegungsmelder-Adresse gebraucht wird). **Alles Spezielle**
+  (Einzel-Szene, spezielle Zentralgruppe für einen bestimmten Raum wie
+  "Kind1 Zentral") kommt unter **Sonder-/Zusatzadressen**. **Vorschau** zur
+  Kontrolle, dann **CSV für ETS6 herunterladen**.
+- **Abgangsliste**, **Geräteplanung**, **Pflichtenheft** — siehe die
+  jeweiligen Abschnitte weiter unten.
+
+**⭳ Sichern (JSON)** speichert die komplette Projektdefinition (Metadaten,
+Geschosse, Räume, Punkte, Sonderadressen) als `.json`-Datei — getrennt von
+der ETS-CSV, gedacht zum Sichern / Duplizieren / Umziehen eines Projekts
+zwischen Installationen.
+
+**× Schliessen** kehrt zur Projektliste zurück, ohne etwas zu löschen —
+beim nächsten Öffnen (auch desselben Projekts) startet der Arbeitsbereich
+wieder beim Unterreiter Gruppenadressen.
 
 ### Geräte-Tab
 
@@ -156,7 +170,7 @@ Phoenix Contact, Hörmann — siehe `DEFAULT_ACTOR_TYPES` in `app/db.py`).
 Das passiert nur einmalig, wenn die Tabelle leer ist — ein bereits
 befüllter oder bewusst geleerter Katalog wird dadurch nie überschrieben.
 
-### Geräteplanung-Tab
+### Geräteplanung (Unterreiter im geöffneten Projekt)
 
 Getrennt von der Abgangsliste (die nur Aktoren mit physischen Kanälen
 betrifft): hier wird festgelegt, welche Geräte — **jeder Gruppe**,
@@ -164,23 +178,22 @@ also auch Sensoren, Wetterstationen, Bedienelemente — in welchem Raum
 verbaut werden, unabhängig davon ob dafür eine Gruppenadresse oder ein
 Aktorkanal existiert.
 
-1. Projekt aus der Liste wählen.
-2. Für jeden Raum Geräte mit Anzahl und optionaler Notiz hinzufügen (z.B.
+1. Für jeden Raum Geräte mit Anzahl und optionaler Notiz hinzufügen (z.B.
    "2× Bewegungsmelder — Ecken", "1× Touchpanel — Eingang").
-3. Oben erscheint automatisch eine **Stückliste** — die Gesamtanzahl
+2. Oben erscheint automatisch eine **Stückliste** — die Gesamtanzahl
    jedes benötigten Geräts über das ganze Projekt hinweg, nach Gruppe
    sortiert. Praktisch für die Bestellung oder Angebotskalkulation.
-4. **PDF herunterladen** exportiert diese Stückliste als Bestellliste,
+3. **PDF herunterladen** exportiert diese Stückliste als Bestellliste,
    plus eine Aufschlüsselung je Raum, im selben Design wie die
    Abgangsliste (siehe unten).
 
-### Pflichtenheft-Tab
+### Pflichtenheft (Unterreiter im geöffneten Projekt)
 
 Dokumentiert, was für das Projekt tatsächlich vereinbart/umgesetzt wurde —
 gedacht als Referenz für Kunde und Elektriker, getrennt von den
 technischen GA-/Verdrahtungsdetails:
 
-1. Projekt wählen — eine Textvorschau zeigt sofort, was im PDF stehen wird.
+1. Eine Textvorschau zeigt sofort, was im PDF stehen wird.
 2. **PDF herunterladen** erzeugt ein mehrseitiges Dokument mit:
    - je Geschoss/Raum: die geplanten Funktionen (aus den Gruppenadressen-
      Punkten, nach Kategorie gruppiert, z.B. "Beleuchtung: Decke (Licht
@@ -208,11 +221,11 @@ wird. Die JSON-Sicherung/-Wiederherstellung oben ist für explizite
 Portabilität gedacht (ein Projekt auf eine andere Maschine bringen, eine
 externe Kopie behalten), nicht für die normale Persistenz im Alltag nötig.
 
-### Abgangsliste (Aktoren-Verdrahtung / Kanalliste)
+### Abgangsliste (Unterreiter im geöffneten Projekt — Aktoren-Verdrahtung / Kanalliste)
 
 Sobald ein Projekt Räume und Punkte enthält, kennt das Tool bereits jeden
 physischen Ausgang, der benötigt wird (jeder Schalt-, Dimm-, LED-,
-Jalousie- und Heizkanal). Der **Abgangsliste**-Tab macht daraus eine
+Jalousie- und Heizkanal). Der **Abgangsliste**-Unterreiter macht daraus eine
 Verdrahtungsliste für den Elektriker:
 
 1. **Setup → Punkttypen**: jeder Punkttyp hat einen **Kanaltyp** (z.B.
@@ -220,11 +233,11 @@ Verdrahtungsliste für den Elektriker:
    Kanäle** (meist 1). Für alle mitgelieferten Punkttypen bereits
    ausgefüllt. `LED (Tunable White)` hat einen eigenen Kanaltyp `LED`
    (nicht `Dimmen`), da dafür üblicherweise eigene Aktoren verbaut werden.
-2. **Aktoren-Tab**: den Aktor-Gerätekatalog anlegen — z.B. Hersteller
+2. **Geräte-Tab**: den Aktor-Gerätekatalog anlegen — z.B. Hersteller
    "MDT", Modell "AKS-2016.03", Type `Schalten`, 20 Kanäle. Der Type muss
    dem Kanaltyp eines Punkttyps entsprechen, um zuordenbar zu sein. Dieser
    Katalog ist global und gilt für alle Projekte.
-3. **Abgangsliste-Tab**: Projekt aus der Liste wählen. Die
+3. **Abgangsliste-Unterreiter** im geöffneten Projekt: die
    **Bedarfsübersicht** zeigt sofort, wie viele Kanäle je Geschoss und
    Kanaltyp tatsächlich benötigt werden (benötigt/zugeordnet/offen) — so
    lässt sich die richtige Aktorgrösse wählen, bevor überhaupt ein Aktor
@@ -405,8 +418,8 @@ app/
   routers/
     setup.py             — Kategorien, Punkttypen, Zentral-Vorlagen (Setup-Tab)
     geraete.py           — globaler Gerätekatalog (Geräte-Tab)
-    projects.py          — Projekte/Geschosse/Räume/Punkte, Sicherung, GA-Export (Gruppenadressen-Tab)
-    abgangsliste.py       — Aktoren, Abgänge, Kanalzuordnung, CSV/PDF-Export (Abgangsliste-Tab)
+    projects.py          — Projekte (inkl. Metadaten), Geschosse/Räume/Punkte, Sicherung, GA-Export (Projekte-Tab)
+    abgangsliste.py       — Aktoren, Abgänge, Kanalzuordnung, CSV/PDF-Export (Abgangsliste-Unterreiter)
     geraeteplanung.py     — Geräteplanung je Raum, Stückliste, PDF-Export
     pflichtenheft.py      — Pflichtenheft-PDF-Export
     system.py             — Selbst-Update über Git

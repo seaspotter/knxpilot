@@ -1,5 +1,5 @@
 """
-KNX Projekttool
+KNXpilot
 --------------------------------
 Modeled directly on real exported ETS6 projects.
 
@@ -35,7 +35,7 @@ from fastapi.staticfiles import StaticFiles
 from .db import init_db
 from .routers import setup, geraete, projects, abgangsliste, geraeteplanung, pflichtenheft, system
 
-app = FastAPI(title="KNX Projekttool")
+app = FastAPI(title="KNXpilot")
 
 init_db()
 
