@@ -17,12 +17,10 @@ Vorlagen erzeugt — normalerweise muss man das pro Projekt gar nicht anfassen.
 **Voraussetzungen:** Docker mit Compose-Plugin, sowie `git`.
 
 ```bash
-git clone https://github.com/seaspotter/KNX_projecttool.git
-cd KNX_projecttool
+git clone https://github.com/seaspotter/knxpilot.git
+cd knxpilot
 docker compose up -d --build
 ```
-*(Repository-URL/Ordnername hier anpassen, sobald das Repo wie geplant
-umbenannt wurde.)*
 
 Danach `http://<host>:8000` öffnen.
 
