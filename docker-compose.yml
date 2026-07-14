@@ -1,6 +1,7 @@
 services:
   knxpilot:
     build: .
+    image: knxpilot
     container_name: knxpilot
     restart: unless-stopped
     ports:
