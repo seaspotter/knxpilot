@@ -68,8 +68,6 @@
     <p>Geschosse → Räume → Punkte. Zentral- &amp; Allgemeinfunktionen werden automatisch aus Ihren Vorlagen erzeugt.</p>
   </div>
   <div class="row" style="margin:0; align-items:center;">
-    <span class="muted" id="update-status"></span>
-    <button id="update-btn" class="btn secondary small" onclick="performUpdate()" style="display:none;">⭱ Aktualisieren</button>
     <button id="theme-toggle" onclick="toggleTheme()">☀️ Hell</button>
   </div>
 </header>
@@ -80,6 +78,7 @@
   <button data-tab="pflichtenheft">Pflichtenheft</button>
   <button data-tab="aktoren">Geräte</button>
   <button data-tab="setup">Setup (Kategorien &amp; Vorlagen)</button>
+  <button data-tab="update">Update</button>
 </nav>
 <main>
 
@@ -322,6 +321,20 @@
       <div style="margin-top:8px;"><button class="btn" onclick="createCentralTemplate()">Vorlage speichern</button></div>
       <hr class="sep">
       <ul class="list" id="central-templates-list"></ul>
+    </div>
+  </div>
+
+  <!-- UPDATE TAB -->
+  <div class="tab" id="tab-update">
+    <div class="card">
+      <h3>Update</h3>
+      <p class="muted">Prüft per Git, ob auf GitHub eine neuere Version vorliegt als die aktuell laufende. Es wird nichts automatisch im Hintergrund geprüft — nur auf Klick.</p>
+      <div class="row">
+        <button class="btn" onclick="checkForUpdate()">⟲ Nach Updates suchen</button>
+        <button id="update-btn" class="btn secondary" onclick="performUpdate()" style="display:none;">⭱ Update installieren</button>
+      </div>
+      <p class="muted" id="update-status"></p>
+      <p class="error" id="update-error" style="display:none;"></p>
     </div>
   </div>
 
@@ -1082,13 +1095,18 @@ async function importProjectJson() {
 // ---------- Self-update ----------
 async function checkForUpdate() {
   const statusEl = document.getElementById('update-status');
+  const errorEl = document.getElementById('update-error');
   const btn = document.getElementById('update-btn');
   statusEl.textContent = 'Suche nach Updates...';
+  errorEl.style.display = 'none';
+  errorEl.textContent = '';
+  btn.style.display = 'none';
   try {
     const status = await api('/system/status');
     if (status.error) {
-      statusEl.textContent = '';
-      btn.style.display = 'none';
+      statusEl.textContent = status.current ? `Aktuelle Version: ${status.current}` : '';
+      errorEl.textContent = 'Prüfung fehlgeschlagen: ' + status.error;
+      errorEl.style.display = 'block';
       return;
     }
     if (status.update_available) {
@@ -1096,11 +1114,11 @@ async function checkForUpdate() {
       btn.style.display = 'inline-block';
     } else {
       statusEl.textContent = `Aktuell (${status.current})`;
-      btn.style.display = 'none';
     }
   } catch (e) {
     statusEl.textContent = '';
-    btn.style.display = 'none';
+    errorEl.textContent = 'Prüfung fehlgeschlagen: ' + e.message;
+    errorEl.style.display = 'block';
   }
 }
 
@@ -1312,7 +1330,6 @@ function downloadPflichtenheft() {
   await loadCentralTemplates();
   await loadActorTypes();
   await loadProjects();
-  await checkForUpdate();
 })();
 </script>
 </body>
