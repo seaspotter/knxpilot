@@ -223,6 +223,10 @@ def init_db():
         if count == 0:
             seed_defaults(db)
 
+        (count,) = db.execute("SELECT COUNT(*) FROM actor_types").fetchone()
+        if count == 0:
+            seed_default_actor_types(db)
+
 
 def seed_defaults(db):
     """Seed categories, point types and central templates from the analysed real projects."""
@@ -447,4 +451,97 @@ def seed_defaults(db):
         ],
         block_size=5,
         channel_type="Tor",
+    )
+
+
+# (manufacturer, model, group_name, description, channel_type, channel_count)
+DEFAULT_ACTOR_TYPES = [
+    ('MDT', 'AKH-0400.03', 'Aktor', 'Heizungsaktor 4 Kanäle', 'Heizung', 4),
+    ('MDT', 'AKH-0600.03', 'Aktor', 'Heizungsaktor 6 Kanäle', 'Heizung', 6),
+    ('MDT', 'AKH-0800.03', 'Aktor', 'Heizungsaktor 8 Kanäle', 'Heizung', 8),
+    ('MDT', 'BE-04000.02', 'Aktor', 'Binäreingang 4 Kanäle (potentialfrei)', 'Binäreingang', 4),
+    ('MDT', 'BE-04024.02', 'Aktor', 'Binäreingang 4 Kanäle (24V)', 'Binäreingang', 4),
+    ('MDT', 'BE-04230.02', 'Aktor', 'Binäreingang 4 Kanäle (230V)', 'Binäreingang', 4),
+    ('MDT', 'BE-08000.02', 'Aktor', 'Binäreingang 8 Kanäle (potentialfrei)', 'Binäreingang', 8),
+    ('MDT', 'BE-08024.02', 'Aktor', 'Binäreingang 8 Kanäle (24V)', 'Binäreingang', 8),
+    ('MDT', 'BE-08230.02', 'Aktor', 'Binäreingang 8 Kanäle (230V)', 'Binäreingang', 8),
+    ('MDT', 'BE-16000.02', 'Aktor', 'Binäreingang 16 Kanäle (potentialfrei)', 'Binäreingang', 16),
+    ('MDT', 'BE-16024.02', 'Aktor', 'Binäreingang 16 Kanäle (24V)', 'Binäreingang', 16),
+    ('MDT', 'BE-16230.02', 'Aktor', 'Binäreingang 16 Kanäle (230V)', 'Binäreingang', 16),
+    ('MDT', 'BE-32000.02', 'Aktor', 'Binäreingang 32 Kanäle (potentialfrei)', 'Binäreingang', 32),
+    ('MDT', 'BE-GTS06TW.01S', 'Bedienelement', 'Glas Touch Smart 6 Zoll Weiß', '', None),
+    ('MDT', 'BE-GTS06TS.01S', 'Bedienelement', 'Glas Touch Smart 6 Zoll Schwarz', '', None),
+    ('MDT', 'BE-GTSP6TW.01S', 'Bedienelement', 'Glas Touch Smart Plus 6 Zoll Weiß', '', None),
+    ('MDT', 'BE-GTSP6TS.01S', 'Bedienelement', 'Glas Touch Smart Plus 6 Zoll Schwarz', '', None),
+    ('MDT', 'BE-GT20W.02', 'Bedienelement', 'Glastaster II Smart Weiß', '', None),
+    ('MDT', 'BE-GT20S.02S', 'Bedienelement', 'Glastaster II Smart Schwarz', '', None),
+    ('MDT', 'BE-GT2TW.02', 'Bedienelement', 'Glastaster II Smart Weiß mit Temperatursensor', '', None),
+    ('MDT', 'BE-GT2TS.02S', 'Bedienelement', 'Glastaster II Smart Schwarz mit Temperatursensor', '', None),
+    ('MDT', 'BE-TAS6304.01', 'Bedienelement', 'Taster Smart 63 4-fach', '', None),
+    ('MDT', 'BE-TAS63T4.01', 'Bedienelement', 'Taster Smart 63 4-fach mit Temperatursensor', '', None),
+    ('MDT', 'BE-TAL6301.01', 'Bedienelement', 'Taster Light 63 1-fach', '', None),
+    ('MDT', 'BE-TAL63T1.01', 'Bedienelement', 'Taster Light 63 1-fach mit Temperatursensor', '', None),
+    ('MDT', 'BE-TAL6301.A1', 'Bedienelement', 'Taster Light 63 1-fach (Auf/Ab)', '', None),
+    ('MDT', 'BE-TAL63T1.A1', 'Bedienelement', 'Taster Light 63 1-fach (Auf/Ab) mit Temperatursensor', '', None),
+    ('MDT', 'BE-TAL6301.B1', 'Bedienelement', 'Taster Light 63 1-fach (I/O)', '', None),
+    ('MDT', 'BE-TAL63T1.B1', 'Bedienelement', 'Taster Light 63 1-fach (I/O) mit Temperatursensor', '', None),
+    ('MDT', 'BE-TAL6302.01', 'Bedienelement', 'Taster Light 63 2-fach', '', None),
+    ('MDT', 'BE-TAL63T2.01', 'Bedienelement', 'Taster Light 63 2-fach mit Temperatursensor', '', None),
+    ('MDT', 'BE-TAL6302.A1', 'Bedienelement', 'Taster Light 63 2-fach (Auf/Ab)', '', None),
+    ('MDT', 'BE-TAL63T2.A1', 'Bedienelement', 'Taster Light 63 2-fach (Auf/Ab) mit Temperatursensor', '', None),
+    ('MDT', 'BE-TAL6302.B1', 'Bedienelement', 'Taster Light 63 2-fach (I/O)', '', None),
+    ('MDT', 'BE-TAL63T2.B1', 'Bedienelement', 'Taster Light 63 2-fach (I/O) mit Temperatursensor', '', None),
+    ('MDT', 'BE-TAL6302.C1', 'Bedienelement', 'Taster Light 63 2-fach (Auf/Ab, I/O)', '', None),
+    ('MDT', 'BE-TAL63T2.C1', 'Bedienelement', 'Taster Light 63 2-fach (Auf/Ab, I/O) mit Temperatursensor', '', None),
+    ('MDT', 'BE-TAL6302.D1', 'Bedienelement', 'Taster Light 63 2-fach (I/O, Auf/Ab)', '', None),
+    ('MDT', 'BE-TAL6304.01', 'Bedienelement', 'Taster Light 63 4-fach', '', None),
+    ('MDT', 'BE-TAL63T4.01', 'Bedienelement', 'Taster Light 63 4-fach mit Temperatursensor', '', None),
+    ('MDT', 'AKS-0216.03', 'Aktor', 'Schaltaktor Standard 2 Kanäle', 'Schalten', 2),
+    ('MDT', 'AKS-0416.03', 'Aktor', 'Schaltaktor Standard 4 Kanäle', 'Schalten', 4),
+    ('MDT', 'AKS-0816.03', 'Aktor', 'Schaltaktor Standard 8 Kanäle', 'Schalten', 8),
+    ('MDT', 'AKS-1216.03', 'Aktor', 'Schaltaktor Standard 12 Kanäle', 'Schalten', 12),
+    ('MDT', 'AKS-1616.03', 'Aktor', 'Schaltaktor Standard 16 Kanäle', 'Schalten', 16),
+    ('MDT', 'AKS-2016.03', 'Aktor', 'Schaltaktor Standard 20 Kanäle', 'Schalten', 20),
+    ('MDT', 'AKS-2416.03', 'Aktor', 'Schaltaktor Standard 24 Kanäle', 'Schalten', 24),
+    ('MDT', 'AKK-0216.03', 'Aktor', 'Schaltaktor Kompakt 2 Kanäle', 'Schalten', 2),
+    ('MDT', 'AKK-0416.03', 'Aktor', 'Schaltaktor Kompakt 4 Kanäle', 'Schalten', 4),
+    ('MDT', 'AKK-0816.03', 'Aktor', 'Schaltaktor Kompakt 8 Kanäle', 'Schalten', 8),
+    ('MDT', 'AKK-1616.03', 'Aktor', 'Schaltaktor Kompakt 16 Kanäle', 'Schalten', 16),
+    ('MDT', 'AKK-2416.03', 'Aktor', 'Schaltaktor Kompakt 24 Kanäle', 'Schalten', 24),
+    ('MDT', 'JAL-0210.02', 'Aktor', 'Jalousieaktor 2 Kanäle', 'Rollo', 2),
+    ('MDT', 'JAL-0410.02', 'Aktor', 'Jalousieaktor 4 Kanäle', 'Rollo', 4),
+    ('MDT', 'JAL-0810.02', 'Aktor', 'Jalousieaktor 8 Kanäle', 'Rollo', 8),
+    ('MDT', 'AKD-0201.02', 'Aktor', 'Dimmaktor 2 Kanäle', 'Dimmen', 2),
+    ('MDT', 'AKD-0401.02', 'Aktor', 'Dimmaktor 4 Kanäle', 'Dimmen', 4),
+    ('MDT', 'AKD-0424R.02', 'Aktor', 'LED Controller 4 Kanäle', 'Dimmen', 4),
+    ('MDT', 'AKD-0424R2.02', 'Aktor', 'LED Controller 4 Kanäle', 'Dimmen', 4),
+    ('MDT', 'BE-TAL63T2.D1', 'Bedienelement', 'Taster Light 63 2-fach (I/O, Auf/Ab) mit Temperatursensor', '', None),
+    ('MDT', 'SCN-BWM63.02', 'Sensor', 'Bewegungsmelder 63', '', None),
+    ('MDT', 'SCN-BWM63T.02', 'Sensor', 'Bewegungsmelder 63 mit Temperatursensor', '', None),
+    ('MDT', 'SCN-IP000.03', 'Systemgerät', 'IP Interface', '', None),
+    ('Busch-Jaeger', '2CKA006132A0432', 'Sensor', 'Busch-Wächter PRO 280° KNX (Weiß)', '', None),
+    ('Busch-Jaeger', '2CKA006132A0433', 'Sensor', 'Busch-Wächter PRO 280° KNX (Anthrazit/Schwarz)', '', None),
+    ('Phoenix Contact', '1477019', 'Systemgerät', 'Busspannungsversorgung STEP3 640mA', '', None),
+    ('Phoenix Contact', '1477020', 'Systemgerät', 'Busspannungsversorgung STEP3 1280mA', '', None),
+    ('Elsner Elektronik', 'Windancer 2.0 GPS KNX SEC', 'Wetterstation', 'Wetterstation mit GPS', '', None),
+    ('Elsner Elektronik', 'Windancer 2.0 KNX SEC', 'Wetterstation', 'Wetterstation', '', None),
+    ('Theben', '1509201', 'Wetterstation', 'Wetterstation Meteodata 150/24V KNX', '', None),
+    ('Theben', '1509204', 'Wetterstation', 'Wetterstation Meteodata 150/24V GPS KNX', '', None),
+    ('Gira', '209600', 'Visualisierung/Logik', 'X1 Server', '', None),
+    ('Gira', '208600', 'Systemgerät', 'S1 Fernzugriff-Modul', '', None),
+    ('Theben', '1019610', 'Sensor', 'Bewegungsmelder theLuxa P300 KNX WH (Weiß)', '', None),
+    ('Theben', '1019611', 'Sensor', 'Bewegungsmelder theLuxa P300 KNX BK (Schwarz)', '', None),
+    ('Enertex', '1167-24', 'Systemgerät', 'LED PowerSupply 160-24', '', None),
+    ('Hörmann', '4511630', 'Aktor', 'KNX Gateway Standard für Torantriebe', 'Tor', 1),
+]
+
+
+def seed_default_actor_types(db):
+    """Seed the device catalog with a starter set of common KNX devices (MDT/Busch-Jaeger/
+    Theben/Elsner/Gira/Phoenix Contact/Hörmann) so new installs aren't empty. Only runs
+    once, when actor_types is empty - never overwrites a catalog the user has since edited."""
+    db.executemany(
+        "INSERT INTO actor_types (manufacturer, model, group_name, description, channel_type, channel_count) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        DEFAULT_ACTOR_TYPES,
     )

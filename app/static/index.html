@@ -211,7 +211,8 @@
       </div>
       <div class="row">
         <input type="text" id="actortype-description" placeholder="Beschreibung (optional)" style="min-width:300px; flex:1;">
-        <button class="btn" onclick="createActorType()">Gerät speichern</button>
+        <button class="btn" id="actortype-save-btn" onclick="saveActorType()">Gerät speichern</button>
+        <button class="btn secondary small" id="actortype-cancel-btn" onclick="cancelEditActorType()" style="display:none;">Abbrechen</button>
       </div>
       <div class="row">
         <button class="btn secondary small" onclick="exportActorTypesJson()">⭳ Katalog exportieren (JSON)</button>
@@ -449,7 +450,9 @@ function getEffectiveDeviceGroup() {
   return select.value;
 }
 
-async function createActorType() {
+let EDITING_ACTOR_TYPE_ID = null;
+
+async function saveActorType() {
   const manufacturer = document.getElementById('actortype-manufacturer').value.trim();
   const model = document.getElementById('actortype-model').value.trim();
   const group_name = getEffectiveDeviceGroup();
@@ -459,12 +462,51 @@ async function createActorType() {
   const channel_count = isAktor ? (parseInt(document.getElementById('actortype-count').value) || 1) : null;
   if (!model) return alert('Modell ist erforderlich');
   if (isAktor && !channel_type) return alert('Type ist für die Gruppe "Aktor" erforderlich');
-  await api('/actor-types', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({manufacturer, model, group_name, description, channel_type, channel_count})});
+  const body = JSON.stringify({manufacturer, model, group_name, description, channel_type, channel_count});
+  if (EDITING_ACTOR_TYPE_ID) {
+    await api('/actor-types/' + EDITING_ACTOR_TYPE_ID, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
+  } else {
+    await api('/actor-types', {method:'POST', headers:{'Content-Type':'application/json'}, body});
+  }
+  cancelEditActorType();
+  await loadActorTypes();
+}
+
+function editActorType(id) {
+  const at = ACTOR_TYPES.find(a => a.id === id);
+  if (!at) return;
+  EDITING_ACTOR_TYPE_ID = id;
+  document.getElementById('actortype-manufacturer').value = at.manufacturer || '';
+  document.getElementById('actortype-model').value = at.model || '';
+  document.getElementById('actortype-description').value = at.description || '';
+  const groupSelect = document.getElementById('actortype-group');
+  const knownGroups = ['Aktor', 'Sensor', 'Wetterstation', 'Bedienelement', 'Sonstiges'];
+  const groupCustom = document.getElementById('actortype-group-custom');
+  if (knownGroups.includes(at.group_name)) {
+    groupSelect.value = at.group_name;
+    groupCustom.style.display = 'none';
+    groupCustom.value = '';
+  } else {
+    groupSelect.value = '__custom__';
+    groupCustom.style.display = 'inline-block';
+    groupCustom.value = at.group_name || '';
+  }
+  document.getElementById('actortype-channeltype').value = at.channel_type || '';
+  document.getElementById('actortype-count').value = at.channel_count || 8;
+  onDeviceGroupChange();
+  document.getElementById('actortype-save-btn').textContent = 'Änderungen speichern';
+  document.getElementById('actortype-cancel-btn').style.display = '';
+  document.getElementById('actortype-manufacturer').scrollIntoView({behavior: 'smooth', block: 'center'});
+}
+
+function cancelEditActorType() {
+  EDITING_ACTOR_TYPE_ID = null;
   document.getElementById('actortype-manufacturer').value = '';
   document.getElementById('actortype-model').value = '';
   document.getElementById('actortype-channeltype').value = '';
   document.getElementById('actortype-description').value = '';
-  await loadActorTypes();
+  document.getElementById('actortype-save-btn').textContent = 'Gerät speichern';
+  document.getElementById('actortype-cancel-btn').style.display = 'none';
 }
 
 async function loadActorTypes() {
@@ -488,7 +530,10 @@ async function loadActorTypes() {
             ${at.channel_count ? `<span class="pill">${at.channel_count} Kanäle</span>` : ''}
             ${at.description ? `<div class="muted" style="margin-top:2px;">${at.description}</div>` : ''}
           </div>
-          <button class="btn danger small" onclick="deleteActorType(${at.id})">Löschen</button>
+          <div class="row" style="gap:6px;">
+            <button class="btn secondary small" onclick="editActorType(${at.id})">Bearbeiten</button>
+            <button class="btn danger small" onclick="deleteActorType(${at.id})">Löschen</button>
+          </div>
         </li>`).join('')}
     </ul>
   `).join('') || '<p class="muted">Noch keine Geräte</p>';
@@ -496,6 +541,7 @@ async function loadActorTypes() {
 
 async function deleteActorType(id) {
   if (!confirm('Dieses Gerät löschen?')) return;
+  if (EDITING_ACTOR_TYPE_ID === id) cancelEditActorType();
   await api('/actor-types/' + id, {method:'DELETE'});
   await loadActorTypes();
 }
