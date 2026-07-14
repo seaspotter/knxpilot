@@ -5,7 +5,7 @@ services:
     container_name: knxpilot
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "80:8000"
     volumes:
       # Mount the ENTIRE repo into the container. This means `git pull` (run either
       # on the host or via the in-app Update button, which runs it inside the

@@ -22,7 +22,7 @@ cd knxpilot
 docker compose up -d --build
 ```
 
-Danach `http://<host>:8000` öffnen.
+Danach `http://<host>` öffnen (läuft auf Port 80, kein `:8000` nötig).
 
 **Beim ersten Start:**
 - Kategorien, Punkttypen und Zentral-/Allgemeinfunktions-Vorlagen sind
@@ -333,7 +333,7 @@ Ein schlankes LXC mit Docker ist die einfachste Variante:
    `docker-ce`-Pakete direkt von Docker installieren).
 4. Dieses Verzeichnis (per `git clone`) hineinkopieren, hineinwechseln,
    `docker compose up -d --build`.
-5. `http://<lxc-ip>:8000` aufrufen.
+5. `http://<lxc-ip>` aufrufen.
 
 Das Dateisystem des LXC (inkl. der Datenbank) wird automatisch von den
 üblichen Proxmox-Backup-Jobs erfasst.
