@@ -174,6 +174,7 @@ def init_db():
                 text TEXT NOT NULL,
                 typ TEXT NOT NULL DEFAULT 'Frage',
                 status TEXT NOT NULL DEFAULT 'offen',
+                antwort TEXT NOT NULL DEFAULT '',
                 order_idx INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
@@ -197,6 +198,7 @@ def init_db():
             ("projects", "status", "ALTER TABLE projects ADD COLUMN status TEXT NOT NULL DEFAULT ''"),
             ("projects", "comment", "ALTER TABLE projects ADD COLUMN comment TEXT NOT NULL DEFAULT ''"),
             ("projects", "order_number", "ALTER TABLE projects ADD COLUMN order_number TEXT NOT NULL DEFAULT ''"),
+            ("klaerungen", "antwort", "ALTER TABLE klaerungen ADD COLUMN antwort TEXT NOT NULL DEFAULT ''"),
         ]:
             cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]
             if column not in cols:

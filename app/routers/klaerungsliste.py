@@ -26,7 +26,7 @@ def list_klaerungen(project_id: int):
             {
                 "id": r["id"], "room_id": r["room_id"], "room_point_id": r["room_point_id"],
                 "room_name": r["room_name"], "point_label": r["point_label"],
-                "text": r["text"], "typ": r["typ"], "status": r["status"],
+                "text": r["text"], "typ": r["typ"], "status": r["status"], "antwort": r["antwort"],
             }
             for r in rows
         ]
@@ -39,9 +39,9 @@ def add_klaerung(project_id: int, k: KlaerungIn):
             "SELECT COUNT(*) FROM klaerungen WHERE project_id=?", (project_id,)
         ).fetchone()
         cur = db.execute(
-            "INSERT INTO klaerungen (project_id, room_id, room_point_id, text, typ, status, order_idx) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (project_id, k.room_id, k.room_point_id, k.text, k.typ, k.status, count),
+            "INSERT INTO klaerungen (project_id, room_id, room_point_id, text, typ, status, antwort, order_idx) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (project_id, k.room_id, k.room_point_id, k.text, k.typ, k.status, k.antwort, count),
         )
         return {"id": cur.lastrowid}
 
@@ -50,8 +50,8 @@ def add_klaerung(project_id: int, k: KlaerungIn):
 def update_klaerung(k_id: int, k: KlaerungIn):
     with get_db() as db:
         db.execute(
-            "UPDATE klaerungen SET room_id=?, room_point_id=?, text=?, typ=?, status=? WHERE id=?",
-            (k.room_id, k.room_point_id, k.text, k.typ, k.status, k_id),
+            "UPDATE klaerungen SET room_id=?, room_point_id=?, text=?, typ=?, status=?, antwort=? WHERE id=?",
+            (k.room_id, k.room_point_id, k.text, k.typ, k.status, k.antwort, k_id),
         )
     return {"ok": True}
 

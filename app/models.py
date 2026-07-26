@@ -94,3 +94,4 @@ class KlaerungIn(BaseModel):
     text: str
     typ: str = "Frage"       # "Frage" | "Aufgabe" | "Notiz"
     status: str = "offen"    # "offen" | "geklärt" | "abgelehnt"
+    antwort: str = ""

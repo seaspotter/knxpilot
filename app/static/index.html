@@ -301,6 +301,9 @@
           </div>
           <div class="row">
             <input type="text" id="kl-text" placeholder="Frage, Aufgabe oder Notiz..." style="min-width:320px; flex:1;">
+          </div>
+          <div class="row">
+            <input type="text" id="kl-antwort" placeholder="Antwort/Ergebnis (optional, z.B. Tasterfarbe: schwarz)" style="min-width:320px; flex:1;">
             <button class="btn" id="kl-save-btn" onclick="saveKlaerung()">+ Hinzufügen</button>
             <button class="btn secondary small" id="kl-cancel-btn" onclick="cancelEditKlaerung()" style="display:none;">Abbrechen</button>
           </div>
@@ -1489,13 +1492,14 @@ async function saveKlaerung() {
   const pointVal = document.getElementById('kl-point').value;
   const room_id = roomVal ? parseInt(roomVal) : null;
   const room_point_id = pointVal ? parseInt(pointVal) : null;
+  const antwort = document.getElementById('kl-antwort').value.trim();
 
   if (EDITING_KLAERUNG_ID) {
     const existing = KLAERUNGEN.find(k => k.id === EDITING_KLAERUNG_ID);
-    const body = JSON.stringify({room_id, room_point_id, text, typ, status: existing ? existing.status : 'offen'});
+    const body = JSON.stringify({room_id, room_point_id, text, typ, antwort, status: existing ? existing.status : 'offen'});
     await api('/klaerungen/' + EDITING_KLAERUNG_ID, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
   } else {
-    const body = JSON.stringify({room_id, room_point_id, text, typ});
+    const body = JSON.stringify({room_id, room_point_id, text, typ, antwort});
     await api(`/projects/${CURRENT_PROJECT}/klaerungen`, {method:'POST', headers:{'Content-Type':'application/json'}, body});
   }
   cancelEditKlaerung();
@@ -1511,6 +1515,7 @@ function editKlaerung(id) {
   onKlRoomChange();
   document.getElementById('kl-point').value = k.room_point_id || '';
   document.getElementById('kl-text').value = k.text;
+  document.getElementById('kl-antwort').value = k.antwort || '';
   document.getElementById('kl-form-title').textContent = 'Eintrag bearbeiten';
   document.getElementById('kl-save-btn').textContent = 'Änderungen speichern';
   document.getElementById('kl-cancel-btn').style.display = '';
@@ -1522,6 +1527,7 @@ function cancelEditKlaerung() {
   document.getElementById('kl-room').value = '';
   onKlRoomChange();
   document.getElementById('kl-text').value = '';
+  document.getElementById('kl-antwort').value = '';
   document.getElementById('kl-form-title').textContent = 'Neuer Eintrag';
   document.getElementById('kl-save-btn').textContent = '+ Hinzufügen';
   document.getElementById('kl-cancel-btn').style.display = 'none';
@@ -1530,7 +1536,7 @@ function cancelEditKlaerung() {
 async function setKlaerungStatus(id, status) {
   const k = KLAERUNGEN.find(k => k.id === id);
   if (!k) return;
-  const body = JSON.stringify({room_id: k.room_id, room_point_id: k.room_point_id, text: k.text, typ: k.typ, status});
+  const body = JSON.stringify({room_id: k.room_id, room_point_id: k.room_point_id, text: k.text, typ: k.typ, antwort: k.antwort, status});
   await api('/klaerungen/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
   await loadKlaerungslisteForCurrentProject();
 }
@@ -1572,6 +1578,7 @@ function renderKlaerungsliste() {
                 <span class="pill ${KL_STATUS_CLASS[k.status] || ''}">${k.status}</span>
                 ${k.point_label ? `<span class="pill">${k.point_label}</span>` : ''}
                 <div style="margin-top:4px;">${k.text}</div>
+                ${k.antwort ? `<div class="muted" style="margin-top:2px;">→ ${k.antwort}</div>` : ''}
               </div>
               <div class="row" style="gap:6px; margin:0;">
                 ${k.status !== 'offen' ? `<button class="btn secondary small" onclick="setKlaerungStatus(${k.id}, 'offen')">Offen</button>` : ''}
