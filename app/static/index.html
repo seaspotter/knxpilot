@@ -301,9 +301,6 @@
           </div>
           <div class="row">
             <input type="text" id="kl-text" placeholder="Frage, Aufgabe oder Notiz..." style="min-width:320px; flex:1;">
-          </div>
-          <div class="row">
-            <input type="text" id="kl-antwort" placeholder="Antwort/Ergebnis (optional, z.B. Tasterfarbe: schwarz)" style="min-width:320px; flex:1;">
             <button class="btn" id="kl-save-btn" onclick="saveKlaerung()">+ Hinzufügen</button>
             <button class="btn secondary small" id="kl-cancel-btn" onclick="cancelEditKlaerung()" style="display:none;">Abbrechen</button>
           </div>
@@ -1492,14 +1489,17 @@ async function saveKlaerung() {
   const pointVal = document.getElementById('kl-point').value;
   const room_id = roomVal ? parseInt(roomVal) : null;
   const room_point_id = pointVal ? parseInt(pointVal) : null;
-  const antwort = document.getElementById('kl-antwort').value.trim();
 
   if (EDITING_KLAERUNG_ID) {
     const existing = KLAERUNGEN.find(k => k.id === EDITING_KLAERUNG_ID);
-    const body = JSON.stringify({room_id, room_point_id, text, typ, antwort, status: existing ? existing.status : 'offen'});
+    const body = JSON.stringify({
+      room_id, room_point_id, text, typ,
+      status: existing ? existing.status : 'offen',
+      antwort: existing ? existing.antwort : '',
+    });
     await api('/klaerungen/' + EDITING_KLAERUNG_ID, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
   } else {
-    const body = JSON.stringify({room_id, room_point_id, text, typ, antwort});
+    const body = JSON.stringify({room_id, room_point_id, text, typ});
     await api(`/projects/${CURRENT_PROJECT}/klaerungen`, {method:'POST', headers:{'Content-Type':'application/json'}, body});
   }
   cancelEditKlaerung();
@@ -1515,7 +1515,6 @@ function editKlaerung(id) {
   onKlRoomChange();
   document.getElementById('kl-point').value = k.room_point_id || '';
   document.getElementById('kl-text').value = k.text;
-  document.getElementById('kl-antwort').value = k.antwort || '';
   document.getElementById('kl-form-title').textContent = 'Eintrag bearbeiten';
   document.getElementById('kl-save-btn').textContent = 'Änderungen speichern';
   document.getElementById('kl-cancel-btn').style.display = '';
@@ -1527,7 +1526,6 @@ function cancelEditKlaerung() {
   document.getElementById('kl-room').value = '';
   onKlRoomChange();
   document.getElementById('kl-text').value = '';
-  document.getElementById('kl-antwort').value = '';
   document.getElementById('kl-form-title').textContent = 'Neuer Eintrag';
   document.getElementById('kl-save-btn').textContent = '+ Hinzufügen';
   document.getElementById('kl-cancel-btn').style.display = 'none';
