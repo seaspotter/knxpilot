@@ -1548,6 +1548,21 @@ async function deleteKlaerung(id) {
   await loadKlaerungslisteForCurrentProject();
 }
 
+function escapeAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
+async function saveKlAntwortInline(input) {
+  const id = parseInt(input.dataset.id);
+  const k = KLAERUNGEN.find(k => k.id === id);
+  if (!k) return;
+  const antwort = input.value.trim();
+  if (antwort === (k.antwort || '')) return;
+  const body = JSON.stringify({room_id: k.room_id, room_point_id: k.room_point_id, text: k.text, typ: k.typ, status: k.status, antwort});
+  await api('/klaerungen/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
+  k.antwort = antwort;
+}
+
 const KL_STATUS_CLASS = {offen: 'status-offen', 'geklärt': 'status-geklaert', abgelehnt: 'status-abgelehnt'};
 
 function renderKlaerungsliste() {
@@ -1570,15 +1585,13 @@ function renderKlaerungsliste() {
     return `
       <div class="floor-card">
         <b>${heading}</b>
-        <ul class="list">
-          ${entries.map(k => `
-            <li>
+        ${entries.map(k => `
+          <div class="room-card">
+            <div class="row" style="justify-content:space-between;">
               <div>
                 <span class="pill">${k.typ}</span>
                 <span class="pill ${KL_STATUS_CLASS[k.status] || ''}">${k.status}</span>
                 ${k.point_label ? `<span class="pill">${k.point_label}</span>` : ''}
-                <div style="margin-top:4px;">${k.text}</div>
-                ${k.antwort ? `<div class="muted" style="margin-top:2px;">→ ${k.antwort}</div>` : ''}
               </div>
               <div class="row" style="gap:6px; margin:0;">
                 ${k.status !== 'offen' ? `<button class="btn secondary small" onclick="setKlaerungStatus(${k.id}, 'offen')">Offen</button>` : ''}
@@ -1587,8 +1600,12 @@ function renderKlaerungsliste() {
                 <button class="btn secondary small" onclick="editKlaerung(${k.id})">Bearbeiten</button>
                 <button class="btn danger small" onclick="deleteKlaerung(${k.id})">Löschen</button>
               </div>
-            </li>`).join('')}
-        </ul>
+            </div>
+            <div style="margin-top:4px;">${k.text}</div>
+            <div class="row" style="margin-top:6px;">
+              <input type="text" data-id="${k.id}" value="${escapeAttr(k.antwort || '')}" placeholder="Antwort/Ergebnis..." style="min-width:220px; flex:1;" onblur="saveKlAntwortInline(this)" onkeydown="if(event.key==='Enter'){this.blur();}">
+            </div>
+          </div>`).join('')}
       </div>`;
   }).join('') || '<p class="muted">Noch keine Einträge</p>';
 
