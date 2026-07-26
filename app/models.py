@@ -86,3 +86,11 @@ class RoomDeviceIn(BaseModel):
     device_type_id: int
     quantity: int = 1
     note: str = ""
+
+
+class KlaerungIn(BaseModel):
+    room_id: int | None = None
+    room_point_id: int | None = None
+    text: str
+    typ: str = "Frage"       # "Frage" | "Aufgabe" | "Notiz"
+    status: str = "offen"    # "offen" | "geklärt" | "abgelehnt"

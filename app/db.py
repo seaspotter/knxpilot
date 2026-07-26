@@ -162,6 +162,21 @@ def init_db():
                 note TEXT NOT NULL DEFAULT '',
                 order_idx INTEGER NOT NULL DEFAULT 0
             );
+
+            -- Klärungsliste: per-project questions/tasks/notes for site visits,
+            -- optionally tied to a room and/or a specific point within it. Internal
+            -- working list only - never surfaced in the Pflichtenheft export.
+            CREATE TABLE IF NOT EXISTS klaerungen (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                room_id INTEGER REFERENCES rooms(id) ON DELETE CASCADE,
+                room_point_id INTEGER REFERENCES room_points(id) ON DELETE CASCADE,
+                text TEXT NOT NULL,
+                typ TEXT NOT NULL DEFAULT 'Frage',
+                status TEXT NOT NULL DEFAULT 'offen',
+                order_idx INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
             """
         )
 
