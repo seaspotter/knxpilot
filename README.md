@@ -67,9 +67,9 @@ in `app/routers/projects.py` isoliert.
 ## Die vier Tabs
 
 - **Projekte** — Projekte anlegen/suchen/bearbeiten und öffnen; ein geöffnetes
-  Projekt zeigt einen Arbeitsbereich mit vier Unterreitern (Gruppenadressen,
-  Abgangsliste, Geräteplanung, Pflichtenheft), die alle am selben Projekt
-  arbeiten.
+  Projekt zeigt einen Arbeitsbereich mit fünf Unterreitern (Gruppenadressen,
+  Abgangsliste, Geräteplanung, Pflichtenheft, Klärungsliste), die alle am
+  selben Projekt arbeiten.
 - **Geräte** — globaler Gerätekatalog (Aktoren, Sensoren, Bedienelemente
   usw.), gemeinsam für alle Projekte genutzt.
 - **Setup** — Kategorien, Punkttypen und Zentral-/Allgemeinfunktions-
@@ -178,6 +178,27 @@ GA-/Verdrahtungsdetails. Eine Textvorschau zeigt sofort, was im PDF stehen
 wird; **PDF herunterladen** erzeugt ein mehrseitiges Dokument mit den
 geplanten Funktionen und Geräten je Geschoss/Raum, einer Übersicht der
 Zentral-/Allgemeinfunktionen und der Geräte-Stückliste als Abschluss.
+
+#### Klärungsliste
+
+Interne Arbeitsliste für Fragen, Aufgaben und Notizen, die z.B. bei einem
+Kundentermin anfallen (etwa "Tasterfarbe schwarz oder weiss?") — erscheint
+**nicht** im Pflichtenheft-Export, rein zur eigenen Nachverfolgung.
+
+- Jeder Eintrag hat einen **Typ** (Frage / Aufgabe / Notiz) und optional
+  einen **Raum**, darin wiederum optional einen bestimmten **Punkt**; ohne
+  Raum landet er unter "Allgemein". Die Liste ist nach Raum gruppiert.
+- **Status** (offen / geklärt / abgelehnt) wird über Schnellaktions-Buttons
+  direkt in der Liste gesetzt, ohne ein Formular zu öffnen.
+- **Antwort/Ergebnis** ist direkt in jedem Eintrag editierbar und speichert
+  beim Verlassen des Felds — gedacht für den Ablauf "erst alle Fragen
+  anlegen, dann beim Termin der Reihe nach beantworten und auf Geklärt
+  setzen", ohne für jede Antwort ins Bearbeiten-Formular wechseln zu müssen.
+- **Bearbeiten** im oberen Formular ändert nur die strukturellen Felder
+  (Typ/Raum/Punkt/Text) — die bereits erfasste Antwort bleibt dabei
+  erhalten.
+- Der Unterreiter-Button zeigt die Anzahl noch offener Einträge an
+  (z.B. "Klärungsliste (3)"), sobald ein Projekt geöffnet ist.
 
 ### Geräte
 
@@ -382,6 +403,7 @@ app/
     abgangsliste.py       — Aktoren, Abgänge, Kanalzuordnung, CSV/PDF-Export (Abgangsliste-Unterreiter)
     geraeteplanung.py     — Geräteplanung je Raum, Stückliste, PDF-Export (Geräteplanung-Unterreiter)
     pflichtenheft.py      — Pflichtenheft-PDF-Export (Pflichtenheft-Unterreiter)
+    klaerungsliste.py     — Fragen/Aufgaben/Notizen je Projekt (Klärungsliste-Unterreiter)
     system.py             — Selbst-Update über Git (Update-Tab)
 ```
 
