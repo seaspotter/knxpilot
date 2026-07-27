@@ -100,26 +100,35 @@ def company_header_block(company):
     name_cell = Paragraph(name, styles["CompanyName"]) if name else ""
 
     if logo_cell and name_cell:
-        row, col_widths = [[logo_cell, name_cell]], [70 * mm, 110 * mm]
+        # Name on the left, logo on the right - a common letterhead convention,
+        # and keeps the logo from crowding straight into the page's left margin.
+        row, col_widths = [[name_cell, logo_cell]], [110 * mm, 70 * mm]
+        align_commands = [("ALIGN", (1, 0), (1, 0), "RIGHT")]
     else:
         row, col_widths = [[logo_cell or name_cell]], [180 * mm]
+        align_commands = [("ALIGN", (0, 0), (0, 0), "RIGHT" if logo_cell else "LEFT")]
 
     t = Table(row, colWidths=col_widths)
     t.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 10),
         ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+        *align_commands,
     ]))
     return [t, Spacer(1, 5 * mm)]
 
 
 def company_footer_line(company):
-    """Address/contact line for the page footer (every page), centered. Returns
-    "" if disabled or empty - build_pdf_response/make_numbered_canvas treat an
-    empty string as 'draw nothing', so callers never need an `if` themselves."""
+    """Name/address/contact line for the page footer (every page), centered,
+    drawn below the page-number rule so it reads as a separate block rather
+    than crowding the project/page-number line. Returns "" if disabled or
+    empty - build_pdf_response/make_numbered_canvas treat an empty string as
+    'draw nothing', so callers never need an `if` themselves."""
     if not company or not company.get("show_on_pdf"):
         return ""
-    parts = [p for p in (company.get("address"), company.get("phone"), company.get("email"), company.get("website")) if p]
+    parts = [p for p in (
+        company.get("name"), company.get("address"), company.get("phone"), company.get("email"), company.get("website"),
+    ) if p]
     return " · ".join(parts)
 
 
@@ -168,17 +177,19 @@ def make_numbered_canvas(footer_left_text, footer_center_text=""):
 
         def _draw_footer(self, page_count):
             width, _ = A4
-            y_rule = 14 * mm
-            if footer_center_text:
-                self.setFont("Helvetica", 8)
-                self.setFillColor(PDF_MUTED_COLOR)
-                self.drawCentredString(width / 2, y_rule + 5 * mm, footer_center_text)
+            y_rule = 16 * mm
             self.setStrokeColor(PDF_BORDER_COLOR)
             self.line(15 * mm, y_rule, width - 15 * mm, y_rule)
             self.setFont("Helvetica", 8)
             self.setFillColor(PDF_MUTED_COLOR)
             self.drawString(15 * mm, y_rule - 5 * mm, footer_left_text)
             self.drawRightString(width - 15 * mm, y_rule - 5 * mm, f"Seite {self._pageNumber} von {page_count}")
+            if footer_center_text:
+                # Drawn below the project/page-number row, as its own separated
+                # block, rather than crowding the same line.
+                self.setFont("Helvetica", 8)
+                self.setFillColor(PDF_MUTED_COLOR)
+                self.drawCentredString(width / 2, y_rule - 10 * mm, footer_center_text)
 
     return _NumberedCanvas
 
