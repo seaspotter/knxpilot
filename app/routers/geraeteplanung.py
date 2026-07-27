@@ -9,7 +9,7 @@ from reportlab.lib.units import mm
 
 from ..db import get_db
 from ..models import RoomDeviceIn
-from ..pdf_design import pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response, company_letterhead
+from ..pdf_design import pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response, company_header_block, company_footer_line
 from ..utils import join_parts
 
 router = APIRouter(tags=["geraeteplanung"])
@@ -114,9 +114,9 @@ def export_geraeteliste_pdf(project_id: int):
                 if devices:
                     room_rows.append((floor["name"], room["name"], devices))
 
-        company = db.execute("SELECT * FROM company_profile WHERE id=1").fetchone()
+        company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
         styles = pdf_styles()
-        story = company_letterhead(dict(company)) + pdf_title_banner(f"Geräteliste — {project['name']}", "Bestellübersicht")
+        story = company_header_block(company) + pdf_title_banner(f"Geräteliste — {project['name']}", "Bestellübersicht")
 
         story.append(Paragraph("Stückliste (Bestellung)", styles["SectionHeading"]))
         table_data = [["Gruppe", "Gerät", "Anzahl"]]
@@ -150,4 +150,5 @@ def export_geraeteliste_pdf(project_id: int):
             footer_left_text=f"Geräteliste · {project['name']}",
             filename=f"{project['name'].replace(' ', '_')}_geraeteliste.pdf",
             doc_title=f"Geräteliste {project['name']}",
+            footer_center_text=company_footer_line(company),
         )

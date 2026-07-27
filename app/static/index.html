@@ -24,7 +24,7 @@
   header h1 { margin:0; font-size:19px; }
   header p { margin:2px 0 0; color:var(--muted); font-size:13px; }
   #header-company-brand { padding-right:12px; border-right:1px solid var(--border); }
-  #header-company-brand img { width:28px; height:28px; object-fit:contain; border-radius:6px; flex-shrink:0; }
+  #header-company-brand img { height:34px; width:auto; max-width:160px; object-fit:contain; flex-shrink:0; }
   #header-company-brand span { font-size:13px; color:var(--muted); white-space:nowrap; }
   #theme-toggle { background:var(--panel2); border:1px solid var(--border); color:var(--text); padding:7px 12px; border-radius:8px; cursor:pointer; font-size:13px; white-space:nowrap; }
   nav { display:flex; gap:4px; padding: 0 24px; border-bottom:1px solid var(--border); }
@@ -356,24 +356,31 @@
   <!-- SETUP TAB -->
   <div class="tab" id="tab-setup">
     <div class="card">
-      <h3>Firma <span class="info-icon" tabindex="0" data-tip="Ihre Firmenangaben - werden im Programmkopf neben dem KNXpilot-Logo angezeigt und optional als Briefkopf auf Seite 1 jedes PDF-Exports (Abgangsliste, Geräteliste, Pflichtenheft) übernommen.">i</span></h3>
+      <h3>Firma <span class="info-icon" tabindex="0" data-tip="Ihre Firmenangaben - werden im Programmkopf neben dem KNXpilot-Logo angezeigt und optional als Briefkopf (Logo/Name oben, Adresse/Kontakt in der Fusszeile) auf jedem PDF-Export (Abgangsliste, Geräteliste, Pflichtenheft) übernommen.">i</span></h3>
       <p class="muted">Einmalig hinterlegen - erscheint programmweit im Kopfbereich und optional auf allen PDF-Exporten.</p>
-      <div class="row" style="align-items:flex-start;">
-        <img id="company-logo-preview" src="" alt="Logo-Vorschau" style="display:none; width:64px; height:64px; object-fit:contain; border:1px solid var(--border); border-radius:8px; background:var(--panel2);">
+
+      <div class="row" style="align-items:center;">
+        <img id="company-logo-preview" src="" alt="Logo-Vorschau" style="display:none; height:72px; width:auto; max-width:240px; object-fit:contain; border:1px solid var(--border); border-radius:8px; background:var(--panel2); padding:4px;">
         <div class="row" style="margin:0;">
           <input type="file" id="company-logo-file" accept="image/*" onchange="onCompanyLogoFileChange(event)">
           <button class="btn secondary small" onclick="clearCompanyLogo()">Logo entfernen</button>
         </div>
       </div>
+      <hr class="sep">
+
       <div class="row">
-        <input type="text" id="company-name" placeholder="Firmenname">
-        <input type="text" id="company-address" placeholder="Adresse" style="min-width:220px;">
+        <input type="text" id="company-name" placeholder="Firmenname" style="min-width:300px; flex:1;">
       </div>
       <div class="row">
-        <input type="text" id="company-phone" placeholder="Telefon">
-        <input type="text" id="company-email" placeholder="E-Mail">
-        <input type="text" id="company-website" placeholder="Website">
+        <input type="text" id="company-address" placeholder="Adresse (Strasse, PLZ Ort)" style="min-width:300px; flex:1;">
       </div>
+      <div class="row">
+        <input type="text" id="company-phone" placeholder="Telefon" style="flex:1;">
+        <input type="text" id="company-email" placeholder="E-Mail" style="flex:1;">
+        <input type="text" id="company-website" placeholder="Website" style="flex:1;">
+      </div>
+      <hr class="sep">
+
       <div class="row">
         <label style="display:flex; align-items:center; gap:6px;">
           <input type="checkbox" id="company-show-on-pdf">

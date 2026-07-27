@@ -9,7 +9,7 @@ from reportlab.lib.units import mm
 
 from ..db import get_db
 from ..ga_logic import get_room_functions_by_category, get_central_functions_overview
-from ..pdf_design import pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response, company_letterhead
+from ..pdf_design import pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response, company_header_block, company_footer_line
 from ..utils import join_parts
 from .geraeteplanung import device_summary
 
@@ -24,9 +24,9 @@ def export_pflichtenheft_pdf(project_id: int):
             raise HTTPException(404, "Project not found")
 
         floors = db.execute("SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall()
-        company = db.execute("SELECT * FROM company_profile WHERE id=1").fetchone()
+        company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
         styles = pdf_styles()
-        story = company_letterhead(dict(company)) + pdf_title_banner(
+        story = company_header_block(company) + pdf_title_banner(
             f"Pflichtenheft — {project['name']}",
             "Dokumentation des vereinbarten Funktionsumfangs",
         )
@@ -100,4 +100,5 @@ def export_pflichtenheft_pdf(project_id: int):
             footer_left_text=f"Pflichtenheft · {project['name']}",
             filename=f"{project['name'].replace(' ', '_')}_pflichtenheft.pdf",
             doc_title=f"Pflichtenheft {project['name']}",
+            footer_center_text=company_footer_line(company),
         )

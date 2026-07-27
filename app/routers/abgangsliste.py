@@ -14,7 +14,7 @@ from reportlab.lib.units import mm
 from ..db import get_db
 from ..ga_logic import get_circuits
 from ..models import ActorInstanceIn, ChannelAssignIn
-from ..pdf_design import pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response, company_letterhead, PDF_MUTED_COLOR
+from ..pdf_design import pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response, company_header_block, company_footer_line, PDF_MUTED_COLOR
 from ..utils import join_parts, channel_letters
 
 router = APIRouter(tags=["abgangsliste"])
@@ -298,9 +298,9 @@ def export_abgangsliste_pdf(project_id: int):
             by_floor.setdefault(ai["floor_id"], []).append(ai)
         floor_ids_sorted = sorted(by_floor.keys(), key=lambda fid: (fid is None, floor_order.get(fid, 999)))
 
-        company = db.execute("SELECT * FROM company_profile WHERE id=1").fetchone()
+        company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
         styles = pdf_styles()
-        story = company_letterhead(dict(company)) + pdf_title_banner(f"Abgangsliste — {project['name']}", "Aktoren-Verdrahtung je Geschoss")
+        story = company_header_block(company) + pdf_title_banner(f"Abgangsliste — {project['name']}", "Aktoren-Verdrahtung je Geschoss")
 
         first_floor = True
         for floor_id in floor_ids_sorted:
@@ -346,4 +346,5 @@ def export_abgangsliste_pdf(project_id: int):
             footer_left_text=f"Abgangsliste · {project['name']}",
             filename=f"{project['name'].replace(' ', '_')}_abgangsliste.pdf",
             doc_title=f"Abgangsliste {project['name']}",
+            footer_center_text=company_footer_line(company),
         )

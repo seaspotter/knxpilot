@@ -31,7 +31,7 @@ def pdf_styles():
     styles.add(ParagraphStyle("RoomHeading", fontName="Helvetica-Bold", fontSize=11, textColor=PDF_ACCENT_COLOR, spaceBefore=6, spaceAfter=2))
     styles.add(ParagraphStyle("Body", fontName="Helvetica", fontSize=9.5, textColor=colors.HexColor("#0f172a"), leading=13))
     styles.add(ParagraphStyle("BodyMuted", fontName="Helvetica-Oblique", fontSize=9, textColor=PDF_MUTED_COLOR, leading=12))
-    styles.add(ParagraphStyle("Letterhead", fontName="Helvetica", fontSize=9, textColor=PDF_MUTED_COLOR, leading=12))
+    styles.add(ParagraphStyle("CompanyName", fontName="Helvetica-Bold", fontSize=13, textColor=PDF_BANNER_COLOR, leading=16))
     return styles
 
 
@@ -52,45 +52,57 @@ def pdf_title_banner(title, subtitle=""):
     return [t, Spacer(1, 6 * mm)]
 
 
-def company_letterhead(company):
-    """Optional letterhead block (logo + contact info) prepended to page 1 of
-    every PDF export. Gated entirely by the global show_on_pdf toggle - callers
-    just prepend this list to their story, never need an `if` themselves."""
+def _fit_logo_image(img_bytes, max_width, max_height):
+    """Scales a logo to fit within max_width x max_height while preserving its
+    real aspect ratio. A fixed square box would squish a wide horizontal logo
+    lockup down to a sliver-thin strip - this sizes by the image's actual
+    proportions instead, capped by whichever dimension is the tighter fit."""
+    pil_img = PILImage.open(io.BytesIO(img_bytes))
+    orig_w, orig_h = pil_img.size
+    scale = min(max_width / orig_w, max_height / orig_h)
+    return Image(io.BytesIO(img_bytes), width=orig_w * scale, height=orig_h * scale)
+
+
+def _decode_logo(company, max_width, max_height):
+    """Returns a sized Image flowable for the company logo, or "" if there's no
+    logo or it can't be decoded. PIL decodes pixels lazily - constructing an
+    Image() alone won't raise on a corrupt file, only a later render pass would
+    (crashing the whole PDF) - so the decode is forced now, inside this
+    try/except, letting a bad logo degrade to text-only instead."""
+    data_url = (company or {}).get("logo_data_url") or ""
+    if not (data_url.startswith("data:") and ";base64," in data_url):
+        return ""
+    try:
+        _, b64data = data_url.split(";base64,", 1)
+        img_bytes = base64.b64decode(b64data)
+        PILImage.open(io.BytesIO(img_bytes)).load()
+        return _fit_logo_image(img_bytes, max_width, max_height)
+    except Exception:
+        return ""
+
+
+def company_header_block(company):
+    """Optional header block (logo + company name) prepended to page 1 of every
+    PDF export, above the title banner. Gated entirely by the global
+    show_on_pdf toggle - callers just prepend this list to their story, never
+    need an `if` themselves. The full address/contact details go in the page
+    footer instead - see company_footer_line() - so this stays a clean,
+    uncluttered logo-and-name strip."""
     if not company or not company.get("show_on_pdf"):
         return []
 
-    lines = [l for l in [
-        company.get("name", ""),
-        company.get("address", ""),
-        " · ".join(b for b in (company.get("phone"), company.get("email"), company.get("website")) if b),
-    ] if l]
-
-    logo_cell = ""
-    data_url = company.get("logo_data_url") or ""
-    if data_url.startswith("data:") and ";base64," in data_url:
-        try:
-            _, b64data = data_url.split(";base64,", 1)
-            img_bytes = base64.b64decode(b64data)
-            # PIL decodes lazily - Image() alone won't raise on a corrupt file, only a
-            # later render pass would (crashing the whole PDF). Force the decode now,
-            # inside this try/except, so a bad logo degrades to text-only instead.
-            PILImage.open(io.BytesIO(img_bytes)).load()
-            logo_cell = Image(io.BytesIO(img_bytes), width=28 * mm, height=28 * mm, kind="proportional")
-        except Exception:
-            logo_cell = ""
-
-    if not lines and not logo_cell:
+    name = company.get("name") or ""
+    logo_cell = _decode_logo(company, max_width=65 * mm, max_height=20 * mm)
+    if not name and not logo_cell:
         return []
 
     styles = pdf_styles()
-    text_cell = Paragraph("<br/>".join(lines), styles["Letterhead"]) if lines else ""
+    name_cell = Paragraph(name, styles["CompanyName"]) if name else ""
 
-    if logo_cell and text_cell:
-        row, col_widths = [[logo_cell, text_cell]], [30 * mm, 150 * mm]
-    elif logo_cell:
-        row, col_widths = [[logo_cell]], [30 * mm]
+    if logo_cell and name_cell:
+        row, col_widths = [[logo_cell, name_cell]], [70 * mm, 110 * mm]
     else:
-        row, col_widths = [[text_cell]], [180 * mm]
+        row, col_widths = [[logo_cell or name_cell]], [180 * mm]
 
     t = Table(row, colWidths=col_widths)
     t.setStyle(TableStyle([
@@ -98,7 +110,17 @@ def company_letterhead(company):
         ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 10),
         ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
     ]))
-    return [t, Spacer(1, 4 * mm)]
+    return [t, Spacer(1, 5 * mm)]
+
+
+def company_footer_line(company):
+    """Address/contact line for the page footer (every page), centered. Returns
+    "" if disabled or empty - build_pdf_response/make_numbered_canvas treat an
+    empty string as 'draw nothing', so callers never need an `if` themselves."""
+    if not company or not company.get("show_on_pdf"):
+        return ""
+    parts = [p for p in (company.get("address"), company.get("phone"), company.get("email"), company.get("website")) if p]
+    return " · ".join(parts)
 
 
 def pdf_table_style(extra_commands=None):
@@ -120,10 +142,12 @@ def pdf_table_style(extra_commands=None):
     return TableStyle(commands)
 
 
-def make_numbered_canvas(footer_left_text):
-    """Canvas factory adding 'Seite X von Y' + a left-hand footer label to every page.
-    Needs a factory (not a plain class) because the total page count is only known
-    once the whole document has been laid out - this defers drawing until save()."""
+def make_numbered_canvas(footer_left_text, footer_center_text=""):
+    """Canvas factory adding 'Seite X von Y' + a left-hand footer label to every
+    page, plus an optional centered company address/contact line above it (see
+    company_footer_line()). Needs a factory (not a plain class) because the
+    total page count is only known once the whole document has been laid out -
+    this defers drawing until save()."""
 
     class _NumberedCanvas(pdfcanvas.Canvas):
         def __init__(self, *args, **kwargs):
@@ -144,24 +168,32 @@ def make_numbered_canvas(footer_left_text):
 
         def _draw_footer(self, page_count):
             width, _ = A4
+            y_rule = 14 * mm
+            if footer_center_text:
+                self.setFont("Helvetica", 8)
+                self.setFillColor(PDF_MUTED_COLOR)
+                self.drawCentredString(width / 2, y_rule + 5 * mm, footer_center_text)
             self.setStrokeColor(PDF_BORDER_COLOR)
-            self.line(15 * mm, 14 * mm, width - 15 * mm, 14 * mm)
+            self.line(15 * mm, y_rule, width - 15 * mm, y_rule)
             self.setFont("Helvetica", 8)
             self.setFillColor(PDF_MUTED_COLOR)
-            self.drawString(15 * mm, 9 * mm, footer_left_text)
-            self.drawRightString(width - 15 * mm, 9 * mm, f"Seite {self._pageNumber} von {page_count}")
+            self.drawString(15 * mm, y_rule - 5 * mm, footer_left_text)
+            self.drawRightString(width - 15 * mm, y_rule - 5 * mm, f"Seite {self._pageNumber} von {page_count}")
 
     return _NumberedCanvas
 
 
-def build_pdf_response(story, footer_left_text, filename, doc_title):
+def build_pdf_response(story, footer_left_text, filename, doc_title, footer_center_text=""):
     buf = io.BytesIO()
+    # A centered company line needs its own row above the page-number rule -
+    # give it a bit more bottom margin so it never crowds the last line of content.
+    bottom_margin = 26 * mm if footer_center_text else 20 * mm
     doc = SimpleDocTemplate(
         buf, pagesize=A4,
-        topMargin=15 * mm, bottomMargin=20 * mm, leftMargin=15 * mm, rightMargin=15 * mm,
+        topMargin=15 * mm, bottomMargin=bottom_margin, leftMargin=15 * mm, rightMargin=15 * mm,
         title=doc_title,
     )
-    doc.build(story, canvasmaker=make_numbered_canvas(footer_left_text))
+    doc.build(story, canvasmaker=make_numbered_canvas(footer_left_text, footer_center_text))
     buf.seek(0)
     return StreamingResponse(
         iter([buf.getvalue()]),
