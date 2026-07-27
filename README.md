@@ -72,8 +72,9 @@ in `app/routers/projects.py` isoliert.
   selben Projekt arbeiten.
 - **Geräte** — globaler Gerätekatalog (Aktoren, Sensoren, Bedienelemente
   usw.), gemeinsam für alle Projekte genutzt.
-- **Setup** — Kategorien, Punkttypen und Zentral-/Allgemeinfunktions-
-  Vorlagen; im Alltag selten angefasst, bereits vorbelegt.
+- **Setup** — Firmenprofil (Name/Adresse/Kontakt/Logo), Kategorien,
+  Punkttypen und Zentral-/Allgemeinfunktions-Vorlagen; ausser dem
+  Firmenprofil im Alltag selten angefasst, bereits vorbelegt.
 - **Update** — prüft auf Wunsch, ob auf GitHub eine neuere Version vorliegt,
   und installiert sie.
 
@@ -232,6 +233,16 @@ wird dadurch nie überschrieben.
 
 ### Setup
 
+- **Firma** — Name, Adresse, Telefon, E-Mail, Website und ein Logo,
+  einmalig hinterlegt. Erscheint als Badge im Programmkopf neben dem
+  KNXpilot-Logo (Logo + Name), sobald etwas hinterlegt ist. Zusätzlich
+  gibt es einen globalen Schalter **"Firmenlogo/-daten auf
+  PDF-Exporten anzeigen"** — gilt für alle drei PDF-Exporte
+  gleichzeitig, kein Umschalten je Export nötig (siehe *PDF-Exporte*
+  weiter unten). Das Logo wird beim Hochladen
+  automatisch auf den sichtbaren Bildinhalt zugeschnitten (entfernt
+  transparente/weisse Rahmen um das eigentliche Motiv), damit es in
+  der kleinen Kopfzeilen-Badge nicht winzig wirkt.
 - **Kategorien** — die 6 Hauptgruppen, vorbelegt.
 - **Punkttypen** — wiederverwendbare Definitionen wie "Licht (Dimmen)",
   "Rollo (einfach)", "Jalousie (mit Lamelle)", "Heizkreis", jeweils mit
@@ -310,6 +321,15 @@ auf jeder Seite. Der gemeinsame Code dafür liegt in `app/pdf_design.py`
 (`pdf_styles()`, `pdf_title_banner()`, `pdf_table_style()`,
 `make_numbered_canvas()`) — Änderungen dort wirken sich auf alle drei
 Exporte gleichzeitig aus.
+
+Ist im Setup-Tab unter *Firma* der Schalter "Firmenlogo/-daten auf
+PDF-Exporten anzeigen" aktiv, ergänzt `company_header_block()` oben auf
+Seite 1 Firmenname und Logo (neben dem Titel-Banner), während
+`company_footer_line()` Adresse, Telefon, E-Mail und Website als
+eigene, zentrierte Zeile unterhalb von "Seite X von Y" auf **jeder**
+Seite einfügt. Ist der Schalter aus oder kein Firmenprofil hinterlegt,
+liefern beide Funktionen einfach nichts zurück — die Aufrufer in den
+drei Router-Dateien brauchen dafür kein `if`.
 
 ## Persistenz & Deployment
 
@@ -394,10 +414,10 @@ app/
   db.py                 — Datenbankverbindung, Schema, Migrationen, Standard-Vorbelegung
   models.py             — alle Pydantic-Schemas für Request-Bodies
   ga_logic.py            — Gruppenadressen-Baum-Generierung, Abgänge, Pflichtenheft-Hilfsfunktionen
-  pdf_design.py          — gemeinsames PDF-Design (Banner, Tabellenstil, Seitenzahlen)
+  pdf_design.py          — gemeinsames PDF-Design (Banner, Tabellenstil, Seitenzahlen, Firmen-Briefkopf)
   utils.py               — kleine Hilfsfunktionen ohne eigene Abhängigkeiten
   routers/
-    setup.py             — Kategorien, Punkttypen, Zentral-Vorlagen (Setup-Tab)
+    setup.py             — Firmenprofil, Kategorien, Punkttypen, Zentral-Vorlagen (Setup-Tab)
     geraete.py           — globaler Gerätekatalog (Geräte-Tab)
     projects.py          — Projekte (inkl. Metadaten), Geschosse/Räume/Punkte, Sicherung, GA-Export (Projekte-Tab)
     abgangsliste.py       — Aktoren, Abgänge, Kanalzuordnung, CSV/PDF-Export (Abgangsliste-Unterreiter)
