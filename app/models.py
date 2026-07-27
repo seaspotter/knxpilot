@@ -95,3 +95,13 @@ class KlaerungIn(BaseModel):
     typ: str = "Frage"       # "Frage" | "Aufgabe" | "Notiz"
     status: str = "offen"    # "offen" | "geklärt" | "abgelehnt"
     antwort: str = ""
+
+
+class CompanyProfileIn(BaseModel):
+    name: str = ""
+    address: str = ""
+    email: str = ""
+    website: str = ""
+    phone: str = ""
+    logo_data_url: str = ""   # data URL, or "" to clear the logo
+    show_on_pdf: bool = False

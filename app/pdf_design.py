@@ -4,14 +4,16 @@ Geräteliste, Pflichtenheft) so they all look consistent: a dark banner
 header, a light table style, and a footer with "Seite X von Y" + project
 name on every page.
 """
+import base64
 import io
 
 from fastapi.responses import StreamingResponse
+from PIL import Image as PILImage
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import Image, SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.pdfgen import canvas as pdfcanvas
 
 PDF_BANNER_COLOR = colors.HexColor("#1e293b")
@@ -29,6 +31,7 @@ def pdf_styles():
     styles.add(ParagraphStyle("RoomHeading", fontName="Helvetica-Bold", fontSize=11, textColor=PDF_ACCENT_COLOR, spaceBefore=6, spaceAfter=2))
     styles.add(ParagraphStyle("Body", fontName="Helvetica", fontSize=9.5, textColor=colors.HexColor("#0f172a"), leading=13))
     styles.add(ParagraphStyle("BodyMuted", fontName="Helvetica-Oblique", fontSize=9, textColor=PDF_MUTED_COLOR, leading=12))
+    styles.add(ParagraphStyle("Letterhead", fontName="Helvetica", fontSize=9, textColor=PDF_MUTED_COLOR, leading=12))
     return styles
 
 
@@ -47,6 +50,55 @@ def pdf_title_banner(title, subtitle=""):
         ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
     ]))
     return [t, Spacer(1, 6 * mm)]
+
+
+def company_letterhead(company):
+    """Optional letterhead block (logo + contact info) prepended to page 1 of
+    every PDF export. Gated entirely by the global show_on_pdf toggle - callers
+    just prepend this list to their story, never need an `if` themselves."""
+    if not company or not company.get("show_on_pdf"):
+        return []
+
+    lines = [l for l in [
+        company.get("name", ""),
+        company.get("address", ""),
+        " · ".join(b for b in (company.get("phone"), company.get("email"), company.get("website")) if b),
+    ] if l]
+
+    logo_cell = ""
+    data_url = company.get("logo_data_url") or ""
+    if data_url.startswith("data:") and ";base64," in data_url:
+        try:
+            _, b64data = data_url.split(";base64,", 1)
+            img_bytes = base64.b64decode(b64data)
+            # PIL decodes lazily - Image() alone won't raise on a corrupt file, only a
+            # later render pass would (crashing the whole PDF). Force the decode now,
+            # inside this try/except, so a bad logo degrades to text-only instead.
+            PILImage.open(io.BytesIO(img_bytes)).load()
+            logo_cell = Image(io.BytesIO(img_bytes), width=28 * mm, height=28 * mm, kind="proportional")
+        except Exception:
+            logo_cell = ""
+
+    if not lines and not logo_cell:
+        return []
+
+    styles = pdf_styles()
+    text_cell = Paragraph("<br/>".join(lines), styles["Letterhead"]) if lines else ""
+
+    if logo_cell and text_cell:
+        row, col_widths = [[logo_cell, text_cell]], [30 * mm, 150 * mm]
+    elif logo_cell:
+        row, col_widths = [[logo_cell]], [30 * mm]
+    else:
+        row, col_widths = [[text_cell]], [180 * mm]
+
+    t = Table(row, colWidths=col_widths)
+    t.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+        ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    return [t, Spacer(1, 4 * mm)]
 
 
 def pdf_table_style(extra_commands=None):

@@ -1,12 +1,34 @@
-"""Categories / Point types / Central templates ("Setup" tab - rarely touched)."""
+"""Categories / Point types / Central templates / Company profile ("Setup" tab)."""
 import json
 
 from fastapi import APIRouter
 
 from ..db import get_db
-from ..models import PointTypeIn, CentralTemplateIn
+from ..models import PointTypeIn, CentralTemplateIn, CompanyProfileIn
 
 router = APIRouter(tags=["setup"])
+
+
+@router.get("/api/company-profile")
+def get_company_profile():
+    with get_db() as db:
+        r = db.execute("SELECT * FROM company_profile WHERE id=1").fetchone()
+        return {
+            "id": r["id"], "name": r["name"], "address": r["address"], "email": r["email"],
+            "website": r["website"], "phone": r["phone"], "logo_data_url": r["logo_data_url"],
+            "show_on_pdf": bool(r["show_on_pdf"]),
+        }
+
+
+@router.put("/api/company-profile")
+def update_company_profile(cp: CompanyProfileIn):
+    with get_db() as db:
+        db.execute(
+            "UPDATE company_profile SET name=?, address=?, email=?, website=?, phone=?, "
+            "logo_data_url=?, show_on_pdf=? WHERE id=1",
+            (cp.name, cp.address, cp.email, cp.website, cp.phone, cp.logo_data_url, int(cp.show_on_pdf)),
+        )
+    return {"ok": True}
 
 
 @router.get("/api/categories")

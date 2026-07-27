@@ -178,6 +178,20 @@ def init_db():
                 order_idx INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
+
+            -- Global, tool-wide company identity (singleton, id pinned to 1). Shown in
+            -- the app header next to the KNXpilot brand, and optionally as a page-1
+            -- letterhead on every PDF export, gated by show_on_pdf.
+            CREATE TABLE IF NOT EXISTS company_profile (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                name TEXT NOT NULL DEFAULT '',
+                address TEXT NOT NULL DEFAULT '',
+                email TEXT NOT NULL DEFAULT '',
+                website TEXT NOT NULL DEFAULT '',
+                phone TEXT NOT NULL DEFAULT '',
+                logo_data_url TEXT NOT NULL DEFAULT '',
+                show_on_pdf INTEGER NOT NULL DEFAULT 0
+            );
             """
         )
 
@@ -253,6 +267,10 @@ def init_db():
         (count,) = db.execute("SELECT COUNT(*) FROM actor_types").fetchone()
         if count == 0:
             seed_default_actor_types(db)
+
+        (count,) = db.execute("SELECT COUNT(*) FROM company_profile").fetchone()
+        if count == 0:
+            db.execute("INSERT INTO company_profile (id) VALUES (1)")
 
 
 def seed_defaults(db):
