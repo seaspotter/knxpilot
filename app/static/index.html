@@ -520,6 +520,69 @@ async function loadCompanyProfile() {
   renderHeaderCompanyBranding(c);
 }
 
+function autocropLogoDataUrl(dataUrl) {
+  // Many logo files ship with transparent or white padding baked around the
+  // actual mark, which makes them look tiny once fit into a small header/PDF
+  // box - the box renders at the intended size, but most of it is blank. This
+  // crops to the actual visible content so the full box is used.
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      let imgData;
+      try {
+        imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      } catch (e) {
+        resolve(dataUrl);
+        return;
+      }
+      const { data, width, height } = imgData;
+      let hasAlpha = false;
+      for (let i = 3; i < data.length; i += 4 * 37) {
+        if (data[i] < 255) { hasAlpha = true; break; }
+      }
+      const bgR = data[0], bgG = data[1], bgB = data[2];
+      const isBackground = (i) => {
+        if (hasAlpha) return data[i + 3] < 12;
+        return Math.abs(data[i] - bgR) + Math.abs(data[i + 1] - bgG) + Math.abs(data[i + 2] - bgB) < 18;
+      };
+
+      let minX = width, minY = height, maxX = -1, maxY = -1;
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          if (!isBackground(i)) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (maxX < minX || maxY < minY) { resolve(dataUrl); return; }
+
+      const pad = 4;
+      minX = Math.max(0, minX - pad);
+      minY = Math.max(0, minY - pad);
+      maxX = Math.min(width - 1, maxX + pad);
+      maxY = Math.min(height - 1, maxY + pad);
+      const cropW = maxX - minX + 1, cropH = maxY - minY + 1;
+
+      const cropCanvas = document.createElement('canvas');
+      cropCanvas.width = cropW;
+      cropCanvas.height = cropH;
+      cropCanvas.getContext('2d').drawImage(canvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+      resolve(cropCanvas.toDataURL('image/png'));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 function onCompanyLogoFileChange(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -530,7 +593,10 @@ function onCompanyLogoFileChange(event) {
     return;
   }
   const reader = new FileReader();
-  reader.onload = () => { COMPANY_LOGO_DATA_URL = reader.result; updateCompanyLogoPreview(); };
+  reader.onload = async () => {
+    COMPANY_LOGO_DATA_URL = await autocropLogoDataUrl(reader.result);
+    updateCompanyLogoPreview();
+  };
   reader.readAsDataURL(file);
 }
 
