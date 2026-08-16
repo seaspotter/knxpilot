@@ -10,13 +10,14 @@ from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.lib.units import mm
 
 from ..db import get_db
-from ..ga_logic import get_room_functions_by_category, get_central_functions_overview
+from ..ga_logic import get_room_functions_by_category, get_central_functions_overview, build_ga_tree
 from ..pdf_design import (
     pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response,
     company_header_block, company_footer_line, checkbox_cell, signature_block,
 )
 from ..utils import join_parts
 from .geraeteplanung import device_summary
+from .abgangsliste import build_abgangsliste_story
 
 router = APIRouter(tags=["pflichtenheft"])
 
@@ -59,6 +60,62 @@ def _floor_room_table(styles, floor_rooms):
     return table
 
 
+def _gruppenadressen_story(project_id, styles):
+    """Compact table rendering of the GA tree (see build_ga_tree()) for the
+    optional Pflichtenheft "Gruppenadressen" section - Adresse/Name/DPT per
+    Middle Group, since a full project can have hundreds of addresses and the
+    interactive tree view's collapsibility doesn't translate to a static PDF."""
+    tree = build_ga_tree(project_id)
+    story = []
+    for m_idx, main in enumerate(tree["main_groups"]):
+        if m_idx > 0:
+            story.append(PageBreak())
+        total_subs = sum(len(mid["subs"]) for mid in main["middles"])
+        story.append(Paragraph(f"{main['main']} {main['name']} ({total_subs})", styles["SectionHeading"]))
+        for mid in main["middles"]:
+            story.append(Paragraph(
+                f"{main['main']}/{mid['middle']} {mid['name']} ({len(mid['subs'])})", styles["RoomHeading"]
+            ))
+            table_data = [["Adresse", "Name", "DPT"]]
+            for s in mid["subs"]:
+                table_data.append([
+                    f"{main['main']}/{mid['middle']}/{s['sub']}",
+                    Paragraph(s["name"], styles["Body"]),
+                    s["dpt"] or "",
+                ])
+            table = Table(table_data, colWidths=[25 * mm, 115 * mm, 40 * mm], repeatRows=1)
+            table.setStyle(pdf_table_style([("VALIGN", (0, 0), (-1, -1), "MIDDLE")]))
+            story.append(table)
+            story.append(Spacer(1, 3 * mm))
+    return story
+
+
+def _klaerungsliste_story(db, project_id, styles):
+    """Table rendering of the Klärungsliste for the optional Pflichtenheft
+    section - all entries regardless of status (offen/geklärt/abgelehnt),
+    each clearly labeled, so nothing is silently omitted from the record."""
+    rows = db.execute(
+        "SELECT k.*, r.name AS room_name FROM klaerungen k "
+        "LEFT JOIN rooms r ON k.room_id = r.id "
+        "WHERE k.project_id=? ORDER BY k.room_id IS NULL DESC, k.order_idx",
+        (project_id,),
+    ).fetchall()
+    if not rows:
+        return [Paragraph("Keine Einträge vorhanden.", styles["BodyMuted"])]
+    table_data = [["Raum", "Typ", "Text", "Status", "Antwort"]]
+    for r in rows:
+        table_data.append([
+            Paragraph(r["room_name"] or "Allgemein", styles["Body"]),
+            Paragraph(r["typ"], styles["Body"]),
+            Paragraph(r["text"], styles["Body"]),
+            Paragraph(r["status"], styles["Body"]),
+            Paragraph(r["antwort"] or "", styles["Body"]),
+        ])
+    table = Table(table_data, colWidths=[28 * mm, 20 * mm, 55 * mm, 20 * mm, 57 * mm], repeatRows=1)
+    table.setStyle(pdf_table_style([("VALIGN", (0, 0), (-1, -1), "MIDDLE")]))
+    return [table]
+
+
 @router.get("/api/projects/{project_id}/export-pflichtenheft.pdf")
 def export_pflichtenheft_pdf(project_id: int):
     with get_db() as db:
@@ -96,11 +153,12 @@ def export_pflichtenheft_pdf(project_id: int):
             rooms = db.execute("SELECT * FROM rooms WHERE floor_id=? ORDER BY order_idx", (floor["id"],)).fetchall()
             floor_rooms.append((floor, rooms))
 
-        directory_table = _floor_room_table(styles, [(f["name"], [r["name"] for r in rooms]) for f, rooms in floor_rooms if rooms])
-        if directory_table:
-            story.append(Paragraph("Stockwerk- und Raumverzeichnis", styles["SectionHeading"]))
-            story.append(directory_table)
-            story.append(PageBreak())
+        if company.get("pflichtenheft_include_struktur", True):
+            directory_table = _floor_room_table(styles, [(f["name"], [r["name"] for r in rooms]) for f, rooms in floor_rooms if rooms])
+            if directory_table:
+                story.append(Paragraph("Stockwerk- und Raumverzeichnis", styles["SectionHeading"]))
+                story.append(directory_table)
+                story.append(PageBreak())
 
         any_room = False
         for floor, rooms in floor_rooms:
@@ -149,16 +207,39 @@ def export_pflichtenheft_pdf(project_id: int):
             if central_table:
                 story.append(central_table)
 
-        summary = device_summary(project_id)
-        if summary:
+        if company.get("pflichtenheft_include_gruppenadressen", False):
+            ga_story = _gruppenadressen_story(project_id, styles)
+            if ga_story:
+                story.append(PageBreak())
+                story.append(Paragraph("Gruppenadressen", styles["SectionHeading"]))
+                story.append(Spacer(1, 2 * mm))
+                story += ga_story
+
+        if company.get("pflichtenheft_include_abgangsliste", False):
+            abgangsliste_story = build_abgangsliste_story(db, project_id, styles, page_break_between_floors=False)
+            if abgangsliste_story:
+                story.append(PageBreak())
+                story.append(Paragraph("Abgangsliste", styles["SectionHeading"]))
+                story.append(Spacer(1, 2 * mm))
+                story += abgangsliste_story
+
+        if company.get("pflichtenheft_include_geraeteliste", True):
+            summary = device_summary(project_id)
+            if summary:
+                story.append(PageBreak())
+                story.append(Paragraph("Stückliste (Geräte gesamt)", styles["SectionHeading"]))
+                table_data = [["Gruppe", "Gerät", "Anzahl"]]
+                for s in summary:
+                    table_data.append([s["group_name"], s["device_name"], str(s["total"])])
+                table = Table(table_data, colWidths=[35 * mm, 105 * mm, 25 * mm])
+                table.setStyle(pdf_table_style())
+                story.append(table)
+
+        if company.get("pflichtenheft_include_klaerungsliste", False):
             story.append(PageBreak())
-            story.append(Paragraph("Stückliste (Geräte gesamt)", styles["SectionHeading"]))
-            table_data = [["Gruppe", "Gerät", "Anzahl"]]
-            for s in summary:
-                table_data.append([s["group_name"], s["device_name"], str(s["total"])])
-            table = Table(table_data, colWidths=[35 * mm, 105 * mm, 25 * mm])
-            table.setStyle(pdf_table_style())
-            story.append(table)
+            story.append(Paragraph("Klärungsliste", styles["SectionHeading"]))
+            story.append(Spacer(1, 2 * mm))
+            story += _klaerungsliste_story(db, project_id, styles)
 
         return build_pdf_response(
             story,

@@ -186,7 +186,8 @@ def init_db():
 
             -- Klärungsliste: per-project questions/tasks/notes for site visits,
             -- optionally tied to a room and/or a specific point within it. Internal
-            -- working list only - never surfaced in the Pflichtenheft export.
+            -- working list by default - only appears in the Pflichtenheft export if
+            -- explicitly opted into (company_profile.pflichtenheft_include_klaerungsliste).
             CREATE TABLE IF NOT EXISTS klaerungen (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -212,7 +213,12 @@ def init_db():
                 phone TEXT NOT NULL DEFAULT '',
                 logo_data_url TEXT NOT NULL DEFAULT '',
                 show_on_pdf INTEGER NOT NULL DEFAULT 0,
-                pflichtenheft_preamble TEXT NOT NULL DEFAULT ''
+                pflichtenheft_preamble TEXT NOT NULL DEFAULT '',
+                pflichtenheft_include_struktur INTEGER NOT NULL DEFAULT 1,
+                pflichtenheft_include_geraeteliste INTEGER NOT NULL DEFAULT 1,
+                pflichtenheft_include_gruppenadressen INTEGER NOT NULL DEFAULT 0,
+                pflichtenheft_include_abgangsliste INTEGER NOT NULL DEFAULT 0,
+                pflichtenheft_include_klaerungsliste INTEGER NOT NULL DEFAULT 0
             );
             """
         )
@@ -237,6 +243,16 @@ def init_db():
             ("klaerungen", "antwort", "ALTER TABLE klaerungen ADD COLUMN antwort TEXT NOT NULL DEFAULT ''"),
             ("company_profile", "pflichtenheft_preamble",
              "ALTER TABLE company_profile ADD COLUMN pflichtenheft_preamble TEXT NOT NULL DEFAULT ''"),
+            ("company_profile", "pflichtenheft_include_struktur",
+             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_struktur INTEGER NOT NULL DEFAULT 1"),
+            ("company_profile", "pflichtenheft_include_geraeteliste",
+             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_geraeteliste INTEGER NOT NULL DEFAULT 1"),
+            ("company_profile", "pflichtenheft_include_gruppenadressen",
+             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_gruppenadressen INTEGER NOT NULL DEFAULT 0"),
+            ("company_profile", "pflichtenheft_include_abgangsliste",
+             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_abgangsliste INTEGER NOT NULL DEFAULT 0"),
+            ("company_profile", "pflichtenheft_include_klaerungsliste",
+             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_klaerungsliste INTEGER NOT NULL DEFAULT 0"),
         ]:
             cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]
             if column not in cols:

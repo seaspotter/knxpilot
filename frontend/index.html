@@ -304,6 +304,7 @@
       <button data-subtab="kategorien">Kategorien</button>
       <button data-subtab="punkttypen">Funktionstypen</button>
       <button data-subtab="zentralvorlagen">Zentral-/Allgemeinfunktions-Vorlagen</button>
+      <button data-subtab="pflichtenheft">Pflichtenheft</button>
     </div>
 
     <div class="subtab active" id="setup-subtab-firma">
@@ -338,15 +339,6 @@
           <input type="checkbox" id="company-show-on-pdf">
           Firmenlogo/-daten auf PDF-Exporten anzeigen
           <span class="info-icon" tabindex="0" data-tip="Gilt global für alle PDF-Exporte in jedem Projekt - kein Schalter je Export.">i</span>
-        </label>
-      </div>
-      <hr class="sep">
-
-      <div class="row">
-        <label style="display:block; width:100%;">
-          Pflichtenheft — Vorbemerkungen
-          <span class="info-icon" tabindex="0" data-tip="Allgemeiner Erklärungstext (z.B. wie Schalten/Dimmen/Jalousie/Heizung bedient werden), der als eigener Abschnitt am Anfang jedes Pflichtenheft-PDFs erscheint. Mit sinnvollem Standardtext vorbelegt - hier anpassen oder leeren, um den Abschnitt ganz wegzulassen.">i</span>
-          <textarea id="company-pflichtenheft-preamble" rows="6" style="width:100%; margin-top:6px; font-family:inherit;"></textarea>
         </label>
       </div>
       <div><button class="btn" onclick="saveCompanyProfile()">Firmenprofil speichern</button></div>
@@ -415,6 +407,32 @@
       </div>
       <hr class="sep">
       <ul class="list" id="central-templates-list"></ul>
+    </div>
+    </div>
+
+    <div class="subtab" id="setup-subtab-pflichtenheft">
+    <div class="card">
+      <h3>Pflichtenheft</h3>
+      <p class="muted">Steuert, was im Pflichtenheft-PDF-Export erscheint (siehe Projekt-Tab Pflichtenheft).</p>
+
+      <div class="row">
+        <label style="display:block; width:100%;">
+          Vorbemerkungen
+          <span class="info-icon" tabindex="0" data-tip="Allgemeiner Erklärungstext (z.B. wie Schalten/Dimmen/Jalousie/Heizung bedient werden), der als eigener Abschnitt am Anfang jedes Pflichtenheft-PDFs erscheint. Mit sinnvollem Standardtext vorbelegt - hier anpassen oder leeren, um den Abschnitt ganz wegzulassen.">i</span>
+          <textarea id="company-pflichtenheft-preamble" rows="6" style="width:100%; margin-top:6px; font-family:inherit;"></textarea>
+        </label>
+      </div>
+      <hr class="sep">
+
+      <p class="muted" style="margin-bottom:6px;">Zusätzliche Abschnitte im PDF (neben den Funktionen je Raum, die immer enthalten sind):</p>
+      <div class="row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-struktur"> Stockwerk- und Raumverzeichnis</label>
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-geraeteliste"> Geräteliste (Stückliste)</label>
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-gruppenadressen"> Gruppenadressen<span class="info-icon" tabindex="0" data-tip="Kann bei grösseren Projekten sehr lang werden (eine Zeile je Adresse).">i</span></label>
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-abgangsliste"> Abgangsliste</label>
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-klaerungsliste"> Klärungsliste</label>
+      </div>
+      <div style="margin-top:10px;"><button class="btn" onclick="saveCompanyProfile()">Firmenprofil speichern</button></div>
     </div>
     </div>
   </div>

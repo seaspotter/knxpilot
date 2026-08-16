@@ -190,16 +190,22 @@ GA-/Verdrahtungsdetails. Eine Textvorschau zeigt sofort, was im PDF stehen
 wird; **PDF herunterladen** erzeugt ein mehrseitiges Dokument mit:
 
 - einem **Vorbemerkungen**-Abschnitt (allgemeine Erklärung, wie
-  Schalten/Dimmen/Jalousie/Heizung bedient werden — Text und Vorhandensein
-  im Setup-Tab unter *Firma* einstellbar, siehe unten),
-- einem **Stockwerk- und Raumverzeichnis**,
+  Schalten/Dimmen/Jalousie/Heizung bedient werden),
 - den geplanten Funktionen und Geräten je Geschoss/Raum — jede einzelne
   Funktion mit einer leeren **Getestet**-Checkbox zum Abhaken vor Ort nach
   der Inbetriebnahme (rein papierbasiert — es wird nichts im Tool
   gespeichert, da KNXpilot nicht nachhält, welcher Taster welche Funktion
   auslöst; das ist Sache der ETS-Programmierung),
-  einer Übersicht der Zentral-/Allgemeinfunktionen (ebenfalls mit
-  Getestet-Checkbox) und der Geräte-Stückliste als Abschluss.
+  sowie einer Übersicht der Zentral-/Allgemeinfunktionen (ebenfalls mit
+  Getestet-Checkbox) — diese beiden sind immer enthalten.
+
+Zusätzlich lassen sich im Setup-Tab unter *Pflichtenheft* (siehe unten)
+weitere Abschnitte optional dazuschalten: **Stockwerk- und
+Raumverzeichnis** sowie **Geräteliste** (Stückliste, standardmässig an),
+und **Gruppenadressen**, **Abgangsliste** sowie **Klärungsliste**
+(standardmässig aus, da sie ein Projekt schnell sehr lang machen können —
+gezielt für den Einzelfall dazuschalten). Dort lässt sich auch der
+Vorbemerkungen-Text anpassen oder leeren.
 
 Daneben steht **Übergabe-Checkliste herunterladen** — ein zweites,
 weitgehend allgemeines PDF (Sichtprüfung, Funktionsprüfung,
@@ -262,24 +268,20 @@ wird dadurch nie überschrieben.
 
 ### Setup
 
-Firma, Kategorien, Funktionstypen und Zentral-/Allgemeinfunktions-Vorlagen sind
-eigene Unterreiter innerhalb des Setup-Tabs, nicht alle gleichzeitig
-sichtbar.
+Firma, Kategorien, Funktionstypen, Zentral-/Allgemeinfunktions-Vorlagen und
+Pflichtenheft sind eigene Unterreiter innerhalb des Setup-Tabs, nicht alle
+gleichzeitig sichtbar.
 
 - **Firma** — Name, Adresse, Telefon, E-Mail, Website und ein Logo,
   einmalig hinterlegt. Erscheint als Badge im Programmkopf neben dem
   KNXpilot-Logo (Logo + Name), sobald etwas hinterlegt ist. Zusätzlich
   gibt es einen globalen Schalter **"Firmenlogo/-daten auf
-  PDF-Exporten anzeigen"** — gilt für alle drei PDF-Exporte
-  gleichzeitig, kein Umschalten je Export nötig (siehe *PDF-Exporte*
-  weiter unten). Das Logo wird beim Hochladen
-  automatisch auf den sichtbaren Bildinhalt zugeschnitten (entfernt
-  transparente/weisse Rahmen um das eigentliche Motiv), damit es in
-  der kleinen Kopfzeilen-Badge nicht winzig wirkt. Ausserdem ein
-  Textfeld **"Pflichtenheft — Vorbemerkungen"**, mit einem sinnvollen
-  Standardtext vorbelegt (kurzer/langer Tastendruck, Dimmen, Jalousie,
-  Heizung) — erscheint als eigener Abschnitt am Anfang jedes
-  Pflichtenheft-PDFs; anpassen oder leeren, um ihn wegzulassen.
+  PDF-Exporten anzeigen"** — gilt für alle PDF-Exporte gleichzeitig,
+  kein Umschalten je Export nötig (siehe *PDF-Exporte* weiter unten).
+  Das Logo wird beim Hochladen automatisch auf den sichtbaren
+  Bildinhalt zugeschnitten (entfernt transparente/weisse Rahmen um das
+  eigentliche Motiv), damit es in der kleinen Kopfzeilen-Badge nicht
+  winzig wirkt.
 - **Kategorien** — die 6 Hauptgruppen, vorbelegt; der Name jeder Kategorie
   lässt sich über **Bearbeiten** umbenennen, Reihenfolge (=
   Hauptgruppennummer) und Anzahl bleiben fest.
@@ -304,6 +306,12 @@ sichtbar.
 - **Die Hauptgruppe einer Kategorie wird nur erzeugt, wenn sie im Projekt
   tatsächlich verwendet wird** — z.B. erscheint keine Hauptgruppe
   Steckdosen samt Zentralfunktion, wenn nie eine Steckdose hinzugefügt wird.
+- **Pflichtenheft** — der Vorbemerkungen-Text (siehe oben) sowie fünf
+  Kontrollkästchen, die steuern, welche zusätzlichen Abschnitte im
+  Pflichtenheft-PDF erscheinen: Stockwerk-/Raumverzeichnis, Geräteliste
+  (beide standardmässig an), Gruppenadressen, Abgangsliste und
+  Klärungsliste (standardmässig aus). Gilt global für alle Projekte,
+  wie der Rest des Firmenprofils.
 
 ### Update
 
@@ -322,13 +330,13 @@ Installation geändert hat, ohne extra auf GitHub nachsehen zu müssen.
 
 ## PDF-Exporte
 
-Alle drei PDF-Exporte (Abgangsliste, Geräteliste, Pflichtenheft) nutzen
-dieselbe Gestaltung: ein dunkler Banner-Titelkopf, eine einheitliche
-Tabellenoptik, und eine Fusszeile mit Projektname sowie **Seite X von Y**
-auf jeder Seite. Der gemeinsame Code dafür liegt in `backend/pdf_design.py`
-(`pdf_styles()`, `pdf_title_banner()`, `pdf_table_style()`,
-`make_numbered_canvas()`) — Änderungen dort wirken sich auf alle drei
-Exporte gleichzeitig aus.
+Alle PDF-Exporte (Abgangsliste, Geräteliste, Pflichtenheft,
+Übergabe-Checkliste) nutzen dieselbe Gestaltung: ein dunkler
+Banner-Titelkopf, eine einheitliche Tabellenoptik, und eine Fusszeile mit
+Projektname sowie **Seite X von Y** auf jeder Seite. Der gemeinsame Code
+dafür liegt in `backend/pdf_design.py` (`pdf_styles()`,
+`pdf_title_banner()`, `pdf_table_style()`, `make_numbered_canvas()`) —
+Änderungen dort wirken sich auf alle Exporte gleichzeitig aus.
 
 Ist im Setup-Tab unter *Firma* der Schalter "Firmenlogo/-daten auf
 PDF-Exporten anzeigen" aktiv, ergänzt `company_header_block()` oben auf

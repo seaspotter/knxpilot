@@ -8,14 +8,25 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- A new **Setup → Pflichtenheft** sub-tab controls what the Pflichtenheft
+  PDF export includes: the Vorbemerkungen text, plus five checkboxes for
+  optional sections — Stockwerk-/Raumverzeichnis and Geräteliste (on by
+  default, matching prior behavior), and new **Gruppenadressen**,
+  **Abgangsliste**, and **Klärungsliste** sections (off by default, since
+  they can make a larger project's Pflichtenheft very long) —
+  `company_profile` gained five new columns for these toggles. The
+  Abgangsliste export's per-floor/actuator/channel rendering was factored
+  out into a shared `build_abgangsliste_story()` so both the standalone
+  export and this optional section use the same code.
 - Pflichtenheft PDF, made more professional: a **Vorbemerkungen** section
-  (general operating-convention text, editable/clearable in Setup → Firma,
-  seeded with sensible default wording on fresh installs), a
-  **Stockwerk- und Raumverzeichnis** table, and a **Getestet** checkbox
-  next to every individual function (room-level and central/general) for
-  hand-ticking during on-site commissioning — paper-style only, no
-  tracked state, since KNXpilot doesn't know which physical
-  button/Bedienelement drives which function (that's ETS programming).
+  (general operating-convention text, editable/clearable in the new Setup
+  → Pflichtenheft tab, seeded with sensible default wording on fresh
+  installs), a **Stockwerk- und Raumverzeichnis** table, and a
+  **Getestet** checkbox next to every individual function (room-level and
+  central/general) for hand-ticking during on-site commissioning —
+  paper-style only, no tracked state, since KNXpilot doesn't know which
+  physical button/Bedienelement drives which function (that's ETS
+  programming).
 - A new **Übergabe-Checkliste** PDF export (Pflichtenheft sub-tab, next
   to the existing PDF button): a mostly generic KNX handover checklist
   (Sichtprüfung/Funktionsprüfung/Kundengespräch/Anlagenübergabe, tri-state

@@ -116,3 +116,8 @@ class CompanyProfileIn(BaseModel):
     logo_data_url: str = ""   # data URL, or "" to clear the logo
     show_on_pdf: bool = False
     pflichtenheft_preamble: str = ""
+    pflichtenheft_include_struktur: bool = True
+    pflichtenheft_include_geraeteliste: bool = True
+    pflichtenheft_include_gruppenadressen: bool = False
+    pflichtenheft_include_abgangsliste: bool = False
+    pflichtenheft_include_klaerungsliste: bool = False

@@ -266,6 +266,84 @@ def export_abgangsliste(project_id: int):
         )
 
 
+def build_abgangsliste_story(db, project_id, styles, page_break_between_floors=True):
+    """The per-floor/per-actuator/per-channel content of the Abgangsliste, as a
+    list of flowables - factored out of export_abgangsliste_pdf() so the
+    Pflichtenheft export can optionally include the same content (see
+    pflichtenheft.py's pflichtenheft_include_abgangsliste toggle) without
+    duplicating this query/rendering logic."""
+    circuits = get_circuits(db, project_id)
+    by_room_point = {(c["room_point_id"], c["channel_seq"]): c for c in circuits}
+
+    actor_instances = db.execute(
+        "SELECT ai.*, at.channel_type as ct, at.channel_count as cc, "
+        "at.manufacturer as at_manufacturer, at.model as at_model "
+        "FROM actor_instances ai JOIN actor_types at ON ai.actor_type_id = at.id "
+        "WHERE ai.project_id=? ORDER BY ai.order_idx",
+        (project_id,),
+    ).fetchall()
+    floors_rows = db.execute(
+        "SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)
+    ).fetchall()
+    floor_names = {r["id"]: r["name"] for r in floors_rows}
+    floor_order = {r["id"]: r["order_idx"] for r in floors_rows}
+    assignments = db.execute(
+        "SELECT * FROM channel_assignments WHERE project_id=?", (project_id,)
+    ).fetchall()
+
+    story = []
+    if not actor_instances:
+        story.append(Paragraph("Noch keine Aktoren in diesem Projekt angelegt.", styles["BodyMuted"]))
+        return story
+
+    # Group actuators by floor, in floor order, "no floor" last.
+    by_floor = {}
+    for ai in actor_instances:
+        by_floor.setdefault(ai["floor_id"], []).append(ai)
+    floor_ids_sorted = sorted(by_floor.keys(), key=lambda fid: (fid is None, floor_order.get(fid, 999)))
+
+    first_floor = True
+    for floor_id in floor_ids_sorted:
+        if not first_floor and page_break_between_floors:
+            story.append(PageBreak())
+        first_floor = False
+
+        floor_label = floor_names.get(floor_id, "Ohne Geschoss")
+        story.append(Paragraph(floor_label, styles["SectionHeading"]))
+        story.append(Spacer(1, 2 * mm))
+
+        for ai in by_floor[floor_id]:
+            actor_display = join_parts(ai["at_manufacturer"], ai["at_model"]) or "?"
+            subtitle_parts = [actor_display]
+            if ai["location_label"]:
+                subtitle_parts.append(ai["location_label"])
+            if ai["physical_address"]:
+                subtitle_parts.append(ai["physical_address"])
+            story.append(Paragraph(" · ".join(subtitle_parts), styles["RoomHeading"]))
+
+            by_letter = {}
+            for a in assignments:
+                if a["actor_instance_id"] == ai["id"]:
+                    circuit = by_room_point.get((a["room_point_id"], a["channel_seq"]))
+                    by_letter[a["channel_letter"]] = circuit["function_name"] if circuit else "?"
+
+            table_data = [["Kanal", "Funktion"]]
+            row_styles = []
+            for i, letter in enumerate(channel_letters(ai["cc"])):
+                function = by_letter.get(letter, "RESERVE")
+                table_data.append([letter, function])
+                if function == "RESERVE":
+                    row_styles.append(("TEXTCOLOR", (0, i + 1), (-1, i + 1), PDF_MUTED_COLOR))
+                    row_styles.append(("FONTNAME", (0, i + 1), (-1, i + 1), "Helvetica-Oblique"))
+
+            table = Table(table_data, colWidths=[25 * mm, 130 * mm])
+            table.setStyle(pdf_table_style(row_styles))
+            story.append(table)
+            story.append(Spacer(1, 5 * mm))
+
+    return story
+
+
 @router.get("/api/projects/{project_id}/export-abgangsliste.pdf")
 def export_abgangsliste_pdf(project_id: int):
     with get_db() as db:
@@ -273,73 +351,10 @@ def export_abgangsliste_pdf(project_id: int):
         if not project:
             raise HTTPException(404, "Project not found")
 
-        circuits = get_circuits(db, project_id)
-        by_room_point = {(c["room_point_id"], c["channel_seq"]): c for c in circuits}
-
-        actor_instances = db.execute(
-            "SELECT ai.*, at.channel_type as ct, at.channel_count as cc, "
-            "at.manufacturer as at_manufacturer, at.model as at_model "
-            "FROM actor_instances ai JOIN actor_types at ON ai.actor_type_id = at.id "
-            "WHERE ai.project_id=? ORDER BY ai.order_idx",
-            (project_id,),
-        ).fetchall()
-        floors_rows = db.execute(
-            "SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)
-        ).fetchall()
-        floor_names = {r["id"]: r["name"] for r in floors_rows}
-        floor_order = {r["id"]: r["order_idx"] for r in floors_rows}
-        assignments = db.execute(
-            "SELECT * FROM channel_assignments WHERE project_id=?", (project_id,)
-        ).fetchall()
-
-        # Group actuators by floor, in floor order, "no floor" last.
-        by_floor = {}
-        for ai in actor_instances:
-            by_floor.setdefault(ai["floor_id"], []).append(ai)
-        floor_ids_sorted = sorted(by_floor.keys(), key=lambda fid: (fid is None, floor_order.get(fid, 999)))
-
         company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
         styles = pdf_styles()
         story = company_header_block(company) + pdf_title_banner(f"Abgangsliste — {project['name']}", "Aktoren-Verdrahtung je Geschoss")
-
-        first_floor = True
-        for floor_id in floor_ids_sorted:
-            if not first_floor:
-                story.append(PageBreak())
-            first_floor = False
-
-            floor_label = floor_names.get(floor_id, "Ohne Geschoss")
-            story.append(Paragraph(floor_label, styles["SectionHeading"]))
-            story.append(Spacer(1, 2 * mm))
-
-            for ai in by_floor[floor_id]:
-                actor_display = join_parts(ai["at_manufacturer"], ai["at_model"]) or "?"
-                subtitle_parts = [actor_display]
-                if ai["location_label"]:
-                    subtitle_parts.append(ai["location_label"])
-                if ai["physical_address"]:
-                    subtitle_parts.append(ai["physical_address"])
-                story.append(Paragraph(" · ".join(subtitle_parts), styles["RoomHeading"]))
-
-                by_letter = {}
-                for a in assignments:
-                    if a["actor_instance_id"] == ai["id"]:
-                        circuit = by_room_point.get((a["room_point_id"], a["channel_seq"]))
-                        by_letter[a["channel_letter"]] = circuit["function_name"] if circuit else "?"
-
-                table_data = [["Kanal", "Funktion"]]
-                row_styles = []
-                for i, letter in enumerate(channel_letters(ai["cc"])):
-                    function = by_letter.get(letter, "RESERVE")
-                    table_data.append([letter, function])
-                    if function == "RESERVE":
-                        row_styles.append(("TEXTCOLOR", (0, i + 1), (-1, i + 1), PDF_MUTED_COLOR))
-                        row_styles.append(("FONTNAME", (0, i + 1), (-1, i + 1), "Helvetica-Oblique"))
-
-                table = Table(table_data, colWidths=[25 * mm, 130 * mm])
-                table.setStyle(pdf_table_style(row_styles))
-                story.append(table)
-                story.append(Spacer(1, 5 * mm))
+        story += build_abgangsliste_story(db, project_id, styles)
 
         return build_pdf_response(
             story,
