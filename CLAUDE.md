@@ -78,7 +78,12 @@ the user to make explicitly, not something to introduce as a side effect of
   branch workflow, how to add a feature.
 - [`DEPLOYMENT.md`](./DEPLOYMENT.md) — persistence, the self-update
   mechanism, Docker image publishing, Proxmox/LXC deployment.
-- [`CHANGELOG.md`](./CHANGELOG.md) — notable changes over time.
+- [`CHANGELOG.md`](./CHANGELOG.md) — notable changes over time (what's
+  already shipped).
+- [`ROADMAP.md`](./ROADMAP.md) — what's *not* shipped yet: prioritized
+  ideas for future work. Update it (check off/remove a shipped item, add a
+  newly-raised idea) whenever a roadmap discussion happens, even if nothing
+  gets built in that same session.
 
 ## Keep docs in sync with code changes
 
@@ -100,6 +105,9 @@ change** — don't leave it for later:
   deployment steps.
 - `CHANGELOG.md` — add an entry under `[Unreleased]` for any
   user-/deployer-/developer-visible change.
+- `ROADMAP.md` — if the change ships something listed there, check it off
+  or remove it (with a pointer to the CHANGELOG entry) in the same change,
+  so it doesn't silently drift out of sync with what's actually built.
 
 This applies to structural work in particular — a rename or move that
 isn't reflected in these docs makes them actively misleading rather than

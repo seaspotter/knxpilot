@@ -65,6 +65,7 @@ Standardwerten vorbelegt.
 - [`DEPLOYMENT.md`](./DEPLOYMENT.md) — Persistenz, Self-Update-Mechanismus,
   Proxmox/LXC-Bereitstellung
 - [`CHANGELOG.md`](./CHANGELOG.md) — Änderungen über die Zeit
+- [`ROADMAP.md`](./ROADMAP.md) — geplante/angedachte zukünftige Funktionen
 
 ## Lizenz
 
