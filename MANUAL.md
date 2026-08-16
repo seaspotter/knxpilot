@@ -415,15 +415,18 @@ nicht alle gleichzeitig sichtbar.
   neuester Sicherungen behalten, ältere werden automatisch gelöscht.
   Details zur NAS-Einbindung und den Nextcloud-Zugangsdaten:
   [`DEPLOYMENT.md`](./DEPLOYMENT.md). Darunter: **Vorhandene Sicherungen**
-  listet alles im NAS-Ziel (mit Herunterladen/Wiederherstellen je Zeile),
-  und **Sicherung wiederherstellen (Datei hochladen)** stellt aus einer
-  hochgeladenen Datei wieder her (z.B. eine aus Nextcloud heruntergeladene
-  Sicherung). Beide Wege ersetzen die komplette laufende Datenbank und
-  starten die App danach automatisch neu — vorher wird immer zuerst eine
-  Sicherung des aktuellen Stands angelegt, und eine hochgeladene Datei
-  wird vor der Übernahme geprüft (muss wie eine echte KNXpilot-Datenbank
-  aussehen), damit weder ein Fehlklick noch eine falsche Datei etwas
-  endgültig zerstört.
+  listet alles in jedem aktivierten Ziel — NAS und Nextcloud — mit
+  Herunterladen/Wiederherstellen je Zeile (ist Nextcloud aktiviert, aber
+  seine Liste nicht abrufbar, z.B. wegen falscher URL/Zugangsdaten, wird
+  das als eigene Meldung angezeigt, ohne die NAS-Liste zu verstecken).
+  **Sicherung wiederherstellen (Datei hochladen)** stellt zusätzlich aus
+  jeder hochgeladenen Datei wieder her, auch von ausserhalb der beiden
+  konfigurierten Ziele. Alle drei Wege ersetzen die komplette laufende
+  Datenbank und starten die App danach automatisch neu — vorher wird
+  immer zuerst eine Sicherung des aktuellen Stands angelegt, und eine
+  Datei wird vor der Übernahme geprüft (muss wie eine echte
+  KNXpilot-Datenbank aussehen), damit weder ein Fehlklick noch eine
+  falsche Datei etwas endgültig zerstört.
 
 ### Update
 

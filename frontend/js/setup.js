@@ -64,29 +64,47 @@ function humanFileSize(bytes) {
 }
 
 async function loadBackupFilesList() {
-  const files = await api('/system/backups');
+  const data = await api('/system/backups');
   const ul = document.getElementById('backup-files-list');
-  ul.innerHTML = files.map(f => `
+  const rows = [
+    ...data.local.map(f => ({...f, source: 'local'})),
+    ...data.nextcloud.map(f => ({...f, source: 'nextcloud'})),
+  ].sort((a, b) => b.filename.localeCompare(a.filename));
+
+  const errorHtml = data.nextcloud_error
+    ? `<li class="muted" style="color:var(--danger);">Nextcloud-Liste nicht abrufbar: ${data.nextcloud_error}</li>`
+    : '';
+  const rowsHtml = rows.map(f => `
     <li>
-      <div><b>${f.filename}</b> <span class="pill">${humanFileSize(f.size)}</span> <span class="pill">${new Date(f.modified_at).toLocaleString('de-DE')}</span></div>
       <div>
-        <button class="btn secondary small" onclick="downloadBackupFile('${f.filename}')">Herunterladen</button>
-        <button class="btn danger small" onclick="restoreFromLocalBackup('${f.filename}')">Wiederherstellen</button>
+        <b>${f.filename}</b>
+        <span class="pill">${f.source === 'nextcloud' ? 'Nextcloud' : 'NAS'}</span>
+        ${f.size ? `<span class="pill">${humanFileSize(f.size)}</span>` : ''}
+        ${f.modified_at ? `<span class="pill">${new Date(f.modified_at).toLocaleString('de-DE')}</span>` : ''}
+      </div>
+      <div>
+        <button class="btn secondary small" onclick="downloadBackupFile('${f.filename}', '${f.source}')">Herunterladen</button>
+        <button class="btn danger small" onclick="restoreFromExistingBackup('${f.filename}', '${f.source}')">Wiederherstellen</button>
       </div>
     </li>
-  `).join('') || '<li class="muted">Keine Sicherungen gefunden (NAS-Ziel nicht aktiv oder noch keine Sicherung gelaufen).</li>';
+  `).join('');
+  ul.innerHTML = errorHtml + (rowsHtml || (errorHtml ? '' : '<li class="muted">Keine Sicherungen gefunden (kein Ziel aktiv oder noch keine Sicherung gelaufen).</li>'));
 }
 
-function downloadBackupFile(filename) {
-  window.location.href = `/api/system/backups/${encodeURIComponent(filename)}/download`;
+function downloadBackupFile(filename, source) {
+  const path = source === 'nextcloud'
+    ? `/api/system/backups/nextcloud/${encodeURIComponent(filename)}/download`
+    : `/api/system/backups/${encodeURIComponent(filename)}/download`;
+  window.location.href = path;
 }
 
 const RESTORE_CONFIRM_TEXT = (label) =>
   `Sicherung "${label}" wiederherstellen?\n\nDie komplette aktuelle Datenbank wird ersetzt (vorher wird automatisch eine Sicherung des aktuellen Stands angelegt) und die App startet danach neu. Nicht rückgängig zu machen, ausser über die eben angelegte Sicherung.`;
 
-async function restoreFromLocalBackup(filename) {
+async function restoreFromExistingBackup(filename, source) {
   if (!(await showConfirm(RESTORE_CONFIRM_TEXT(filename), {danger: true}))) return;
-  await performRestore(() => api(`/system/restore-local/${encodeURIComponent(filename)}`, {method: 'POST'}));
+  const path = source === 'nextcloud' ? `/system/restore-nextcloud/${encodeURIComponent(filename)}` : `/system/restore-local/${encodeURIComponent(filename)}`;
+  await performRestore(() => api(path, {method: 'POST'}));
 }
 
 async function restoreFromUpload() {

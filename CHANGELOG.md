@@ -4,6 +4,30 @@ Notable changes to KNXpilot. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this file starts from the
 restructuring below — history before that is available via `git log`.
 
+## [Unreleased]
+
+### Fixed
+
+- Listing/pruning existing Nextcloud backups (used by Setup → Backup's
+  "Vorhandene Sicherungen" list and by retention pruning after each
+  upload) sent a body-less `PROPFIND` request, which several real WebDAV
+  servers - Nextcloud's SabreDAV included - reject or mishandle even
+  though the WebDAV RFC technically allows omitting the body. This made
+  a perfectly successful backup **upload** get reported as a failure,
+  because the retention step run right after it would throw. Now sends a
+  proper request body/`Content-Type`, and a listing/pruning failure is
+  logged but no longer turns an already-successful upload into a
+  reported failure.
+
+### Added
+
+- **Setup → Backup**'s "Vorhandene Sicherungen" now lists Nextcloud
+  backups too (previously local-only), each with its own Herunterladen/
+  Wiederherstellen, and a Nextcloud listing error (e.g. wrong URL/
+  credentials) is shown without hiding an otherwise-working local list.
+  New `GET /api/system/backups/nextcloud/{filename}/download` and
+  `POST /api/system/restore-nextcloud/{filename}`.
+
 ## [0.3.0] - 2026-08-16
 
 ### Added

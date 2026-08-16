@@ -11,9 +11,12 @@ import time
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 
-from ..backup import BACKUP_FILENAME_RE, list_local_backups, restore_database, run_backup_now
+from ..backup import (
+    BACKUP_FILENAME_RE, download_nextcloud_backup, list_local_backups, list_nextcloud_backups,
+    restore_database, run_backup_now,
+)
 from ..db import get_db
 
 router = APIRouter(tags=["system"])
@@ -137,34 +140,61 @@ def trigger_backup():
         return run_backup_now(db)
 
 
-def _local_backup_path():
+def _backup_settings():
     with get_db() as db:
-        cp = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
-    return cp["backup_local_path"] if cp["backup_local_enabled"] else None
+        return dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
 
 
 @router.get("/api/system/backups")
 def list_backups():
-    """Existing local-destination backups, for Setup -> Backup's
-    "Vorhandene Sicherungen" list. Empty if that destination isn't
-    enabled - Nextcloud backups aren't listed here (no cheap "browse a
-    WebDAV folder" UI built for that; download from Nextcloud itself and
-    use the upload-restore path instead)."""
-    path = _local_backup_path()
-    return list_local_backups(path) if path else []
+    """Existing backups in every enabled destination, for Setup ->
+    Backup's "Vorhandene Sicherungen" list. Nextcloud listing failures
+    (e.g. wrong URL/credentials) are reported back as nextcloud_error
+    rather than raising, so a broken Nextcloud connection doesn't also
+    hide an otherwise-working local listing."""
+    cp = _backup_settings()
+    local = list_local_backups(cp["backup_local_path"]) if cp["backup_local_enabled"] else []
+    nextcloud, nextcloud_error = [], None
+    if cp["backup_nextcloud_enabled"]:
+        try:
+            nextcloud = list_nextcloud_backups(
+                cp["backup_nextcloud_url"], cp["backup_nextcloud_username"], cp["backup_nextcloud_password"]
+            )
+        except Exception as e:
+            nextcloud_error = str(e)
+    return {"local": local, "nextcloud": nextcloud, "nextcloud_error": nextcloud_error}
 
 
 @router.get("/api/system/backups/{filename}/download")
 def download_backup(filename: str):
     if not BACKUP_FILENAME_RE.match(filename):
         raise HTTPException(400, "Invalid filename")
-    path = _local_backup_path()
-    if not path:
+    cp = _backup_settings()
+    if not cp["backup_local_enabled"]:
         raise HTTPException(404, "Local backup destination not enabled")
-    file_path = Path(path) / filename
+    file_path = Path(cp["backup_local_path"]) / filename
     if not file_path.is_file():
         raise HTTPException(404, "Backup not found")
     return FileResponse(file_path, filename=filename, media_type="application/octet-stream")
+
+
+@router.get("/api/system/backups/nextcloud/{filename}/download")
+def download_backup_nextcloud(filename: str):
+    if not BACKUP_FILENAME_RE.match(filename):
+        raise HTTPException(400, "Invalid filename")
+    cp = _backup_settings()
+    if not cp["backup_nextcloud_enabled"]:
+        raise HTTPException(404, "Nextcloud destination not enabled")
+    try:
+        data = download_nextcloud_backup(
+            cp["backup_nextcloud_url"], cp["backup_nextcloud_username"], cp["backup_nextcloud_password"], filename
+        )
+    except Exception as e:
+        raise HTTPException(502, f"Nextcloud-Download fehlgeschlagen: {e}")
+    return Response(
+        content=data, media_type="application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 def _restore_and_restart(data, background_tasks):
@@ -183,13 +213,32 @@ def restore_from_local(filename: str, background_tasks: BackgroundTasks):
     read it."""
     if not BACKUP_FILENAME_RE.match(filename):
         raise HTTPException(400, "Invalid filename")
-    path = _local_backup_path()
-    if not path:
+    cp = _backup_settings()
+    if not cp["backup_local_enabled"]:
         raise HTTPException(404, "Local backup destination not enabled")
-    file_path = Path(path) / filename
+    file_path = Path(cp["backup_local_path"]) / filename
     if not file_path.is_file():
         raise HTTPException(404, "Backup not found")
     return _restore_and_restart(file_path.read_bytes(), background_tasks)
+
+
+@router.post("/api/system/restore-nextcloud/{filename}")
+def restore_from_nextcloud(filename: str, background_tasks: BackgroundTasks):
+    """Restores from a file already sitting in the Nextcloud backup
+    folder - downloads it via WebDAV first, then goes through the same
+    validate+safety-snapshot+replace path as any other restore."""
+    if not BACKUP_FILENAME_RE.match(filename):
+        raise HTTPException(400, "Invalid filename")
+    cp = _backup_settings()
+    if not cp["backup_nextcloud_enabled"]:
+        raise HTTPException(404, "Nextcloud destination not enabled")
+    try:
+        data = download_nextcloud_backup(
+            cp["backup_nextcloud_url"], cp["backup_nextcloud_username"], cp["backup_nextcloud_password"], filename
+        )
+    except Exception as e:
+        raise HTTPException(502, f"Nextcloud-Download fehlgeschlagen: {e}")
+    return _restore_and_restart(data, background_tasks)
 
 
 @router.post("/api/system/restore-upload")

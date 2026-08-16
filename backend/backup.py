@@ -30,6 +30,7 @@ recoverable. The caller (backend/routers/system.py) is responsible for
 restarting the process afterwards.
 """
 import base64
+import logging
 import os
 import re
 import sqlite3
@@ -42,6 +43,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .db import DB_PATH
+
+logger = logging.getLogger("knxpilot.backup")
 
 BACKUP_FILENAME_RE = re.compile(r"^knxpilot_backup_\d{8}_\d{6}\.db$")
 
@@ -157,6 +160,17 @@ def _write_local(path_str, filename, data, retention):
 
 
 # ---------- Nextcloud (WebDAV) destination ----------
+# A minimal PROPFIND request body asking for size + modified date. The
+# WebDAV RFC technically allows an empty PROPFIND body (defaults to
+# "allprop"), but several real servers - Nextcloud's SabreDAV included -
+# reject or misbehave on a body-less request, so this is sent explicitly
+# rather than relying on that fallback.
+_PROPFIND_BODY = (
+    b'<?xml version="1.0" encoding="utf-8"?>'
+    b'<d:propfind xmlns:d="DAV:"><d:prop><d:getlastmodified/><d:getcontentlength/></d:prop></d:propfind>'
+)
+
+
 def _webdav_request(url, method, username, password, data=None, extra_headers=None):
     req = urllib.request.Request(url, data=data, method=method)
     token = base64.b64encode(f"{username}:{password}".encode()).decode()
@@ -166,23 +180,52 @@ def _webdav_request(url, method, username, password, data=None, extra_headers=No
     return urllib.request.urlopen(req, timeout=30)
 
 
-def _webdav_list(base_url, username, password):
-    """PROPFIND (Depth: 1) the backup folder, return the filenames of any
-    existing knxpilot_backup_*.db entries - namespace-agnostic XML parse,
-    since WebDAV servers may prefix the DAV: namespace differently."""
-    with _webdav_request(base_url, "PROPFIND", username, password, extra_headers={"Depth": "1"}) as resp:
+def _nextcloud_base(url):
+    return url if url.endswith("/") else url + "/"
+
+
+def list_nextcloud_backups(url, username, password):
+    """Newest-first metadata (filename/size/modified_at, mirroring
+    list_local_backups()'s shape) for every knxpilot_backup_*.db entry in
+    the configured Nextcloud folder - used both by Setup -> Backup's
+    "Vorhandene Sicherungen" list and by _upload_nextcloud()'s retention
+    pruning below. Namespace-agnostic XML parse (WebDAV servers may
+    prefix the DAV: namespace differently), grouped by <d:response> so
+    each file's size/date stay matched to its own href."""
+    base = _nextcloud_base(url)
+    with _webdav_request(
+        base, "PROPFIND", username, password, data=_PROPFIND_BODY,
+        extra_headers={"Depth": "1", "Content-Type": "application/xml; charset=utf-8"},
+    ) as resp:
         root = ET.fromstring(resp.read())
-    names = []
-    for el in root.iter():
-        if el.tag.endswith("href") and el.text:
-            name = urllib.parse.unquote(el.text.rstrip("/").rsplit("/", 1)[-1])
-            if BACKUP_FILENAME_RE.match(name):
-                names.append(name)
-    return sorted(names)
+    out = []
+    for resp_el in root:
+        if not resp_el.tag.endswith("response"):
+            continue
+        href_el = next((c for c in resp_el.iter() if c.tag.endswith("href")), None)
+        if href_el is None or not href_el.text:
+            continue
+        name = urllib.parse.unquote(href_el.text.rstrip("/").rsplit("/", 1)[-1])
+        if not BACKUP_FILENAME_RE.match(name):
+            continue
+        size_el = next((c for c in resp_el.iter() if c.tag.endswith("getcontentlength")), None)
+        modified_el = next((c for c in resp_el.iter() if c.tag.endswith("getlastmodified")), None)
+        out.append({
+            "filename": name,
+            "size": int(size_el.text) if size_el is not None and size_el.text else 0,
+            "modified_at": modified_el.text if modified_el is not None and modified_el.text else "",
+        })
+    out.sort(key=lambda f: f["filename"], reverse=True)
+    return out
+
+
+def download_nextcloud_backup(url, username, password, filename):
+    with _webdav_request(_nextcloud_base(url) + filename, "GET", username, password) as resp:
+        return resp.read()
 
 
 def _upload_nextcloud(url, username, password, filename, data, retention):
-    base = url if url.endswith("/") else url + "/"
+    base = _nextcloud_base(url)
     # Ensure the target folder exists - MKCOL on an already-existing
     # collection returns 405, which is the expected/harmless case here.
     try:
@@ -191,13 +234,21 @@ def _upload_nextcloud(url, username, password, filename, data, retention):
         if e.code != 405:
             raise
     _webdav_request(base + filename, "PUT", username, password, data=data)
+    # The backup itself has already succeeded at this point - a retention/
+    # listing failure below is logged but deliberately doesn't turn the
+    # whole backup into a reported failure (that distinction is exactly
+    # what was missing before: a broken PROPFIND made a successful upload
+    # look like a failed backup).
     if retention > 0:
-        existing = _webdav_list(base, username, password)
-        for old_name in existing[:-retention]:
-            try:
-                _webdav_request(base + old_name, "DELETE", username, password)
-            except urllib.error.HTTPError:
-                pass  # best-effort prune - a failed cleanup shouldn't fail the whole backup
+        try:
+            existing = [f["filename"] for f in list_nextcloud_backups(url, username, password)]
+            for old_name in sorted(existing)[:-retention]:
+                try:
+                    _webdav_request(base + old_name, "DELETE", username, password)
+                except urllib.error.HTTPError:
+                    pass  # best-effort prune - a failed delete shouldn't fail the whole backup
+        except Exception:
+            logger.exception("Nextcloud retention listing/pruning failed (upload itself succeeded)")
 
 
 # ---------- Orchestration ----------
