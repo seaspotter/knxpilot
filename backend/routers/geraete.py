@@ -57,6 +57,24 @@ def delete_actor_type(at_id: int):
     return {"ok": True}
 
 
+@router.delete("/api/actor-types")
+def clear_actor_types():
+    """Bulk-clears the catalog for starting over with your own (e.g. after
+    importing several supplier JSON files and wanting to drop the seeded
+    starter catalog). Only deletes types not referenced by any project's
+    Geräteplanung/Abgangsliste - those are skipped, not force-deleted, since
+    that would silently orphan real project data."""
+    with get_db() as db:
+        (total,) = db.execute("SELECT COUNT(*) FROM actor_types").fetchone()
+        db.execute(
+            "DELETE FROM actor_types WHERE id NOT IN ("
+            "SELECT device_type_id FROM room_devices "
+            "UNION SELECT actor_type_id FROM actor_instances)"
+        )
+        (remaining,) = db.execute("SELECT COUNT(*) FROM actor_types").fetchone()
+    return {"deleted": total - remaining, "skipped_in_use": remaining}
+
+
 @router.get("/api/actor-types/export-json")
 def export_actor_types_json():
     with get_db() as db:

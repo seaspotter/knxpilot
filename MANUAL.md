@@ -15,6 +15,23 @@ Jeder Punkt reserviert einen **festen Adressblock** (Standard 5, oder 10 bei
 Jalousien mit Lamelle) und füllt ungenutzte Plätze mit `res` für spätere
 Erweiterungen auf — genau wie in Ihren bestehenden Projekten.
 
+**Dieses Schema ist fest im Tool verankert, nicht nur eine Voreinstellung.**
+Kategorien lassen sich zwar umbenennen (siehe Setup → Kategorien), aber die
+Zuordnung Hauptgruppe=Kategorie/Mittelgruppe=Geschoss/Untergruppe=Punkt
+selbst ist es nicht — sie steckt in `backend/ga_logic.py`s
+`build_ga_tree()`, in der Bedeutung von `categories.order_idx` als
+KNX-Hauptgruppennummer (0–5, daher auch keine neuen Kategorien
+hinzufügbar), und im gesamten Zentral-/Allgemeinfunktions-Vorlagensystem
+(`scope: building/floor/room_multi` geht von "Kategorie = Hauptgruppe"
+aus). Ein anderes Schema (z.B. Geschoss als Hauptgruppe, Kategorie als
+Mittelgruppe) wäre kein Setup-Schalter, sondern eine andere
+Adressierungs-Engine — u.a. weil KNX-Hauptgruppen nur 0–31 erlauben,
+Mittelgruppen sogar nur 0–7 (bei 3-Ebenen-Adressierung): mit Geschossen
+als Hauptgruppe bräuchte jede Kategorie eine Mittelgruppennummer
+0–7, was bei mehr als 8 Kategorien nicht mehr aufgeht. Dieses Tool bildet
+bewusst genau ein Schema ab (das der realen Projekte, aus denen es
+entstanden ist), kein Baukasten für beliebige Konventionen.
+
 ## GA-CSV-Format für ETS6
 
 Tab-getrennt, jedes Feld in Anführungszeichen, mit Kopfzeile, Spalten:
@@ -258,7 +275,14 @@ Ein Suchfeld filtert live nach allen Feldern. Jeder Eintrag hat einen
 aktualisiert das bestehende Gerät statt ein neues anzulegen.
 **⭳ Katalog exportieren (JSON)** / **⭱ Katalog importieren (JSON)** sichern
 oder teilen den Katalog; der Import gleicht nach (Hersteller, Modell) ab —
-dieselbe Datei mehrfach zu importieren ist unbedenklich.
+dieselbe Datei mehrfach zu importieren ist unbedenklich, und mehrere
+verschiedene Herstellerkataloge lassen sich nacheinander importieren:
+sie werden zusammengeführt, nicht ersetzt. **Katalog leeren** entfernt
+den kompletten Katalog auf einmal (mit Sicherheitsabfrage) — Geräte, die
+bereits in einem Projekt verwendet werden, bleiben dabei erhalten und
+werden übersprungen. Bleibt der Katalog danach leer, wird beim nächsten
+Neustart automatisch wieder der Standard-Startkatalog eingefügt (siehe
+unten) — bei Bedarf vorher den eigenen Katalog importieren.
 
 Bei einer frischen Installation (leerer Katalog) wird beim ersten Start
 automatisch ein Startkatalog gängiger KNX-Geräte eingefügt (u.a. MDT,
@@ -290,8 +314,14 @@ gleichzeitig sichtbar.
   "Rollo (einfach)", "Jalousie (mit Lamelle)", "Heizkreis", jeweils mit
   Datenpunkten, reserviertem Blockumfang und einem **Kanaltyp** (z.B.
   `Schalten`, `Dimmen`, `Rollo`, `Heizung`, `Tor`), der den Punkt mit
-  passenden Aktortypen für die Abgangsliste verknüpft.
-- **Zentral-/Allgemeinfunktions-Vorlagen** — automatisch erzeugte Blöcke:
+  passenden Aktortypen für die Abgangsliste verknüpft. Die Vorbelegung ist
+  ein Vorschlag, kein festes Schema — jederzeit anpassbar, und **Alle
+  löschen** entfernt auf einmal alle noch nicht in einem Projekt
+  verwendeten Funktionstypen (mit Sicherheitsabfrage), um eigene von
+  Grund auf anzulegen. Bereits verwendete bleiben dabei erhalten.
+- **Zentral-/Allgemeinfunktions-Vorlagen** — automatisch erzeugte Blöcke
+  (**Alle löschen** entfernt hier ausnahmslos alle, da nichts anderes im
+  Tool auf eine bestimmte Vorlage verweist):
   - `scope: building` → ein Block für das gesamte Projekt
   - `scope: floor` → ein Block je Geschoss (z.B. "Zentral EG", "Zentral OG")
   - `scope: room_multi` → ein Block **pro Raum**, nur für Räume mit einer

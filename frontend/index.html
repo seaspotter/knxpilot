@@ -287,6 +287,8 @@
         <button class="btn secondary small" onclick="exportActorTypesJson()">⭳ Katalog exportieren (JSON)</button>
         <input type="file" id="import-actortypes-file" accept="application/json">
         <button class="btn secondary small" onclick="importActorTypesJson()">⭱ Katalog importieren (JSON)</button>
+        <span class="info-icon" tabindex="0" data-tip="Der Import gleicht nach Hersteller+Modell ab (bereits vorhandene werden aktualisiert, neue ergänzt) - mehrere Kataloge unterschiedlicher Hersteller lassen sich also nacheinander importieren, sie werden zusammengeführt statt ersetzt.">i</span>
+        <button class="btn danger small" onclick="clearActorTypeCatalog()">Katalog leeren</button>
       </div>
       <hr class="sep">
       <div class="row">
@@ -348,7 +350,7 @@
     <div class="subtab" id="setup-subtab-kategorien">
     <div class="card">
       <h3>Kategorien (Hauptgruppen)</h3>
-      <p class="muted">Ihre Standard-Funktionskategorien. Reihenfolge = Hauptgruppennummer. Normalerweise einmalig festgelegt und danach unverändert.</p>
+      <p class="muted">Ihre Standard-Funktionskategorien. Reihenfolge = Hauptgruppennummer. Normalerweise einmalig festgelegt und danach unverändert. Das Adressierungsschema selbst (Hauptgruppe = Kategorie, Mittelgruppe = Geschoss, Untergruppe = Punkt) ist fest im Tool verankert, nicht nur hier in der Reihenfolge — ein anderes Schema (z.B. Geschoss als Hauptgruppe) würde eine andere Tool-Variante erfordern, siehe Hilfe-Tab.</p>
       <ul class="list" id="categories-list"></ul>
     </div>
     </div>
@@ -356,7 +358,7 @@
     <div class="subtab" id="setup-subtab-punkttypen">
     <div class="card">
       <h3>Funktionstypen</h3>
-      <p class="muted">Wiederverwendbare Bausteine (ein Licht, eine Jalousie, eine Steckdose...) mit ihren Datenpunkten und reserviertem Blockumfang. Der "Kanaltyp" verknüpft einen Punkt mit passenden Aktortypen weiter unten, damit er in der Abgangsliste eines Projekts einem physischen Aktorkanal zugeordnet werden kann.</p>
+      <p class="muted">Wiederverwendbare Bausteine (ein Licht, eine Jalousie, eine Steckdose...) mit ihren Datenpunkten und reserviertem Blockumfang. Ein Funktionstyp bestimmt, welche Untergruppen entstehen, wenn er im Funktionen-Unterreiter einem Raum zugewiesen wird (z.B. erzeugt "Licht (Dimmen)" die Datenpunkte Schalten/Status/Dimmen unter einer eigenen Adresse je Raum/Label). Der "Kanaltyp" verknüpft einen Punkt mit passenden Aktortypen weiter unten, damit er in der Abgangsliste eines Projekts einem physischen Aktorkanal zugeordnet werden kann. Die vorbelegten Funktionstypen sind ein Vorschlag, kein festes Schema — Datenpunkte/Suffixe/DPTs frei anpassen, oder unten den kompletten Satz löschen und eigene anlegen.</p>
       <div class="row">
         <select id="pt-category"></select>
         <input type="text" id="pt-name" placeholder="Name, z.B. Licht (Dimmen)">
@@ -373,6 +375,7 @@
         <button class="btn secondary small" id="pt-cancel-btn" onclick="cancelEditPointType()" style="display:none;">Abbrechen</button>
       </div>
       <hr class="sep">
+      <div style="margin-bottom:8px;"><button class="btn danger small" onclick="clearPointTypes()">Alle löschen</button></div>
       <ul class="list" id="point-types-list"></ul>
     </div>
     </div>
@@ -381,11 +384,14 @@
     <div class="card">
       <h3>Zentral-/Allgemeinfunktions-Vorlagen</h3>
       <p class="muted">
-        Werden in jedem Projekt automatisch erzeugt. Geltungsbereich "building" = ein Block für das ganze Projekt.
+        Werden in jedem Projekt automatisch erzeugt, ohne dass Sie sie pro Projekt anlegen müssen — je Kategorie
+        entstehen daraus die "Zentralfunktionen"-Mittelgruppe(n) bzw., bei der Kategorie Allgemein, eigene
+        Mittelgruppen (z.B. Datum/Uhrzeit, Klima). Geltungsbereich "building" = ein Block für das ganze Projekt.
         "floor" = ein Block je Geschoss (z.B. "Zentral EG", "Zentral OG").
         "room_multi" = ein Block PRO RAUM, nur für Räume mit mehreren Punkten dieser
         Kategorie (z.B. erhält ein Raum mit 2+ Jalousien eine eigene kombinierte "Zentral"-Steuerung).
-        Vorlagen der Kategorie Allgemein werden jeweils zu einer eigenen Mittelgruppe.
+        Wie bei Funktionstypen sind auch dies nur Vorschläge — frei anpassen oder unten den kompletten
+        Satz löschen, um eigene Sammel-/Zentralfunktionen von Grund auf zu definieren.
       </p>
       <div class="row">
         <select id="ct-category"></select>
@@ -406,6 +412,7 @@
         <button class="btn secondary small" id="ct-cancel-btn" onclick="cancelEditCentralTemplate()" style="display:none;">Abbrechen</button>
       </div>
       <hr class="sep">
+      <div style="margin-bottom:8px;"><button class="btn danger small" onclick="clearCentralTemplates()">Alle löschen</button></div>
       <ul class="list" id="central-templates-list"></ul>
     </div>
     </div>

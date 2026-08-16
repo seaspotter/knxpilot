@@ -149,3 +149,14 @@ async function importActorTypesJson() {
   showToast(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert.`, 'success');
 }
 
+async function clearActorTypeCatalog() {
+  if (!(await showConfirm(
+    'Kompletten Gerätekatalog leeren?\n\nGeräte, die bereits in einem Projekt (Geräteplanung oder Abgangsliste) verwendet werden, bleiben erhalten.\n\nHinweis: Bleibt der Katalog danach leer, wird beim nächsten Neustart automatisch wieder der Standard-Startkatalog eingefügt - bei Bedarf vorher Ihren eigenen Katalog importieren.',
+    {danger: true}
+  ))) return;
+  cancelEditActorType();
+  const result = await api('/actor-types', {method:'DELETE'});
+  await loadActorTypes();
+  showToast(`${result.deleted} gelöscht${result.skipped_in_use ? `, ${result.skipped_in_use} in Verwendung übersprungen` : ''}.`, 'success');
+}
+

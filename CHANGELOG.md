@@ -8,6 +8,22 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- "Alle löschen" bulk-clear buttons, each with a confirmation popup, for
+  the Geräte Katalog, Setup → Funktionstypen, and Setup →
+  Zentral-/Allgemeinfunktions-Vorlagen — for starting over with your own
+  set instead of editing/deleting the seeded defaults one by one. Geräte
+  Katalog and Funktionstypen only delete entries not already used by a
+  project (in-use ones are skipped and reported, never force-deleted);
+  Zentral-Vorlagen have no such restriction, since nothing else
+  references them by id. New `DELETE /api/actor-types`,
+  `DELETE /api/point-types`, `DELETE /api/central-templates` endpoints.
+- More explanation in Setup (Funktionstypen, Zentral-/Allgemeinfunktions-
+  Vorlagen, Kategorien) and MANUAL.md's addressing-model section on how
+  these relate to the generated GA tree, and why the
+  Hauptgruppe=Kategorie/Mittelgruppe=Geschoss/Untergruppe=Punkt scheme is
+  built into the tool rather than a configurable setting (KNX's own
+  0–31/0–7 main/middle group limits make an alternative ordering, e.g.
+  floor-as-main-group, a different addressing engine, not a toggle).
 - A new **Setup → Pflichtenheft** sub-tab controls what the Pflichtenheft
   PDF export includes: the Vorbemerkungen text, plus six checkboxes —
   whether to show Vorbemerkungen at all (new, lets you keep the text

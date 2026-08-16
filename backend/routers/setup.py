@@ -109,6 +109,22 @@ def delete_point_type(pt_id: int):
     return {"ok": True}
 
 
+@router.delete("/api/point-types")
+def clear_point_types():
+    """Bulk-clears Funktionstypen for building your own set from scratch.
+    Only deletes types not already assigned to a room point in some project
+    - those are skipped, not force-deleted, to avoid orphaning real project
+    data. Categories themselves are untouched (they stay fixed to the KNX
+    main group numbers regardless)."""
+    with get_db() as db:
+        (total,) = db.execute("SELECT COUNT(*) FROM point_types").fetchone()
+        db.execute(
+            "DELETE FROM point_types WHERE id NOT IN (SELECT point_type_id FROM room_points)"
+        )
+        (remaining,) = db.execute("SELECT COUNT(*) FROM point_types").fetchone()
+    return {"deleted": total - remaining, "skipped_in_use": remaining}
+
+
 @router.get("/api/central-templates")
 def list_central_templates():
     with get_db() as db:
@@ -154,3 +170,16 @@ def delete_central_template(ct_id: int):
     with get_db() as db:
         db.execute("DELETE FROM central_templates WHERE id=?", (ct_id,))
     return {"ok": True}
+
+
+@router.delete("/api/central-templates")
+def clear_central_templates():
+    """Bulk-clears every Zentral-/Allgemeinfunktions-Vorlage across all
+    categories, for building your own from scratch. Unlike Funktionstypen,
+    nothing else references these by id (they're regenerated fresh into the
+    GA tree at preview/export time, never stored per-project), so this is
+    a plain, unconditional delete - no "in use" cases to skip."""
+    with get_db() as db:
+        (total,) = db.execute("SELECT COUNT(*) FROM central_templates").fetchone()
+        db.execute("DELETE FROM central_templates")
+    return {"deleted": total}

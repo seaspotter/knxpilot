@@ -253,6 +253,17 @@ async function deletePointType(id) {
   await loadPointTypes();
 }
 
+async function clearPointTypes() {
+  if (!(await showConfirm(
+    'Alle Funktionstypen löschen?\n\nFunktionstypen, die bereits einem Raum in einem Projekt zugewiesen sind, bleiben erhalten. Die restlichen werden entfernt, um eigene Funktionstypen von Grund auf neu anzulegen.',
+    {danger: true}
+  ))) return;
+  cancelEditPointType();
+  const result = await api('/point-types', {method:'DELETE'});
+  await loadPointTypes();
+  showToast(`${result.deleted} gelöscht${result.skipped_in_use ? `, ${result.skipped_in_use} in Verwendung übersprungen` : ''}.`, 'success');
+}
+
 
 // ---------- Setup: Central Templates ----------
 function addCtSuffixRow(suffix='', dpt='') {
@@ -357,5 +368,16 @@ async function deleteCentralTemplate(id) {
   if (EDITING_CENTRAL_TEMPLATE_ID === id) cancelEditCentralTemplate();
   await api('/central-templates/' + id, {method:'DELETE'});
   await loadCentralTemplates();
+}
+
+async function clearCentralTemplates() {
+  if (!(await showConfirm(
+    'Alle Zentral-/Allgemeinfunktions-Vorlagen löschen (über alle Kategorien hinweg)?\n\nBetrifft nur zukünftige Gruppenadressen-Vorschauen/-Exporte - bereits heruntergeladene CSVs ändern sich dadurch nicht. Gedacht, um eigene Vorlagen von Grund auf neu anzulegen.',
+    {danger: true}
+  ))) return;
+  cancelEditCentralTemplate();
+  const result = await api('/central-templates', {method:'DELETE'});
+  await loadCentralTemplates();
+  showToast(`${result.deleted} gelöscht.`, 'success');
 }
 
