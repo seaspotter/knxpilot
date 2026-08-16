@@ -83,8 +83,8 @@ def system_update(background_tasks: BackgroundTasks):
             return {
                 "ok": True,
                 "message": (
-                    "Updated, but requirements.txt or the Dockerfile changed - a full rebuild is needed. "
-                    "Run on the server: docker compose up -d --build"
+                    "Updated, but requirements.txt or the Dockerfile changed - a new image is needed. "
+                    "Run on the server: docker compose pull && docker compose up -d"
                 ),
                 "restarting": False,
             }

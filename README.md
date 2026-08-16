@@ -19,7 +19,8 @@ Vorlagen erzeugt — normalerweise muss man das pro Projekt gar nicht anfassen.
 ```bash
 git clone https://github.com/seaspotter/knxpilot.git
 cd knxpilot
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
 
 Danach `http://<host>` öffnen (läuft auf Port 80, kein `:8000` nötig).

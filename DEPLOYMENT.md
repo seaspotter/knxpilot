@@ -1,7 +1,11 @@
 # Deployment
 
-KNXpilot is a single Docker Compose service. There's no separate build/CD
-pipeline — the app updates itself via `git pull` at runtime (see below).
+KNXpilot is a single Docker Compose service, running a prebuilt image from
+`ghcr.io/seaspotter/knxpilot` (published by
+[`.github/workflows/docker-publish.yml`](./.github/workflows/docker-publish.yml)
+on every push to `main`). Code updates apply themselves via `git pull` at
+runtime (see below); only a changed `requirements.txt`/`Dockerfile` needs a
+fresh `docker compose pull`.
 
 ## Persistenz
 
@@ -27,7 +31,8 @@ löschen und neu vorbelegen zu lassen:
 ```bash
 docker compose down
 rm backend/data/knx_ga.db
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
 
 Bei bereits gespeicherten echten Projekten: zuerst mit dem
@@ -44,8 +49,8 @@ neue `backend/`/`frontend/`-Struktur automatisch mit. Die Datenbank
 (`backend/data/knx_ga.db`, vorher `app/data/knx_ga.db`) bleibt dabei
 unangetastet, da sie im selben Mount liegt und nur der Pfad relativ zum
 Repo-Root sich ändert. Da sich `Dockerfile` in diesem Schritt geändert hat,
-zeigt der Update-Button eine Rebuild-Meldung — einmalig
-`docker compose up -d --build` auf dem Server ausführen.
+zeigt der Update-Button eine Hinweis-Meldung — einmalig
+`docker compose pull && docker compose up -d` auf dem Server ausführen.
 
 ## Self-Update-Mechanismus (Update-Tab in der App)
 
@@ -64,12 +69,14 @@ So funktioniert es: `docker-compose.yml` bindet das **gesamte Repository**
 in den Container ein (`- .:/app`). Ein `git pull` (ausgeführt vom
 Update-Button, innerhalb des Containers gegen dasselbe eingebundene
 Verzeichnis) aktualisiert den laufenden Code sofort — ein Prozess-Neustart
-übernimmt ihn, ohne dass ein Image-Rebuild nötig ist (siehe
+übernimmt ihn, ohne dass ein neues Image nötig ist (siehe
 `backend/routers/system.py`). Die Datenbank bleibt dabei unangetastet.
 Ändern sich `requirements.txt` oder das `Dockerfile`, führt der Button
 **keinen** automatischen Neustart durch — stattdessen zeigt er eine
-Meldung, dass ein vollständiger Rebuild nötig ist (`docker compose up -d
---build`).
+Meldung, dass ein neues Image nötig ist (`docker compose pull && docker
+compose up -d`). Das Image dafür baut GitHub Actions bereits bei jedem
+Push auf `main` (siehe oben) — auf dem Server ist dafür kein lokaler
+Build nötig, nur ein Pull.
 
 **Wichtig für zukünftige Änderungen:** Dieser Mechanismus setzt voraus,
 dass das Frontend ohne Build-Schritt auskommt (reines HTML/CSS/JS, direkt
@@ -129,8 +136,14 @@ Ein schlankes LXC mit Docker ist die einfachste Variante:
    sh get-docker.sh
    ```
 4. Dieses Verzeichnis (per `git clone`) hineinkopieren, hineinwechseln,
-   `docker compose up -d --build`.
+   `docker compose pull && docker compose up -d`.
 5. `http://<lxc-ip>` aufrufen.
+
+Falls `docker compose pull` mit einem Berechtigungsfehler fehlschlägt: das
+GHCR-Package ist beim allerersten Build evtl. noch privat. Einmalig unter
+`github.com/seaspotter?tab=packages` → **knxpilot** → **Package settings**
+→ Sichtbarkeit auf **Public** stellen (das Repository selbst ist bereits
+öffentlich, das Package erbt das nicht automatisch).
 
 Das Dateisystem des LXC (inkl. der Datenbank) wird automatisch von den
 üblichen Proxmox-Backup-Jobs erfasst.

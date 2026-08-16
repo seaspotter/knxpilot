@@ -6,6 +6,25 @@ restructuring below — history before that is available via `git log`.
 
 ## [Unreleased]
 
+### Added
+
+- A GitHub Actions workflow (`.github/workflows/docker-publish.yml`)
+  builds and publishes the Docker image to `ghcr.io/seaspotter/knxpilot`
+  on every push to `main` (tag `latest`, plus a short-sha tag) and on
+  version tags (e.g. `v0.1.0`).
+
+### Changed
+
+- `docker-compose.yml` now pulls the published `ghcr.io/seaspotter/
+  knxpilot:latest` image instead of building locally — a fresh deploy or
+  a dependency update is now `docker compose pull && docker compose up
+  -d`, no local build tools needed on the server. Building locally is
+  still possible by swapping the `image:` line for `build: .`.
+- The self-update mechanism's "requirements.txt/Dockerfile changed"
+  message (`backend/routers/system.py`) now points at `docker compose
+  pull && docker compose up -d` instead of `docker compose up -d
+  --build`, matching the new image-based deploy flow.
+
 ## [0.1.0] - 2026-08-16
 
 First release: the backend/frontend restructuring plus the full UI/UX
