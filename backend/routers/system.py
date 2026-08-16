@@ -8,12 +8,26 @@ do NOT auto-restart, since the new dependencies wouldn't be installed yet.
 import os
 import subprocess
 import time
+from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks
 
 router = APIRouter(tags=["system"])
 
 REPO_DIR = "/app"
+
+# Self-relative (not REPO_DIR) so this works in local dev too, not just the
+# container - unlike the git-based endpoints below, which only make sense
+# against the bind-mounted repo checkout.
+CHANGELOG_PATH = Path(__file__).parent.parent.parent / "CHANGELOG.md"
+
+
+@router.get("/api/system/changelog")
+def get_changelog():
+    try:
+        return {"markdown": CHANGELOG_PATH.read_text(encoding="utf-8")}
+    except FileNotFoundError:
+        return {"markdown": ""}
 
 
 @router.get("/api/system/status")

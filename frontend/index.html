@@ -22,8 +22,15 @@
   </div>
 </header>
 <nav>
-  <button data-tab="projects" class="active">Projekte</button>
-  <button data-tab="aktoren">Geräte</button>
+  <div class="nav-item-group">
+    <button data-tab="projects" class="active">Projekte</button>
+    <button class="nav-caret" onclick="toggleProjekteMenu(event)" aria-label="Projekte-Menü">▾</button>
+    <div class="nav-dropdown-menu" id="projekte-dropdown-menu" style="display:none;">
+      <button onclick="closeNavDropdowns(); openCreateProjectModal();">+ Neues Projekt</button>
+      <button onclick="closeNavDropdowns(); document.querySelector('nav button[data-tab=&quot;projects&quot;]').click();">Projekt öffnen</button>
+    </div>
+  </div>
+  <button data-tab="aktoren">Geräte Katalog</button>
   <button data-tab="setup">Setup (Kategorien &amp; Vorlagen)</button>
   <button data-tab="update">Update</button>
 </nav>
@@ -387,6 +394,11 @@
       </div>
       <p class="muted" id="update-status"></p>
       <p class="error" id="update-error" style="display:none;"></p>
+    </div>
+
+    <div class="card">
+      <h3>Änderungsprotokoll</h3>
+      <div id="changelog-content" class="changelog"></div>
     </div>
   </div>
 

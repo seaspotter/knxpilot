@@ -39,7 +39,7 @@ async function renderActorInstanceForm() {
   const actorsOnly = ACTOR_TYPES.filter(at => at.group_name === 'Aktor');
   document.getElementById('ai-actortype').innerHTML = actorsOnly.map(at =>
     `<option value="${at.id}">${[at.manufacturer, at.model].filter(Boolean).join(' ')} (${at.channel_type}, ${at.channel_count} Kanäle)</option>`).join('') ||
-    '<option value="">Noch keine Aktoren definiert - im Geräte-Tab anlegen (Gruppe: Aktor)</option>';
+    '<option value="">Noch keine Aktoren definiert - im Geräte-Katalog-Tab anlegen (Gruppe: Aktor)</option>';
   document.getElementById('ai-floor').innerHTML = '<option value="">(kein Geschoss)</option>' +
     tree.floors.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
 }

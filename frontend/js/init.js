@@ -6,4 +6,5 @@
   await loadCentralTemplates();
   await loadActorTypes();
   await loadProjects();
+  await loadChangelog();
 })();

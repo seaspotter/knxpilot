@@ -22,6 +22,19 @@
   nav { display:flex; gap:4px; padding: 0 24px; border-bottom:1px solid var(--border); }
   nav button { background:none; border:none; color:var(--muted); padding:12px 16px; cursor:pointer; font-size:14px; border-bottom:2px solid transparent; }
   nav button.active { color:var(--text); border-bottom-color:var(--accent); }
+  .nav-item-group { position:relative; display:flex; align-items:center; }
+  .nav-caret { background:none; border:none; color:var(--muted); cursor:pointer; padding:12px 8px 12px 0; font-size:11px; }
+  .nav-caret:hover { color:var(--text); }
+  .nav-dropdown-menu {
+    position:absolute; top:100%; left:0; z-index:50; min-width:170px;
+    background:var(--panel); border:1px solid var(--border); border-radius:8px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.25); padding:4px;
+  }
+  .nav-dropdown-menu button {
+    display:block; width:100%; text-align:left; background:none; border:none;
+    color:var(--text); padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13px;
+  }
+  .nav-dropdown-menu button:hover { background:var(--panel2); }
   main { padding: 20px; max-width: 1100px; margin: 0 auto; }
   .tab { display:none; }
   .tab.active { display:block; }
@@ -84,6 +97,13 @@
   .stat-card:hover { border-color:var(--accent); }
   .stat-card h4 { margin:0 0 6px; font-size:13px; color:var(--accent); }
   .stat-card p { font-size:13px; }
+  .changelog h3 { margin:16px 0 8px; font-size:14px; color:var(--accent); }
+  .changelog h3:first-child { margin-top:0; }
+  .changelog h4 { margin:10px 0 6px; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+  .changelog ul { margin:0 0 6px; padding-left:20px; }
+  .changelog li { margin-bottom:6px; font-size:13px; line-height:1.5; }
+  .changelog p { font-size:13px; line-height:1.5; }
+  .changelog code { background:var(--panel2); padding:1px 5px; border-radius:4px; font-family:ui-monospace, monospace; font-size:12px; }
   .ga-tree { font-size:13px; }
   .ga-tree summary { cursor:pointer; padding:4px 0; list-style-position:outside; }
   .ga-tree summary:hover { color:var(--accent); }

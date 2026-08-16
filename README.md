@@ -27,8 +27,8 @@ Danach `http://<host>` öffnen (läuft auf Port 80, kein `:8000` nötig).
 **Beim ersten Start:**
 - Kategorien, Punkttypen und Zentral-/Allgemeinfunktions-Vorlagen sind
   bereits mit sinnvollen Standardwerten vorbelegt (siehe Setup-Tab unten).
-- Der Geräte-Tab wird automatisch mit einem Startkatalog gängiger
-  KNX-Geräte gefüllt (siehe Geräte-Tab unten).
+- Der Geräte-Katalog-Tab wird automatisch mit einem Startkatalog gängiger
+  KNX-Geräte gefüllt (siehe Geräte-Katalog-Tab unten).
 - Es gibt **keine Benutzerauthentifizierung** — nur im eigenen internen
   Netzwerk betreiben, nie direkt ans Internet exponieren.
 
@@ -66,35 +66,42 @@ in `backend/routers/projects.py` isoliert.
 
 ## Die vier Tabs
 
-- **Projekte** — Projekte anlegen/suchen/bearbeiten und öffnen; ein geöffnetes
-  Projekt zeigt einen Arbeitsbereich mit fünf Unterreitern (Gruppenadressen,
-  Abgangsliste, Geräteplanung, Pflichtenheft, Klärungsliste), die alle am
-  selben Projekt arbeiten.
-- **Geräte** — globaler Gerätekatalog (Aktoren, Sensoren, Bedienelemente
-  usw.), gemeinsam für alle Projekte genutzt.
+- **Projekte** — Projekte anlegen/suchen/öffnen; ein Klick auf den kleinen
+  Pfeil ▾ daneben öffnet ein Menü mit **Neues Projekt** und
+  **Projekt öffnen** als Abkürzung von überall in der App aus. Ein
+  geöffnetes Projekt zeigt einen Arbeitsbereich mit sechs Unterreitern
+  (Übersicht, Gruppenadressen, Abgangsliste, Geräteplanung, Pflichtenheft,
+  Klärungsliste), die alle am selben Projekt arbeiten.
+- **Geräte Katalog** — globaler Gerätekatalog (Aktoren, Sensoren,
+  Bedienelemente usw.), gemeinsam für alle Projekte genutzt.
 - **Setup** — Firmenprofil (Name/Adresse/Kontakt/Logo), Kategorien,
-  Punkttypen und Zentral-/Allgemeinfunktions-Vorlagen; ausser dem
-  Firmenprofil im Alltag selten angefasst, bereits vorbelegt.
+  Punkttypen und Zentral-/Allgemeinfunktions-Vorlagen als eigene
+  Unterreiter; ausser dem Firmenprofil im Alltag selten angefasst, bereits
+  vorbelegt.
 - **Update** — prüft auf Wunsch, ob auf GitHub eine neuere Version vorliegt,
-  und installiert sie.
+  installiert sie, und zeigt das Änderungsprotokoll dieses Tools an.
 
 ### Projekte
 
-**Projektliste** (Standardansicht): Projekt anlegen mit Name, Kunde, Standort,
-Status (In Planung / In Ausführung / Abgeschlossen / Pausiert), Bestellnummer
-und Kommentar — alle Felder ausser Name optional. Ein Suchfeld filtert live
-nach allen diesen Feldern; Kunde/Standort/Status/Bestellnummer erscheinen als
-Badges neben jedem Projektnamen. **⭱ Aus Sicherung wiederherstellen (JSON)**
-legt aus einer zuvor exportierten Datei ein neues Projekt an (siehe
-Gruppenadressen unten) — existiert bereits ein Projekt mit gleichem Namen,
-wird der Import als "<Name> (imported)" gespeichert statt es zu überschreiben.
+**Projektliste** (Standardansicht): ein Suchfeld filtert live nach Name,
+Kunde, Standort, Status und Bestellnummer, die als Badges neben jedem
+Projektnamen erscheinen. **+ Neues Projekt** öffnet ein Formular (Name,
+Kunde, Standort, Status, Bestellnummer, Kommentar — alle Felder ausser
+Name optional) und wechselt nach dem Anlegen direkt in den Arbeitsbereich
+des neuen Projekts. **⭱ Aus Sicherung wiederherstellen (JSON)** legt aus
+einer zuvor exportierten Datei ein neues Projekt an (siehe Gruppenadressen
+unten) — existiert bereits ein Projekt mit gleichem Namen, wird der Import
+als "<Name> (imported)" gespeichert statt es zu überschreiben.
 
-**Öffnen** eines Projekts zeigt dessen Arbeitsbereich: oben die
+**Öffnen** eines Projekts zeigt dessen Arbeitsbereich (die Projektliste
+wird dabei ausgeblendet, nicht darunter weiter angezeigt): oben die
 Projekt-Metadaten mit **Bearbeiten**-Button (ändert Name/Kunde/Standort/
 Status/Bestellnummer/Kommentar nachträglich), daneben **⭳ Sichern (JSON)**
 und **× Schliessen**. **× Schliessen** kehrt zur Projektliste zurück, ohne
 etwas zu löschen — beim nächsten Öffnen startet der Arbeitsbereich wieder
-beim Unterreiter Gruppenadressen.
+beim Unterreiter Übersicht, der auf einen Blick zeigt, wie weit jeder der
+übrigen fünf Unterreiter gediehen ist (mit direktem Sprung dorthin per
+Klick).
 
 #### Gruppenadressen
 
@@ -201,7 +208,7 @@ Kundentermin anfallen (etwa "Tasterfarbe schwarz oder weiss?") — erscheint
 - Der Unterreiter-Button zeigt die Anzahl noch offener Einträge an
   (z.B. "Klärungsliste (3)"), sobald ein Projekt geöffnet ist.
 
-### Geräte
+### Geräte Katalog
 
 Globaler Gerätekatalog — **gemeinsam für alle Projekte**, unabhängig davon
 welches Projekt gerade bearbeitet wird. Deckt nicht nur Aktoren ab, sondern
@@ -232,6 +239,10 @@ die Tabelle leer ist — ein bereits befüllter oder bewusst geleerter Katalog
 wird dadurch nie überschrieben.
 
 ### Setup
+
+Firma, Kategorien, Punkttypen und Zentral-/Allgemeinfunktions-Vorlagen sind
+eigene Unterreiter innerhalb des Setup-Tabs, nicht alle gleichzeitig
+sichtbar.
 
 - **Firma** — Name, Adresse, Telefon, E-Mail, Website und ein Logo,
   einmalig hinterlegt. Erscheint als Badge im Programmkopf neben dem
@@ -275,6 +286,10 @@ Schlägt die Prüfung fehl, zeigt der Tab die tatsächliche Fehlermeldung an
 statt kommentarlos "kein Update verfügbar" zu behaupten. Voraussetzungen
 auf dem Server und wie der Mechanismus intern funktioniert (git pull +
 Neustart, kein Image-Rebuild) siehe [`DEPLOYMENT.md`](./DEPLOYMENT.md).
+
+Darunter zeigt der Tab das **Änderungsprotokoll** dieses Tools
+(`CHANGELOG.md`), damit ersichtlich ist, was sich seit der letzten
+Installation geändert hat, ohne extra auf GitHub nachsehen zu müssen.
 
 ## PDF-Exporte
 

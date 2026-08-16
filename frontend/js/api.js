@@ -18,14 +18,26 @@ const api = (path, opts) => fetch('/api' + path, opts).then(async r => {
 let CATEGORIES = [], POINT_TYPES = [], CENTRAL_TEMPLATES = [], ACTOR_TYPES = [], PROJECTS_LIST = [];
 let CURRENT_PROJECT = null;
 
-document.querySelectorAll('nav button').forEach(btn => {
+document.querySelectorAll('nav button[data-tab]').forEach(btn => {
   btn.onclick = async () => {
-    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('nav button[data-tab]').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
   };
 });
+
+// ---------- Nav dropdown (Projekte menu) ----------
+function toggleProjekteMenu(ev) {
+  ev.stopPropagation();
+  const menu = document.getElementById('projekte-dropdown-menu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+function closeNavDropdowns() {
+  const menu = document.getElementById('projekte-dropdown-menu');
+  if (menu) menu.style.display = 'none';
+}
+document.addEventListener('click', closeNavDropdowns);
 
 document.querySelectorAll('#workspace-subnav button').forEach(btn => {
   btn.onclick = async () => {

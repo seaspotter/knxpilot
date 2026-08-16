@@ -74,3 +74,60 @@ async function waitForRestartThenReload() {
   document.getElementById('update-status').textContent = 'Startet noch... bitte in Kürze manuell neu laden.';
 }
 
+// ---------- Changelog ----------
+function escapeChangelogHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function inlineChangelogMarkdown(s) {
+  return escapeChangelogHtml(s)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
+function renderChangelogMarkdown(markdown) {
+  const lines = markdown.split('\n');
+  let html = '';
+  let listOpen = false;
+  const closeList = () => { if (listOpen) { html += '</ul>'; listOpen = false; } };
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (/^###\s/.test(line)) {
+      closeList();
+      html += `<h4>${inlineChangelogMarkdown(line.replace(/^###\s*/, ''))}</h4>`;
+      i++;
+    } else if (/^##\s/.test(line)) {
+      closeList();
+      html += `<h3>${inlineChangelogMarkdown(line.replace(/^##\s*/, ''))}</h3>`;
+      i++;
+    } else if (/^#\s/.test(line)) {
+      i++; // skip the top-level title, already implied by the card heading
+    } else if (/^-\s/.test(line)) {
+      if (!listOpen) { html += '<ul>'; listOpen = true; }
+      let text = line.replace(/^-\s*/, '');
+      i++;
+      while (i < lines.length && /^\s+\S/.test(lines[i])) { text += ' ' + lines[i].trim(); i++; }
+      html += `<li>${inlineChangelogMarkdown(text)}</li>`;
+    } else if (line.trim() === '') {
+      closeList();
+      i++;
+    } else {
+      closeList();
+      let text = line.trim();
+      i++;
+      while (i < lines.length && lines[i].trim() !== '' && !/^[#-]/.test(lines[i])) { text += ' ' + lines[i].trim(); i++; }
+      html += `<p class="muted">${inlineChangelogMarkdown(text)}</p>`;
+    }
+  }
+  closeList();
+  return html;
+}
+
+async function loadChangelog() {
+  const { markdown } = await api('/system/changelog');
+  document.getElementById('changelog-content').innerHTML = markdown
+    ? renderChangelogMarkdown(markdown)
+    : '<p class="muted">Kein Änderungsprotokoll gefunden.</p>';
+}
+

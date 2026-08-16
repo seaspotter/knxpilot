@@ -45,6 +45,7 @@ function openCreateProjectModal() {
       const created = await api('/projects', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, customer, location, status, order_number, comment})});
       modal.close();
       await loadProjects();
+      document.querySelector('nav button[data-tab="projects"]').click();
       await openProject(created.id, name);
     } catch (e) {
       showToast(e.message, 'error');

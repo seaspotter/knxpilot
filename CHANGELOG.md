@@ -48,6 +48,14 @@ restructuring below — history before that is available via `git log`.
   inline form. `frontend/js/ui.js`'s `showConfirm` now shares its
   overlay/Escape/backdrop-click plumbing with the new modal via a
   `openModal()` helper.
+- The "Projekte" top-nav item is now a small dropdown (▾) with "Neues
+  Projekt" and "Projekt öffnen", usable from any tab.
+- Renamed the "Geräte" tab to "Geräte Katalog" for clarity (and the
+  validation messages that reference it).
+- The Update tab now shows this project's changelog
+  (`GET /api/system/changelog`, new `.changelog` rendering in
+  `frontend/js/update.js` — a small hand-written Markdown-to-HTML
+  converter, no library added).
 
 ### Changed
 
