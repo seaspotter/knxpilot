@@ -10,9 +10,10 @@ import subprocess
 import time
 from pathlib import Path
 
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 
-from ..backup import run_backup_now
+from ..backup import BACKUP_FILENAME_RE, list_local_backups, restore_database, run_backup_now
 from ..db import get_db
 
 router = APIRouter(tags=["system"])
@@ -134,3 +135,67 @@ def trigger_backup():
     error the caller needs to catch."""
     with get_db() as db:
         return run_backup_now(db)
+
+
+def _local_backup_path():
+    with get_db() as db:
+        cp = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
+    return cp["backup_local_path"] if cp["backup_local_enabled"] else None
+
+
+@router.get("/api/system/backups")
+def list_backups():
+    """Existing local-destination backups, for Setup -> Backup's
+    "Vorhandene Sicherungen" list. Empty if that destination isn't
+    enabled - Nextcloud backups aren't listed here (no cheap "browse a
+    WebDAV folder" UI built for that; download from Nextcloud itself and
+    use the upload-restore path instead)."""
+    path = _local_backup_path()
+    return list_local_backups(path) if path else []
+
+
+@router.get("/api/system/backups/{filename}/download")
+def download_backup(filename: str):
+    if not BACKUP_FILENAME_RE.match(filename):
+        raise HTTPException(400, "Invalid filename")
+    path = _local_backup_path()
+    if not path:
+        raise HTTPException(404, "Local backup destination not enabled")
+    file_path = Path(path) / filename
+    if not file_path.is_file():
+        raise HTTPException(404, "Backup not found")
+    return FileResponse(file_path, filename=filename, media_type="application/octet-stream")
+
+
+def _restore_and_restart(data, background_tasks):
+    try:
+        restore_database(data)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    background_tasks.add_task(_restart_process)
+    return {"ok": True, "message": "Wiederhergestellt. Startet neu...", "restarting": True}
+
+
+@router.post("/api/system/restore-local/{filename}")
+def restore_from_local(filename: str, background_tasks: BackgroundTasks):
+    """Restores directly from a file already sitting in the local backup
+    folder - no upload round-trip needed since the backend can already
+    read it."""
+    if not BACKUP_FILENAME_RE.match(filename):
+        raise HTTPException(400, "Invalid filename")
+    path = _local_backup_path()
+    if not path:
+        raise HTTPException(404, "Local backup destination not enabled")
+    file_path = Path(path) / filename
+    if not file_path.is_file():
+        raise HTTPException(404, "Backup not found")
+    return _restore_and_restart(file_path.read_bytes(), background_tasks)
+
+
+@router.post("/api/system/restore-upload")
+async def restore_from_upload(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+    """Restores from an uploaded .db file - works for a Nextcloud backup
+    (download it from Nextcloud's web UI first) or any other copy of a
+    KNXpilot database, not just ones this install itself produced."""
+    data = await file.read()
+    return _restore_and_restart(data, background_tasks)

@@ -2,6 +2,7 @@
 (async function init() {
   await loadAppVersion();
   await loadCompanyProfile();
+  await loadBackupFilesList();
   await loadCategories();
   await loadPointTypes();
   await loadCentralTemplates();

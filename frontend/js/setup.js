@@ -45,11 +45,69 @@ function renderBackupStatus(c) {
 async function runBackupNow() {
   const result = await api('/system/backup', {method: 'POST'});
   await loadCompanyProfile();
+  await loadBackupFilesList();
   if (result.ok) {
     showToast('Sicherung erfolgreich.', 'success');
   } else {
     const detail = Object.entries(result.results).map(([k, v]) => `${k}: ${v}`).join('\n');
     showToast(`Sicherung fehlgeschlagen:\n${detail}`, 'error', {sticky: true});
+  }
+}
+
+// ---------- Setup: Backup - existing files + restore ----------
+function humanFileSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ['KB', 'MB', 'GB'];
+  let i = -1;
+  do { bytes /= 1024; i++; } while (bytes >= 1024 && i < units.length - 1);
+  return `${bytes.toFixed(1)} ${units[i]}`;
+}
+
+async function loadBackupFilesList() {
+  const files = await api('/system/backups');
+  const ul = document.getElementById('backup-files-list');
+  ul.innerHTML = files.map(f => `
+    <li>
+      <div><b>${f.filename}</b> <span class="pill">${humanFileSize(f.size)}</span> <span class="pill">${new Date(f.modified_at).toLocaleString('de-DE')}</span></div>
+      <div>
+        <button class="btn secondary small" onclick="downloadBackupFile('${f.filename}')">Herunterladen</button>
+        <button class="btn danger small" onclick="restoreFromLocalBackup('${f.filename}')">Wiederherstellen</button>
+      </div>
+    </li>
+  `).join('') || '<li class="muted">Keine Sicherungen gefunden (NAS-Ziel nicht aktiv oder noch keine Sicherung gelaufen).</li>';
+}
+
+function downloadBackupFile(filename) {
+  window.location.href = `/api/system/backups/${encodeURIComponent(filename)}/download`;
+}
+
+const RESTORE_CONFIRM_TEXT = (label) =>
+  `Sicherung "${label}" wiederherstellen?\n\nDie komplette aktuelle Datenbank wird ersetzt (vorher wird automatisch eine Sicherung des aktuellen Stands angelegt) und die App startet danach neu. Nicht rückgängig zu machen, ausser über die eben angelegte Sicherung.`;
+
+async function restoreFromLocalBackup(filename) {
+  if (!(await showConfirm(RESTORE_CONFIRM_TEXT(filename), {danger: true}))) return;
+  await performRestore(() => api(`/system/restore-local/${encodeURIComponent(filename)}`, {method: 'POST'}));
+}
+
+async function restoreFromUpload() {
+  const fileInput = document.getElementById('restore-upload-file');
+  const file = fileInput.files[0];
+  if (!file) return showToast('Bitte zuerst eine Sicherungsdatei auswählen', 'warning');
+  if (!(await showConfirm(RESTORE_CONFIRM_TEXT(file.name), {danger: true}))) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  await performRestore(() => api('/system/restore-upload', {method: 'POST', body: formData}));
+}
+
+async function performRestore(triggerFn) {
+  try {
+    const result = await triggerFn();
+    if (result.restarting) {
+      showToast('Wiederhergestellt. App startet neu...', 'info', {sticky: true});
+      await waitForRestartThenReload();
+    }
+  } catch (e) {
+    showToast('Wiederherstellen fehlgeschlagen: ' + e.message, 'error', {sticky: true});
   }
 }
 

@@ -47,8 +47,19 @@ KNXpilot/`), Benutzername und ein
 statt des echten Kontopassworts eintragen — lässt sich bei Bedarf einzeln
 widerrufen.
 
-Wiederherstellen: die heruntergeladene/gesicherte `.db`-Datei als
-`backend/data/knx_ga.db` einspielen und den Container neu starten.
+**Wiederherstellen läuft direkt in der App**, kein Server-/Dateizugriff
+nötig: im Bereich **Vorhandene Sicherungen** (nur für das NAS-Ziel gelistet)
+auf **Wiederherstellen** klicken, oder eine Sicherungsdatei (z.B. aus
+Nextcloud heruntergeladen) unter **Sicherung wiederherstellen (Datei
+hochladen)** hochladen. Beides ersetzt die komplette laufende Datenbank
+und startet die App danach automatisch neu — vorher wird immer zuerst
+automatisch eine Sicherung des *aktuellen* Stands angelegt (Dateiname
+`knxpilot_backup_prerestore_<Zeitstempel>.db`, direkt neben
+`backend/data/knx_ga.db`), damit ein versehentliches/falsches
+Wiederherstellen selbst noch rückgängig zu machen ist. Eine hochgeladene
+Datei wird vor der Übernahme geprüft (muss die KNXpilot-Tabellenstruktur
+enthalten) — eine falsche/fremde Datei wird abgelehnt, ohne dass etwas
+verändert wird.
 
 ## Update von einer früheren Version dieses Tools
 

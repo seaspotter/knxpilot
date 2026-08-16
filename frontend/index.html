@@ -497,7 +497,7 @@
 
     <div class="subtab" id="setup-subtab-backup">
     <div class="card">
-      <h3>Backup <span class="info-icon" tabindex="0" data-tip="Sichert die komplette Datenbank (alle Projekte, Geräte-Katalog, Setup) als eine Datei - anders als 'Sichern (JSON)' im Projektkopf, das nur ein einzelnes Projekt exportiert. Wiederherstellen: heruntergeladene .db-Datei als backend/data/knx_ga.db einspielen und neu starten.">i</span></h3>
+      <h3>Backup <span class="info-icon" tabindex="0" data-tip="Sichert die komplette Datenbank (alle Projekte, Geräte-Katalog, Setup) als eine Datei - anders als 'Sichern (JSON)' im Projektkopf, das nur ein einzelnes Projekt exportiert. Wiederherstellen weiter unten auf dieser Seite, direkt in der App.">i</span></h3>
       <p class="muted">Automatische und/oder manuelle Sicherung auf ein NAS/gemountetes Verzeichnis und/oder Nextcloud — beide Ziele lassen sich unabhängig voneinander aktivieren.</p>
 
       <div class="row">
@@ -532,6 +532,21 @@
       <div style="margin-top:10px;">
         <button class="btn" onclick="saveCompanyProfile()">Speichern</button>
         <button class="btn secondary" onclick="runBackupNow()">Jetzt sichern</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4>Vorhandene Sicherungen (NAS/gemountetes Verzeichnis)</h4>
+      <p class="muted">Nur Sicherungen im lokalen/gemounteten Ziel erscheinen hier — für eine Nextcloud-Sicherung die Datei aus der Nextcloud-Weboberfläche herunterladen und unten hochladen.</p>
+      <ul class="list" id="backup-files-list"></ul>
+    </div>
+
+    <div class="card">
+      <h4>Sicherung wiederherstellen (Datei hochladen)</h4>
+      <p class="muted">Ersetzt die komplette aktuelle Datenbank durch den Inhalt der hochgeladenen Datei — vorher wird automatisch eine Sicherung des aktuellen Stands angelegt, danach startet die App neu.</p>
+      <div class="row">
+        <input type="file" id="restore-upload-file" accept=".db">
+        <button class="btn danger" onclick="restoreFromUpload()">Wiederherstellen</button>
       </div>
     </div>
     </div>

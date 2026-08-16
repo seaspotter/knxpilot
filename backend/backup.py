@@ -21,8 +21,16 @@ Scheduling lives in backend/main.py's background task; this module only
 knows how to take one snapshot and ship it to whichever destinations are
 enabled "right now" (run_backup_now reads the current company_profile row
 itself, so it's always in sync with the latest saved settings).
+
+Restoring (restore_database() below) is the reverse direction - always
+validates the incoming file actually looks like a KNXpilot database first,
+and always takes a fresh safety snapshot of the CURRENT database before
+overwriting it, so an accidental/wrong restore is itself still
+recoverable. The caller (backend/routers/system.py) is responsible for
+restarting the process afterwards.
 """
 import base64
+import os
 import re
 import sqlite3
 import tempfile
@@ -59,6 +67,82 @@ def _snapshot_bytes():
 
 def _backup_filename():
     return f"knxpilot_backup_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.db"
+
+
+# ---------- Listing / restoring ----------
+# Tables that must be present for an uploaded/selected file to be treated
+# as a genuine KNXpilot database before it's allowed to replace the live
+# one - deliberately a subset of backend/db.py's schema (the ones least
+# likely to ever be renamed), not an exhaustive/version-pinned check.
+_EXPECTED_TABLES = {"projects", "company_profile", "categories", "floors", "room_points", "actor_types"}
+
+
+def list_local_backups(path_str):
+    """Newest-first metadata for every knxpilot_backup_<timestamp>.db file
+    in the local/mounted backup folder - used by Setup -> Backup's
+    "Vorhandene Sicherungen" list. Pre-restore safety snapshots (see
+    restore_database()) use a different filename shape and deliberately
+    don't show up here, or count against the regular retention pruning -
+    they're a one-off just-in-case copy, not part of the rotation."""
+    folder = Path(path_str) if path_str else None
+    if not folder or not folder.is_dir():
+        return []
+    out = []
+    for p in sorted(folder.glob("knxpilot_backup_*.db"), reverse=True):
+        if not BACKUP_FILENAME_RE.match(p.name):
+            continue
+        stat = p.stat()
+        out.append({
+            "filename": p.name,
+            "size": stat.st_size,
+            "modified_at": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(timespec="seconds"),
+        })
+    return out
+
+
+def _looks_like_knxpilot_db(path):
+    try:
+        conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+        try:
+            tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        finally:
+            conn.close()
+        return _EXPECTED_TABLES.issubset(tables)
+    except sqlite3.Error:
+        return False
+
+
+def restore_database(data):
+    """
+    Validates `data` (raw bytes of a .db file) looks like a real KNXpilot
+    database, takes a pre-restore safety snapshot of the CURRENT live
+    database, then atomically replaces backend/data/knx_ga.db with it.
+    Raises ValueError (caller turns this into a 400) if the file doesn't
+    pass validation - nothing is touched in that case. The caller must
+    restart the process afterwards; this function doesn't, since it has
+    no opinion on how (BackgroundTasks vs. otherwise).
+    """
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+        f.write(data)
+        tmp_path = Path(f.name)
+    try:
+        if not _looks_like_knxpilot_db(tmp_path):
+            raise ValueError("Diese Datei sieht nicht wie eine KNXpilot-Datenbank aus.")
+
+        safety_name = f"knxpilot_backup_prerestore_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.db"
+        (DB_PATH.parent / safety_name).write_bytes(_snapshot_bytes())
+
+        # NamedTemporaryFile defaults to 0600 - match the original DB
+        # file's mode so a replace never quietly tightens permissions on
+        # a bind-mounted volume other tooling on the host might expect to
+        # read.
+        try:
+            os.chmod(tmp_path, DB_PATH.stat().st_mode)
+        except OSError:
+            pass
+        os.replace(tmp_path, DB_PATH)
+    finally:
+        tmp_path.unlink(missing_ok=True)
 
 
 # ---------- Local / mounted-folder destination ----------
