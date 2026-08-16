@@ -9,6 +9,7 @@ async function loadCompanyProfile() {
   document.getElementById('company-email').value = c.email || '';
   document.getElementById('company-website').value = c.website || '';
   document.getElementById('company-show-on-pdf').checked = !!c.show_on_pdf;
+  document.getElementById('company-pflichtenheft-preamble').value = c.pflichtenheft_preamble || '';
   COMPANY_LOGO_DATA_URL = c.logo_data_url || '';
   updateCompanyLogoPreview();
   renderHeaderCompanyBranding(c);
@@ -115,6 +116,7 @@ async function saveCompanyProfile() {
     website: document.getElementById('company-website').value.trim(),
     logo_data_url: COMPANY_LOGO_DATA_URL,
     show_on_pdf: document.getElementById('company-show-on-pdf').checked,
+    pflichtenheft_preamble: document.getElementById('company-pflichtenheft-preamble').value.trim(),
   });
   await api('/company-profile', {method:'PUT', headers:{'Content-Type':'application/json'}, body});
   await loadCompanyProfile();

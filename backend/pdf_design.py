@@ -151,6 +151,23 @@ def pdf_table_style(extra_commands=None):
     return TableStyle(commands)
 
 
+def checkbox_cell(box_size=3.2 * mm):
+    """An empty bordered box for paper-style tick lists (to be hand-checked
+    after on-site testing/handover) - drawn rather than a Unicode glyph
+    (e.g. "☐"), since the base Helvetica fonts used throughout this design
+    system (WinAnsi encoding) don't reliably render box-drawing characters."""
+    t = Table([[""]], colWidths=[box_size], rowHeights=[box_size])
+    t.setStyle(TableStyle([("BOX", (0, 0), (-1, -1), 0.8, PDF_BORDER_COLOR)]))
+    return t
+
+
+def signature_block(label, styles):
+    """A blank underline + caption, e.g. for 'Datum, Unterschrift Kunde'."""
+    line = Table([[""]], colWidths=[80 * mm], rowHeights=[10 * mm])
+    line.setStyle(TableStyle([("LINEBELOW", (0, 0), (-1, -1), 0.8, PDF_BORDER_COLOR)]))
+    return [line, Paragraph(label, styles["BodyMuted"])]
+
+
 def make_numbered_canvas(footer_left_text, footer_center_text=""):
     """Canvas factory adding 'Seite X von Y' + a left-hand footer label to every
     page, plus an optional centered company address/contact line above it (see

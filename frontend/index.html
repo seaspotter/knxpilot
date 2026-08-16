@@ -221,7 +221,10 @@
           <div class="card">
             <div class="row" style="justify-content:space-between;">
               <h4 style="margin:0;">Vorschau</h4>
-              <button class="btn" onclick="downloadPflichtenheft()">PDF herunterladen</button>
+              <div class="row" style="margin:0;">
+                <button class="btn secondary" onclick="downloadUebergabeChecklist()">Übergabe-Checkliste herunterladen</button>
+                <button class="btn" onclick="downloadPflichtenheft()">PDF herunterladen</button>
+              </div>
             </div>
             <div id="pflichtenheft-preview" class="tree"></div>
           </div>
@@ -335,6 +338,15 @@
           <input type="checkbox" id="company-show-on-pdf">
           Firmenlogo/-daten auf PDF-Exporten anzeigen
           <span class="info-icon" tabindex="0" data-tip="Gilt global für alle PDF-Exporte in jedem Projekt - kein Schalter je Export.">i</span>
+        </label>
+      </div>
+      <hr class="sep">
+
+      <div class="row">
+        <label style="display:block; width:100%;">
+          Pflichtenheft — Vorbemerkungen
+          <span class="info-icon" tabindex="0" data-tip="Allgemeiner Erklärungstext (z.B. wie Schalten/Dimmen/Jalousie/Heizung bedient werden), der als eigener Abschnitt am Anfang jedes Pflichtenheft-PDFs erscheint. Mit sinnvollem Standardtext vorbelegt - hier anpassen oder leeren, um den Abschnitt ganz wegzulassen.">i</span>
+          <textarea id="company-pflichtenheft-preamble" rows="6" style="width:100%; margin-top:6px; font-family:inherit;"></textarea>
         </label>
       </div>
       <div><button class="btn" onclick="saveCompanyProfile()">Firmenprofil speichern</button></div>

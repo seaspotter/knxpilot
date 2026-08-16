@@ -8,6 +8,20 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- Pflichtenheft PDF, made more professional: a **Vorbemerkungen** section
+  (general operating-convention text, editable/clearable in Setup → Firma,
+  seeded with sensible default wording on fresh installs), a
+  **Stockwerk- und Raumverzeichnis** table, and a **Getestet** checkbox
+  next to every individual function (room-level and central/general) for
+  hand-ticking during on-site commissioning — paper-style only, no
+  tracked state, since KNXpilot doesn't know which physical
+  button/Bedienelement drives which function (that's ETS programming).
+- A new **Übergabe-Checkliste** PDF export (Pflichtenheft sub-tab, next
+  to the existing PDF button): a mostly generic KNX handover checklist
+  (Sichtprüfung/Funktionsprüfung/Kundengespräch/Anlagenübergabe, tri-state
+  Ja/Nein/Nicht-nötig checkboxes, Bemerkungen column, signature lines for
+  Errichter and Kunde/Betreiber) - only the project name is filled in
+  automatically.
 - A "Projekt öffnen" picker modal (nav dropdown → **Projekt öffnen**):
   search across all projects and open one directly, from any tab,
   without needing to close whatever project is currently open first —

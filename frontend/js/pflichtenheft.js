@@ -42,3 +42,7 @@ function downloadPflichtenheft() {
   window.location.href = `/api/projects/${CURRENT_PROJECT}/export-pflichtenheft.pdf`;
 }
 
+function downloadUebergabeChecklist() {
+  window.location.href = `/api/projects/${CURRENT_PROJECT}/export-uebergabe-checkliste.pdf`;
+}
+

@@ -11,6 +11,27 @@ from pathlib import Path
 DB_PATH = Path(__file__).parent / "data" / "knx_ga.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
+# Default "Vorbemerkungen" text for the Pflichtenheft PDF - generic KNX
+# operating conventions, editable/clearable in Setup (Firma tab). Seeded once
+# on a fresh install (see the company_profile INSERT below), same "only
+# insert into an empty table" convention as seed_defaults()/
+# seed_default_actor_types() - never overwrites a value the user has since
+# edited or cleared.
+DEFAULT_PFLICHTENHEFT_PREAMBLE = (
+    "Die Bedienung erfolgt grundsätzlich über Taster bzw. Bedienelemente: "
+    "ein kurzer Tastendruck schaltet Beleuchtung EIN/AUS bzw. fährt Rollladen/"
+    "Jalousie AUF/AB, ein langer Tastendruck dimmt die Beleuchtung heller/"
+    "dunkler bzw. verstellt die Lamellen. Ein kurzer Tastendruck während "
+    "einer laufenden Fahrt stoppt diese sofort.\n\n"
+    "Die Raumheizung wird über die jeweiligen Raumbediengeräte geregelt: "
+    "eine Komforttemperatur für den normalen Betrieb und eine niedrigere "
+    "Absenktemperatur bei längerer Abwesenheit sind je Raum hinterlegt und "
+    "individuell anpassbar.\n\n"
+    "Die konkrete Zuordnung von Tasten/Wippen zu den nachfolgend "
+    "aufgeführten Funktionen erfolgt bei der ETS-Programmierung und ist "
+    "nicht Bestandteil dieses Dokuments."
+)
+
 
 @contextmanager
 def get_db():
@@ -190,7 +211,8 @@ def init_db():
                 website TEXT NOT NULL DEFAULT '',
                 phone TEXT NOT NULL DEFAULT '',
                 logo_data_url TEXT NOT NULL DEFAULT '',
-                show_on_pdf INTEGER NOT NULL DEFAULT 0
+                show_on_pdf INTEGER NOT NULL DEFAULT 0,
+                pflichtenheft_preamble TEXT NOT NULL DEFAULT ''
             );
             """
         )
@@ -213,6 +235,8 @@ def init_db():
             ("projects", "comment", "ALTER TABLE projects ADD COLUMN comment TEXT NOT NULL DEFAULT ''"),
             ("projects", "order_number", "ALTER TABLE projects ADD COLUMN order_number TEXT NOT NULL DEFAULT ''"),
             ("klaerungen", "antwort", "ALTER TABLE klaerungen ADD COLUMN antwort TEXT NOT NULL DEFAULT ''"),
+            ("company_profile", "pflichtenheft_preamble",
+             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_preamble TEXT NOT NULL DEFAULT ''"),
         ]:
             cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]
             if column not in cols:
@@ -270,7 +294,10 @@ def init_db():
 
         (count,) = db.execute("SELECT COUNT(*) FROM company_profile").fetchone()
         if count == 0:
-            db.execute("INSERT INTO company_profile (id) VALUES (1)")
+            db.execute(
+                "INSERT INTO company_profile (id, pflichtenheft_preamble) VALUES (1, ?)",
+                (DEFAULT_PFLICHTENHEFT_PREAMBLE,),
+            )
 
 
 def seed_defaults(db):

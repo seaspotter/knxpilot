@@ -17,7 +17,7 @@ def get_company_profile():
         return {
             "id": r["id"], "name": r["name"], "address": r["address"], "email": r["email"],
             "website": r["website"], "phone": r["phone"], "logo_data_url": r["logo_data_url"],
-            "show_on_pdf": bool(r["show_on_pdf"]),
+            "show_on_pdf": bool(r["show_on_pdf"]), "pflichtenheft_preamble": r["pflichtenheft_preamble"],
         }
 
 
@@ -26,8 +26,9 @@ def update_company_profile(cp: CompanyProfileIn):
     with get_db() as db:
         db.execute(
             "UPDATE company_profile SET name=?, address=?, email=?, website=?, phone=?, "
-            "logo_data_url=?, show_on_pdf=? WHERE id=1",
-            (cp.name, cp.address, cp.email, cp.website, cp.phone, cp.logo_data_url, int(cp.show_on_pdf)),
+            "logo_data_url=?, show_on_pdf=?, pflichtenheft_preamble=? WHERE id=1",
+            (cp.name, cp.address, cp.email, cp.website, cp.phone, cp.logo_data_url,
+             int(cp.show_on_pdf), cp.pflichtenheft_preamble),
         )
     return {"ok": True}
 

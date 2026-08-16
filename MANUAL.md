@@ -187,9 +187,27 @@ unabhängig davon ob dafür eine Gruppenadresse oder ein Aktorkanal existiert.
 Dokumentiert, was für das Projekt tatsächlich vereinbart/umgesetzt wurde —
 gedacht als Referenz für Kunde und Elektriker, getrennt von den technischen
 GA-/Verdrahtungsdetails. Eine Textvorschau zeigt sofort, was im PDF stehen
-wird; **PDF herunterladen** erzeugt ein mehrseitiges Dokument mit den
-geplanten Funktionen und Geräten je Geschoss/Raum, einer Übersicht der
-Zentral-/Allgemeinfunktionen und der Geräte-Stückliste als Abschluss.
+wird; **PDF herunterladen** erzeugt ein mehrseitiges Dokument mit:
+
+- einem **Vorbemerkungen**-Abschnitt (allgemeine Erklärung, wie
+  Schalten/Dimmen/Jalousie/Heizung bedient werden — Text und Vorhandensein
+  im Setup-Tab unter *Firma* einstellbar, siehe unten),
+- einem **Stockwerk- und Raumverzeichnis**,
+- den geplanten Funktionen und Geräten je Geschoss/Raum — jede einzelne
+  Funktion mit einer leeren **Getestet**-Checkbox zum Abhaken vor Ort nach
+  der Inbetriebnahme (rein papierbasiert — es wird nichts im Tool
+  gespeichert, da KNXpilot nicht nachhält, welcher Taster welche Funktion
+  auslöst; das ist Sache der ETS-Programmierung),
+  einer Übersicht der Zentral-/Allgemeinfunktionen (ebenfalls mit
+  Getestet-Checkbox) und der Geräte-Stückliste als Abschluss.
+
+Daneben steht **Übergabe-Checkliste herunterladen** — ein zweites,
+weitgehend allgemeines PDF (Sichtprüfung, Funktionsprüfung,
+Kundengespräch, Anlagenübergabe, je mit Ja/Nein/Nicht-nötig-Checkboxen und
+Bemerkungsspalte, plus Unterschriftenzeilen für Errichter und
+Kunde/Betreiber) für das Übergabegespräch vor Ort — nur Projektname
+wird automatisch eingesetzt, der Rest ist ein fester, wiederverwendbarer
+Fragenkatalog.
 
 #### Klärungsliste
 
@@ -257,7 +275,11 @@ sichtbar.
   weiter unten). Das Logo wird beim Hochladen
   automatisch auf den sichtbaren Bildinhalt zugeschnitten (entfernt
   transparente/weisse Rahmen um das eigentliche Motiv), damit es in
-  der kleinen Kopfzeilen-Badge nicht winzig wirkt.
+  der kleinen Kopfzeilen-Badge nicht winzig wirkt. Ausserdem ein
+  Textfeld **"Pflichtenheft — Vorbemerkungen"**, mit einem sinnvollen
+  Standardtext vorbelegt (kurzer/langer Tastendruck, Dimmen, Jalousie,
+  Heizung) — erscheint als eigener Abschnitt am Anfang jedes
+  Pflichtenheft-PDFs; anpassen oder leeren, um ihn wegzulassen.
 - **Kategorien** — die 6 Hauptgruppen, vorbelegt; der Name jeder Kategorie
   lässt sich über **Bearbeiten** umbenennen, Reihenfolge (=
   Hauptgruppennummer) und Anzahl bleiben fest.
