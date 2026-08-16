@@ -99,14 +99,23 @@
       </div>
 
       <div class="subnav" id="workspace-subnav">
-        <button data-subtab="ga" class="active">Gruppenadressen</button>
+        <button data-subtab="uebersicht" class="active">Übersicht</button>
+        <button data-subtab="ga">Gruppenadressen</button>
         <button data-subtab="abgangsliste">Abgangsliste</button>
         <button data-subtab="geraeteplanung">Geräteplanung</button>
         <button data-subtab="pflichtenheft">Pflichtenheft</button>
         <button data-subtab="klaerungsliste">Klärungsliste</button>
       </div>
 
-      <div class="subtab active" id="subtab-ga">
+      <div class="subtab active" id="subtab-uebersicht">
+        <div class="card">
+          <h3>Projektübersicht</h3>
+          <p class="muted">Stand des Projekts auf einen Blick — auf eine Karte klicken, um direkt zum jeweiligen Unterreiter zu springen.</p>
+          <div class="stat-grid" id="uebersicht-cards"></div>
+        </div>
+      </div>
+
+      <div class="subtab" id="subtab-ga">
         <div class="card">
           <div class="row">
             <input type="text" id="floor-name" placeholder="Geschossname, z.B. Erdgeschoss (EG)">
@@ -385,6 +394,7 @@
 <script src="/js/setup.js"></script>
 <script src="/js/geraete.js"></script>
 <script src="/js/projekte.js"></script>
+<script src="/js/uebersicht.js"></script>
 <script src="/js/abgangsliste.js"></script>
 <script src="/js/geraeteplanung.js"></script>
 <script src="/js/pflichtenheft.js"></script>

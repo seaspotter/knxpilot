@@ -70,15 +70,16 @@ async function openProject(id, name) {
   renderProjectMeta();
 
   document.querySelectorAll('#workspace-subnav button').forEach(b => b.classList.remove('active'));
-  document.querySelector('#workspace-subnav button[data-subtab="ga"]').classList.add('active');
+  document.querySelector('#workspace-subnav button[data-subtab="uebersicht"]').classList.add('active');
   document.querySelectorAll('#project-detail .subtab').forEach(t => t.classList.remove('active'));
-  document.getElementById('subtab-ga').classList.add('active');
+  document.getElementById('subtab-uebersicht').classList.add('active');
 
   await renderFloors();
   await renderSpecialLocationOptions();
   await renderSpecials();
   await refreshKlaerungsBadge();
   await refreshAbgangslisteBadge();
+  await loadUebersichtForCurrentProject();
 }
 
 function closeProject() {

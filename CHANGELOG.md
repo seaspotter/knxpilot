@@ -13,6 +13,11 @@ restructuring below — history before that is available via `git log`.
   (24 + 7 call sites).
 - An open-circuit-count badge on the Abgangsliste sub-tab button (e.g.
   "Abgangsliste (3)"), mirroring the existing Klärungsliste badge pattern.
+- A new "Übersicht" sub-tab (`frontend/js/uebersicht.js`), now the default
+  landing sub-tab when opening a project — 5 clickable status cards (one
+  per other sub-tab) summarizing floors/rooms/points, circuit assignment
+  progress, planned device count, and open Klärungen at a glance, each
+  jumping straight to the relevant sub-tab on click.
 
 ### Changed
 

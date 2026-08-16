@@ -78,6 +78,11 @@
     width:230px; white-space:normal; line-height:1.4; box-shadow:0 4px 14px rgba(0,0,0,0.3);
   }
   hr.sep { border:none; border-top:1px solid var(--border); margin:14px 0; }
+  .stat-grid { display:flex; flex-wrap:wrap; gap:10px; }
+  .stat-card { flex:1 1 200px; margin-bottom:0; cursor:pointer; transition:border-color 0.1s; }
+  .stat-card:hover { border-color:var(--accent); }
+  .stat-card h4 { margin:0 0 6px; font-size:13px; color:var(--accent); }
+  .stat-card p { font-size:13px; }
   .toast-container { position:fixed; bottom:20px; right:20px; z-index:100; display:flex; flex-direction:column; gap:8px; max-width:360px; }
   .toast {
     background:var(--panel); border:1px solid var(--border); border-left:4px solid var(--accent);
