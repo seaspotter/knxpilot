@@ -32,9 +32,9 @@ Danach `http://<host>` öffnen (läuft auf Port 80, kein `:8000` nötig).
 - Es gibt **keine Benutzerauthentifizierung** — nur im eigenen internen
   Netzwerk betreiben, nie direkt ans Internet exponieren.
 
-Für eine Proxmox/LXC-Bereitstellung siehe *Bereitstellung auf Proxmox*
-weiter unten; für spätere Updates den **Update**-Tab in der App verwenden
-(siehe unten) oder manuell `git pull` + Neustart.
+Für eine Proxmox/LXC-Bereitstellung und weitere Deployment-Details siehe
+[`DEPLOYMENT.md`](./DEPLOYMENT.md); für spätere Updates den **Update**-Tab
+in der App verwenden (siehe unten) oder manuell `git pull` + Neustart.
 
 ## Adressierungsmodell (entspricht Ihren echten Projekten)
 
@@ -62,7 +62,7 @@ importieren**.
 Falls sich Ihre Konventionen in ETS jemals ändern und Importe anfangen,
 Zeilen zu überspringen: ein kleines Testprojekt exportieren und mit der
 Ausgabe des Tools vergleichen — der CSV-Schreiber ist in `export_csv()`
-in `app/routers/projects.py` isoliert.
+in `backend/routers/projects.py` isoliert.
 
 ## Die vier Tabs
 
@@ -227,7 +227,7 @@ dieselbe Datei mehrfach zu importieren ist unbedenklich.
 Bei einer frischen Installation (leerer Katalog) wird beim ersten Start
 automatisch ein Startkatalog gängiger KNX-Geräte eingefügt (u.a. MDT,
 Busch-Jaeger, Theben, Elsner Elektronik, Gira, Phoenix Contact, Hörmann —
-siehe `DEFAULT_ACTOR_TYPES` in `app/db.py`). Das passiert nur einmalig, wenn
+siehe `DEFAULT_ACTOR_TYPES` in `backend/db.py`). Das passiert nur einmalig, wenn
 die Tabelle leer ist — ein bereits befüllter oder bewusst geleerter Katalog
 wird dadurch nie überschrieben.
 
@@ -272,52 +272,16 @@ Prüft **nur auf Klick** — nichts läuft automatisch im Hintergrund.
 **⟲ Nach Updates suchen** zeigt den aktuellen Stand und, falls auf GitHub
 eine neuere Version vorliegt, einen **⭱ Update installieren**-Button.
 Schlägt die Prüfung fehl, zeigt der Tab die tatsächliche Fehlermeldung an
-statt kommentarlos "kein Update verfügbar" zu behaupten.
-
-Voraussetzung, einmalig auf dem Server:
-```bash
-git branch --set-upstream-to=origin/main main
-```
-Das Repository ist öffentlich, daher funktioniert `git fetch`/`git pull`
-anonym — es sind keine Git-Zugangsdaten im Container nötig.
-
-So funktioniert es: `docker-compose.yml` bindet das **gesamte Repository**
-in den Container ein. Ein `git pull` (ausgeführt vom Update-Button,
-innerhalb des Containers gegen dasselbe eingebundene Verzeichnis)
-aktualisiert den laufenden Code sofort — ein Neustart übernimmt ihn, ohne
-dass ein Image-Rebuild nötig ist. Die Datenbank bleibt dabei unangetastet.
-Ändern sich `requirements.txt` oder das `Dockerfile`, führt der Button
-**keinen** automatischen Neustart durch — stattdessen zeigt er eine
-Meldung, dass ein vollständiger Rebuild nötig ist (`docker compose up -d
---build`).
-
-<details>
-<summary>Falls das Repository später wieder privat wird</summary>
-
-Dann braucht der Container Zugriff auf Ihre Git-Zugangsdaten, sonst
-schlägt jede Prüfung mit einer Fehlermeldung wie `could not read
-Username for 'https://github.com'` fehl. In `docker-compose.yml` sind
-zwei Varianten als Kommentar vorbereitet — je nachdem, ob Sie HTTPS mit
-Personal Access Token oder SSH verwenden, die passende Zeile
-einkommentieren:
-
-```yaml
-# HTTPS mit Personal Access Token (im Credential Store des Hosts zwischengespeichert):
-# - ~/.git-credentials:/root/.git-credentials:ro
-# - ~/.gitconfig:/root/.gitconfig:ro
-
-# SSH-Deploy-Key stattdessen:
-# - ~/.ssh:/root/.ssh:ro
-```
-
-</details>
+statt kommentarlos "kein Update verfügbar" zu behaupten. Voraussetzungen
+auf dem Server und wie der Mechanismus intern funktioniert (git pull +
+Neustart, kein Image-Rebuild) siehe [`DEPLOYMENT.md`](./DEPLOYMENT.md).
 
 ## PDF-Exporte
 
 Alle drei PDF-Exporte (Abgangsliste, Geräteliste, Pflichtenheft) nutzen
 dieselbe Gestaltung: ein dunkler Banner-Titelkopf, eine einheitliche
 Tabellenoptik, und eine Fusszeile mit Projektname sowie **Seite X von Y**
-auf jeder Seite. Der gemeinsame Code dafür liegt in `app/pdf_design.py`
+auf jeder Seite. Der gemeinsame Code dafür liegt in `backend/pdf_design.py`
 (`pdf_styles()`, `pdf_title_banner()`, `pdf_table_style()`,
 `make_numbered_canvas()`) — Änderungen dort wirken sich auf alle drei
 Exporte gleichzeitig aus.
@@ -333,51 +297,8 @@ drei Router-Dateien brauchen dafür kein `if`.
 
 ## Persistenz & Deployment
 
-Projekte liegen in der SQLite-Datei `app/data/knx_ga.db`, die über
-`docker-compose.yml` in den Container eingebunden wird — sie übersteht also
-Container-Neubauten/-Neustarts, solange dieser Ordner nicht gelöscht wird.
-Die JSON-Sicherung/-Wiederherstellung (siehe Gruppenadressen oben) ist für
-explizite Portabilität gedacht, nicht für die normale Persistenz im Alltag
-nötig. Für die Erstinstallation siehe *Schnellstart* oben.
-
-### Update von einer früheren Version dieses Tools
-
-Das Datenbankschema migriert beim Start automatisch (neue Spalten werden
-ergänzt), eine bestehende `knx_ga.db` funktioniert also weiter. Die
-*Vorbelegungsdaten* (Punkttypen, Zentralvorlagen, Standard-Gerätekatalog)
-werden allerdings nur einmalig eingefügt, wenn die jeweilige Tabelle leer
-ist — Korrekturen daran erscheinen also nicht rückwirkend in einer
-bestehenden Installation. Solange sich noch keine echten Projektdaten
-angesammelt haben, ist der einfachste Weg, `app/data/knx_ga.db` zu löschen
-und neu vorbelegen zu lassen:
-
-```bash
-docker compose down
-rm app/data/knx_ga.db
-docker compose up -d --build
-```
-
-Bei bereits gespeicherten echten Projekten: zuerst mit dem
-**⭳ Sichern (JSON)**-Button je Projekt sichern, dann die Datenbank löschen,
-danach über **⭱ Aus Sicherung wiederherstellen** zurückspielen.
-
-### Bereitstellung auf Proxmox
-
-Ein schlankes LXC mit Docker ist die einfachste Variante:
-
-1. Ein unprivilegiertes Debian/Ubuntu-LXC anlegen (1 vCPU / 512MB–1GB RAM
-   reicht).
-2. **Nesting** aktivieren (Optionen → Features), damit Docker im LXC
-   laufen kann.
-3. `apt update && apt install -y docker.io docker-compose-plugin` (falls
-   dieses Paket auf Ihrer Distribution fehlt, alternativ die
-   `docker-ce`-Pakete direkt von Docker installieren).
-4. Dieses Verzeichnis (per `git clone`) hineinkopieren, hineinwechseln,
-   `docker compose up -d --build`.
-5. `http://<lxc-ip>` aufrufen.
-
-Das Dateisystem des LXC (inkl. der Datenbank) wird automatisch von den
-üblichen Proxmox-Backup-Jobs erfasst.
+Für Details zu Datenpersistenz, Update-Mechanismus und
+Proxmox/LXC-Bereitstellung siehe [`DEPLOYMENT.md`](./DEPLOYMENT.md).
 
 ## Hinweise / Einschränkungen
 
@@ -406,32 +327,9 @@ Das Dateisystem des LXC (inkl. der Datenbank) wird automatisch von den
 
 ## Code-Struktur
 
-Das Backend ist modular aufgeteilt (statt einer einzigen grossen Datei):
-
-```
-app/
-  main.py               — erstellt die App, bindet alle Router ein, mountet die Frontend-Dateien
-  db.py                 — Datenbankverbindung, Schema, Migrationen, Standard-Vorbelegung
-  models.py             — alle Pydantic-Schemas für Request-Bodies
-  ga_logic.py            — Gruppenadressen-Baum-Generierung, Abgänge, Pflichtenheft-Hilfsfunktionen
-  pdf_design.py          — gemeinsames PDF-Design (Banner, Tabellenstil, Seitenzahlen, Firmen-Briefkopf)
-  utils.py               — kleine Hilfsfunktionen ohne eigene Abhängigkeiten
-  routers/
-    setup.py             — Firmenprofil, Kategorien, Punkttypen, Zentral-Vorlagen (Setup-Tab)
-    geraete.py           — globaler Gerätekatalog (Geräte-Tab)
-    projects.py          — Projekte (inkl. Metadaten), Geschosse/Räume/Punkte, Sicherung, GA-Export (Projekte-Tab)
-    abgangsliste.py       — Aktoren, Abgänge, Kanalzuordnung, CSV/PDF-Export (Abgangsliste-Unterreiter)
-    geraeteplanung.py     — Geräteplanung je Raum, Stückliste, PDF-Export (Geräteplanung-Unterreiter)
-    pflichtenheft.py      — Pflichtenheft-PDF-Export (Pflichtenheft-Unterreiter)
-    klaerungsliste.py     — Fragen/Aufgaben/Notizen je Projekt (Klärungsliste-Unterreiter)
-    system.py             — Selbst-Update über Git (Update-Tab)
-```
-
-Diese Aufteilung folgt bewusst den Tabs der Oberfläche — wer eine Funktion
-in der App sieht, findet den zugehörigen Code im gleichnamigen Modul. Für
-Docker ändert sich dadurch nichts: `COPY app ./app` im Dockerfile und die
-Repo-weite Einbindung in `docker-compose.yml` funktionieren beide rekursiv,
-unabhängig von der internen Ordnerstruktur.
+Backend (FastAPI) und Frontend (vanilla HTML/CSS/JS, kein Build-Schritt)
+liegen in getrennten Verzeichnissen — Details, wie man lokal entwickelt und
+wo welcher Code liegt, siehe [`DEVELOPMENT.md`](./DEVELOPMENT.md).
 
 ## Lizenz
 
@@ -443,5 +341,5 @@ Dienst, muss der geänderte Quellcode auch dessen Nutzern zur Verfügung
 gestellt werden, nicht nur jenen, denen eine Kopie ausgehändigt wird.
 
 Vor einer Veröffentlichung "the project author(s)" im Lizenz-Header am
-Anfang von `app/main.py` durch den tatsächlichen Namen bzw. die Firma
+Anfang von `backend/main.py` durch den tatsächlichen Namen bzw. die Firma
 ersetzen.

@@ -11,7 +11,7 @@ services:
       # on the host or via the in-app Update button, which runs it inside the
       # container against this same mounted directory) updates the running code
       # immediately - a restart picks it up, no rebuild needed for pure code changes.
-      # Your database at app/data/knx_ga.db lives inside this same mount, so it's
+      # Your database at backend/data/knx_ga.db lives inside this same mount, so it's
       # automatically persisted without a separate volume line.
       - .:/app
 
