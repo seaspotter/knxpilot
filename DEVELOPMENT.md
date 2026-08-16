@@ -1,5 +1,25 @@
 # Development
 
+## Branches
+
+- **`dev`** — active work happens here. Commit and push freely.
+- **`main`** — what deployments actually run: the Docker image
+  ([`.github/workflows/docker-publish.yml`](./.github/workflows/docker-publish.yml))
+  and every server's self-update (`git pull` on `main`, see
+  [`DEPLOYMENT.md`](./DEPLOYMENT.md)) both track it. `main` only moves
+  forward at a release, via a fast-forward merge from `dev`
+  (`git checkout main && git merge --ff-only dev`) plus a `vX.Y.Z` tag —
+  see `CHANGELOG.md` for the version history.
+- To switch your local checkout between them: `git checkout dev` /
+  `git checkout main` (or `git switch dev` / `git switch main`). `main`
+  only has what's actually been released, so it'll usually look "behind"
+  `dev` day-to-day — that's expected, not a problem to fix.
+- The running app shows which version it's on in the header (via
+  `git describe`, e.g. `v0.1.0` on a release commit, `v0.1.0-3-gabc1234`
+  for commits since the last release) — see `/api/system/version` in
+  `backend/routers/system.py`. Only populated inside a real git checkout
+  (i.e. the deployed container), not local dev.
+
 ## Local setup
 
 ```bash

@@ -30,6 +30,21 @@ def get_changelog():
         return {"markdown": ""}
 
 
+@router.get("/api/system/version")
+def get_version():
+    """Local-only (no network fetch), so this is cheap enough to call on every
+    page load for a persistent header badge - unlike /system/status below,
+    which does a git fetch and is only meant to run on an explicit click."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", REPO_DIR, "describe", "--tags", "--always", "--dirty"],
+            capture_output=True, text=True, timeout=10, check=True,
+        )
+        return {"version": result.stdout.strip()}
+    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return {"version": None}
+
+
 @router.get("/api/system/status")
 def system_status():
     try:

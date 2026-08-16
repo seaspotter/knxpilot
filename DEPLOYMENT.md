@@ -3,9 +3,12 @@
 KNXpilot is a single Docker Compose service, running a prebuilt image from
 `ghcr.io/seaspotter/knxpilot` (published by
 [`.github/workflows/docker-publish.yml`](./.github/workflows/docker-publish.yml)
-on every push to `main`). Code updates apply themselves via `git pull` at
-runtime (see below); only a changed `requirements.txt`/`Dockerfile` needs a
-fresh `docker compose pull`.
+on every push to `main`, as a multi-arch manifest covering `linux/amd64`
+and `linux/arm64` — `docker compose pull` picks the right one for the host
+automatically, no extra flags needed on a Raspberry Pi or other ARM
+server). Code updates apply themselves via `git pull` at runtime (see
+below); only a changed `requirements.txt`/`Dockerfile` needs a fresh
+`docker compose pull`.
 
 ## Persistenz
 

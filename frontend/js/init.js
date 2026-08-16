@@ -1,5 +1,6 @@
 // ---------- Init ----------
 (async function init() {
+  await loadAppVersion();
   await loadCompanyProfile();
   await loadCategories();
   await loadPointTypes();

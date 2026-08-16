@@ -1,3 +1,11 @@
+// ---------- Version badge ----------
+async function loadAppVersion() {
+  try {
+    const { version } = await api('/system/version');
+    document.getElementById('app-version').textContent = version || '';
+  } catch (e) { /* local dev without a git checkout at /app - just show nothing */ }
+}
+
 // ---------- Self-update ----------
 async function checkForUpdate() {
   const statusEl = document.getElementById('update-status');

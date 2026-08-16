@@ -11,7 +11,13 @@ restructuring below — history before that is available via `git log`.
 - A GitHub Actions workflow (`.github/workflows/docker-publish.yml`)
   builds and publishes the Docker image to `ghcr.io/seaspotter/knxpilot`
   on every push to `main` (tag `latest`, plus a short-sha tag) and on
-  version tags (e.g. `v0.1.0`).
+  version tags (e.g. `v0.1.0`), as a multi-arch manifest covering
+  `linux/amd64` and `linux/arm64` (e.g. Raspberry Pi) — `docker compose
+  pull` picks the right one for the host automatically.
+- A small version badge in the header (e.g. `v0.1.0`, or
+  `v0.1.0-3-gabc1234` for commits since the last release), from a new
+  `GET /api/system/version` endpoint (`git describe`, local checkout
+  only — no network fetch, unlike the existing update-check endpoint).
 
 ### Changed
 
