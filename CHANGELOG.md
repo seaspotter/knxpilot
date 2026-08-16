@@ -30,5 +30,6 @@ restructuring below — history before that is available via `git log`.
   `docker-ce` as an apt-installable fallback without noting that those are
   Docker's own package names, not Ubuntu's — `apt install` silently fails
   the whole transaction (including `docker.io`) when one package name
-  doesn't resolve. Replaced with Docker's official install script, which
-  handles this correctly including on newer non-LTS Ubuntu releases.
+  doesn't resolve. Fixed to use Ubuntu's own `docker-compose-v2` package
+  (no third-party repo needed), with Docker's official install script kept
+  as a documented fallback for distros where that package isn't available.
