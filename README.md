@@ -25,7 +25,7 @@ docker compose up -d --build
 Danach `http://<host>` öffnen (läuft auf Port 80, kein `:8000` nötig).
 
 **Beim ersten Start:**
-- Kategorien, Punkttypen und Zentral-/Allgemeinfunktions-Vorlagen sind
+- Kategorien, Funktionstypen und Zentral-/Allgemeinfunktions-Vorlagen sind
   bereits mit sinnvollen Standardwerten vorbelegt (siehe Setup-Tab unten).
 - Der Geräte-Katalog-Tab wird automatisch mit einem Startkatalog gängiger
   KNX-Geräte gefüllt (siehe Geräte-Katalog-Tab unten).
@@ -75,10 +75,11 @@ in `backend/routers/projects.py` isoliert.
 - **Geräte Katalog** — globaler Gerätekatalog (Aktoren, Sensoren,
   Bedienelemente usw.), gemeinsam für alle Projekte genutzt.
 - **Setup** — Firmenprofil (Name/Adresse/Kontakt/Logo), Kategorien,
-  Punkttypen und Zentral-/Allgemeinfunktions-Vorlagen als eigene
-  Unterreiter. Punkttypen und Vorlagen lassen sich nachträglich bearbeiten
-  (nicht nur löschen/neu anlegen); Kategorien sind bewusst nur lesbar, da
-  sie direkt den festen KNX-Hauptgruppennummern entsprechen.
+  Funktionstypen und Zentral-/Allgemeinfunktions-Vorlagen als eigene
+  Unterreiter. Funktionstypen und Vorlagen lassen sich nachträglich
+  bearbeiten (nicht nur löschen/neu anlegen); Kategorien lassen sich
+  umbenennen, aber nicht neu anordnen/hinzufügen/löschen, da ihre
+  Reihenfolge direkt den festen KNX-Hauptgruppennummern entspricht.
 - **Update** — prüft auf Wunsch, ob auf GitHub eine neuere Version vorliegt,
   installiert sie, und zeigt das Änderungsprotokoll dieses Tools an.
 
@@ -120,11 +121,11 @@ Unterreiters Funktionen weiter unten.
 #### Funktionen
 
 - Jedem im Unterreiter Gebäudestruktur angelegten Raum Punkte zuweisen:
-  Punkttyp wählen (z.B. "Licht (Dimmen)"), ein Label vergeben (z.B.
+  Funktionstyp wählen (z.B. "Licht (Dimmen)"), ein Label vergeben (z.B.
   "Spots", "Decke", "Nord" für ein Fenster), bei Bedarf eine Anzahl für
   mehrere gleiche auf einmal, und **+BWM** ankreuzen, falls dieser Punkt
   eine Bewegungsmelder-Adresse braucht. Über das ✎-Symbol an jedem bereits
-  zugewiesenen Punkt lässt sich Punkttyp/Label/BWM nachträglich ändern,
+  zugewiesenen Punkt lässt sich Funktionstyp/Label/BWM nachträglich ändern,
   ohne ihn löschen und neu anlegen zu müssen.
 - **Alles Spezielle** (Einzel-Szene, spezielle Zentralgruppe für einen
   bestimmten Raum wie "Kind1 Zentral") kommt unter **Sonder-/
@@ -137,7 +138,7 @@ Unterreiters Funktionen weiter unten.
   Geschosse, Räume, Punkte, Sonderadressen) als `.json`-Datei — getrennt
   von der ETS-CSV, gedacht zum Sichern / Duplizieren / Umziehen eines
   Projekts zwischen Installationen. Beim Wiederherstellen werden
-  Punkttypen/Kategorien per Name mit der Zielinstallation abgeglichen; was
+  Funktionstypen/Kategorien per Name mit der Zielinstallation abgeglichen; was
   nicht übereinstimmt, wird übersprungen und gemeldet, nie einfach
   angenommen.
 
@@ -149,7 +150,7 @@ und Heizkanal). Dieser Unterreiter macht daraus eine Verdrahtungsliste für
 den Elektriker — getrennt von der ETS-Gruppenadressen-CSV: die eine dient
 der Busprogrammierung, die andere der Schaltschrank-Verdrahtung.
 
-1. Jeder Punkttyp hat einen **Kanaltyp** (z.B. `Schalten`, `Dimmen`, `LED`,
+1. Jeder Funktionstyp hat einen **Kanaltyp** (z.B. `Schalten`, `Dimmen`, `LED`,
    `Rollo`, `Heizung`, `Tor`, siehe Setup-Tab) und **benötigte Kanäle**
    (meist 1).
 2. Im Geräte-Tab die verwendeten Aktoren anlegen, mit einem **Type**, der
@@ -234,7 +235,7 @@ auch Sensoren, Wetterstationen, Bedienelemente usw. Jeder Eintrag hat:
   Bedienelement, Sonstiges); bestimmt, wo das Gerät in der Liste erscheint
 - **Beschreibung** — optionale Notiz
 - **Type** und **Kanäle** — **nur bei der Gruppe "Aktor" relevant**: der
-  Type muss dem Kanaltyp eines Punkttyps entsprechen (siehe Setup-Tab),
+  Type muss dem Kanaltyp eines Funktionstyps entsprechen (siehe Setup-Tab),
   damit das Gerät in der Abgangsliste zuordenbar ist. Bei anderen Gruppen
   bleiben diese Felder leer/ausgeblendet, und nur Aktoren erscheinen als
   Auswahl in der Abgangsliste.
@@ -255,7 +256,7 @@ wird dadurch nie überschrieben.
 
 ### Setup
 
-Firma, Kategorien, Punkttypen und Zentral-/Allgemeinfunktions-Vorlagen sind
+Firma, Kategorien, Funktionstypen und Zentral-/Allgemeinfunktions-Vorlagen sind
 eigene Unterreiter innerhalb des Setup-Tabs, nicht alle gleichzeitig
 sichtbar.
 
@@ -269,8 +270,10 @@ sichtbar.
   automatisch auf den sichtbaren Bildinhalt zugeschnitten (entfernt
   transparente/weisse Rahmen um das eigentliche Motiv), damit es in
   der kleinen Kopfzeilen-Badge nicht winzig wirkt.
-- **Kategorien** — die 6 Hauptgruppen, vorbelegt.
-- **Punkttypen** — wiederverwendbare Definitionen wie "Licht (Dimmen)",
+- **Kategorien** — die 6 Hauptgruppen, vorbelegt; der Name jeder Kategorie
+  lässt sich über **Bearbeiten** umbenennen, Reihenfolge (=
+  Hauptgruppennummer) und Anzahl bleiben fest.
+- **Funktionstypen** — wiederverwendbare Definitionen wie "Licht (Dimmen)",
   "Rollo (einfach)", "Jalousie (mit Lamelle)", "Heizkreis", jeweils mit
   Datenpunkten, reserviertem Blockumfang und einem **Kanaltyp** (z.B.
   `Schalten`, `Dimmen`, `Rollo`, `Heizung`, `Tor`), der den Punkt mit
@@ -341,11 +344,11 @@ Proxmox/LXC-Bereitstellung siehe [`DEPLOYMENT.md`](./DEPLOYMENT.md).
   also keine Adressen auf, die im Tool zwischenzeitlich entfernt wurden;
   das bei Bedarf manuell in ETS erledigen.
 - Reservierte `res`-Blöcke sind eine bewusste Übernahme Ihrer bestehenden
-  Konvention (Zukunftssicherheit) — braucht ein Punkttyp (plus BWM, falls
+  Konvention (Zukunftssicherheit) — braucht ein Funktionstyp (plus BWM, falls
   angehakt) irgendwann mehr Suffixe als sein Blockumfang, geht das Tool
   einfach über die Blockgrenze hinaus ohne aufzufüllen, wodurch
   nachfolgende Punkte sich verschieben. Blockgrössen grosszügig genug für
-  die tatsächlich verwendeten Punkttypen wählen.
+  die tatsächlich verwendeten Funktionstypen wählen.
 - Die Hauptgruppe einer Kategorie erscheint nur, wenn im Projekt
   tatsächlich etwas sie nutzt (ein Punkt oder eine Sonderadresse).
   Zentralvorlagen einer ungenutzten Kategorie werden ebenfalls nicht

@@ -1,10 +1,11 @@
 """Categories / Point types / Central templates / Company profile ("Setup" tab)."""
 import json
+import sqlite3
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from ..db import get_db
-from ..models import PointTypeIn, CentralTemplateIn, CompanyProfileIn
+from ..models import PointTypeIn, CentralTemplateIn, CompanyProfileIn, CategoryRenameIn
 
 router = APIRouter(tags=["setup"])
 
@@ -36,6 +37,16 @@ def list_categories():
     with get_db() as db:
         rows = db.execute("SELECT * FROM categories ORDER BY order_idx").fetchall()
         return [dict(r) for r in rows]
+
+
+@router.put("/api/categories/{category_id}")
+def rename_category(category_id: int, c: CategoryRenameIn):
+    with get_db() as db:
+        try:
+            db.execute("UPDATE categories SET name=? WHERE id=?", (c.name, category_id))
+        except sqlite3.IntegrityError:
+            raise HTTPException(400, "A category with that name already exists")
+    return {"ok": True}
 
 
 @router.get("/api/point-types")

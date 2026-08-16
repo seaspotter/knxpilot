@@ -132,12 +132,26 @@ async function loadCategories() {
   CATEGORIES = await api('/categories');
   const ul = document.getElementById('categories-list');
   ul.innerHTML = CATEGORIES.map(c => `
-    <li><span><b>${c.main_label ?? ''}</b> ${c.order_idx}. ${c.name} ${c.is_allgemein ? '<span class="pill">Allgemein-Vorlage</span>' : ''}</span></li>
+    <li>
+      <span><b>${c.main_label ?? ''}</b> ${c.order_idx}. ${c.name} ${c.is_allgemein ? '<span class="pill">Allgemein-Vorlage</span>' : ''}</span>
+      <button class="btn secondary small" onclick="renameCategory(${c.id}, '${c.name.replace(/'/g,"\\'")}')">Bearbeiten</button>
+    </li>
   `).join('');
   const catSelects = ['pt-category', 'ct-category', 'special-category'];
   catSelects.forEach(id => {
     document.getElementById(id).innerHTML = CATEGORIES.map(c => `<option value="${c.id}">${c.order_idx}. ${c.name}</option>`).join('');
   });
+}
+
+async function renameCategory(id, currentName) {
+  const newName = await openRenameModal(currentName, {title: 'Kategorie umbenennen'});
+  if (newName === null) return;
+  try {
+    await api('/categories/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: newName})});
+    await loadCategories();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
 }
 
 // ---------- Setup: Point Types ----------
@@ -196,7 +210,7 @@ function cancelEditPointType() {
   document.getElementById('pt-channeltype').value = '';
   document.getElementById('pt-channelsneeded').value = '1';
   document.getElementById('pt-suffixes').innerHTML = '';
-  document.getElementById('pt-save-btn').textContent = 'Punkttyp speichern';
+  document.getElementById('pt-save-btn').textContent = 'Funktionstyp speichern';
   document.getElementById('pt-cancel-btn').style.display = 'none';
 }
 
@@ -215,11 +229,11 @@ async function loadPointTypes() {
         <button class="btn danger small" onclick="deletePointType(${pt.id})">Löschen</button>
       </div>
     </li>`;
-  }).join('') || '<li class="muted">Noch keine Punkttypen</li>';
+  }).join('') || '<li class="muted">Noch keine Funktionstypen</li>';
 }
 
 async function deletePointType(id) {
-  if (!(await showConfirm('Diesen Punkttyp löschen?', {danger: true}))) return;
+  if (!(await showConfirm('Diesen Funktionstyp löschen?', {danger: true}))) return;
   if (EDITING_POINT_TYPE_ID === id) cancelEditPointType();
   await api('/point-types/' + id, {method:'DELETE'});
   await loadPointTypes();

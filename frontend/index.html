@@ -250,7 +250,7 @@
   <div class="tab" id="tab-aktoren">
     <div class="card">
       <h3>Geräte-Katalog</h3>
-      <p class="muted">Globaler Katalog, gemeinsam für alle Projekte genutzt — Aktoren, Sensoren, Wetterstationen, Bedienelemente usw. Kanaltyp/Kanäle sind nur für die Gruppe "Aktor" nötig und müssen dann dem Kanaltyp eines Punkttyps (Setup-Tab) entsprechen, damit der Aktor in der Abgangsliste eines Projekts zuordenbar ist.</p>
+      <p class="muted">Globaler Katalog, gemeinsam für alle Projekte genutzt — Aktoren, Sensoren, Wetterstationen, Bedienelemente usw. Kanaltyp/Kanäle sind nur für die Gruppe "Aktor" nötig und müssen dann dem Kanaltyp eines Funktionstyps (Setup-Tab) entsprechen, damit der Aktor in der Abgangsliste eines Projekts zuordenbar ist.</p>
       <div class="row">
         <input type="text" id="actortype-manufacturer" placeholder="Hersteller, z.B. MDT">
         <input type="text" id="actortype-model" placeholder="Modell, z.B. AKS-2016.03">
@@ -290,7 +290,7 @@
     <div class="subnav" id="setup-subnav">
       <button data-subtab="firma" class="active">Firma</button>
       <button data-subtab="kategorien">Kategorien</button>
-      <button data-subtab="punkttypen">Punkttypen</button>
+      <button data-subtab="punkttypen">Funktionstypen</button>
       <button data-subtab="zentralvorlagen">Zentral-/Allgemeinfunktions-Vorlagen</button>
     </div>
 
@@ -342,7 +342,7 @@
 
     <div class="subtab" id="setup-subtab-punkttypen">
     <div class="card">
-      <h3>Punkttypen</h3>
+      <h3>Funktionstypen</h3>
       <p class="muted">Wiederverwendbare Bausteine (ein Licht, eine Jalousie, eine Steckdose...) mit ihren Datenpunkten und reserviertem Blockumfang. Der "Kanaltyp" verknüpft einen Punkt mit passenden Aktortypen weiter unten, damit er in der Abgangsliste eines Projekts einem physischen Aktorkanal zugeordnet werden kann.</p>
       <div class="row">
         <select id="pt-category"></select>
@@ -356,7 +356,7 @@
       <div id="pt-suffixes"></div>
       <button class="btn secondary small" onclick="addPtSuffixRow()">+ Datenpunkt hinzufügen</button>
       <div style="margin-top:8px;">
-        <button class="btn" id="pt-save-btn" onclick="savePointType()">Punkttyp speichern</button>
+        <button class="btn" id="pt-save-btn" onclick="savePointType()">Funktionstyp speichern</button>
         <button class="btn secondary small" id="pt-cancel-btn" onclick="cancelEditPointType()" style="display:none;">Abbrechen</button>
       </div>
       <hr class="sep">

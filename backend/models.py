@@ -45,6 +45,10 @@ class RoomIn(BaseModel):
     name: str
 
 
+class CategoryRenameIn(BaseModel):
+    name: str
+
+
 class RoomPointIn(BaseModel):
     point_type_id: int
     label: str = ""

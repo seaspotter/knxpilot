@@ -36,20 +36,35 @@ restructuring below — history before that is available via `git log`.
   existing single-room endpoint in a loop; the original single-room input
   is unchanged.
 - Floors, rooms, and room functions can now be renamed/edited after
-  creation, not just deleted: floor and room names via a ✎ rename dialog
-  (`frontend/js/ui.js`'s `openRenameModal`), and a room's assigned
-  functions (point type/label/BWM) via a ✎ edit link that repurposes the
-  existing quick-add form into an edit form (same pattern already used
-  for actor types). New backend endpoints: `PUT /api/floors/{id}`,
+  creation, not just deleted: floor and room names via a "Bearbeiten"
+  button opening a rename dialog (`frontend/js/ui.js`'s
+  `openRenameModal`), and a room's assigned functions (point type/label/
+  BWM) via a ✎ edit link on each pill that repurposes the existing
+  quick-add form into an edit form (same pattern already used for actor
+  types). New backend endpoints: `PUT /api/floors/{id}`,
   `PUT /api/rooms/{id}`, `PUT /api/room-points/{id}`.
-- Setup's Punkttypen and Zentral-Vorlagen can now be edited in place
-  (the backend already supported this; only the frontend UI was missing)
-  — same "Bearbeiten" pattern as the Geräte Katalog's actor types.
-  Categories stay view-only, since they map directly to fixed KNX main
-  group numbers.
+- Setup's Funktionstypen (formerly "Punkttypen") and Zentral-Vorlagen can
+  now be edited in place (the backend already supported this; only the
+  frontend UI was missing) — same "Bearbeiten" pattern as the Geräte
+  Katalog's actor types.
+- Categories can now be renamed via a new "Bearbeiten" button
+  (`PUT /api/categories/{id}`) — reordering/adding/removing stays
+  unsupported, since order directly maps to fixed KNX main group numbers.
 
 ### Changed
 
+- Renamed Setup's "Punkttypen" sub-tab and every user-facing label to
+  "Funktionstypen", for terminology consistency with the "Funktionen"
+  tab where those types get assigned to rooms (the underlying
+  `point_types` table, `/api/point-types` endpoint, and JS variable
+  names are unchanged — only displayed text moved).
+- Floor and room rename now uses a "Bearbeiten" button in the same
+  button row as "löschen", instead of the ✎ icon-link introduced in the
+  previous change — matching the convention used everywhere else a name
+  can be changed (actor types, Funktionstypen, Zentral-Vorlagen,
+  Kategorien). Room-function pills keep their ✎/× icon-link pair, which
+  predates this rework and fits a compact pill format better than a
+  text button.
 - Split the "Gruppenadressen" sub-tab into **Gebäudestruktur** (floors/
   rooms only) and **Funktionen** (assigning KNX functions to rooms,
   Sonderadressen, GA preview/export) — these were previously combined on
@@ -92,6 +107,13 @@ restructuring below — history before that is available via `git log`.
 
 ### Fixed
 
+- List rows (`ul.list li`, used by Funktionstypen, Zentral-/
+  Allgemeinfunktions-Vorlagen, Kategorien, actor types, etc.) let their
+  "Bearbeiten"/"Löschen" buttons wrap onto a second line whenever the
+  row's content wrapped to multiple lines (e.g. "LED (Tunable White)",
+  "Klima"), since content and buttons shared equal flex-shrink. Fixed by
+  giving the content column `min-width: 0` (free to shrink/wrap) and the
+  button column `flex-shrink: 0` (stays put at its natural size).
 - `DEPLOYMENT.md`'s Proxmox instructions named `docker-compose-plugin`/
   `docker-ce` as an apt-installable fallback without noting that those are
   Docker's own package names, not Ubuntu's — `apt install` silently fails

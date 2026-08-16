@@ -213,13 +213,14 @@ async function renderFloors() {
     <div class="floor-card">
       <div class="row" style="justify-content:space-between;">
         <div>
-          <b>${floor.name}</b> <a href="#" onclick="event.preventDefault(); renameFloor(${floor.id}, '${floor.name.replace(/'/g,"\\'")}', ${floor.is_outdoor})" style="color:var(--accent); text-decoration:none;" title="Umbenennen">✎</a>
+          <b>${floor.name}</b>
           ${floor.is_outdoor ? '<span class="pill">Aussen/unbeheizt</span>' : ''}
         </div>
         <div>
           <input type="text" placeholder="Raumname" id="room-name-${floor.id}" style="width:140px;">
           <button class="btn secondary small" onclick="addRoom(${floor.id})">+ Raum hinzufügen</button>
           <button class="btn secondary small" onclick="toggleBulkRoomInput(${floor.id})">Mehrere...</button>
+          <button class="btn secondary small" onclick="renameFloor(${floor.id}, '${floor.name.replace(/'/g,"\\'")}', ${floor.is_outdoor})">Bearbeiten</button>
           <button class="btn danger small" onclick="deleteFloor(${floor.id})">Geschoss löschen</button>
         </div>
       </div>
@@ -236,8 +237,11 @@ function renderRoom(room) {
   return `
     <div class="room-card">
       <div class="row" style="justify-content:space-between;">
-        <div><b>${room.name}</b> <a href="#" onclick="event.preventDefault(); renameRoom(${room.id}, '${room.name.replace(/'/g,"\\'")}')" style="color:var(--accent); text-decoration:none;" title="Umbenennen">✎</a></div>
-        <button class="btn danger small" onclick="deleteRoom(${room.id})">Raum löschen</button>
+        <b>${room.name}</b>
+        <div>
+          <button class="btn secondary small" onclick="renameRoom(${room.id}, '${room.name.replace(/'/g,"\\'")}')">Bearbeiten</button>
+          <button class="btn danger small" onclick="deleteRoom(${room.id})">Raum löschen</button>
+        </div>
       </div>
       <p class="muted" style="margin:4px 0;">${room.points.length} Funktion(en) — im Unterreiter Funktionen zuweisen</p>
     </div>
@@ -308,7 +312,7 @@ async function importProjectJson() {
   fileInput.value = '';
   await loadProjects();
   if (result.skipped && result.skipped.length) {
-    showToast(`Importiert als "${result.name}".\n\nEinige Elemente wurden übersprungen, da ihr Punkttyp/ihre Kategorie auf dieser Installation nicht existiert:\n- ${result.skipped.join('\n- ')}`, 'warning', {sticky: true});
+    showToast(`Importiert als "${result.name}".\n\nEinige Elemente wurden übersprungen, da ihr Funktionstyp/ihre Kategorie auf dieser Installation nicht existiert:\n- ${result.skipped.join('\n- ')}`, 'warning', {sticky: true});
   } else {
     showToast(`Importiert als "${result.name}".`, 'success');
   }

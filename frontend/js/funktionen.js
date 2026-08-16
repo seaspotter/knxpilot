@@ -44,7 +44,7 @@ function renderRoomFunctions(room) {
         </select>
         <input type="text" id="label-${room.id}" placeholder="Label z.B. Decke, Spots, Nord (leer = keins)" style="width:210px;">
         <input type="number" id="qty-${room.id}" value="1" min="1" title="Anzahl">
-        <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="bwm-${room.id}"> +BWM<span class="info-icon" tabindex="0" data-tip="BWM = Bewegungsmelder. Fügt diesem Punkt eine zusätzliche Bewegungsmelder-Adresse hinzu, zusätzlich zu den normalen Datenpunkten des Punkttyps.">i</span></label>
+        <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="bwm-${room.id}"> +BWM<span class="info-icon" tabindex="0" data-tip="BWM = Bewegungsmelder. Fügt diesem Punkt eine zusätzliche Bewegungsmelder-Adresse hinzu, zusätzlich zu den normalen Datenpunkten des Funktionstyps.">i</span></label>
         <button class="btn secondary small" id="save-btn-${room.id}" onclick="saveRoomPoint(${room.id})">+ Hinzufügen</button>
         <button class="btn secondary small" id="cancel-btn-${room.id}" onclick="cancelEditRoomPoint(${room.id})" style="display:none;">Abbrechen</button>
       </div>
