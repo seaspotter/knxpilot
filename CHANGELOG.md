@@ -59,7 +59,10 @@ restructuring below — history before that is available via `git log`.
   are no longer stacked on the same page. Frontend-only — the moved code
   (`previewGA`, `expandAllGaTree`, `downloadCSV`) now lives in a new
   `frontend/js/gruppenadressen.js`, following the one-file-per-sub-tab
-  convention.
+  convention. The tree now loads automatically when opening the tab
+  (the "Vorschau" button still works, as a manual refresh), and
+  Übersicht gained a matching "Gruppenadressen" stat card showing the
+  total address count.
 - Renamed Setup's "Punkttypen" sub-tab and every user-facing label to
   "Funktionstypen", for terminology consistency with the "Funktionen"
   tab where those types get assigned to rooms (the underlying

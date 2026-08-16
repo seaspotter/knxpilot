@@ -4,8 +4,9 @@ function goToSubtab(name) {
 }
 
 async function loadUebersichtForCurrentProject() {
-  const [tree, circuits, deviceSummary, klaerungen] = await Promise.all([
+  const [tree, preview, circuits, deviceSummary, klaerungen] = await Promise.all([
     api(`/projects/${CURRENT_PROJECT}/tree`),
+    api(`/projects/${CURRENT_PROJECT}/preview`),
     api(`/projects/${CURRENT_PROJECT}/circuits`),
     api(`/projects/${CURRENT_PROJECT}/device-summary`),
     api(`/projects/${CURRENT_PROJECT}/klaerungen`),
@@ -14,6 +15,8 @@ async function loadUebersichtForCurrentProject() {
   const floorCount = tree.floors.length;
   const roomCount = tree.floors.reduce((sum, f) => sum + f.rooms.length, 0);
   const pointCount = tree.floors.reduce((sum, f) => sum + f.rooms.reduce((s, r) => s + r.points.length, 0), 0);
+
+  const gaCount = preview.main_groups.reduce((sum, m) => sum + m.middles.reduce((s, mid) => s + mid.subs.length, 0), 0);
 
   const assignedCount = circuits.filter(c => c.assignment).length;
   const totalCircuits = circuits.length;
@@ -32,6 +35,11 @@ async function loadUebersichtForCurrentProject() {
       subtab: 'funktionen',
       title: 'Funktionen',
       body: pointCount ? `${pointCount} Punkte definiert` : 'Noch keine Punkte definiert',
+    },
+    {
+      subtab: 'gruppenadressen',
+      title: 'Gruppenadressen',
+      body: gaCount ? `${gaCount} Gruppenadressen` : 'Noch keine Gruppenadressen',
     },
     {
       subtab: 'abgangsliste',

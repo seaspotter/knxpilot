@@ -136,10 +136,11 @@ Unterreiters Funktionen weiter unten.
 
 #### Gruppenadressen
 
-- **Vorschau** zeigt die aus Gebäudestruktur und Funktionen erzeugten
-  Gruppenadressen als aufklappbaren Baum (Hauptgruppe → Mittelgruppe →
-  Adresse), **Alle aufklappen**/**Alle einklappen** klappen ihn komplett
-  auf bzw. zu.
+- Beim Öffnen des Unterreiters erscheinen die aus Gebäudestruktur und
+  Funktionen erzeugten Gruppenadressen sofort als aufklappbarer Baum
+  (Hauptgruppe → Mittelgruppe → Adresse) — **Vorschau** lädt ihn bei
+  Bedarf manuell neu, **Alle aufklappen**/**Alle einklappen** klappen ihn
+  komplett auf bzw. zu.
 - **CSV für ETS6 herunterladen** exportiert dieselben Adressen als
   ETS6-kompatible CSV-Datei.
 - **⭳ Sichern (JSON)** (im Projektkopf oben, unterreiterübergreifend

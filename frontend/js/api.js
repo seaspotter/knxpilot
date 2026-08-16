@@ -46,6 +46,7 @@ document.querySelectorAll('#workspace-subnav button').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('subtab-' + btn.dataset.subtab).classList.add('active');
     if (btn.dataset.subtab === 'uebersicht') await loadUebersichtForCurrentProject();
+    if (btn.dataset.subtab === 'gruppenadressen') await previewGA();
     if (btn.dataset.subtab === 'abgangsliste') await loadAbgangForCurrentProject();
     if (btn.dataset.subtab === 'geraeteplanung') await loadGeraeteplanungForCurrentProject();
     if (btn.dataset.subtab === 'pflichtenheft') await loadPflichtenheftForCurrentProject();
