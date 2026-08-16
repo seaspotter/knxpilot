@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>KNXpilot</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header>
+  <div class="brand">
+    <img src="/favicon.svg" alt="KNXpilot Logo">
+    <div>
+      <h1>KNXpilot</h1>
+      <p>KNX-Projekte planen: Gruppenadressen, Abgangsliste, Geräteplanung und Pflichtenheft — alles an einem Ort.</p>
+    </div>
+  </div>
+  <div class="row" style="margin:0; align-items:center; gap:12px;">
+    <div id="header-company-brand" class="row" style="margin:0; align-items:center; gap:8px; display:none;"></div>
+    <button id="theme-toggle" onclick="toggleTheme()">☀️ Hell</button>
+  </div>
+</header>
+<nav>
+  <button data-tab="projects" class="active">Projekte</button>
+  <button data-tab="aktoren">Geräte</button>
+  <button data-tab="setup">Setup (Kategorien &amp; Vorlagen)</button>
+  <button data-tab="update">Update</button>
+</nav>
+<main>
+
+  <!-- PROJEKTE TAB -->
+  <div class="tab active" id="tab-projects">
+    <div class="card">
+      <h3>Projekte</h3>
+      <div class="row">
+        <input type="text" id="proj-name" placeholder="Neuer Projektname">
+        <input type="text" id="proj-customer" placeholder="Kunde">
+        <input type="text" id="proj-location" placeholder="Standort">
+        <select id="proj-status">
+          <option value="">— Status —</option>
+          <option value="In Planung">In Planung</option>
+          <option value="In Ausführung">In Ausführung</option>
+          <option value="Abgeschlossen">Abgeschlossen</option>
+          <option value="Pausiert">Pausiert</option>
+        </select>
+        <input type="text" id="proj-order-number" placeholder="Bestellnummer">
+      </div>
+      <div class="row">
+        <input type="text" id="proj-comment" placeholder="Kommentar (optional)" style="min-width:300px; flex:1;">
+        <button class="btn" onclick="createProject()">Projekt erstellen</button>
+      </div>
+      <div class="row">
+        <input type="file" id="import-json-file" accept="application/json">
+        <button class="btn secondary" onclick="importProjectJson()">⭱ Aus Sicherung wiederherstellen (JSON)</button>
+      </div>
+      <hr class="sep">
+      <div class="row">
+        <input type="text" id="project-filter" placeholder="🔍 Suchen (Name, Kunde, Standort, Status, Bestellnummer)..." style="min-width:320px; flex:1;" oninput="renderProjectsList()">
+        <span class="muted" id="project-filter-count"></span>
+      </div>
+      <ul class="list" id="projects-list"></ul>
+    </div>
+
+    <div id="project-detail" style="display:none;">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;">
+          <h3 id="project-detail-title" style="margin:0;">Projekt</h3>
+          <div class="row" style="margin:0;">
+            <button class="btn secondary small" onclick="exportProjectJson()">⭳ Sichern (JSON)</button>
+            <button class="btn secondary small" onclick="closeProject()">× Schliessen</button>
+          </div>
+        </div>
+        <div id="project-meta-view">
+          <div class="row" id="project-meta-pills"></div>
+          <p class="muted" id="project-meta-comment"></p>
+          <button class="btn secondary small" onclick="editProjectMeta()">Bearbeiten</button>
+        </div>
+        <div id="project-meta-edit" style="display:none;">
+          <div class="row">
+            <input type="text" id="pm-name" placeholder="Projektname">
+            <input type="text" id="pm-customer" placeholder="Kunde">
+            <input type="text" id="pm-location" placeholder="Standort">
+            <select id="pm-status">
+              <option value="">— Status —</option>
+              <option value="In Planung">In Planung</option>
+              <option value="In Ausführung">In Ausführung</option>
+              <option value="Abgeschlossen">Abgeschlossen</option>
+              <option value="Pausiert">Pausiert</option>
+            </select>
+            <input type="text" id="pm-order-number" placeholder="Bestellnummer">
+          </div>
+          <div class="row">
+            <input type="text" id="pm-comment" placeholder="Kommentar (optional)" style="min-width:300px; flex:1;">
+            <button class="btn" onclick="saveProjectMeta()">Änderungen speichern</button>
+            <button class="btn secondary small" onclick="cancelEditProjectMeta()">Abbrechen</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="subnav" id="workspace-subnav">
+        <button data-subtab="ga" class="active">Gruppenadressen</button>
+        <button data-subtab="abgangsliste">Abgangsliste</button>
+        <button data-subtab="geraeteplanung">Geräteplanung</button>
+        <button data-subtab="pflichtenheft">Pflichtenheft</button>
+        <button data-subtab="klaerungsliste">Klärungsliste</button>
+      </div>
+
+      <div class="subtab active" id="subtab-ga">
+        <div class="card">
+          <div class="row">
+            <input type="text" id="floor-name" placeholder="Geschossname, z.B. Erdgeschoss (EG)">
+            <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="floor-outdoor"> Aussen / unbeheizt (z.B. Aussen, Garage)<span class="info-icon" tabindex="0" data-tip="Schliesst dieses Geschoss von Zentral-Vorlagen aus, die im Setup-Tab mit &quot;Aussen-/unbeheizte Geschosse überspringen&quot; markiert sind (z.B. Fahrzeitmessung, Sommer/Winter-Status) - ergibt für Aussenbereiche meist keinen Sinn.">i</span></label>
+            <button class="btn secondary" onclick="addFloor()">+ Geschoss hinzufügen</button>
+          </div>
+          <div id="floors-container"></div>
+        </div>
+
+        <div class="card">
+          <h3>Sonder- / Zusatzadressen</h3>
+          <p class="muted">Alles, was nicht ins Standardschema passt — Einzel-Szenen, spezielle Zentralgruppen usw.</p>
+          <div class="row">
+            <select id="special-category"></select>
+            <select id="special-location" class="wide"></select>
+            <input type="text" id="special-name" placeholder="Name, z.B. Langschläfer Kind1">
+          </div>
+          <div id="special-suffixes"></div>
+          <button class="btn secondary small" onclick="addSpecialSuffixRow()">+ Datenpunkt hinzufügen</button>
+          <div style="margin-top:8px;"><button class="btn secondary" onclick="createSpecial()">Sonderadresse hinzufügen</button></div>
+          <ul class="list" id="specials-list" style="margin-top:10px;"></ul>
+        </div>
+
+        <div class="card">
+          <div class="row" style="justify-content:space-between;">
+            <h3 style="margin:0;">Vorschau &amp; Export</h3>
+            <div class="row" style="margin:0;">
+              <button class="btn secondary" onclick="previewGA()">Vorschau</button>
+              <button class="btn" onclick="downloadCSV()">CSV für ETS6 herunterladen</button>
+            </div>
+          </div>
+          <div class="error" id="gen-error"></div>
+          <div class="tree" id="ga-preview"></div>
+        </div>
+      </div>
+
+      <div class="subtab" id="subtab-abgangsliste">
+        <div id="abgang-detail" style="display:none;">
+          <div class="card">
+            <h4>Bedarfsübersicht</h4>
+            <p class="muted">Wie viele Kanäle je Geschoss und Kanaltyp tatsächlich benötigt werden — hilft bei der Wahl der richtigen Aktorgrösse, bevor verdrahtet wird.</p>
+            <ul class="list" id="channel-summary-list"></ul>
+          </div>
+
+          <div class="card">
+            <h4>Aktoren in diesem Projekt</h4>
+            <div class="row">
+              <select id="ai-actortype" class="wide"></select>
+              <select id="ai-floor"></select>
+              <input type="text" id="ai-location" placeholder="Standort, z.B. EG Technik Verteilung" style="width:220px;">
+              <input type="text" id="ai-address" placeholder="Physikalische Adresse, z.B. 1.1.2" style="width:140px;">
+              <button class="btn secondary" onclick="addActorInstance()">+ Aktor hinzufügen</button>
+            </div>
+            <ul class="list" id="actor-instances-list"></ul>
+          </div>
+
+          <div class="card">
+            <h4>Abgänge</h4>
+            <div class="row" style="justify-content:space-between;">
+              <span class="muted" id="circuits-summary"></span>
+              <div class="row" style="margin:0;">
+                <button class="btn secondary" onclick="autoAssignCircuits()">Alle automatisch zuordnen</button><span class="info-icon" tabindex="0" data-tip="Weist jeden noch nicht zugeordneten Abgang dem ersten freien passenden Kanal zu. Mischt dabei nie Geschosse - ein Abgang im EG wird nur einem Aktor im EG zugeordnet, auch wenn dessen Kanäle voll sind. Aktoren ohne zugewiesenes Geschoss werden ebenfalls nicht verwendet.">i</span>
+                <button class="btn secondary" onclick="downloadAbgangsliste()">CSV herunterladen</button>
+                <button class="btn" onclick="downloadAbgangslistePdf()">PDF herunterladen</button>
+              </div>
+            </div>
+            <ul class="list" id="circuits-list"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="subtab" id="subtab-geraeteplanung">
+        <div id="geraeteplanung-detail" style="display:none;">
+          <div class="card">
+            <div class="row" style="justify-content:space-between;">
+              <h4 style="margin:0;">Stückliste (gesamtes Projekt)</h4>
+              <button class="btn" onclick="downloadGeraeteliste()">PDF herunterladen</button>
+            </div>
+            <ul class="list" id="device-summary-list"></ul>
+          </div>
+          <div class="card">
+            <h4>Geräte je Raum</h4>
+            <div id="geraeteplanung-rooms"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subtab" id="subtab-pflichtenheft">
+        <div id="pflichtenheft-detail" style="display:none;">
+          <div class="card">
+            <div class="row" style="justify-content:space-between;">
+              <h4 style="margin:0;">Vorschau</h4>
+              <button class="btn" onclick="downloadPflichtenheft()">PDF herunterladen</button>
+            </div>
+            <div id="pflichtenheft-preview" class="tree"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subtab" id="subtab-klaerungsliste">
+        <div class="card">
+          <h4 id="kl-form-title">Neuer Eintrag</h4>
+          <div class="row">
+            <select id="kl-typ">
+              <option value="Frage">Frage</option>
+              <option value="Aufgabe">Aufgabe</option>
+              <option value="Notiz">Notiz</option>
+            </select>
+            <select id="kl-room" class="wide" onchange="onKlRoomChange()">
+              <option value="">Allgemein (kein Raum)</option>
+            </select>
+            <select id="kl-point" class="wide" style="display:none;">
+              <option value="">(kein bestimmter Punkt)</option>
+            </select>
+          </div>
+          <div class="row">
+            <input type="text" id="kl-text" placeholder="Frage, Aufgabe oder Notiz..." style="min-width:320px; flex:1;">
+            <button class="btn" id="kl-save-btn" onclick="saveKlaerung()">+ Hinzufügen</button>
+            <button class="btn secondary small" id="kl-cancel-btn" onclick="cancelEditKlaerung()" style="display:none;">Abbrechen</button>
+          </div>
+        </div>
+        <div id="klaerungsliste-groups"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AKTOREN/GERÄTE TAB -->
+  <div class="tab" id="tab-aktoren">
+    <div class="card">
+      <h3>Geräte-Katalog</h3>
+      <p class="muted">Globaler Katalog, gemeinsam für alle Projekte genutzt — Aktoren, Sensoren, Wetterstationen, Bedienelemente usw. Kanaltyp/Kanäle sind nur für die Gruppe "Aktor" nötig und müssen dann dem Kanaltyp eines Punkttyps (Setup-Tab) entsprechen, damit der Aktor in der Abgangsliste eines Projekts zuordenbar ist.</p>
+      <div class="row">
+        <input type="text" id="actortype-manufacturer" placeholder="Hersteller, z.B. MDT">
+        <input type="text" id="actortype-model" placeholder="Modell, z.B. AKS-2016.03">
+        <select id="actortype-group" onchange="onDeviceGroupChange()">
+          <option value="Aktor">Aktor</option>
+          <option value="Sensor">Sensor</option>
+          <option value="Wetterstation">Wetterstation</option>
+          <option value="Bedienelement">Bedienelement</option>
+          <option value="Sonstiges">Sonstiges</option>
+          <option value="__custom__">Andere (eingeben)...</option>
+        </select>
+        <input type="text" id="actortype-group-custom" placeholder="Eigene Gruppe" style="display:none; width:140px;" oninput="onDeviceGroupChange()">
+        <label id="actortype-channeltype-label" style="display:flex; align-items:center; gap:4px;">Type <input type="text" id="actortype-channeltype" placeholder="z.B. Schalten" style="width:110px;"></label>
+        <label id="actortype-count-label" style="display:flex; align-items:center; gap:4px;">Kanäle <input type="number" id="actortype-count" value="8" min="1" style="width:60px;"></label>
+      </div>
+      <div class="row">
+        <input type="text" id="actortype-description" placeholder="Beschreibung (optional)" style="min-width:300px; flex:1;">
+        <button class="btn" id="actortype-save-btn" onclick="saveActorType()">Gerät speichern</button>
+        <button class="btn secondary small" id="actortype-cancel-btn" onclick="cancelEditActorType()" style="display:none;">Abbrechen</button>
+      </div>
+      <div class="row">
+        <button class="btn secondary small" onclick="exportActorTypesJson()">⭳ Katalog exportieren (JSON)</button>
+        <input type="file" id="import-actortypes-file" accept="application/json">
+        <button class="btn secondary small" onclick="importActorTypesJson()">⭱ Katalog importieren (JSON)</button>
+      </div>
+      <hr class="sep">
+      <div class="row">
+        <input type="text" id="actortype-filter" placeholder="🔍 Suchen (Hersteller, Modell, Beschreibung, Gruppe, Type)..." style="min-width:320px; flex:1;" oninput="renderActorTypesList()">
+        <span class="muted" id="actortype-filter-count"></span>
+      </div>
+      <div id="actor-types-groups"></div>
+    </div>
+  </div>
+
+  <!-- SETUP TAB -->
+  <div class="tab" id="tab-setup">
+    <div class="card">
+      <h3>Firma <span class="info-icon" tabindex="0" data-tip="Ihre Firmenangaben - werden im Programmkopf neben dem KNXpilot-Logo angezeigt und optional als Briefkopf (Logo/Name oben, Adresse/Kontakt in der Fusszeile) auf jedem PDF-Export (Abgangsliste, Geräteliste, Pflichtenheft) übernommen.">i</span></h3>
+      <p class="muted">Einmalig hinterlegen - erscheint programmweit im Kopfbereich und optional auf allen PDF-Exporten.</p>
+
+      <div class="row" style="align-items:center;">
+        <img id="company-logo-preview" src="" alt="Logo-Vorschau" style="display:none; height:72px; width:auto; max-width:240px; object-fit:contain; border:1px solid var(--border); border-radius:8px; background:var(--panel2); padding:4px;">
+        <div class="row" style="margin:0;">
+          <input type="file" id="company-logo-file" accept="image/*" onchange="onCompanyLogoFileChange(event)">
+          <button class="btn secondary small" onclick="clearCompanyLogo()">Logo entfernen</button>
+        </div>
+      </div>
+      <hr class="sep">
+
+      <div class="row">
+        <input type="text" id="company-name" placeholder="Firmenname" style="min-width:300px; flex:1;">
+      </div>
+      <div class="row">
+        <input type="text" id="company-address" placeholder="Adresse (Strasse, PLZ Ort)" style="min-width:300px; flex:1;">
+      </div>
+      <div class="row">
+        <input type="text" id="company-phone" placeholder="Telefon" style="flex:1;">
+        <input type="text" id="company-email" placeholder="E-Mail" style="flex:1;">
+        <input type="text" id="company-website" placeholder="Website" style="flex:1;">
+      </div>
+      <hr class="sep">
+
+      <div class="row">
+        <label style="display:flex; align-items:center; gap:6px;">
+          <input type="checkbox" id="company-show-on-pdf">
+          Firmenlogo/-daten auf PDF-Exporten anzeigen
+          <span class="info-icon" tabindex="0" data-tip="Gilt global für alle PDF-Exporte in jedem Projekt - kein Schalter je Export.">i</span>
+        </label>
+      </div>
+      <div><button class="btn" onclick="saveCompanyProfile()">Firmenprofil speichern</button></div>
+    </div>
+
+    <div class="card">
+      <h3>Kategorien (Hauptgruppen)</h3>
+      <p class="muted">Ihre Standard-Funktionskategorien. Reihenfolge = Hauptgruppennummer. Normalerweise einmalig festgelegt und danach unverändert.</p>
+      <ul class="list" id="categories-list"></ul>
+    </div>
+
+    <div class="card">
+      <h3>Punkttypen</h3>
+      <p class="muted">Wiederverwendbare Bausteine (ein Licht, eine Jalousie, eine Steckdose...) mit ihren Datenpunkten und reserviertem Blockumfang. Der "Kanaltyp" verknüpft einen Punkt mit passenden Aktortypen weiter unten, damit er in der Abgangsliste eines Projekts einem physischen Aktorkanal zugeordnet werden kann.</p>
+      <div class="row">
+        <select id="pt-category"></select>
+        <input type="text" id="pt-name" placeholder="Name, z.B. Licht (Dimmen)">
+        <input type="number" id="pt-blocksize" value="5" title="Blockgrösse (reservierte Adressen)">
+      </div>
+      <div class="row">
+        <input type="text" id="pt-channeltype" placeholder="Kanaltyp, z.B. Schalten, Dimmen, Rollo, Heizung, Tor (leer = kein physischer Kanal)">
+        <label style="display:flex; align-items:center; gap:4px;">Benötigte Kanäle <input type="number" id="pt-channelsneeded" value="1" min="1" style="width:60px;"></label>
+      </div>
+      <div id="pt-suffixes"></div>
+      <button class="btn secondary small" onclick="addPtSuffixRow()">+ Datenpunkt hinzufügen</button>
+      <div style="margin-top:8px;"><button class="btn" onclick="createPointType()">Punkttyp speichern</button></div>
+      <hr class="sep">
+      <ul class="list" id="point-types-list"></ul>
+    </div>
+
+    <div class="card">
+      <h3>Zentral-/Allgemeinfunktions-Vorlagen</h3>
+      <p class="muted">
+        Werden in jedem Projekt automatisch erzeugt. Geltungsbereich "building" = ein Block für das ganze Projekt.
+        "floor" = ein Block je Geschoss (z.B. "Zentral EG", "Zentral OG").
+        "room_multi" = ein Block PRO RAUM, nur für Räume mit mehreren Punkten dieser
+        Kategorie (z.B. erhält ein Raum mit 2+ Jalousien eine eigene kombinierte "Zentral"-Steuerung).
+        Vorlagen der Kategorie Allgemein werden jeweils zu einer eigenen Mittelgruppe.
+      </p>
+      <div class="row">
+        <select id="ct-category"></select>
+        <select id="ct-scope" onchange="onCtScopeChange()">
+          <option value="building">building (einmal je Projekt)</option>
+          <option value="floor">floor (einmal je Geschoss)</option>
+          <option value="room_multi">room_multi (einmal je Raum, wenn genug Punkte)</option>
+        </select>
+        <input type="text" id="ct-name" placeholder="Name, z.B. Zentral (leer = kein Präfix)">
+        <label id="ct-skip-outdoor-label" style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="ct-skip-outdoor"> Aussen-/unbeheizte Geschosse überspringen<span class="info-icon" tabindex="0" data-tip="Gilt nur für diese eine Vorlage, nicht global - andere Vorlagen (z.B. Beleuchtung Zentral je Geschoss) können ein als &quot;Aussen&quot; markiertes Geschoss weiterhin einbeziehen, solange dieses Häkchen dort nicht auch gesetzt wird.">i</span></label>
+        <label id="ct-blocksize-label" style="display:none; align-items:center; gap:4px;">Blockgrösse <input type="number" id="ct-blocksize" placeholder="z.B. 5" style="width:60px;"></label>
+        <label id="ct-trigger-label" style="display:none; align-items:center; gap:4px;">Auslösen ab <input type="number" id="ct-trigger" value="2" style="width:60px;"> Punkten</label>
+      </div>
+      <div id="ct-suffixes"></div>
+      <button class="btn secondary small" onclick="addCtSuffixRow()">+ Datenpunkt hinzufügen</button>
+      <div style="margin-top:8px;"><button class="btn" onclick="createCentralTemplate()">Vorlage speichern</button></div>
+      <hr class="sep">
+      <ul class="list" id="central-templates-list"></ul>
+    </div>
+  </div>
+
+  <!-- UPDATE TAB -->
+  <div class="tab" id="tab-update">
+    <div class="card">
+      <h3>Update</h3>
+      <p class="muted">Prüft per Git, ob auf GitHub eine neuere Version vorliegt als die aktuell laufende. Es wird nichts automatisch im Hintergrund geprüft — nur auf Klick.</p>
+      <div class="row">
+        <button class="btn" onclick="checkForUpdate()">⟲ Nach Updates suchen</button>
+        <button id="update-btn" class="btn secondary" onclick="performUpdate()" style="display:none;">⭱ Update installieren</button>
+      </div>
+      <p class="muted" id="update-status"></p>
+      <p class="error" id="update-error" style="display:none;"></p>
+    </div>
+  </div>
+
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/setup.js"></script>
+<script src="/js/geraete.js"></script>
+<script src="/js/projekte.js"></script>
+<script src="/js/abgangsliste.js"></script>
+<script src="/js/geraeteplanung.js"></script>
+<script src="/js/pflichtenheft.js"></script>
+<script src="/js/klaerungsliste.js"></script>
+<script src="/js/update.js"></script>
+<script src="/js/init.js"></script>
+</body>
+</html>

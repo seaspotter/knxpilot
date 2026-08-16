@@ -1,0 +1,42 @@
+// ---------- Theme ----------
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('theme-toggle').textContent = theme === 'light' ? '🌙 Dunkel' : '☀️ Hell';
+  localStorage.setItem('knx-ga-theme', theme);
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(current === 'light' ? 'dark' : 'light');
+}
+applyTheme(localStorage.getItem('knx-ga-theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+
+const api = (path, opts) => fetch('/api' + path, opts).then(async r => {
+  if (!r.ok) { const t = await r.json().catch(()=>({detail:r.statusText})); throw new Error(t.detail || 'Error'); }
+  return r.headers.get('content-type')?.includes('json') ? r.json() : r;
+});
+
+let CATEGORIES = [], POINT_TYPES = [], CENTRAL_TEMPLATES = [], ACTOR_TYPES = [], PROJECTS_LIST = [];
+let CURRENT_PROJECT = null;
+
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.onclick = async () => {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  };
+});
+
+document.querySelectorAll('#workspace-subnav button').forEach(btn => {
+  btn.onclick = async () => {
+    document.querySelectorAll('#workspace-subnav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#project-detail .subtab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('subtab-' + btn.dataset.subtab).classList.add('active');
+    if (btn.dataset.subtab === 'abgangsliste') await loadAbgangForCurrentProject();
+    if (btn.dataset.subtab === 'geraeteplanung') await loadGeraeteplanungForCurrentProject();
+    if (btn.dataset.subtab === 'pflichtenheft') await loadPflichtenheftForCurrentProject();
+    if (btn.dataset.subtab === 'klaerungsliste') await loadKlaerungslisteForCurrentProject();
+  };
+});
+

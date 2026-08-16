@@ -1,0 +1,261 @@
+// ---------- Setup: Company profile ----------
+let COMPANY_LOGO_DATA_URL = '';
+
+async function loadCompanyProfile() {
+  const c = await api('/company-profile');
+  document.getElementById('company-name').value = c.name || '';
+  document.getElementById('company-address').value = c.address || '';
+  document.getElementById('company-phone').value = c.phone || '';
+  document.getElementById('company-email').value = c.email || '';
+  document.getElementById('company-website').value = c.website || '';
+  document.getElementById('company-show-on-pdf').checked = !!c.show_on_pdf;
+  COMPANY_LOGO_DATA_URL = c.logo_data_url || '';
+  updateCompanyLogoPreview();
+  renderHeaderCompanyBranding(c);
+}
+
+function autocropLogoDataUrl(dataUrl) {
+  // Many logo files ship with transparent or white padding baked around the
+  // actual mark, which makes them look tiny once fit into a small header/PDF
+  // box - the box renders at the intended size, but most of it is blank. This
+  // crops to the actual visible content so the full box is used.
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      let imgData;
+      try {
+        imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      } catch (e) {
+        resolve(dataUrl);
+        return;
+      }
+      const { data, width, height } = imgData;
+      let hasAlpha = false;
+      for (let i = 3; i < data.length; i += 4 * 37) {
+        if (data[i] < 255) { hasAlpha = true; break; }
+      }
+      const bgR = data[0], bgG = data[1], bgB = data[2];
+      const isBackground = (i) => {
+        if (hasAlpha) return data[i + 3] < 12;
+        return Math.abs(data[i] - bgR) + Math.abs(data[i + 1] - bgG) + Math.abs(data[i + 2] - bgB) < 18;
+      };
+
+      let minX = width, minY = height, maxX = -1, maxY = -1;
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          if (!isBackground(i)) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (maxX < minX || maxY < minY) { resolve(dataUrl); return; }
+
+      const pad = 4;
+      minX = Math.max(0, minX - pad);
+      minY = Math.max(0, minY - pad);
+      maxX = Math.min(width - 1, maxX + pad);
+      maxY = Math.min(height - 1, maxY + pad);
+      const cropW = maxX - minX + 1, cropH = maxY - minY + 1;
+
+      const cropCanvas = document.createElement('canvas');
+      cropCanvas.width = cropW;
+      cropCanvas.height = cropH;
+      cropCanvas.getContext('2d').drawImage(canvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+      resolve(cropCanvas.toDataURL('image/png'));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+function onCompanyLogoFileChange(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const MAX_BYTES = 2 * 1024 * 1024; // 2 MB - round-trips as base64 on every Setup load
+  if (file.size > MAX_BYTES) {
+    alert('Logo ist zu gross (max. 2 MB). Bitte ein kleineres Bild wählen.');
+    event.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = async () => {
+    COMPANY_LOGO_DATA_URL = await autocropLogoDataUrl(reader.result);
+    updateCompanyLogoPreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearCompanyLogo() {
+  COMPANY_LOGO_DATA_URL = '';
+  document.getElementById('company-logo-file').value = '';
+  updateCompanyLogoPreview();
+}
+
+function updateCompanyLogoPreview() {
+  const img = document.getElementById('company-logo-preview');
+  if (COMPANY_LOGO_DATA_URL) { img.src = COMPANY_LOGO_DATA_URL; img.style.display = ''; }
+  else { img.src = ''; img.style.display = 'none'; }
+}
+
+async function saveCompanyProfile() {
+  const body = JSON.stringify({
+    name: document.getElementById('company-name').value.trim(),
+    address: document.getElementById('company-address').value.trim(),
+    phone: document.getElementById('company-phone').value.trim(),
+    email: document.getElementById('company-email').value.trim(),
+    website: document.getElementById('company-website').value.trim(),
+    logo_data_url: COMPANY_LOGO_DATA_URL,
+    show_on_pdf: document.getElementById('company-show-on-pdf').checked,
+  });
+  await api('/company-profile', {method:'PUT', headers:{'Content-Type':'application/json'}, body});
+  await loadCompanyProfile();
+}
+
+function renderHeaderCompanyBranding(c) {
+  const el = document.getElementById('header-company-brand');
+  if (!c || (!c.name && !c.logo_data_url)) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.innerHTML = `${c.logo_data_url ? `<img src="${c.logo_data_url}" alt="${c.name || 'Firmenlogo'}">` : ''}${c.name ? `<span>${c.name}</span>` : ''}`;
+  el.style.display = 'flex';
+}
+
+// ---------- Setup: Categories ----------
+async function loadCategories() {
+  CATEGORIES = await api('/categories');
+  const ul = document.getElementById('categories-list');
+  ul.innerHTML = CATEGORIES.map(c => `
+    <li><span><b>${c.main_label ?? ''}</b> ${c.order_idx}. ${c.name} ${c.is_allgemein ? '<span class="pill">Allgemein-Vorlage</span>' : ''}</span></li>
+  `).join('');
+  const catSelects = ['pt-category', 'ct-category', 'special-category'];
+  catSelects.forEach(id => {
+    document.getElementById(id).innerHTML = CATEGORIES.map(c => `<option value="${c.id}">${c.order_idx}. ${c.name}</option>`).join('');
+  });
+}
+
+// ---------- Setup: Point Types ----------
+function addPtSuffixRow(suffix='', dpt='') {
+  const div = document.createElement('div');
+  div.className = 'row';
+  div.innerHTML = `
+    <input type="text" placeholder="Suffix z.B. Schalten" class="pt-suf-name" value="${suffix}">
+    <input type="text" placeholder="DPT z.B. DPST-1-1" class="pt-suf-dpt" value="${dpt}">
+    <button class="btn danger small" onclick="this.parentElement.remove()">x</button>`;
+  document.getElementById('pt-suffixes').appendChild(div);
+}
+
+async function createPointType() {
+  const category_id = parseInt(document.getElementById('pt-category').value);
+  const name = document.getElementById('pt-name').value.trim();
+  const block_size = parseInt(document.getElementById('pt-blocksize').value) || 5;
+  const channel_type = document.getElementById('pt-channeltype').value.trim();
+  const channels_needed = parseInt(document.getElementById('pt-channelsneeded').value) || 1;
+  const suffixes = [...document.querySelectorAll('#pt-suffixes .row')].map(r => ({
+    suffix: r.querySelector('.pt-suf-name').value.trim(),
+    dpt: r.querySelector('.pt-suf-dpt').value.trim()
+  })).filter(s => s.suffix);
+  if (!name || suffixes.length === 0) return alert('Name und mindestens ein Datenpunkt erforderlich');
+  await api('/point-types', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category_id, name, suffixes, block_size, channel_type, channels_needed})});
+  document.getElementById('pt-name').value = '';
+  document.getElementById('pt-channeltype').value = '';
+  document.getElementById('pt-channelsneeded').value = '1';
+  document.getElementById('pt-suffixes').innerHTML = '';
+  await loadPointTypes();
+}
+
+async function loadPointTypes() {
+  POINT_TYPES = await api('/point-types');
+  const ul = document.getElementById('point-types-list');
+  ul.innerHTML = POINT_TYPES.map(pt => {
+    const cat = CATEGORIES.find(c => c.id === pt.category_id);
+    return `<li>
+      <div><b>${pt.name}</b> <span class="pill">${cat?.name||'?'}</span> <span class="pill">Block ${pt.block_size}</span>
+        ${pt.channel_type ? `<span class="pill">Kanal: ${pt.channel_type} ×${pt.channels_needed}</span>` : ''}
+        ${pt.suffixes.map(s=>`<span class="pill">${s.suffix} · ${s.dpt}</span>`).join('')}
+      </div>
+      <button class="btn danger small" onclick="deletePointType(${pt.id})">Löschen</button>
+    </li>`;
+  }).join('') || '<li class="muted">Noch keine Punkttypen</li>';
+}
+
+async function deletePointType(id) {
+  if (!confirm('Diesen Punkttyp löschen?')) return;
+  await api('/point-types/' + id, {method:'DELETE'});
+  await loadPointTypes();
+}
+
+
+// ---------- Setup: Central Templates ----------
+function addCtSuffixRow(suffix='', dpt='') {
+  const div = document.createElement('div');
+  div.className = 'row';
+  div.innerHTML = `
+    <input type="text" placeholder="Suffix z.B. Ein/Aus" class="ct-suf-name" value="${suffix}">
+    <input type="text" placeholder="DPT z.B. DPST-1-1" class="ct-suf-dpt" value="${dpt}">
+    <button class="btn danger small" onclick="this.parentElement.remove()">x</button>`;
+  document.getElementById('ct-suffixes').appendChild(div);
+}
+
+function onCtScopeChange() {
+  const scope = document.getElementById('ct-scope').value;
+  document.getElementById('ct-skip-outdoor-label').style.display = scope === 'floor' ? 'flex' : 'none';
+  document.getElementById('ct-blocksize-label').style.display = scope === 'room_multi' ? 'flex' : 'none';
+  document.getElementById('ct-trigger-label').style.display = scope === 'room_multi' ? 'flex' : 'none';
+}
+
+async function createCentralTemplate() {
+  const category_id = parseInt(document.getElementById('ct-category').value);
+  const scope = document.getElementById('ct-scope').value;
+  const name = document.getElementById('ct-name').value.trim();
+  const skip_outdoor_floors = document.getElementById('ct-skip-outdoor').checked;
+  const blockSizeVal = document.getElementById('ct-blocksize').value.trim();
+  const triggerVal = document.getElementById('ct-trigger').value.trim();
+  const block_size = scope === 'room_multi' && blockSizeVal ? parseInt(blockSizeVal) : null;
+  const trigger_count = scope === 'room_multi' && triggerVal ? parseInt(triggerVal) : null;
+  const suffixes = [...document.querySelectorAll('#ct-suffixes .row')].map(r => ({
+    suffix: r.querySelector('.ct-suf-name').value.trim(),
+    dpt: r.querySelector('.ct-suf-dpt').value.trim()
+  })).filter(s => s.suffix);
+  if (suffixes.length === 0) return alert('Mindestens ein Datenpunkt erforderlich');
+  await api('/central-templates', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category_id, name, scope, suffixes, skip_outdoor_floors, block_size, trigger_count})});
+  document.getElementById('ct-name').value = '';
+  document.getElementById('ct-skip-outdoor').checked = false;
+  document.getElementById('ct-blocksize').value = '';
+  document.getElementById('ct-trigger').value = '2';
+  document.getElementById('ct-suffixes').innerHTML = '';
+  await loadCentralTemplates();
+}
+
+async function loadCentralTemplates() {
+  CENTRAL_TEMPLATES = await api('/central-templates');
+  const ul = document.getElementById('central-templates-list');
+  ul.innerHTML = CENTRAL_TEMPLATES.map(ct => {
+    const cat = CATEGORIES.find(c => c.id === ct.category_id);
+    const extra = [];
+    if (ct.skip_outdoor_floors) extra.push('<span class="pill">ohne Aussen</span>');
+    if (ct.scope === 'room_multi') {
+      extra.push(`<span class="pill">ab ${ct.trigger_count || 2} Punkten</span>`);
+      if (ct.block_size) extra.push(`<span class="pill">Block ${ct.block_size}</span>`);
+    }
+    return `<li>
+      <div><b>${ct.name || '(kein Präfix)'}</b> <span class="pill">${cat?.name||'?'}</span> <span class="pill">${ct.scope}</span> ${extra.join(' ')}
+        ${ct.suffixes.map(s=>`<span class="pill">${s.suffix || '(keiner)'} · ${s.dpt}</span>`).join('')}
+      </div>
+      <button class="btn danger small" onclick="deleteCentralTemplate(${ct.id})">Löschen</button>
+    </li>`;
+  }).join('') || '<li class="muted">Noch keine Vorlagen</li>';
+}
+
+async function deleteCentralTemplate(id) {
+  if (!confirm('Diese Vorlage löschen?')) return;
+  await api('/central-templates/' + id, {method:'DELETE'});
+  await loadCentralTemplates();
+}
+
