@@ -107,9 +107,23 @@ Ein schlankes LXC mit Docker ist die einfachste Variante:
    reicht).
 2. **Nesting** aktivieren (Optionen → Features), damit Docker im LXC
    laufen kann.
-3. `apt update && apt install -y docker.io docker-compose-plugin` (falls
-   dieses Paket auf Ihrer Distribution fehlt, alternativ die
-   `docker-ce`-Pakete direkt von Docker installieren).
+3. Docker installieren. `docker.io`/`docker-compose-plugin` aus den
+   Standard-Ubuntu-Paketquellen reichen **nicht** — `docker-compose-plugin`
+   und `docker-ce` sind Docker's eigene Paketnamen aus deren eigenem
+   APT-Repository, nicht aus Ubuntus Repos, und `apt install` bricht die
+   gesamte Transaktion ab, sobald ein Paketname nicht auflösbar ist (auch
+   `docker.io` wird dann NICHT installiert). Am zuverlässigsten ist Dockers
+   offizielles Installationsskript, das das richtige Repository selbst
+   erkennt (funktioniert auch auf sehr neuen, nicht-LTS-Ubuntu-Versionen
+   wie 25.04 "plucky", bei denen Dockers Repo dem Codename manchmal
+   hinterherhinkt):
+   ```bash
+   curl -fsSL https://get.docker.com -o get-docker.sh
+   sh get-docker.sh
+   ```
+   Installiert `docker-ce`, `docker-ce-cli`, `containerd.io`,
+   `docker-buildx-plugin` und `docker-compose-plugin` in einem Schritt.
+   Danach prüfen: `docker --version && docker compose version`.
 4. Dieses Verzeichnis (per `git clone`) hineinkopieren, hineinwechseln,
    `docker compose up -d --build`.
 5. `http://<lxc-ip>` aufrufen.

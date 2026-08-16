@@ -72,3 +72,23 @@ the user to make explicitly, not something to introduce as a side effect of
 - [`DEPLOYMENT.md`](./DEPLOYMENT.md) — persistence, the self-update
   mechanism, Proxmox/LXC deployment.
 - [`CHANGELOG.md`](./CHANGELOG.md) — notable changes over time.
+
+## Keep docs in sync with code changes
+
+When a change adds/renames/removes a tab, a file/directory, an endpoint, a
+path referenced in docs (e.g. `backend/...`, `frontend/...`), or a
+deployment/dev-setup step, **update the relevant `.md` file(s) in the same
+change** — don't leave it for later:
+
+- `README.md` — if the change affects what a user of the app sees/does (a
+  tab, a workflow, an export format) or any file path mentioned in it.
+- `DEVELOPMENT.md` — if it affects project structure, dev setup, or
+  conventions.
+- `DEPLOYMENT.md` — if it affects persistence, the update mechanism, or
+  deployment steps.
+- `CHANGELOG.md` — add an entry under `[Unreleased]` for any
+  user-/deployer-/developer-visible change.
+
+This applies to structural work in particular — a rename or move that
+isn't reflected in these docs makes them actively misleading rather than
+just incomplete.
