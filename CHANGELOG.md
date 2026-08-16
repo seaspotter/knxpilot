@@ -27,17 +27,22 @@ restructuring below — history before that is available via `git log`.
 - The default Pflichtenheft **Vorbemerkungen** text is now a much fuller
   writeup (contributed by the user): Begriffserklärungen (Sensor, Aktor,
   Szene, ETS), Grundlegende Bedienphilosophie, a per-Gewerk
-  Funktionsübersicht (Beleuchtung, Beschattung, Heizung), and Prioritäten/
-  Schutz-/Zentralfunktionen — replacing the previous shorter text.
-  Installs whose preamble still exactly matches the old default (i.e.
-  never customized) get upgraded to the new one on next startup, same
+  Funktionsübersicht (Beleuchtung, Beschattung, Heizung), Prioritäten/
+  Schutz-/Zentralfunktionen, and a closing Hinweis footnote — replacing
+  the previous shorter text (which itself replaced an even earlier one;
+  both old versions are recognized and upgraded, see below). Installs
+  whose preamble still exactly matches a previous default (i.e. never
+  customized) get upgraded to the current one on next startup, same
   "never touch text someone actually wrote" backfill pattern used when
   this field was first introduced.
 - The Vorbemerkungen field now supports light formatting - blank lines
-  between paragraphs, `##`/`###` for headings/subheadings, `- ` for
-  bullet points, `**text**` for bold - rendered accordingly in the PDF
-  (new `SubHeading`/`BodyBullet` paragraph styles in `backend/
-  pdf_design.py`). Previously it was rendered as flat paragraphs only.
+  between paragraphs, `##`/`###` for a heading, a line that's only
+  `**text**` for a smaller subheading, a line that's only `*text*` for an
+  italic aside/footnote, `---` for a horizontal rule, `- ` for bullet
+  points, and `**text**` inline for bold - rendered accordingly in the
+  PDF (new `SubHeading`/`BodyBullet` paragraph styles in `backend/
+  pdf_design.py`, plus `HRFlowable` for the rule). Previously it was
+  rendered as flat paragraphs only.
 - The Pflichtenheft PDF's optional **Gruppenadressen** section moved to
   always be the last section (after Klärungsliste), regardless of which
   other optional sections are also selected - it's usually the longest

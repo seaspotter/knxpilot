@@ -263,9 +263,12 @@ einzelne Adresse als Tabellenzeile) und passt daher eher ans Ende als
 mitten zwischen die eher erzählenden Abschnitte. Dort lässt sich auch der
 Vorbemerkungen-Text anpassen und über ein eigenes Kontrollkästchen
 ein-/ausblenden, ohne den Text dabei zu verlieren — eine einfache
-Formatierung ist möglich: eine Leerzeile trennt Absätze, `##`/`###` für
-Überschriften/Unterüberschriften, `- ` für Aufzählungspunkte, `**Text**`
-für Fettdruck.
+Formatierung ist möglich: eine Leerzeile trennt Absätze, `##` oder `###`
+für eine Überschrift, eine Zeile die nur aus `**Text**` besteht für eine
+kleinere Unterüberschrift, eine Zeile die nur aus `*Text*` besteht für
+einen kursiven Hinweis/Fussnote, `---` für eine Trennlinie, `- ` am
+Zeilenanfang für Aufzählungspunkte, und `**Text**` mitten im Satz für
+Fettdruck.
 
 Daneben steht **Übergabe-Checkliste herunterladen** — ein zweites,
 weitgehend allgemeines PDF (Sichtprüfung, Funktionsprüfung,

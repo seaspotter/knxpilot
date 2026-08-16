@@ -13,18 +13,97 @@ DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 # Default "Vorbemerkungen" text for the Pflichtenheft PDF - a fuller KNX
 # operating-conventions writeup (glossary, operating philosophy, per-trade
-# overview, priority/safety functions), contributed by the user. Editable/
-# clearable in Setup -> Pflichtenheft. Uses a small markdown-like syntax
-# that backend/routers/pflichtenheft.py's _preamble_story() renders into
-# headings/bullets/bold (## / ### / "- " / **bold** - see that function's
-# docstring); the leading "Allgemeine Vorbemerkungen..." title from the
-# original text is omitted here since the PDF already prints its own
-# "Vorbemerkungen" section heading right before this text. Seeded once on a
-# fresh install (see the company_profile INSERT below), same "only insert
-# into an empty table" convention as seed_defaults()/
-# seed_default_actor_types() - never overwrites a value the user has since
-# edited or cleared.
+# overview, priority/safety functions), contributed by the user (final
+# wording pass). Editable/clearable in Setup -> Pflichtenheft. Uses a small
+# markdown-like syntax that backend/routers/pflichtenheft.py's
+# _preamble_story() renders into headings/bullets/bold/italic/rule (## or
+# ### / a whole-line **bold** / a whole-line *italic* / "---" / "- " /
+# inline **bold** - see that function's docstring). Seeded once on a fresh
+# install (see the company_profile INSERT below), same "only insert into an
+# empty table" convention as seed_defaults()/seed_default_actor_types() -
+# never overwrites a value the user has since edited or cleared.
 DEFAULT_PFLICHTENHEFT_PREAMBLE = (
+    "### Allgemeine Vorbemerkungen und Systemgrundlagen\n\n"
+    "Dieses Pflichtenheft beschreibt die grundlegenden Funktionen, die "
+    "Bedienphilosophie sowie das gewünschte Zusammenspiel der geplanten "
+    "KNX-Anlage. Das Dokument dient als Grundlage für die spätere "
+    "Detailplanung und Parametrierung.\n\n"
+    "**Begriffserklärungen**\n\n"
+    "Um ein einheitliches Verständnis der Systemkomponenten zu "
+    "gewährleisten, werden folgende KNX-Grundbegriffe definiert:\n\n"
+    "- **Sensor:** Ein Gerät, das physikalische Zustände erfasst oder "
+    "Nutzer-Eingaben aufnimmt (z. B. Taster, Präsenzmelder, "
+    "Raumtemperaturregler, Wetterstation).\n"
+    "- **Aktor:** Ein Gerät, das Steuerbefehle empfängt und die physische "
+    "Schaltung oder Fahrt der Verbraucher ausführt (z. B. Schalt-, Dimm-, "
+    "Heizungs- oder Jalousieaktor).\n"
+    "- **Szene:** Ein zusammenfassender Befehl, der bei Auslösung mehrere "
+    "Aktoren gleichzeitig in einen vordefinierten, individuellen Zustand "
+    "versetzt (z. B. Szene „Fernsehen“: Deckenlicht aus, Stehleuchte "
+    "gedimmt, Jalousien geschlossen).\n"
+    "- **ETS:** Die offizielle Software (Engineering Tool Software), mit "
+    "der die logischen Verknüpfungen zwischen den Sensoren und Aktoren "
+    "abschließend programmiert werden.\n\n"
+    "### Grundlegende Bedienphilosophie\n\n"
+    "Die manuelle Bedienung der Anlage über die Tastsensoren im Gebäude "
+    "folgt – sofern nicht explizit anders gefordert – einer einheitlichen, "
+    "gewerkeübergreifenden Logik:\n\n"
+    "- **Tastenbedienung (Kurz/Lang):** Ein kurzer Tastendruck "
+    "(ca. < 0,5 Sekunden) löst stets die primäre Aktion aus (z. B. Licht "
+    "schalten EIN/AUS, Rollladen/Jalousie fahren AUF/AB). Ein langer "
+    "Tastendruck (> 0,5 Sekunden) aktiviert die sekundäre Funktion (z. B. "
+    "Licht stufenlos dimmen, Jalousielamellen schrittweise verstellen).\n"
+    "- **Fahrtunterbrechung:** Wird während der Laufzeit eines Motors "
+    "(Rollladen, Jalousie, Markise) eine beliebige, dem Behang zugeordnete "
+    "Taste gedrückt, stoppt die Fahrt sofort.\n"
+    "- **Statusrückmeldung:** Anlagenzustände (z. B. Licht brennt im "
+    "Außenbereich) oder aktive Betriebsmodi werden, sofern das jeweilige "
+    "Bedienelement dies unterstützt, über eine integrierte Status-LED "
+    "optisch rückgemeldet.\n\n"
+    "### Grobe Funktionsübersicht der Gewerke\n\n"
+    "**Beleuchtung**\n\n"
+    "Die Beleuchtung wird primär über die zugeordneten Tastsensoren oder "
+    "Präsenzmelder geschaltet. Dimmbare Leuchtenkreise lassen sich durch "
+    "langen Tastendruck in ihrer Helligkeit regulieren (heller/dunkler).\n\n"
+    "**Beschattung (Rollläden / Jalousien)**\n\n"
+    "Die Beschattungselemente lassen sich manuell per Tastendruck "
+    "vollständig auf- oder abfahren. Bei Jalousien und Raffstores kann die "
+    "Lamellenstellung zusätzlich über den langen Tastendruck in kleinen "
+    "Schritten (Step-Betrieb) exakt nachjustiert werden, um den "
+    "Lichteinfall zu regulieren.\n\n"
+    "**Raumtemperaturregelung (Heizung)**\n\n"
+    "Die Regelung der Raumtemperatur erfolgt zonen- bzw. raumweise. Jedem "
+    "Raum sind definierte Betriebsmodi zugeordnet, typischerweise eine "
+    "Komforttemperatur (für Anwesenheit/Normalbetrieb) und eine niedrigere "
+    "Absenktemperatur (für Abwesenheit/Nacht). Die Umschaltung der Modi "
+    "sowie die Feineinstellung der Wunschtemperatur erfolgen über das "
+    "Raumbediengerät.\n\n"
+    "### Prioritäten, Schutz- und Zentralfunktionen\n\n"
+    "**Zentralbefehle**\n\n"
+    "Gewerkeübergreifende Sammelbefehle (z. B. „Zentral-Aus“ für alle "
+    "Leuchten oder „Alle Rollläden ab“) fassen Aktionen komfortabel "
+    "zusammen. Sie überschreiben den momentanen Zustand der Aktoren, "
+    "ordnen sich jedoch zwingend den Sicherheitsfunktionen unter.\n\n"
+    "**Sicherheits- und Wetteralarme**\n\n"
+    "Automatische Schutzreaktionen der Anlage (z. B. das Einfahren von "
+    "Markisen und Jalousien bei Windalarm oder Regen) haben absolute "
+    "Priorität. Solange die auslösende Gefahrenbedingung (Wind, Regen, "
+    "Frost) ansteht, werden sämtliche manuellen Bedienbefehle für die "
+    "betroffenen Behänge blockiert, um Beschädigungen zu vermeiden.\n\n"
+    "---\n\n"
+    "*Hinweis: Die konkrete physikalische Zuordnung einzelner Tasten und "
+    "Wippen zu den hier aufgeführten Funktionen erfolgt im Rahmen der "
+    "späteren ETS-Programmierung und ist nicht verbindlicher Bestandteil "
+    "dieses grundlegenden Pflichtenhefts.*"
+)
+
+# Earlier DEFAULT_PFLICHTENHEFT_PREAMBLE texts, most recent first - an
+# install whose preamble still exactly matches one of these (i.e. was never
+# customized, just carried the seeded default forward) gets upgraded to the
+# current DEFAULT_PFLICHTENHEFT_PREAMBLE on next startup. Same "only touch
+# text nobody actually wrote" reasoning as the empty-string backfill below,
+# just matched against known-old-default values instead of ''.
+_SUPERSEDED_PFLICHTENHEFT_PREAMBLES = [
     "Dieses Pflichtenheft beschreibt die grundlegenden Funktionen, die "
     "Bedienphilosophie sowie das gewünschte Zusammenspiel der geplanten "
     "KNX-Anlage. Das Dokument dient als Grundlage für die spätere "
@@ -90,16 +169,7 @@ DEFAULT_PFLICHTENHEFT_PREAMBLE = (
     "Markisen und Jalousien bei Windalarm oder Regen) haben absolute "
     "Priorität. Solange die auslösende Gefahrenbedingung (Wind, Regen, "
     "Frost) ansteht, werden sämtliche manuellen Bedienbefehle für die "
-    "betroffenen Behänge blockiert, um Beschädigungen zu vermeiden."
-)
-
-# Earlier DEFAULT_PFLICHTENHEFT_PREAMBLE texts, most recent first - an
-# install whose preamble still exactly matches one of these (i.e. was never
-# customized, just carried the seeded default forward) gets upgraded to the
-# current DEFAULT_PFLICHTENHEFT_PREAMBLE on next startup. Same "only touch
-# text nobody actually wrote" reasoning as the empty-string backfill below,
-# just matched against known-old-default values instead of ''.
-_SUPERSEDED_PFLICHTENHEFT_PREAMBLES = [
+    "betroffenen Behänge blockiert, um Beschädigungen zu vermeiden.",
     "Tastsensoren/Bedienelemente: Ein kurzer Tastendruck (< 0,3–0,5 s) löst "
     "die primäre Aktion aus (Schalten EIN/AUS, Rollladen/Jalousie AUF/AB), "
     "ein langer Tastendruck die sekundäre (Dimmen heller/dunkler, "

@@ -8,7 +8,7 @@ alongside it.
 import re
 
 from fastapi import APIRouter, HTTPException
-from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, PageBreak, HRFlowable
 from reportlab.lib.units import mm
 
 from ..db import get_db
@@ -31,17 +31,25 @@ def _inline_bold(text):
     return re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
 
 
+_FULLY_BOLD_RE = re.compile(r"^\*\*(.+)\*\*$")
+_FULLY_ITALIC_RE = re.compile(r"^\*([^*].*[^*]|[^*])\*$")
+_HR_RE = re.compile(r"^-{3,}$")
+
+
 def _preamble_story(text, styles):
     """
     Turns the free-text Vorbemerkungen field into formatted flowables using
     a small, deliberately-limited markdown-like syntax (mirrors the
     frontend's own lightweight renderMarkdown() in spirit, not
-    implementation - this one target ReportLab Paragraphs, not HTML):
-      ## Heading       -> subsection heading (RoomHeading style)
-      ### Heading      -> smaller sub-subheading (SubHeading style)
-      - item text      -> bulleted paragraph (BodyBullet style)
-      blank line       -> paragraph break
-      **bold**         -> bold run (anywhere, including inside headings/bullets)
+    implementation - this one targets ReportLab Paragraphs, not HTML):
+      ## Heading / ### Heading  -> subsection heading (RoomHeading style;
+                                    either depth, no separate tier - see below)
+      **Whole line bold**       -> smaller sub-subheading (SubHeading style)
+      *Whole line italic*       -> muted aside/footnote (BodyMuted style)
+      ---                       -> a thin horizontal rule
+      - item text               -> bulleted paragraph (BodyBullet style)
+      blank line                -> paragraph break
+      **bold**/*italic* inline  -> bold/italic run anywhere else
     Anything else is a plain Body paragraph. Blocks are separated by blank
     lines; single newlines within a block are folded into the same
     paragraph (so the textarea's own line-wrapping doesn't force breaks).
@@ -52,10 +60,18 @@ def _preamble_story(text, styles):
         if not block:
             continue
         joined = " ".join(line.strip() for line in block.split("\n"))
-        if joined.startswith("### "):
-            story.append(Paragraph(_inline_bold(joined[4:]), styles["SubHeading"]))
-        elif joined.startswith("## "):
-            story.append(Paragraph(_inline_bold(joined[3:]), styles["RoomHeading"]))
+        bold_match = _FULLY_BOLD_RE.match(joined)
+        italic_match = _FULLY_ITALIC_RE.match(joined)
+        if _HR_RE.match(joined):
+            story.append(HRFlowable(width="100%", thickness=0.5, spaceBefore=2, spaceAfter=2))
+            continue
+        elif joined.startswith("### ") or joined.startswith("## "):
+            heading_text = joined.split(" ", 1)[1]
+            story.append(Paragraph(_inline_bold(heading_text), styles["RoomHeading"]))
+        elif bold_match:
+            story.append(Paragraph(_inline_bold(bold_match.group(0)), styles["SubHeading"]))
+        elif italic_match:
+            story.append(Paragraph(_inline_bold(italic_match.group(1)), styles["BodyMuted"]))
         elif joined.startswith("- "):
             # A blank-line-separated block can itself contain several "- "
             # bullet lines (one per line, no further blank lines between
