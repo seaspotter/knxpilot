@@ -239,8 +239,10 @@ gedacht als Referenz für Kunde und Elektriker, getrennt von den technischen
 GA-/Verdrahtungsdetails. Eine Textvorschau zeigt sofort, was im PDF stehen
 wird; **PDF herunterladen** erzeugt ein mehrseitiges Dokument mit:
 
-- einem **Vorbemerkungen**-Abschnitt (allgemeine Erklärung, wie
-  Schalten/Dimmen/Jalousie/Heizung bedient werden),
+- einem **Vorbemerkungen**-Abschnitt (Begriffserklärungen, allgemeine
+  Bedienphilosophie, Funktionsübersicht je Gewerk, Prioritäts-/
+  Sicherheitsfunktionen — mit sinnvollem Standardtext vorbelegt, siehe
+  unten),
 - den geplanten Funktionen und Geräten je Geschoss/Raum — jede einzelne
   Funktion mit einer leeren **Getestet**-Checkbox zum Abhaken vor Ort nach
   der Inbetriebnahme (rein papierbasiert — es wird nichts im Tool
@@ -252,11 +254,18 @@ wird; **PDF herunterladen** erzeugt ein mehrseitiges Dokument mit:
 Zusätzlich lassen sich im Setup-Tab unter *Pflichtenheft* (siehe unten)
 weitere Abschnitte optional dazuschalten: **Stockwerk- und
 Raumverzeichnis** sowie **Geräteliste** (Stückliste, standardmässig an),
-und **Gruppenadressen**, **Abgangsliste** sowie **Klärungsliste**
+und **Abgangsliste**, **Klärungsliste** sowie **Gruppenadressen**
 (standardmässig aus, da sie ein Projekt schnell sehr lang machen können —
-gezielt für den Einzelfall dazuschalten). Dort lässt sich auch der
+gezielt für den Einzelfall dazuschalten). Gruppenadressen steht dabei
+immer als letzter Abschnitt im PDF, auch wenn die anderen optionalen
+Abschnitte weiter oben ausgewählt sind — es ist meist der längste (jede
+einzelne Adresse als Tabellenzeile) und passt daher eher ans Ende als
+mitten zwischen die eher erzählenden Abschnitte. Dort lässt sich auch der
 Vorbemerkungen-Text anpassen und über ein eigenes Kontrollkästchen
-ein-/ausblenden, ohne den Text dabei zu verlieren.
+ein-/ausblenden, ohne den Text dabei zu verlieren — eine einfache
+Formatierung ist möglich: eine Leerzeile trennt Absätze, `##`/`###` für
+Überschriften/Unterüberschriften, `- ` für Aufzählungspunkte, `**Text**`
+für Fettdruck.
 
 Daneben steht **Übergabe-Checkliste herunterladen** — ein zweites,
 weitgehend allgemeines PDF (Sichtprüfung, Funktionsprüfung,

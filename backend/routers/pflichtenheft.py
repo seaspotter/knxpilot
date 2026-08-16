@@ -5,6 +5,8 @@ device bill of materials - as a customer/electrician-facing PDF. Also exports
 a generic, mostly project-independent handover checklist (Übergabe-Checkliste)
 alongside it.
 """
+import re
+
 from fastapi import APIRouter, HTTPException
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.lib.units import mm
@@ -20,6 +22,52 @@ from .geraeteplanung import device_summary
 from .abgangsliste import build_abgangsliste_story
 
 router = APIRouter(tags=["pflichtenheft"])
+
+
+def _inline_bold(text):
+    """**bold** -> ReportLab's mini-XML <b>bold</b> (Paragraph renders a
+    small HTML-like subset natively - no separate markdown-to-PDF library
+    needed for just this)."""
+    return re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
+
+
+def _preamble_story(text, styles):
+    """
+    Turns the free-text Vorbemerkungen field into formatted flowables using
+    a small, deliberately-limited markdown-like syntax (mirrors the
+    frontend's own lightweight renderMarkdown() in spirit, not
+    implementation - this one target ReportLab Paragraphs, not HTML):
+      ## Heading       -> subsection heading (RoomHeading style)
+      ### Heading      -> smaller sub-subheading (SubHeading style)
+      - item text      -> bulleted paragraph (BodyBullet style)
+      blank line       -> paragraph break
+      **bold**         -> bold run (anywhere, including inside headings/bullets)
+    Anything else is a plain Body paragraph. Blocks are separated by blank
+    lines; single newlines within a block are folded into the same
+    paragraph (so the textarea's own line-wrapping doesn't force breaks).
+    """
+    story = []
+    for block in re.split(r"\n\s*\n", text.strip()):
+        block = block.strip()
+        if not block:
+            continue
+        joined = " ".join(line.strip() for line in block.split("\n"))
+        if joined.startswith("### "):
+            story.append(Paragraph(_inline_bold(joined[4:]), styles["SubHeading"]))
+        elif joined.startswith("## "):
+            story.append(Paragraph(_inline_bold(joined[3:]), styles["RoomHeading"]))
+        elif joined.startswith("- "):
+            # A blank-line-separated block can itself contain several "- "
+            # bullet lines (one per line, no further blank lines between
+            # them) - split back out so each becomes its own bullet.
+            for line in block.split("\n"):
+                line = line.strip()
+                if line.startswith("- "):
+                    story.append(Paragraph(_inline_bold(line[2:]), styles["BodyBullet"]))
+        else:
+            story.append(Paragraph(_inline_bold(joined), styles["Body"]))
+        story.append(Spacer(1, 1.5 * mm))
+    return story
 
 
 def _function_checklist_table(styles, rows_by_category):
@@ -141,9 +189,7 @@ def export_pflichtenheft_pdf(project_id: int):
         preamble = (company.get("pflichtenheft_preamble") or "").strip()
         if preamble and company.get("pflichtenheft_include_vorbemerkungen", True):
             story.append(Paragraph("Vorbemerkungen", styles["SectionHeading"]))
-            for para in preamble.split("\n\n"):
-                story.append(Paragraph(para.replace("\n", "<br/>"), styles["Body"]))
-                story.append(Spacer(1, 1.5 * mm))
+            story += _preamble_story(preamble, styles)
             story.append(Spacer(1, 2 * mm))
 
         # Collect floor/room data once, used for both the directory table and
@@ -207,14 +253,6 @@ def export_pflichtenheft_pdf(project_id: int):
             if central_table:
                 story.append(central_table)
 
-        if company.get("pflichtenheft_include_gruppenadressen", False):
-            ga_story = _gruppenadressen_story(project_id, styles)
-            if ga_story:
-                story.append(PageBreak())
-                story.append(Paragraph("Gruppenadressen", styles["SectionHeading"]))
-                story.append(Spacer(1, 2 * mm))
-                story += ga_story
-
         if company.get("pflichtenheft_include_abgangsliste", False):
             abgangsliste_story = build_abgangsliste_story(db, project_id, styles, page_break_between_floors=False)
             if abgangsliste_story:
@@ -240,6 +278,18 @@ def export_pflichtenheft_pdf(project_id: int):
             story.append(Paragraph("Klärungsliste", styles["SectionHeading"]))
             story.append(Spacer(1, 2 * mm))
             story += _klaerungsliste_story(db, project_id, styles)
+
+        # Gruppenadressen last, deliberately - it's the longest/most
+        # reference-table-like section on a larger project (every GA in a
+        # dense table), so it goes at the very back rather than breaking up
+        # the more narrative sections above it.
+        if company.get("pflichtenheft_include_gruppenadressen", False):
+            ga_story = _gruppenadressen_story(project_id, styles)
+            if ga_story:
+                story.append(PageBreak())
+                story.append(Paragraph("Gruppenadressen", styles["SectionHeading"]))
+                story.append(Spacer(1, 2 * mm))
+                story += ga_story
 
         return build_pdf_response(
             story,

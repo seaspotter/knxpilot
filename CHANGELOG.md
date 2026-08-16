@@ -22,6 +22,29 @@ restructuring below — history before that is available via `git log`.
   a second format is just a new registry entry + `<option>`, not a
   rewrite. New `GET /api/projects/{id}/export-labels.pdf`.
 
+### Changed
+
+- The default Pflichtenheft **Vorbemerkungen** text is now a much fuller
+  writeup (contributed by the user): Begriffserklärungen (Sensor, Aktor,
+  Szene, ETS), Grundlegende Bedienphilosophie, a per-Gewerk
+  Funktionsübersicht (Beleuchtung, Beschattung, Heizung), and Prioritäten/
+  Schutz-/Zentralfunktionen — replacing the previous shorter text.
+  Installs whose preamble still exactly matches the old default (i.e.
+  never customized) get upgraded to the new one on next startup, same
+  "never touch text someone actually wrote" backfill pattern used when
+  this field was first introduced.
+- The Vorbemerkungen field now supports light formatting - blank lines
+  between paragraphs, `##`/`###` for headings/subheadings, `- ` for
+  bullet points, `**text**` for bold - rendered accordingly in the PDF
+  (new `SubHeading`/`BodyBullet` paragraph styles in `backend/
+  pdf_design.py`). Previously it was rendered as flat paragraphs only.
+- The Pflichtenheft PDF's optional **Gruppenadressen** section moved to
+  always be the last section (after Klärungsliste), regardless of which
+  other optional sections are also selected - it's usually the longest
+  (every group address as its own table row), so it now sits after the
+  more narrative sections instead of between Zentral-/Allgemeinfunktionen
+  and Abgangsliste.
+
 ### Fixed
 
 - Frontend files (`frontend/`, served as static files by `backend/
