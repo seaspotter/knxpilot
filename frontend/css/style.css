@@ -163,6 +163,12 @@
   .modal-card h3 { margin:0 0 14px; font-size:15px; }
   .modal-card .modal-actions { justify-content:flex-end; margin:14px 0 0; }
 
+  .label-grid { display:grid; grid-template-columns: repeat(7, 1fr); gap:2px; max-width:280px; margin-top:8px; }
+  .label-cell { aspect-ratio: 2.54 / 1; border:1px solid var(--border); border-radius:2px; background:var(--panel2); cursor:pointer; }
+  .label-cell:hover { border-color:var(--accent); }
+  .label-cell.used { background:var(--bg); border-style:dashed; opacity:0.6; }
+  .label-cell.start { background:var(--accent); border-color:var(--accent); }
+
   @media (max-width: 700px) {
     main { padding:12px; }
     .card { padding:12px; }

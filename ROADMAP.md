@@ -9,12 +9,10 @@ letting it drift into a wishlist nobody trusts.
 
 ## Up next
 
-- [ ] **Labels** — a PDF export of adhesive labels per actor channel (which
-  fuse/circuit belongs to which function/room), for physically labeling the
-  Verteiler. Reuses the existing Abgangsliste data (actor → channel →
-  function is already modeled) and the shared PDF design system
-  (`backend/pdf_design.py`) — no new data model needed, the fastest of the
-  high-priority ideas to build.
+- [x] **Labels** — Avery Zweckform L6037 label sheet export (Abgangsliste
+  sub-tab), one label per actor instance or per channel, with a position
+  picker to resume a partially-used sheet and a test-print/alignment mode.
+  See `CHANGELOG.md` for detail.
 - [ ] **DIN-Rail / Verteiler (cabinet) layout** — given a cabinet's DIN-rail
   rows, RCD/LS Schalter inventory, and available space, generate the
   physical layout: which fuse/RCD group belongs to which circuit, and which

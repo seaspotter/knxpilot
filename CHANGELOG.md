@@ -4,6 +4,21 @@ Notable changes to KNXpilot. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this file starts from the
 restructuring below — history before that is available via `git log`.
 
+## [Unreleased]
+
+### Added
+
+- **Etiketten** export (Abgangsliste sub-tab): prints an Avery Zweckform
+  L6037 label sheet (25.4 × 10 mm, 189 labels/sheet) — one label per
+  actor instance (physical address + location) or per channel (physical
+  address + channel letter, plus the assigned function/`RESERVE`), with a
+  clickable position picker to resume a partially-used sheet instead of
+  starting over, and a debug/test-print mode (border + position number)
+  for checking alignment on plain paper before printing on real label
+  stock. New `backend/labels.py` (the Avery L6037 layout math/canvas
+  renderer, reusable by future label formats) and
+  `GET /api/projects/{id}/export-labels.pdf`.
+
 ## [0.2.0] - 2026-08-16
 
 ### Added

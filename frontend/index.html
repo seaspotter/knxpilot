@@ -201,6 +201,25 @@
             </div>
             <ul class="list" id="circuits-list"></ul>
           </div>
+
+          <div class="card">
+            <h4>Etiketten (Avery Zweckform L6037)</h4>
+            <p class="muted">25,4 × 10 mm, 189 Etiketten je Bogen. Startposition wählen, um einen bereits teilweise bedruckten Bogen weiter zu nutzen — Etiketten davor bleiben leer.</p>
+            <div class="row">
+              <select id="label-source">
+                <option value="actors">Aktoren (physikalische Adresse + Standort)</option>
+                <option value="channels">Kanäle (physikalische Adresse.Kanal + Funktion)</option>
+              </select>
+              <label style="display:flex; align-items:center; gap:4px;">
+                <input type="checkbox" id="label-debug">
+                Testdruck (mit Rahmen, auf Normalpapier prüfen)
+                <span class="info-icon" tabindex="0" data-tip="Vor dem Bedrucken echter Etiketten empfohlen: auf Normalpapier drucken und gegen einen leeren Bogen halten, um die Ausrichtung zu prüfen.">i</span>
+              </label>
+            </div>
+            <div class="label-grid" id="label-position-grid"></div>
+            <p class="muted" id="label-start-text" style="margin-top:6px;"></p>
+            <button class="btn" onclick="downloadLabelsPdf()">PDF herunterladen</button>
+          </div>
         </div>
       </div>
 
