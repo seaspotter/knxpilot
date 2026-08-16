@@ -30,6 +30,11 @@ restructuring below — history before that is available via `git log`.
   now after the Übersicht addition), list rows reflow instead of clipping,
   and touch targets are slightly larger. Purely additive — desktop layout
   is unaffected.
+- Bulk room add: each floor's room quick-add now has a "Mehrere..."
+  toggle revealing a textarea to paste multiple room names at once (one
+  per line), instead of adding them one-by-one. Frontend-only, reuses the
+  existing single-room endpoint in a loop; the original single-room input
+  is unchanged.
 
 ### Changed
 

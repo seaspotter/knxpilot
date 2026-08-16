@@ -166,8 +166,13 @@ async function renderFloors() {
         <div>
           <input type="text" placeholder="Raumname" id="room-name-${floor.id}" style="width:140px;">
           <button class="btn secondary small" onclick="addRoom(${floor.id})">+ Raum hinzufügen</button>
+          <button class="btn secondary small" onclick="toggleBulkRoomInput(${floor.id})">Mehrere...</button>
           <button class="btn danger small" onclick="deleteFloor(${floor.id})">Geschoss löschen</button>
         </div>
+      </div>
+      <div class="row" id="bulk-room-row-${floor.id}" style="display:none;">
+        <textarea id="bulk-room-names-${floor.id}" placeholder="Ein Raumname pro Zeile, z.B.:&#10;Wohnzimmer&#10;Küche&#10;Bad" rows="4" style="flex:1; min-width:220px;"></textarea>
+        <button class="btn secondary small" onclick="addRoomsBulk(${floor.id})">Alle hinzufügen</button>
       </div>
       ${floor.rooms.map(room => renderRoom(room)).join('') || '<p class="muted">Noch keine Räume</p>'}
     </div>
@@ -213,6 +218,24 @@ async function addRoom(floorId) {
   await renderFloors();
   await renderCircuits();
   await renderChannelSummary();
+}
+
+function toggleBulkRoomInput(floorId) {
+  const row = document.getElementById(`bulk-room-row-${floorId}`);
+  row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+}
+
+async function addRoomsBulk(floorId) {
+  const textarea = document.getElementById(`bulk-room-names-${floorId}`);
+  const names = textarea.value.split('\n').map(n => n.trim()).filter(Boolean);
+  if (!names.length) return showToast('Mindestens ein Raumname erforderlich', 'warning');
+  for (const name of names) {
+    await api(`/floors/${floorId}/rooms`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})});
+  }
+  await renderFloors();
+  await renderCircuits();
+  await renderChannelSummary();
+  showToast(`${names.length} Raum/Räume hinzugefügt.`, 'success');
 }
 
 async function deleteRoom(id) {

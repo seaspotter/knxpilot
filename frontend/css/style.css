@@ -34,7 +34,8 @@
   .card h3 { margin:0 0 10px; font-size:14px; color:var(--accent); }
   .card h4 { margin:0 0 8px; font-size:13px; }
   .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
-  input, select { background:var(--panel2); border:1px solid var(--border); color:var(--text); padding:6px 9px; border-radius:6px; font-size:13px; }
+  input, select, textarea { background:var(--panel2); border:1px solid var(--border); color:var(--text); padding:6px 9px; border-radius:6px; font-size:13px; }
+  textarea { font-family:inherit; resize:vertical; }
   input[type=text] { min-width: 140px; }
   input[type=number] { width: 60px; }
   button.btn { background:var(--accent); border:none; color:var(--btn-text); padding:7px 13px; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px; }
