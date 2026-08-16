@@ -140,10 +140,10 @@ Ein schlankes LXC mit Docker ist die einfachste Variante:
 5. `http://<lxc-ip>` aufrufen.
 
 Falls `docker compose pull` mit einem Berechtigungsfehler fehlschlägt: das
-GHCR-Package ist beim allerersten Build evtl. noch privat. Einmalig unter
+GHCR-Package könnte privat sein (Packages erben die Sichtbarkeit eines
+öffentlichen Repos nicht automatisch). Prüfen/ändern unter
 `github.com/seaspotter?tab=packages` → **knxpilot** → **Package settings**
-→ Sichtbarkeit auf **Public** stellen (das Repository selbst ist bereits
-öffentlich, das Package erbt das nicht automatisch).
+→ Sichtbarkeit auf **Public** stellen.
 
 Das Dateisystem des LXC (inkl. der Datenbank) wird automatisch von den
 üblichen Proxmox-Backup-Jobs erfasst.
