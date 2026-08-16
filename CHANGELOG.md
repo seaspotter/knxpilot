@@ -53,6 +53,13 @@ restructuring below — history before that is available via `git log`.
 
 ### Changed
 
+- Split the GA tree preview and CSV export out of the "Funktionen"
+  sub-tab into its own new "Gruppenadressen" sub-tab, so that assigning
+  functions to rooms and viewing/exporting the resulting group addresses
+  are no longer stacked on the same page. Frontend-only — the moved code
+  (`previewGA`, `expandAllGaTree`, `downloadCSV`) now lives in a new
+  `frontend/js/gruppenadressen.js`, following the one-file-per-sub-tab
+  convention.
 - Renamed Setup's "Punkttypen" sub-tab and every user-facing label to
   "Funktionstypen", for terminology consistency with the "Funktionen"
   tab where those types get assigned to rooms (the underlying
@@ -107,6 +114,11 @@ restructuring below — history before that is available via `git log`.
 
 ### Fixed
 
+- The GA tree preview's expand/collapse triangles sat flush against the
+  card's left edge instead of aligning with the rest of the card's
+  content (`.ga-tree summary`'s `list-style-position: outside` pushed
+  the native disclosure marker outside the content box). Changed to
+  `inside`.
 - List rows (`ul.list li`, used by Funktionstypen, Zentral-/
   Allgemeinfunktions-Vorlagen, Kategorien, actor types, etc.) let their
   "Bearbeiten"/"Löschen" buttons wrap onto a second line whenever the

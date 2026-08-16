@@ -107,7 +107,7 @@
   .changelog p { font-size:13px; line-height:1.5; }
   .changelog code { background:var(--panel2); padding:1px 5px; border-radius:4px; font-family:ui-monospace, monospace; font-size:12px; }
   .ga-tree { font-size:13px; }
-  .ga-tree summary { cursor:pointer; padding:4px 0; list-style-position:outside; }
+  .ga-tree summary { cursor:pointer; padding:4px 0; list-style-position:inside; }
   .ga-tree summary:hover { color:var(--accent); }
   .ga-tree .tree-main { margin-bottom:6px; }
   .ga-tree .tree-main > summary { font-weight:700; }

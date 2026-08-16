@@ -69,9 +69,10 @@ in `backend/routers/projects.py` isoliert.
 - **Projekte** — Projekte anlegen/suchen/öffnen; ein Klick auf den kleinen
   Pfeil ▾ daneben öffnet ein Menü mit **Neues Projekt** und
   **Projekt öffnen** als Abkürzung von überall in der App aus. Ein
-  geöffnetes Projekt zeigt einen Arbeitsbereich mit sieben Unterreitern
-  (Übersicht, Gebäudestruktur, Funktionen, Abgangsliste, Geräteplanung,
-  Pflichtenheft, Klärungsliste), die alle am selben Projekt arbeiten.
+  geöffnetes Projekt zeigt einen Arbeitsbereich mit acht Unterreitern
+  (Übersicht, Gebäudestruktur, Funktionen, Gruppenadressen, Abgangsliste,
+  Geräteplanung, Pflichtenheft, Klärungsliste), die alle am selben Projekt
+  arbeiten.
 - **Geräte Katalog** — globaler Gerätekatalog (Aktoren, Sensoren,
   Bedienelemente usw.), gemeinsam für alle Projekte genutzt.
 - **Setup** — Firmenprofil (Name/Adresse/Kontakt/Logo), Kategorien,
@@ -102,7 +103,7 @@ Status/Bestellnummer/Kommentar nachträglich), daneben **⭳ Sichern (JSON)**
 und **× Schliessen**. **× Schliessen** kehrt zur Projektliste zurück, ohne
 etwas zu löschen — beim nächsten Öffnen startet der Arbeitsbereich wieder
 beim Unterreiter Übersicht, der auf einen Blick zeigt, wie weit jeder der
-übrigen sechs Unterreiter gediehen ist (mit direktem Sprung dorthin per
+übrigen sieben Unterreiter gediehen ist (mit direktem Sprung dorthin per
 Klick).
 
 #### Gebäudestruktur
@@ -115,8 +116,8 @@ Unterreiters Funktionen weiter unten.
   Vorlagen ausgeschlossen werden soll.
 - Räume je Geschoss hinzufügen — einzeln, oder über **Mehrere...** eine
   Liste von Raumnamen (ein Name pro Zeile) auf einmal einfügen.
-- Sowohl Geschoss- als auch Raumnamen lassen sich über das ✎-Symbol
-  daneben jederzeit nachträglich umbenennen.
+- Sowohl Geschoss- als auch Raumnamen lassen sich über den
+  **Bearbeiten**-Button daneben jederzeit nachträglich umbenennen.
 
 #### Funktionen
 
@@ -132,7 +133,15 @@ Unterreiters Funktionen weiter unten.
   Zusatzadressen** — Kategorie wählen, festlegen ob es zu
   `Zentralfunktionen` oder einem bestimmten Geschoss gehört, benennen und
   die Datenpunkte angeben.
-- **Vorschau** zur Kontrolle, dann **CSV für ETS6 herunterladen**.
+
+#### Gruppenadressen
+
+- **Vorschau** zeigt die aus Gebäudestruktur und Funktionen erzeugten
+  Gruppenadressen als aufklappbaren Baum (Hauptgruppe → Mittelgruppe →
+  Adresse), **Alle aufklappen**/**Alle einklappen** klappen ihn komplett
+  auf bzw. zu.
+- **CSV für ETS6 herunterladen** exportiert dieselben Adressen als
+  ETS6-kompatible CSV-Datei.
 - **⭳ Sichern (JSON)** (im Projektkopf oben, unterreiterübergreifend
   sichtbar) speichert die komplette Projektdefinition (Metadaten,
   Geschosse, Räume, Punkte, Sonderadressen) als `.json`-Datei — getrennt
