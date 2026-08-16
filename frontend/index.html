@@ -107,6 +107,7 @@
         <button data-subtab="funktionen">Funktionen</button>
         <button data-subtab="gruppenadressen">Gruppenadressen</button>
         <button data-subtab="abgangsliste">Abgangsliste</button>
+        <button data-subtab="labels">Labels</button>
         <button data-subtab="geraeteplanung">Geräteplanung</button>
         <button data-subtab="pflichtenheft">Pflichtenheft</button>
         <button data-subtab="klaerungsliste">Klärungsliste</button>
@@ -201,25 +202,30 @@
             </div>
             <ul class="list" id="circuits-list"></ul>
           </div>
+        </div>
+      </div>
 
-          <div class="card">
-            <h4>Etiketten (Avery Zweckform L6037)</h4>
-            <p class="muted">25,4 × 10 mm, 189 Etiketten je Bogen. Startposition wählen, um einen bereits teilweise bedruckten Bogen weiter zu nutzen — Etiketten davor bleiben leer.</p>
-            <div class="row">
-              <select id="label-source">
-                <option value="actors">Aktoren (physikalische Adresse + Standort)</option>
-                <option value="channels">Kanäle (physikalische Adresse.Kanal + Funktion)</option>
-              </select>
-              <label style="display:flex; align-items:center; gap:4px;">
-                <input type="checkbox" id="label-debug">
-                Testdruck (mit Rahmen, auf Normalpapier prüfen)
-                <span class="info-icon" tabindex="0" data-tip="Vor dem Bedrucken echter Etiketten empfohlen: auf Normalpapier drucken und gegen einen leeren Bogen halten, um die Ausrichtung zu prüfen.">i</span>
-              </label>
-            </div>
-            <div class="label-grid" id="label-position-grid"></div>
-            <p class="muted" id="label-start-text" style="margin-top:6px;"></p>
-            <button class="btn" onclick="downloadLabelsPdf()">PDF herunterladen</button>
+      <div class="subtab" id="subtab-labels">
+        <div class="card">
+          <h4>Labels</h4>
+          <p class="muted">Bedruckt einen Etikettenbogen für die Schaltschrankbeschriftung. Startposition wählen, um einen bereits teilweise bedruckten Bogen weiter zu nutzen — Etiketten davor bleiben leer.</p>
+          <div class="row">
+            <select id="label-format" onchange="renderLabelGrid()">
+              <option value="l6037">Avery Zweckform L6037 (25,4 × 10 mm, 189/Bogen)</option>
+            </select>
+            <select id="label-source">
+              <option value="actors">Aktoren (physikalische Adresse + Standort)</option>
+              <option value="channels">Kanäle (physikalische Adresse.Kanal + Funktion)</option>
+            </select>
+            <label style="display:flex; align-items:center; gap:4px;">
+              <input type="checkbox" id="label-debug">
+              Testdruck (mit Rahmen, auf Normalpapier prüfen)
+              <span class="info-icon" tabindex="0" data-tip="Vor dem Bedrucken echter Etiketten empfohlen: auf Normalpapier drucken und gegen einen leeren Bogen halten, um die Ausrichtung zu prüfen.">i</span>
+            </label>
           </div>
+          <div class="label-grid" id="label-position-grid"></div>
+          <p class="muted" id="label-start-text" style="margin-top:6px;"></p>
+          <button class="btn" onclick="downloadLabelsPdf()">PDF herunterladen</button>
         </div>
       </div>
 
@@ -526,6 +532,7 @@
 <script src="/js/gruppenadressen.js"></script>
 <script src="/js/uebersicht.js"></script>
 <script src="/js/abgangsliste.js"></script>
+<script src="/js/labels.js"></script>
 <script src="/js/geraeteplanung.js"></script>
 <script src="/js/pflichtenheft.js"></script>
 <script src="/js/klaerungsliste.js"></script>

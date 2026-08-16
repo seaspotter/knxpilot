@@ -59,10 +59,10 @@ in `backend/routers/projects.py` isoliert.
   Programmkopf (neben der Versionsnummer) jederzeit, welches — ein Klick
   darauf springt dorthin, das **×** daneben schliesst es direkt von
   überall aus, ohne erst zum Projekte-Tab wechseln zu müssen. Ein
-  geöffnetes Projekt zeigt einen Arbeitsbereich mit acht Unterreitern
+  geöffnetes Projekt zeigt einen Arbeitsbereich mit neun Unterreitern
   (Übersicht, Gebäudestruktur, Funktionen, Gruppenadressen, Abgangsliste,
-  Geräteplanung, Pflichtenheft, Klärungsliste), die alle am selben Projekt
-  arbeiten.
+  Labels, Geräteplanung, Pflichtenheft, Klärungsliste), die alle am selben
+  Projekt arbeiten.
 - **Geräte Katalog** — globaler Gerätekatalog (Aktoren, Sensoren,
   Bedienelemente usw.), gemeinsam für alle Projekte genutzt.
 - **Setup** — Firmenprofil (Name/Adresse/Kontakt/Logo), Kategorien,
@@ -193,19 +193,29 @@ der Busprogrammierung, die andere der Schaltschrank-Verdrahtung.
    Kanal jedes Aktors wird aufgeführt, unbelegte mit `RESERVE` markiert.
    **PDF herunterladen** exportiert dieselben Daten als formatiertes, nach
    Geschoss und Aktor gegliedertes PDF (ein Geschoss pro Seite).
-7. **Etiketten (Avery Zweckform L6037)**: bedruckt einen Avery-L6037-Bogen
-   (25,4 × 10 mm, 189 Etiketten je Bogen) für die Schaltschrankbeschriftung.
-   Zwei Inhaltsarten zur Wahl: **Aktoren** (ein Etikett je Aktor:
-   physikalische Adresse + Standortbezeichnung — genau die Felder, die
-   oben beim Aktor-Anlegen eingegeben wurden) oder **Kanäle** (ein Etikett
-   je Kanal: physikalische Adresse + Kanalbuchstabe, plus die zugeordnete
-   Funktion bzw. `RESERVE`). Auf ein Etikett im Positionsraster klicken,
-   um dort mit dem Druck zu beginnen — praktisch, um einen bereits
-   teilweise bedruckten Bogen weiter zu nutzen, ohne schon bedruckte
-   Etiketten zu überschreiben. **Testdruck** druckt zusätzlich einen
-   Rahmen und die Positionsnummer auf jedes Etikett — empfohlen für einen
-   ersten Ausdruck auf Normalpapier, gegen einen leeren Bogen gehalten,
-   um die Ausrichtung zu prüfen, bevor echte Etiketten bedruckt werden.
+
+#### Labels
+
+Bedruckt einen Etikettenbogen für die Schaltschrankbeschriftung — nutzt
+dieselben Aktoren/Kanäle wie die Abgangsliste, deshalb ein eigener
+Unterreiter direkt daneben statt eine Karte darin.
+
+- **Format**: aktuell nur **Avery Zweckform L6037** (25,4 × 10 mm,
+  189 Etiketten je Bogen) — weitere Formate lassen sich später ergänzen,
+  die Auswahl ist bewusst als Dropdown angelegt.
+- **Inhalt**: **Aktoren** (ein Etikett je Aktor: physikalische Adresse +
+  Standortbezeichnung — genau die Felder, die beim Aktor-Anlegen in der
+  Abgangsliste eingegeben wurden) oder **Kanäle** (ein Etikett je Kanal:
+  physikalische Adresse + Kanalbuchstabe, plus die zugeordnete Funktion
+  bzw. `RESERVE`).
+- **Startposition**: auf ein Etikett im Positionsraster klicken, um dort
+  mit dem Druck zu beginnen — praktisch, um einen bereits teilweise
+  bedruckten Bogen weiter zu nutzen, ohne schon bedruckte Etiketten zu
+  überschreiben.
+- **Testdruck** druckt zusätzlich einen Rahmen und die Positionsnummer
+  auf jedes Etikett — empfohlen für einen ersten Ausdruck auf
+  Normalpapier, gegen einen leeren Bogen gehalten, um die Ausrichtung zu
+  prüfen, bevor echte Etiketten bedruckt werden.
 
 #### Geräteplanung
 

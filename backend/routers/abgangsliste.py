@@ -13,7 +13,7 @@ from reportlab.lib.units import mm
 
 from ..db import get_db
 from ..ga_logic import get_circuits
-from ..labels import render_label_sheet
+from ..labels import LABEL_FORMATS, render_label_sheet
 from ..models import ActorInstanceIn, ChannelAssignIn
 from ..pdf_design import pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response, company_header_block, company_footer_line, PDF_MUTED_COLOR
 from ..utils import join_parts, channel_letters
@@ -367,15 +367,18 @@ def export_abgangsliste_pdf(project_id: int):
 
 
 @router.get("/api/projects/{project_id}/export-labels.pdf")
-def export_labels_pdf(project_id: int, source: str = "actors", start: int = 1, debug: bool = False):
+def export_labels_pdf(project_id: int, format: str = "l6037", source: str = "actors", start: int = 1, debug: bool = False):
     """
-    Avery Zweckform L6037 label sheet (see ../labels.py). Two content
-    sources: "actors" - one label per actor instance (physical_address +
-    location_label, matching how this field is actually used in practice:
-    the cabinet position like "1.1.2" plus a free-text description); or
-    "channels" - one label per channel/circuit (physical_address.letter +
-    the assigned function, or RESERVE if unassigned).
+    Label sheet export (see ../labels.py for the format registry). Two
+    content sources: "actors" - one label per actor instance
+    (physical_address + location_label, matching how this field is
+    actually used in practice: the cabinet position like "1.1.2" plus a
+    free-text description); or "channels" - one label per channel/circuit
+    (physical_address.letter + the assigned function, or RESERVE if
+    unassigned).
     """
+    if format not in LABEL_FORMATS:
+        raise HTTPException(400, f"Unknown label format '{format}'")
     if source not in ("actors", "channels"):
         raise HTTPException(400, "source must be 'actors' or 'channels'")
 
@@ -421,6 +424,7 @@ def export_labels_pdf(project_id: int, source: str = "actors", start: int = 1, d
         return render_label_sheet(
             items,
             filename=f"{project['name'].replace(' ', '_')}_etiketten.pdf",
+            format=format,
             start=start,
             debug=debug,
         )
