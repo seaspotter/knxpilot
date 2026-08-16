@@ -31,24 +31,10 @@
 
   <!-- PROJEKTE TAB -->
   <div class="tab active" id="tab-projects">
-    <div class="card">
-      <h3>Projekte</h3>
-      <div class="row">
-        <input type="text" id="proj-name" placeholder="Neuer Projektname">
-        <input type="text" id="proj-customer" placeholder="Kunde">
-        <input type="text" id="proj-location" placeholder="Standort">
-        <select id="proj-status">
-          <option value="">— Status —</option>
-          <option value="In Planung">In Planung</option>
-          <option value="In Ausführung">In Ausführung</option>
-          <option value="Abgeschlossen">Abgeschlossen</option>
-          <option value="Pausiert">Pausiert</option>
-        </select>
-        <input type="text" id="proj-order-number" placeholder="Bestellnummer">
-      </div>
-      <div class="row">
-        <input type="text" id="proj-comment" placeholder="Kommentar (optional)" style="min-width:300px; flex:1;">
-        <button class="btn" onclick="createProject()">Projekt erstellen</button>
+    <div class="card" id="projects-list-card">
+      <div class="row" style="justify-content:space-between;">
+        <h3 style="margin:0;">Projekte</h3>
+        <button class="btn" onclick="openCreateProjectModal()">+ Neues Projekt</button>
       </div>
       <div class="row">
         <input type="file" id="import-json-file" accept="application/json">
@@ -285,6 +271,14 @@
 
   <!-- SETUP TAB -->
   <div class="tab" id="tab-setup">
+    <div class="subnav" id="setup-subnav">
+      <button data-subtab="firma" class="active">Firma</button>
+      <button data-subtab="kategorien">Kategorien</button>
+      <button data-subtab="punkttypen">Punkttypen</button>
+      <button data-subtab="zentralvorlagen">Zentral-/Allgemeinfunktions-Vorlagen</button>
+    </div>
+
+    <div class="subtab active" id="setup-subtab-firma">
     <div class="card">
       <h3>Firma <span class="info-icon" tabindex="0" data-tip="Ihre Firmenangaben - werden im Programmkopf neben dem KNXpilot-Logo angezeigt und optional als Briefkopf (Logo/Name oben, Adresse/Kontakt in der Fusszeile) auf jedem PDF-Export (Abgangsliste, Geräteliste, Pflichtenheft) übernommen.">i</span></h3>
       <p class="muted">Einmalig hinterlegen - erscheint programmweit im Kopfbereich und optional auf allen PDF-Exporten.</p>
@@ -320,13 +314,17 @@
       </div>
       <div><button class="btn" onclick="saveCompanyProfile()">Firmenprofil speichern</button></div>
     </div>
+    </div>
 
+    <div class="subtab" id="setup-subtab-kategorien">
     <div class="card">
       <h3>Kategorien (Hauptgruppen)</h3>
       <p class="muted">Ihre Standard-Funktionskategorien. Reihenfolge = Hauptgruppennummer. Normalerweise einmalig festgelegt und danach unverändert.</p>
       <ul class="list" id="categories-list"></ul>
     </div>
+    </div>
 
+    <div class="subtab" id="setup-subtab-punkttypen">
     <div class="card">
       <h3>Punkttypen</h3>
       <p class="muted">Wiederverwendbare Bausteine (ein Licht, eine Jalousie, eine Steckdose...) mit ihren Datenpunkten und reserviertem Blockumfang. Der "Kanaltyp" verknüpft einen Punkt mit passenden Aktortypen weiter unten, damit er in der Abgangsliste eines Projekts einem physischen Aktorkanal zugeordnet werden kann.</p>
@@ -345,7 +343,9 @@
       <hr class="sep">
       <ul class="list" id="point-types-list"></ul>
     </div>
+    </div>
 
+    <div class="subtab" id="setup-subtab-zentralvorlagen">
     <div class="card">
       <h3>Zentral-/Allgemeinfunktions-Vorlagen</h3>
       <p class="muted">
@@ -372,6 +372,7 @@
       <div style="margin-top:8px;"><button class="btn" onclick="createCentralTemplate()">Vorlage speichern</button></div>
       <hr class="sep">
       <ul class="list" id="central-templates-list"></ul>
+    </div>
     </div>
   </div>
 

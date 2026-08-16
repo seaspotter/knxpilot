@@ -1,20 +1,55 @@
 // ---------- Projects ----------
-async function createProject() {
-  const name = document.getElementById('proj-name').value.trim();
-  if (!name) return;
-  const customer = document.getElementById('proj-customer').value.trim();
-  const location = document.getElementById('proj-location').value.trim();
-  const status = document.getElementById('proj-status').value;
-  const order_number = document.getElementById('proj-order-number').value.trim();
-  const comment = document.getElementById('proj-comment').value.trim();
-  await api('/projects', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, customer, location, status, order_number, comment})});
-  document.getElementById('proj-name').value = '';
-  document.getElementById('proj-customer').value = '';
-  document.getElementById('proj-location').value = '';
-  document.getElementById('proj-status').value = '';
-  document.getElementById('proj-order-number').value = '';
-  document.getElementById('proj-comment').value = '';
-  await loadProjects();
+function openCreateProjectModal() {
+  const modal = openModal(`
+    <h3>Neues Projekt</h3>
+    <div class="row">
+      <input type="text" id="new-proj-name" placeholder="Projektname" style="min-width:300px; flex:1;">
+    </div>
+    <div class="row">
+      <input type="text" id="new-proj-customer" placeholder="Kunde">
+      <input type="text" id="new-proj-location" placeholder="Standort">
+    </div>
+    <div class="row">
+      <select id="new-proj-status">
+        <option value="">— Status —</option>
+        <option value="In Planung">In Planung</option>
+        <option value="In Ausführung">In Ausführung</option>
+        <option value="Abgeschlossen">Abgeschlossen</option>
+        <option value="Pausiert">Pausiert</option>
+      </select>
+      <input type="text" id="new-proj-order-number" placeholder="Bestellnummer">
+    </div>
+    <div class="row">
+      <input type="text" id="new-proj-comment" placeholder="Kommentar (optional)" style="min-width:300px; flex:1;">
+    </div>
+    <div class="row modal-actions">
+      <button class="btn secondary" data-action="cancel">Abbrechen</button>
+      <button class="btn" data-action="create">Projekt erstellen</button>
+    </div>`, { wide: true });
+
+  document.getElementById('new-proj-name').focus();
+
+  modal.overlay.addEventListener('click', async (ev) => {
+    const action = ev.target.dataset && ev.target.dataset.action;
+    if (action === 'cancel') return modal.close();
+    if (action !== 'create') return;
+
+    const name = document.getElementById('new-proj-name').value.trim();
+    if (!name) return showToast('Projektname ist erforderlich', 'warning');
+    const customer = document.getElementById('new-proj-customer').value.trim();
+    const location = document.getElementById('new-proj-location').value.trim();
+    const status = document.getElementById('new-proj-status').value;
+    const order_number = document.getElementById('new-proj-order-number').value.trim();
+    const comment = document.getElementById('new-proj-comment').value.trim();
+    try {
+      const created = await api('/projects', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, customer, location, status, order_number, comment})});
+      modal.close();
+      await loadProjects();
+      await openProject(created.id, name);
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
+  });
 }
 
 async function loadProjects() {
@@ -55,6 +90,7 @@ async function deleteProject(id) {
   await api('/projects/' + id, {method:'DELETE'});
   if (CURRENT_PROJECT === id) {
     document.getElementById('project-detail').style.display = 'none';
+    document.getElementById('projects-list-card').style.display = '';
     CURRENT_PROJECT = null;
   }
   await loadProjects();
@@ -62,6 +98,7 @@ async function deleteProject(id) {
 
 async function openProject(id, name) {
   CURRENT_PROJECT = id;
+  document.getElementById('projects-list-card').style.display = 'none';
   document.getElementById('project-detail').style.display = 'block';
   document.getElementById('project-detail-title').textContent = name;
   document.getElementById('ga-preview').innerHTML = '';
@@ -84,6 +121,7 @@ async function openProject(id, name) {
 
 function closeProject() {
   document.getElementById('project-detail').style.display = 'none';
+  document.getElementById('projects-list-card').style.display = '';
   CURRENT_PROJECT = null;
 }
 

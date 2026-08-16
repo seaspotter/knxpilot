@@ -116,8 +116,10 @@
     background:var(--panel); border:1px solid var(--border); border-radius:10px;
     padding:18px; max-width:400px; width:100%; box-shadow:0 10px 40px rgba(0,0,0,0.35);
   }
+  .modal-card.wide { max-width:520px; }
   .modal-card p { margin:0 0 16px; font-size:13.5px; line-height:1.5; white-space:pre-line; }
-  .modal-card .row { justify-content:flex-end; margin:0; }
+  .modal-card h3 { margin:0 0 14px; font-size:15px; }
+  .modal-card .modal-actions { justify-content:flex-end; margin:14px 0 0; }
 
   @media (max-width: 700px) {
     main { padding:12px; }

@@ -41,3 +41,12 @@ document.querySelectorAll('#workspace-subnav button').forEach(btn => {
   };
 });
 
+document.querySelectorAll('#setup-subnav button').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('#setup-subnav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#tab-setup .subtab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('setup-subtab-' + btn.dataset.subtab).classList.add('active');
+  };
+});
+

@@ -38,6 +38,19 @@ restructuring below — history before that is available via `git log`.
 
 ### Changed
 
+- Reworked the Projekte and Setup tabs from "everything stacked on one
+  page" into focused views: the Setup tab now has a Firma/Kategorien/
+  Punkttypen/Zentral-Vorlagen sub-nav (same pattern as the project
+  workspace) instead of 4 always-visible cards; opening a project now
+  hides the project list instead of leaving it visible above the
+  workspace; and "create project" is now a modal (auto-focused, opens
+  the new project directly on success) instead of an always-visible
+  inline form. `frontend/js/ui.js`'s `showConfirm` now shares its
+  overlay/Escape/backdrop-click plumbing with the new modal via a
+  `openModal()` helper.
+
+### Changed
+
 - Restructured the project into separate `backend/` (FastAPI) and
   `frontend/` (plain HTML/CSS/JS, no build step) directories, replacing the
   previous single `app/` directory whose `static/index.html` held the
