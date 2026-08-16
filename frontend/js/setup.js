@@ -173,9 +173,8 @@ function exportCategoriesJson() {
 }
 
 async function importCategoriesJson() {
-  const fileInput = document.getElementById('import-categories-file');
-  const file = fileInput.files[0];
-  if (!file) return showToast('Bitte zuerst eine Kategorien-.json-Datei auswählen', 'warning');
+  const file = await openImportModal('Kategorien-Namen importieren', 'Nur die Namen werden abgeglichen (nach Hauptgruppennummer) - fügt nie eine Kategorie hinzu oder entfernt eine, benennt nur die 6 bestehenden um.');
+  if (!file) return;
   const text = await file.text();
   let payload;
   try {
@@ -184,7 +183,6 @@ async function importCategoriesJson() {
     return showToast('Diese Datei ist kein gültiges JSON', 'error');
   }
   const result = await api('/categories/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-  fileInput.value = '';
   await loadCategories();
   showToast(`${result.updated} umbenannt${result.skipped ? `, ${result.skipped} übersprungen` : ''}.`, 'success');
 }
@@ -290,9 +288,8 @@ function exportPointTypesJson() {
 }
 
 async function importPointTypesJson() {
-  const fileInput = document.getElementById('import-pointtypes-file');
-  const file = fileInput.files[0];
-  if (!file) return showToast('Bitte zuerst eine Funktionstypen-.json-Datei auswählen', 'warning');
+  const file = await openImportModal('Funktionstypen importieren', 'Der Import gleicht nach Kategorie+Name ab (bereits vorhandene werden aktualisiert, neue ergänzt).');
+  if (!file) return;
   const text = await file.text();
   let payload;
   try {
@@ -301,7 +298,6 @@ async function importPointTypesJson() {
     return showToast('Diese Datei ist kein gültiges JSON', 'error');
   }
   const result = await api('/point-types/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-  fileInput.value = '';
   await loadPointTypes();
   showToast(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert${result.skipped ? `, ${result.skipped} übersprungen` : ''}.`, 'success');
 }
@@ -428,9 +424,8 @@ function exportCentralTemplatesJson() {
 }
 
 async function importCentralTemplatesJson() {
-  const fileInput = document.getElementById('import-centraltemplates-file');
-  const file = fileInput.files[0];
-  if (!file) return showToast('Bitte zuerst eine Vorlagen-.json-Datei auswählen', 'warning');
+  const file = await openImportModal('Zentral-/Allgemeinfunktions-Vorlagen importieren', 'Der Import gleicht nach Kategorie+Name+Geltungsbereich ab (bereits vorhandene werden aktualisiert, neue ergänzt).');
+  if (!file) return;
   const text = await file.text();
   let payload;
   try {
@@ -439,7 +434,6 @@ async function importCentralTemplatesJson() {
     return showToast('Diese Datei ist kein gültiges JSON', 'error');
   }
   const result = await api('/central-templates/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-  fileInput.value = '';
   await loadCentralTemplates();
   showToast(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert${result.skipped ? `, ${result.skipped} übersprungen` : ''}.`, 'success');
 }

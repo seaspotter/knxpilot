@@ -133,9 +133,8 @@ function exportActorTypesJson() {
 }
 
 async function importActorTypesJson() {
-  const fileInput = document.getElementById('import-actortypes-file');
-  const file = fileInput.files[0];
-  if (!file) return showToast('Bitte zuerst eine Katalog-.json-Datei auswählen', 'warning');
+  const file = await openImportModal('Geräte-Katalog importieren', 'Der Import gleicht nach Hersteller+Modell ab (bereits vorhandene werden aktualisiert, neue ergänzt) - mehrere Kataloge unterschiedlicher Hersteller lassen sich also nacheinander importieren, sie werden zusammengeführt statt ersetzt.');
+  if (!file) return;
   const text = await file.text();
   let payload;
   try {
@@ -144,7 +143,6 @@ async function importActorTypesJson() {
     return showToast('Diese Datei ist kein gültiges JSON', 'error');
   }
   const result = await api('/actor-types/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-  fileInput.value = '';
   await loadActorTypes();
   showToast(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert.`, 'success');
 }

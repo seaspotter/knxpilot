@@ -16,8 +16,8 @@ from reportlab.lib.units import mm
 from reportlab.platypus import Image, SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.pdfgen import canvas as pdfcanvas
 
-PDF_BANNER_COLOR = colors.HexColor("#1e293b")
-PDF_ACCENT_COLOR = colors.HexColor("#15803d")
+PDF_BANNER_COLOR = colors.HexColor("#14532d")
+PDF_ACCENT_COLOR = colors.HexColor("#16a34a")
 PDF_MUTED_COLOR = colors.HexColor("#64748b")
 PDF_BORDER_COLOR = colors.HexColor("#cbd5e1")
 PDF_STRIPE_COLOR = colors.HexColor("#f1f5f9")

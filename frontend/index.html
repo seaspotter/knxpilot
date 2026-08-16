@@ -261,7 +261,14 @@
   <!-- AKTOREN/GERÄTE TAB -->
   <div class="tab" id="tab-aktoren">
     <div class="card">
-      <h3>Geräte-Katalog</h3>
+      <div class="card-header">
+        <h3>Geräte-Katalog</h3>
+        <div class="icon-btn-group">
+          <button class="icon-btn" onclick="exportActorTypesJson()" data-tip="Katalog als JSON exportieren" tabindex="0">⭳</button>
+          <button class="icon-btn" onclick="importActorTypesJson()" data-tip="Katalog aus JSON importieren - gleicht nach Hersteller+Modell ab (vorhandene werden aktualisiert, neue ergänzt), mehrere Kataloge lassen sich also nacheinander importieren." tabindex="0">⭱</button>
+          <button class="icon-btn danger" onclick="clearActorTypeCatalog()" data-tip="Kompletten Katalog leeren" tabindex="0">🗑</button>
+        </div>
+      </div>
       <p class="muted">Globaler Katalog, gemeinsam für alle Projekte genutzt — Aktoren, Sensoren, Wetterstationen, Bedienelemente usw. Kanaltyp/Kanäle sind nur für die Gruppe "Aktor" nötig und müssen dann dem Kanaltyp eines Funktionstyps (Setup-Tab) entsprechen, damit der Aktor in der Abgangsliste eines Projekts zuordenbar ist.</p>
       <div class="row">
         <input type="text" id="actortype-manufacturer" placeholder="Hersteller, z.B. MDT">
@@ -282,13 +289,6 @@
         <input type="text" id="actortype-description" placeholder="Beschreibung (optional)" style="min-width:300px; flex:1;">
         <button class="btn" id="actortype-save-btn" onclick="saveActorType()">Gerät speichern</button>
         <button class="btn secondary small" id="actortype-cancel-btn" onclick="cancelEditActorType()" style="display:none;">Abbrechen</button>
-      </div>
-      <div class="row">
-        <button class="btn secondary small" onclick="exportActorTypesJson()">⭳ Katalog exportieren (JSON)</button>
-        <input type="file" id="import-actortypes-file" accept="application/json">
-        <button class="btn secondary small" onclick="importActorTypesJson()">⭱ Katalog importieren (JSON)</button>
-        <span class="info-icon" tabindex="0" data-tip="Der Import gleicht nach Hersteller+Modell ab (bereits vorhandene werden aktualisiert, neue ergänzt) - mehrere Kataloge unterschiedlicher Hersteller lassen sich also nacheinander importieren, sie werden zusammengeführt statt ersetzt.">i</span>
-        <button class="btn danger small" onclick="clearActorTypeCatalog()">Katalog leeren</button>
       </div>
       <hr class="sep">
       <div class="row">
@@ -349,14 +349,14 @@
 
     <div class="subtab" id="setup-subtab-kategorien">
     <div class="card">
-      <h3>Kategorien (Hauptgruppen)</h3>
-      <p class="muted">Ihre Standard-Funktionskategorien. Reihenfolge = Hauptgruppennummer. Normalerweise einmalig festgelegt und danach unverändert. Das Adressierungsschema selbst (Hauptgruppe = Kategorie, Mittelgruppe = Geschoss, Untergruppe = Punkt) ist fest im Tool verankert, nicht nur hier in der Reihenfolge — ein anderes Schema (z.B. Geschoss als Hauptgruppe) würde eine andere Tool-Variante erfordern, siehe Hilfe-Tab. Deshalb gibt es hier bewusst kein Hinzufügen/Löschen, nur Umbenennen: es sind immer genau 6, jede an einer festen Hauptgruppennummer.</p>
-      <div class="row">
-        <button class="btn secondary small" onclick="exportCategoriesJson()">⭳ Namen exportieren (JSON)</button>
-        <input type="file" id="import-categories-file" accept="application/json">
-        <button class="btn secondary small" onclick="importCategoriesJson()">⭱ Namen importieren (JSON)</button>
-        <span class="info-icon" tabindex="0" data-tip="Nur die Namen werden abgeglichen (nach Hauptgruppennummer) - fügt nie eine Kategorie hinzu oder entfernt eine, benennt nur die 6 bestehenden um.">i</span>
+      <div class="card-header">
+        <h3>Kategorien (Hauptgruppen)</h3>
+        <div class="icon-btn-group">
+          <button class="icon-btn" onclick="exportCategoriesJson()" data-tip="Namen als JSON exportieren" tabindex="0">⭳</button>
+          <button class="icon-btn" onclick="importCategoriesJson()" data-tip="Namen aus JSON importieren - nur die Namen werden abgeglichen (nach Hauptgruppennummer), fügt nie eine Kategorie hinzu oder entfernt eine." tabindex="0">⭱</button>
+        </div>
       </div>
+      <p class="muted">Ihre Standard-Funktionskategorien. Reihenfolge = Hauptgruppennummer. Normalerweise einmalig festgelegt und danach unverändert. Das Adressierungsschema selbst (Hauptgruppe = Kategorie, Mittelgruppe = Geschoss, Untergruppe = Punkt) ist fest im Tool verankert, nicht nur hier in der Reihenfolge — ein anderes Schema (z.B. Geschoss als Hauptgruppe) würde eine andere Tool-Variante erfordern, siehe Hilfe-Tab. Deshalb gibt es hier bewusst kein Hinzufügen/Löschen, nur Umbenennen: es sind immer genau 6, jede an einer festen Hauptgruppennummer.</p>
       <hr class="sep">
       <ul class="list" id="categories-list"></ul>
     </div>
@@ -364,7 +364,14 @@
 
     <div class="subtab" id="setup-subtab-punkttypen">
     <div class="card">
-      <h3>Funktionstypen</h3>
+      <div class="card-header">
+        <h3>Funktionstypen</h3>
+        <div class="icon-btn-group">
+          <button class="icon-btn" onclick="exportPointTypesJson()" data-tip="Funktionstypen als JSON exportieren" tabindex="0">⭳</button>
+          <button class="icon-btn" onclick="importPointTypesJson()" data-tip="Funktionstypen aus JSON importieren - gleicht nach Kategorie+Name ab (vorhandene werden aktualisiert, neue ergänzt)." tabindex="0">⭱</button>
+          <button class="icon-btn danger" onclick="clearPointTypes()" data-tip="Alle Funktionstypen löschen" tabindex="0">🗑</button>
+        </div>
+      </div>
       <p class="muted">Wiederverwendbare Bausteine (ein Licht, eine Jalousie, eine Steckdose...) mit ihren Datenpunkten und reserviertem Blockumfang. Ein Funktionstyp bestimmt, welche Untergruppen entstehen, wenn er im Funktionen-Unterreiter einem Raum zugewiesen wird (z.B. erzeugt "Licht (Dimmen)" die Datenpunkte Schalten/Status/Dimmen unter einer eigenen Adresse je Raum/Label). Der "Kanaltyp" verknüpft einen Punkt mit passenden Aktortypen weiter unten, damit er in der Abgangsliste eines Projekts einem physischen Aktorkanal zugeordnet werden kann. Die vorbelegten Funktionstypen sind ein Vorschlag, kein festes Schema — Datenpunkte/Suffixe/DPTs frei anpassen, oder unten den kompletten Satz löschen und eigene anlegen.</p>
       <div class="row">
         <select id="pt-category"></select>
@@ -382,19 +389,20 @@
         <button class="btn secondary small" id="pt-cancel-btn" onclick="cancelEditPointType()" style="display:none;">Abbrechen</button>
       </div>
       <hr class="sep">
-      <div class="row" style="margin-bottom:8px;">
-        <button class="btn secondary small" onclick="exportPointTypesJson()">⭳ Exportieren (JSON)</button>
-        <input type="file" id="import-pointtypes-file" accept="application/json">
-        <button class="btn secondary small" onclick="importPointTypesJson()">⭱ Importieren (JSON)</button>
-        <button class="btn danger small" onclick="clearPointTypes()">Alle löschen</button>
-      </div>
       <ul class="list" id="point-types-list"></ul>
     </div>
     </div>
 
     <div class="subtab" id="setup-subtab-zentralvorlagen">
     <div class="card">
-      <h3>Zentral-/Allgemeinfunktions-Vorlagen</h3>
+      <div class="card-header">
+        <h3>Zentral-/Allgemeinfunktions-Vorlagen</h3>
+        <div class="icon-btn-group">
+          <button class="icon-btn" onclick="exportCentralTemplatesJson()" data-tip="Vorlagen als JSON exportieren" tabindex="0">⭳</button>
+          <button class="icon-btn" onclick="importCentralTemplatesJson()" data-tip="Vorlagen aus JSON importieren - gleicht nach Kategorie+Name+Geltungsbereich ab (vorhandene werden aktualisiert, neue ergänzt)." tabindex="0">⭱</button>
+          <button class="icon-btn danger" onclick="clearCentralTemplates()" data-tip="Alle Vorlagen löschen" tabindex="0">🗑</button>
+        </div>
+      </div>
       <p class="muted">
         Werden in jedem Projekt automatisch erzeugt, ohne dass Sie sie pro Projekt anlegen müssen — je Kategorie
         entstehen daraus die "Zentralfunktionen"-Mittelgruppe(n) bzw., bei der Kategorie Allgemein, eigene
@@ -424,12 +432,6 @@
         <button class="btn secondary small" id="ct-cancel-btn" onclick="cancelEditCentralTemplate()" style="display:none;">Abbrechen</button>
       </div>
       <hr class="sep">
-      <div class="row" style="margin-bottom:8px;">
-        <button class="btn secondary small" onclick="exportCentralTemplatesJson()">⭳ Exportieren (JSON)</button>
-        <input type="file" id="import-centraltemplates-file" accept="application/json">
-        <button class="btn secondary small" onclick="importCentralTemplatesJson()">⭱ Importieren (JSON)</button>
-        <button class="btn danger small" onclick="clearCentralTemplates()">Alle löschen</button>
-      </div>
       <ul class="list" id="central-templates-list"></ul>
     </div>
     </div>

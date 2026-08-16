@@ -158,3 +158,35 @@ function openRenameModal(currentName, { title = 'Umbenennen' } = {}) {
     });
   });
 }
+
+// Single file-picker dialog -> Promise<File|null> (null if cancelled/closed
+// without choosing a file). Callers still do their own read/parse/upload -
+// this only replaces the "pick a file" step, so behavior stays identical to
+// the previous always-visible <input type="file"> + separate button.
+function openImportModal(title, hint) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const modal = openModal(`
+      <h3>${title}</h3>
+      ${hint ? `<p class="muted">${hint}</p>` : ''}
+      <div class="row"><input type="file" id="import-modal-file" accept="application/json"></div>
+      <div class="row modal-actions">
+        <button class="btn secondary" data-action="cancel">Abbrechen</button>
+        <button class="btn" data-action="import">Importieren</button>
+      </div>`, {
+      onClose: () => { if (!settled) { settled = true; resolve(null); } },
+    });
+    const doImport = () => {
+      const file = modal.overlay.querySelector('#import-modal-file').files[0];
+      if (!file) return showToast('Bitte zuerst eine Datei auswählen', 'warning');
+      settled = true;
+      resolve(file);
+      modal.close();
+    };
+    modal.overlay.addEventListener('click', (ev) => {
+      const action = ev.target.dataset && ev.target.dataset.action;
+      if (action === 'import') doImport();
+      if (action === 'cancel') modal.close();
+    });
+  });
+}

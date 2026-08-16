@@ -1,11 +1,11 @@
   :root {
     --bg: #0f172a; --panel: #1e293b; --panel2: #0b1220; --panel3: #111c30; --border: #334155;
-    --text: #e2e8f0; --muted: #94a3b8; --accent: #2dd4bf; --accent2: #22c55e;
+    --text: #e2e8f0; --muted: #94a3b8; --accent: #4ade80; --accent2: #22c55e;
     --danger: #f87171; --warn: #fbbf24; --btn-text: #0b1220;
   }
   :root[data-theme="light"] {
     --bg: #f8fafc; --panel: #ffffff; --panel2: #f1f5f9; --panel3: #eef2f7; --border: #cbd5e1;
-    --text: #0f172a; --muted: #55647a; --accent: #0d9488; --accent2: #16a34a;
+    --text: #0f172a; --muted: #55647a; --accent: #166534; --accent2: #16a34a;
     --danger: #dc2626; --warn: #b45309; --btn-text: #ffffff;
   }
   * { box-sizing: border-box; }
@@ -92,6 +92,23 @@
     background:var(--panel3); border:1px solid var(--border); color:var(--text);
     padding:8px 10px; border-radius:6px; font-size:12px; font-weight:400;
     width:230px; white-space:normal; line-height:1.4; box-shadow:0 4px 14px rgba(0,0,0,0.3);
+  }
+  .card-header { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
+  .card-header h3 { margin:0; }
+  .icon-btn-group { display:flex; gap:4px; flex-shrink:0; }
+  .icon-btn {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:30px; height:30px; border-radius:6px; flex-shrink:0;
+    background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    font-size:14px; cursor:pointer; position:relative;
+  }
+  .icon-btn:hover, .icon-btn:focus { color:var(--accent); border-color:var(--accent); outline:none; }
+  .icon-btn.danger:hover, .icon-btn.danger:focus { color:var(--danger); border-color:var(--danger); }
+  .icon-btn:hover::after, .icon-btn:focus::after {
+    content: attr(data-tip); position:absolute; right:0; top:140%; z-index:30;
+    background:var(--panel3); border:1px solid var(--border); color:var(--text);
+    padding:8px 10px; border-radius:6px; font-size:12px; font-weight:400;
+    width:220px; white-space:normal; line-height:1.4; box-shadow:0 4px 14px rgba(0,0,0,0.3);
   }
   hr.sep { border:none; border-top:1px solid var(--border); margin:14px 0; }
   .stat-grid { display:flex; flex-wrap:wrap; gap:10px; }

@@ -104,9 +104,15 @@ restructuring below — history before that is available via `git log`.
   "Speichern" instead of "Firmenprofil speichern" — clearer given both
   tabs save fields on the same underlying profile record.
 - The app's accent color (buttons, headings, active-tab underline,
-  links) changed from blue to a green/teal, and the PDF exports'
-  accent color (room/section headings) changed from blue to green
-  (`#15803d`) — no more blue left in the design system.
+  links) changed from blue to green, and the PDF exports' banner/table-
+  header/section-heading color changed from dark navy to dark green —
+  no more blue left anywhere in the design system.
+- Export/Import/"Alle löschen" for the Geräte Katalog and Setup →
+  Kategorien/Funktionstypen/Zentral-Vorlagen moved from a row of wide
+  text buttons into a compact icon-button group in each card's top-right
+  corner (hover for a tooltip). Import now opens a small popup to choose
+  the file instead of an always-visible file picker next to the button —
+  new shared `openImportModal()` helper in `frontend/js/ui.js`.
 - README.md is now a short landing page (pitch, screenshots, key
   features, quickstart, links) instead of the full manual — all detailed
   per-tab usage instructions, the GA addressing model, and the CSV
