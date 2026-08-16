@@ -19,13 +19,14 @@ CSV export format (verified against real ETS6 exports):
     Main / Middle / Sub / Address / Central / Unfiltered / Description / DatapointType / Security
     DPTs are written as "DPST-x-y". Security is always "Auto".
 
-This file just wires everything together - see app/routers/ for the actual
-endpoints, grouped by tab (setup, geraete, projects, abgangsliste,
-geraeteplanung, klaerungsliste, pflichtenheft, system), app/db.py for the
-schema/migrations/seed data, app/ga_logic.py for GA-tree generation, and
-app/pdf_design.py for the shared PDF look-and-feel.
+This file just wires everything together - see backend/routers/ for the
+actual endpoints, grouped by tab (setup, geraete, projects, abgangsliste,
+geraeteplanung, klaerungsliste, pflichtenheft, system), backend/db.py for the
+schema/migrations/seed data, backend/ga_logic.py for GA-tree generation, and
+backend/pdf_design.py for the shared PDF look-and-feel. The frontend (plain
+HTML/CSS/JS, no build step) lives in ../frontend/, mounted below.
 
-Run with: uvicorn app.main:app --host 0.0.0.0 --port 8000
+Run with: uvicorn backend.main:app --host 0.0.0.0 --port 8000
 """
 from pathlib import Path
 
@@ -48,4 +49,4 @@ app.include_router(klaerungsliste.router)
 app.include_router(pflichtenheft.router)
 app.include_router(system.router)
 
-app.mount("/", StaticFiles(directory=Path(__file__).parent / "static", html=True), name="static")
+app.mount("/", StaticFiles(directory=Path(__file__).parent.parent / "frontend", html=True), name="static")
