@@ -31,11 +31,17 @@ Zeilen zu überspringen: ein kleines Testprojekt exportieren und mit der
 Ausgabe des Tools vergleichen — der CSV-Schreiber ist in `export_csv()`
 in `backend/routers/projects.py` isoliert.
 
-## Die vier Tabs
+## Die fünf Tabs
 
 - **Projekte** — Projekte anlegen/suchen/öffnen; ein Klick auf den kleinen
   Pfeil ▾ daneben öffnet ein Menü mit **Neues Projekt** und
-  **Projekt öffnen** als Abkürzung von überall in der App aus. Ein
+  **Projekt öffnen** (öffnet ein Suchfenster mit allen Projekten, wählt
+  direkt eines aus — auch von einem anderen bereits offenen Projekt aus,
+  ohne es vorher schliessen zu müssen) als Abkürzung von überall in der
+  App aus. Ist ein Projekt geöffnet, zeigt eine kleine Marke 📁 im
+  Programmkopf (neben der Versionsnummer) jederzeit, welches — ein Klick
+  darauf springt dorthin, das **×** daneben schliesst es direkt von
+  überall aus, ohne erst zum Projekte-Tab wechseln zu müssen. Ein
   geöffnetes Projekt zeigt einen Arbeitsbereich mit acht Unterreitern
   (Übersicht, Gebäudestruktur, Funktionen, Gruppenadressen, Abgangsliste,
   Geräteplanung, Pflichtenheft, Klärungsliste), die alle am selben Projekt
@@ -50,6 +56,7 @@ in `backend/routers/projects.py` isoliert.
   Reihenfolge direkt den festen KNX-Hauptgruppennummern entspricht.
 - **Update** — prüft auf Wunsch, ob auf GitHub eine neuere Version vorliegt,
   installiert sie, und zeigt das Änderungsprotokoll dieses Tools an.
+- **Hilfe** — diese Anleitung, direkt in der App.
 
 ### Projekte
 
@@ -63,13 +70,17 @@ einer zuvor exportierten Datei ein neues Projekt an (siehe Gruppenadressen
 unten) — existiert bereits ein Projekt mit gleichem Namen, wird der Import
 als "<Name> (imported)" gespeichert statt es zu überschreiben.
 
-**Öffnen** eines Projekts zeigt dessen Arbeitsbereich (die Projektliste
-wird dabei ausgeblendet, nicht darunter weiter angezeigt): oben die
-Projekt-Metadaten mit **Bearbeiten**-Button (ändert Name/Kunde/Standort/
-Status/Bestellnummer/Kommentar nachträglich), daneben **⭳ Sichern (JSON)**
-und **× Schliessen**. **× Schliessen** kehrt zur Projektliste zurück, ohne
-etwas zu löschen — beim nächsten Öffnen startet der Arbeitsbereich wieder
-beim Unterreiter Übersicht, der auf einen Blick zeigt, wie weit jeder der
+**Öffnen** eines Projekts (aus der Liste, oder über das Suchfenster
+**Projekt öffnen** im ▾-Menü) zeigt dessen Arbeitsbereich (die
+Projektliste wird dabei ausgeblendet, nicht darunter weiter angezeigt):
+oben die Projekt-Metadaten mit **Bearbeiten**-Button (ändert
+Name/Kunde/Standort/Status/Bestellnummer/Kommentar nachträglich),
+daneben **⭳ Sichern (JSON)** und **× Schliessen**. Ein zweites Projekt
+über **Projekt öffnen** auszuwählen wechselt direkt dorthin, ohne das
+erste vorher schliessen zu müssen. **× Schliessen** (oder das **×** an
+der 📁-Marke im Programmkopf) kehrt zur Projektliste zurück, ohne etwas
+zu löschen — beim nächsten Öffnen startet der Arbeitsbereich wieder beim
+Unterreiter Übersicht, der auf einen Blick zeigt, wie weit jeder der
 übrigen sieben Unterreiter gediehen ist (mit direktem Sprung dorthin per
 Klick).
 

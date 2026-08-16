@@ -53,6 +53,63 @@ function openCreateProjectModal() {
   });
 }
 
+// ---------- Project picker modal (used by the "Projekt öffnen" nav item) ----------
+async function openProjectPickerModal() {
+  await loadProjects();
+  const modal = openModal(`
+    <h3>Projekt öffnen</h3>
+    <div class="row">
+      <input type="text" id="picker-project-filter" placeholder="🔍 Suchen (Name, Kunde, Standort, Status, Bestellnummer)..." style="min-width:300px; flex:1;">
+    </div>
+    <ul class="list" id="picker-projects-list" style="max-height:400px; overflow-y:auto;"></ul>
+    <div class="row modal-actions">
+      <button class="btn secondary" data-action="cancel">Abbrechen</button>
+    </div>`, { wide: true });
+
+  const renderPicker = () => {
+    const query = document.getElementById('picker-project-filter').value.trim().toLowerCase();
+    const filtered = !query ? PROJECTS_LIST : PROJECTS_LIST.filter(p =>
+      [p.name, p.customer, p.location, p.status, p.order_number]
+        .some(field => (field || '').toLowerCase().includes(query))
+    );
+    document.getElementById('picker-projects-list').innerHTML = filtered.map(p => `
+      <li>
+        <div>
+          <b>${p.name}</b>
+          ${p.customer ? `<span class="pill">${p.customer}</span>` : ''}
+          ${p.location ? `<span class="pill">${p.location}</span>` : ''}
+          ${p.status ? `<span class="pill">${p.status}</span>` : ''}
+        </div>
+        <button class="btn secondary small" data-open-id="${p.id}">Öffnen</button>
+      </li>`).join('') || `<li class="muted">${query ? 'Keine Projekte gefunden' : 'Noch keine Projekte'}</li>`;
+  };
+  renderPicker();
+  document.getElementById('picker-project-filter').focus();
+  document.getElementById('picker-project-filter').addEventListener('input', renderPicker);
+
+  modal.overlay.addEventListener('click', async (ev) => {
+    if (ev.target.dataset.action === 'cancel') return modal.close();
+    const openId = ev.target.dataset.openId;
+    if (!openId) return;
+    const p = PROJECTS_LIST.find(p => p.id === parseInt(openId));
+    if (!p) return;
+    modal.close();
+    document.querySelector('nav button[data-tab="projects"]').click();
+    await openProject(p.id, p.name);
+  });
+}
+
+function updateHeaderProjectChip() {
+  const chip = document.getElementById('header-current-project');
+  const p = PROJECTS_LIST.find(p => p.id === CURRENT_PROJECT);
+  if (p) {
+    document.getElementById('header-current-project-name').textContent = p.name;
+    chip.style.display = '';
+  } else {
+    chip.style.display = 'none';
+  }
+}
+
 async function loadProjects() {
   PROJECTS_LIST = await api('/projects');
   renderProjectsList();
@@ -93,6 +150,7 @@ async function deleteProject(id) {
     document.getElementById('project-detail').style.display = 'none';
     document.getElementById('projects-list-card').style.display = '';
     CURRENT_PROJECT = null;
+    updateHeaderProjectChip();
   }
   await loadProjects();
 }
@@ -125,6 +183,7 @@ function closeProject() {
   document.getElementById('project-detail').style.display = 'none';
   document.getElementById('projects-list-card').style.display = '';
   CURRENT_PROJECT = null;
+  updateHeaderProjectChip();
 }
 
 // ---------- Project metadata (edit-in-place) ----------
@@ -136,6 +195,7 @@ function renderProjectMeta() {
     .filter(Boolean).map(v => `<span class="pill">${v}</span>`).join('');
   document.getElementById('project-meta-pills').innerHTML = pills;
   document.getElementById('project-meta-comment').textContent = p.comment || '';
+  updateHeaderProjectChip();
 }
 
 function editProjectMeta() {

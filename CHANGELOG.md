@@ -8,6 +8,14 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- A "Projekt öffnen" picker modal (nav dropdown → **Projekt öffnen**):
+  search across all projects and open one directly, from any tab,
+  without needing to close whatever project is currently open first —
+  picking a project always switches straight to it.
+- A small 📁 project-name badge in the header, visible from every tab
+  once a project is open, with its own **×** to close directly (no need
+  to go back to the Projekte tab first). Updates live on open, rename,
+  and delete.
 - A new **Hilfe** tab renders the full usage manual (`MANUAL.md`) in-app,
   via a new `GET /api/system/manual` endpoint and `frontend/js/hilfe.js`.
   The Markdown-to-HTML renderer that used to be private to the Update
