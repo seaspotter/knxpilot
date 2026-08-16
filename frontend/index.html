@@ -416,9 +416,12 @@
       <p class="muted">Steuert, was im Pflichtenheft-PDF-Export erscheint (siehe Projekt-Tab Pflichtenheft).</p>
 
       <div class="row">
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-vorbemerkungen"> Vorbemerkungen im PDF anzeigen</label>
+      </div>
+      <div class="row">
         <label style="display:block; width:100%;">
-          Vorbemerkungen
-          <span class="info-icon" tabindex="0" data-tip="Allgemeiner Erklärungstext (z.B. wie Schalten/Dimmen/Jalousie/Heizung bedient werden), der als eigener Abschnitt am Anfang jedes Pflichtenheft-PDFs erscheint. Mit sinnvollem Standardtext vorbelegt - hier anpassen oder leeren, um den Abschnitt ganz wegzulassen.">i</span>
+          Vorbemerkungen-Text
+          <span class="info-icon" tabindex="0" data-tip="Allgemeiner Erklärungstext (z.B. wie Schalten/Dimmen/Jalousie/Heizung bedient werden), der als eigener Abschnitt am Anfang jedes Pflichtenheft-PDFs erscheint. Mit sinnvollem Standardtext vorbelegt - hier anpassen, oder oben abwählen, um den Abschnitt weglassen ohne den Text zu verlieren.">i</span>
           <textarea id="company-pflichtenheft-preamble" rows="6" style="width:100%; margin-top:6px; font-family:inherit;"></textarea>
         </label>
       </div>
@@ -432,7 +435,7 @@
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-abgangsliste"> Abgangsliste</label>
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-klaerungsliste"> Klärungsliste</label>
       </div>
-      <div style="margin-top:10px;"><button class="btn" onclick="saveCompanyProfile()">Firmenprofil speichern</button></div>
+      <div style="margin-top:10px;"><button class="btn" onclick="saveCompanyProfile()">Speichern</button></div>
     </div>
     </div>
   </div>

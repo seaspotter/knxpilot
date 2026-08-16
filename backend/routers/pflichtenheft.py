@@ -139,7 +139,7 @@ def export_pflichtenheft_pdf(project_id: int):
         story.append(Spacer(1, 4 * mm))
 
         preamble = (company.get("pflichtenheft_preamble") or "").strip()
-        if preamble:
+        if preamble and company.get("pflichtenheft_include_vorbemerkungen", True):
             story.append(Paragraph("Vorbemerkungen", styles["SectionHeading"]))
             for para in preamble.split("\n\n"):
                 story.append(Paragraph(para.replace("\n", "<br/>"), styles["Body"]))

@@ -205,7 +205,8 @@ Raumverzeichnis** sowie **Geräteliste** (Stückliste, standardmässig an),
 und **Gruppenadressen**, **Abgangsliste** sowie **Klärungsliste**
 (standardmässig aus, da sie ein Projekt schnell sehr lang machen können —
 gezielt für den Einzelfall dazuschalten). Dort lässt sich auch der
-Vorbemerkungen-Text anpassen oder leeren.
+Vorbemerkungen-Text anpassen und über ein eigenes Kontrollkästchen
+ein-/ausblenden, ohne den Text dabei zu verlieren.
 
 Daneben steht **Übergabe-Checkliste herunterladen** — ein zweites,
 weitgehend allgemeines PDF (Sichtprüfung, Funktionsprüfung,
@@ -306,11 +307,13 @@ gleichzeitig sichtbar.
 - **Die Hauptgruppe einer Kategorie wird nur erzeugt, wenn sie im Projekt
   tatsächlich verwendet wird** — z.B. erscheint keine Hauptgruppe
   Steckdosen samt Zentralfunktion, wenn nie eine Steckdose hinzugefügt wird.
-- **Pflichtenheft** — der Vorbemerkungen-Text (siehe oben) sowie fünf
-  Kontrollkästchen, die steuern, welche zusätzlichen Abschnitte im
-  Pflichtenheft-PDF erscheinen: Stockwerk-/Raumverzeichnis, Geräteliste
-  (beide standardmässig an), Gruppenadressen, Abgangsliste und
-  Klärungsliste (standardmässig aus). Gilt global für alle Projekte,
+- **Pflichtenheft** — der Vorbemerkungen-Text (mit einem sinnvollen
+  Standardtext vorbelegt: kurzer/langer Tastendruck, Beleuchtung,
+  Rollladen/Jalousie, Heizung, Zentral-/Wetterfunktionen) sowie sechs
+  Kontrollkästchen, die steuern, was im Pflichtenheft-PDF erscheint:
+  Vorbemerkungen, Stockwerk-/Raumverzeichnis, Geräteliste (alle drei
+  standardmässig an), Gruppenadressen, Abgangsliste und Klärungsliste
+  (standardmässig aus). Gilt global für alle Projekte,
   wie der Rest des Firmenprofils.
 
 ### Update

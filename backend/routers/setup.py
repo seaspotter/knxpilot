@@ -18,6 +18,7 @@ def get_company_profile():
             "id": r["id"], "name": r["name"], "address": r["address"], "email": r["email"],
             "website": r["website"], "phone": r["phone"], "logo_data_url": r["logo_data_url"],
             "show_on_pdf": bool(r["show_on_pdf"]), "pflichtenheft_preamble": r["pflichtenheft_preamble"],
+            "pflichtenheft_include_vorbemerkungen": bool(r["pflichtenheft_include_vorbemerkungen"]),
             "pflichtenheft_include_struktur": bool(r["pflichtenheft_include_struktur"]),
             "pflichtenheft_include_geraeteliste": bool(r["pflichtenheft_include_geraeteliste"]),
             "pflichtenheft_include_gruppenadressen": bool(r["pflichtenheft_include_gruppenadressen"]),
@@ -32,11 +33,13 @@ def update_company_profile(cp: CompanyProfileIn):
         db.execute(
             "UPDATE company_profile SET name=?, address=?, email=?, website=?, phone=?, "
             "logo_data_url=?, show_on_pdf=?, pflichtenheft_preamble=?, "
+            "pflichtenheft_include_vorbemerkungen=?, "
             "pflichtenheft_include_struktur=?, pflichtenheft_include_geraeteliste=?, "
             "pflichtenheft_include_gruppenadressen=?, pflichtenheft_include_abgangsliste=?, "
             "pflichtenheft_include_klaerungsliste=? WHERE id=1",
             (cp.name, cp.address, cp.email, cp.website, cp.phone, cp.logo_data_url,
              int(cp.show_on_pdf), cp.pflichtenheft_preamble,
+             int(cp.pflichtenheft_include_vorbemerkungen),
              int(cp.pflichtenheft_include_struktur), int(cp.pflichtenheft_include_geraeteliste),
              int(cp.pflichtenheft_include_gruppenadressen), int(cp.pflichtenheft_include_abgangsliste),
              int(cp.pflichtenheft_include_klaerungsliste)),

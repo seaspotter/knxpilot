@@ -10,6 +10,7 @@ async function loadCompanyProfile() {
   document.getElementById('company-website').value = c.website || '';
   document.getElementById('company-show-on-pdf').checked = !!c.show_on_pdf;
   document.getElementById('company-pflichtenheft-preamble').value = c.pflichtenheft_preamble || '';
+  document.getElementById('pht-include-vorbemerkungen').checked = !!c.pflichtenheft_include_vorbemerkungen;
   document.getElementById('pht-include-struktur').checked = !!c.pflichtenheft_include_struktur;
   document.getElementById('pht-include-geraeteliste').checked = !!c.pflichtenheft_include_geraeteliste;
   document.getElementById('pht-include-gruppenadressen').checked = !!c.pflichtenheft_include_gruppenadressen;
@@ -122,6 +123,7 @@ async function saveCompanyProfile() {
     logo_data_url: COMPANY_LOGO_DATA_URL,
     show_on_pdf: document.getElementById('company-show-on-pdf').checked,
     pflichtenheft_preamble: document.getElementById('company-pflichtenheft-preamble').value.trim(),
+    pflichtenheft_include_vorbemerkungen: document.getElementById('pht-include-vorbemerkungen').checked,
     pflichtenheft_include_struktur: document.getElementById('pht-include-struktur').checked,
     pflichtenheft_include_geraeteliste: document.getElementById('pht-include-geraeteliste').checked,
     pflichtenheft_include_gruppenadressen: document.getElementById('pht-include-gruppenadressen').checked,

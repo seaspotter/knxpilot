@@ -12,21 +12,35 @@ DB_PATH = Path(__file__).parent / "data" / "knx_ga.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 # Default "Vorbemerkungen" text for the Pflichtenheft PDF - generic KNX
-# operating conventions, editable/clearable in Setup (Firma tab). Seeded once
+# operating conventions, condensed from common real-world Pflichtenheft
+# templates (short/long press, lighting, Rollladen/Jalousie, heating,
+# central/weather-triggered functions) without the page-length detail of
+# those originals (no exact Kelvin/LED specifics, no vendor-specific
+# marketing text). Editable/clearable in Setup -> Pflichtenheft. Seeded once
 # on a fresh install (see the company_profile INSERT below), same "only
 # insert into an empty table" convention as seed_defaults()/
 # seed_default_actor_types() - never overwrites a value the user has since
 # edited or cleared.
 DEFAULT_PFLICHTENHEFT_PREAMBLE = (
-    "Die Bedienung erfolgt grundsätzlich über Taster bzw. Bedienelemente: "
-    "ein kurzer Tastendruck schaltet Beleuchtung EIN/AUS bzw. fährt Rollladen/"
-    "Jalousie AUF/AB, ein langer Tastendruck dimmt die Beleuchtung heller/"
-    "dunkler bzw. verstellt die Lamellen. Ein kurzer Tastendruck während "
-    "einer laufenden Fahrt stoppt diese sofort.\n\n"
-    "Die Raumheizung wird über die jeweiligen Raumbediengeräte geregelt: "
-    "eine Komforttemperatur für den normalen Betrieb und eine niedrigere "
-    "Absenktemperatur bei längerer Abwesenheit sind je Raum hinterlegt und "
-    "individuell anpassbar.\n\n"
+    "Tastsensoren/Bedienelemente: Ein kurzer Tastendruck (< 0,3–0,5 s) löst "
+    "die primäre Aktion aus (Schalten EIN/AUS, Rollladen/Jalousie AUF/AB), "
+    "ein langer Tastendruck die sekundäre (Dimmen heller/dunkler, "
+    "Lamellenverstellung). Ein Tastendruck während einer laufenden Fahrt "
+    "stoppt diese sofort.\n\n"
+    "Beleuchtung: Schalten über die zugeordnete Ein-/Aus-Taste, dimmbare "
+    "Beleuchtung zusätzlich per langem Tastendruck. Eine Status-Rückmeldung "
+    "(LED bzw. Anzeige am Bedienelement) zeigt den aktuellen Zustand.\n\n"
+    "Rollladen/Jalousie: Fahrt AUF/AB per Tastendruck, Stop durch erneutes "
+    "kurzes Drücken während der Fahrt. Bei Jalousien lässt sich die "
+    "Lamellenstellung zusätzlich in kleinen Schritten nachjustieren.\n\n"
+    "Heizung: Je Raum ist eine Komforttemperatur (Normalbetrieb) und eine "
+    "niedrigere Absenktemperatur (bei Abwesenheit) hinterlegt; beide sind "
+    "individuell anpassbar, die Umschaltung erfolgt über das jeweilige "
+    "Raumbediengerät.\n\n"
+    "Zentral-/Wetterfunktionen: Sammelbefehle (z.B. \"Alle Rollläden ab\") "
+    "sowie automatische Reaktionen auf Wind/Regen (z.B. Rollläden/Markisen "
+    "einfahren) haben Vorrang vor manuellen Befehlen, solange die "
+    "auslösende Bedingung ansteht.\n\n"
     "Die konkrete Zuordnung von Tasten/Wippen zu den nachfolgend "
     "aufgeführten Funktionen erfolgt bei der ETS-Programmierung und ist "
     "nicht Bestandteil dieses Dokuments."
@@ -214,6 +228,7 @@ def init_db():
                 logo_data_url TEXT NOT NULL DEFAULT '',
                 show_on_pdf INTEGER NOT NULL DEFAULT 0,
                 pflichtenheft_preamble TEXT NOT NULL DEFAULT '',
+                pflichtenheft_include_vorbemerkungen INTEGER NOT NULL DEFAULT 1,
                 pflichtenheft_include_struktur INTEGER NOT NULL DEFAULT 1,
                 pflichtenheft_include_geraeteliste INTEGER NOT NULL DEFAULT 1,
                 pflichtenheft_include_gruppenadressen INTEGER NOT NULL DEFAULT 0,
@@ -243,6 +258,8 @@ def init_db():
             ("klaerungen", "antwort", "ALTER TABLE klaerungen ADD COLUMN antwort TEXT NOT NULL DEFAULT ''"),
             ("company_profile", "pflichtenheft_preamble",
              "ALTER TABLE company_profile ADD COLUMN pflichtenheft_preamble TEXT NOT NULL DEFAULT ''"),
+            ("company_profile", "pflichtenheft_include_vorbemerkungen",
+             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_vorbemerkungen INTEGER NOT NULL DEFAULT 1"),
             ("company_profile", "pflichtenheft_include_struktur",
              "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_struktur INTEGER NOT NULL DEFAULT 1"),
             ("company_profile", "pflichtenheft_include_geraeteliste",

@@ -9,15 +9,21 @@ restructuring below — history before that is available via `git log`.
 ### Added
 
 - A new **Setup → Pflichtenheft** sub-tab controls what the Pflichtenheft
-  PDF export includes: the Vorbemerkungen text, plus five checkboxes for
-  optional sections — Stockwerk-/Raumverzeichnis and Geräteliste (on by
-  default, matching prior behavior), and new **Gruppenadressen**,
-  **Abgangsliste**, and **Klärungsliste** sections (off by default, since
-  they can make a larger project's Pflichtenheft very long) —
-  `company_profile` gained five new columns for these toggles. The
-  Abgangsliste export's per-floor/actuator/channel rendering was factored
-  out into a shared `build_abgangsliste_story()` so both the standalone
-  export and this optional section use the same code.
+  PDF export includes: the Vorbemerkungen text, plus six checkboxes —
+  whether to show Vorbemerkungen at all (new, lets you keep the text
+  saved but hide the section), Stockwerk-/Raumverzeichnis and
+  Geräteliste (on by default, matching prior behavior), and
+  **Gruppenadressen**, **Abgangsliste**, and **Klärungsliste** sections
+  (off by default, since they can make a larger project's Pflichtenheft
+  very long) — `company_profile` gained six new columns for these
+  toggles. The Abgangsliste export's per-floor/actuator/channel
+  rendering was factored out into a shared `build_abgangsliste_story()`
+  so both the standalone export and this optional section use the same
+  code.
+- The default Vorbemerkungen text (seeded on fresh installs) now covers
+  more ground - Beleuchtung, Rollladen/Jalousie treated separately,
+  Heizung, and Zentral-/Wetterfunktionen - condensed from common
+  real-world Pflichtenheft templates without their page-length detail.
 - Pflichtenheft PDF, made more professional: a **Vorbemerkungen** section
   (general operating-convention text, editable/clearable in the new Setup
   → Pflichtenheft tab, seeded with sensible default wording on fresh
@@ -63,6 +69,11 @@ restructuring below — history before that is available via `git log`.
 
 ### Changed
 
+- Setup → Pflichtenheft's save button now reads "Speichern" instead of
+  "Firmenprofil speichern" — that label made sense on the Firma tab
+  (where it still says that), but was confusing on a tab about
+  Pflichtenheft settings, even though both save the same underlying
+  profile record.
 - README.md is now a short landing page (pitch, screenshots, key
   features, quickstart, links) instead of the full manual — all detailed
   per-tab usage instructions, the GA addressing model, and the CSV
