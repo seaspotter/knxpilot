@@ -136,6 +136,7 @@ function renderProjectsList() {
       </div>
       <div>
         <button class="btn secondary small" onclick="openProject(${p.id}, '${p.name.replace(/'/g,"\\'")}')">Öffnen</button>
+        <button class="btn secondary small" onclick="duplicateProject(${p.id})">Duplizieren</button>
         <button class="btn danger small" onclick="deleteProject(${p.id})">Löschen</button>
       </div>
     </li>`).join('') || (query
@@ -358,9 +359,8 @@ function exportProjectJson() {
 }
 
 async function importProjectJson() {
-  const fileInput = document.getElementById('import-json-file');
-  const file = fileInput.files[0];
-  if (!file) return showToast('Bitte zuerst eine Sicherungs-.json-Datei auswählen', 'warning');
+  const file = await openImportModal('Projekt aus Sicherung wiederherstellen', 'Erstellt ein neues Projekt aus einer zuvor per "Sichern (JSON)" heruntergeladenen Datei. Existiert bereits ein Projekt mit demselben Namen, wird die Wiederherstellung als "<Name> (imported)" angelegt.');
+  if (!file) return;
   const text = await file.text();
   let payload;
   try {
@@ -369,12 +369,21 @@ async function importProjectJson() {
     return showToast('Diese Datei ist kein gültiges JSON', 'error');
   }
   const result = await api('/projects/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-  fileInput.value = '';
   await loadProjects();
   if (result.skipped && result.skipped.length) {
     showToast(`Importiert als "${result.name}".\n\nEinige Elemente wurden übersprungen, da ihr Funktionstyp/ihre Kategorie auf dieser Installation nicht existiert:\n- ${result.skipped.join('\n- ')}`, 'warning', {sticky: true});
   } else {
     showToast(`Importiert als "${result.name}".`, 'success');
+  }
+}
+
+async function duplicateProject(id, { open = false } = {}) {
+  const result = await api(`/projects/${id}/duplicate`, {method:'POST'});
+  await loadProjects();
+  showToast(`Dupliziert als "${result.name}".`, 'success');
+  if (open) {
+    document.querySelector('nav button[data-tab="projects"]').click();
+    await openProject(result.id, result.name);
   }
 }
 

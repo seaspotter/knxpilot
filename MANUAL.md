@@ -82,22 +82,28 @@ Kunde, Standort, Status und Bestellnummer, die als Badges neben jedem
 Projektnamen erscheinen. **+ Neues Projekt** öffnet ein Formular (Name,
 Kunde, Standort, Status, Bestellnummer, Kommentar — alle Felder ausser
 Name optional) und wechselt nach dem Anlegen direkt in den Arbeitsbereich
-des neuen Projekts. **⭱ Aus Sicherung wiederherstellen (JSON)** legt aus
-einer zuvor exportierten Datei ein neues Projekt an (siehe Gruppenadressen
-unten) — existiert bereits ein Projekt mit gleichem Namen, wird der Import
-als "<Name> (imported)" gespeichert statt es zu überschreiben.
+des neuen Projekts. Das ⭱-Symbol oben rechts in der Kopfzeile öffnet ein
+Popup zum **Wiederherstellen aus einer JSON-Sicherung**: Datei auswählen,
+importieren — legt daraus ein neues Projekt an (siehe Gruppenadressen
+unten); existiert bereits ein Projekt mit gleichem Namen, wird der Import
+als "<Name> (imported)" gespeichert statt es zu überschreiben. Jede Zeile
+der Liste hat ausserdem **Öffnen**, **Duplizieren** und **Löschen**
+— Duplizieren legt sofort eine vollständige Kopie an ("<Name> (Kopie)",
+bei mehrfachem Duplizieren fortlaufend nummeriert), ohne Umweg über eine
+Datei.
 
 **Öffnen** eines Projekts (aus der Liste, oder über das Suchfenster
 **Projekt öffnen** im ▾-Menü) zeigt dessen Arbeitsbereich (die
 Projektliste wird dabei ausgeblendet, nicht darunter weiter angezeigt):
 oben die Projekt-Metadaten mit **Bearbeiten**-Button (ändert
 Name/Kunde/Standort/Status/Bestellnummer/Kommentar nachträglich),
-daneben **⭳ Sichern (JSON)** und **× Schliessen**. Ein zweites Projekt
-über **Projekt öffnen** auszuwählen wechselt direkt dorthin, ohne das
-erste vorher schliessen zu müssen. **× Schliessen** (oder das **×** an
-der 📁-Marke im Programmkopf) kehrt zur Projektliste zurück, ohne etwas
-zu löschen — beim nächsten Öffnen startet der Arbeitsbereich wieder beim
-Unterreiter Übersicht, der auf einen Blick zeigt, wie weit jeder der
+daneben zwei Symbole — **⭳** (als JSON sichern) und **⧉** (duplizieren,
+wechselt direkt in die neue Kopie) — sowie **× Schliessen**. Ein zweites
+Projekt über **Projekt öffnen** auszuwählen wechselt direkt dorthin, ohne
+das erste vorher schliessen zu müssen. **× Schliessen** (oder das **×**
+an der 📁-Marke im Programmkopf) kehrt zur Projektliste zurück, ohne
+etwas zu löschen — beim nächsten Öffnen startet der Arbeitsbereich wieder
+beim Unterreiter Übersicht, der auf einen Blick zeigt, wie weit jeder der
 übrigen sieben Unterreiter gediehen ist (mit direktem Sprung dorthin per
 Klick).
 
@@ -138,14 +144,18 @@ Unterreiters Funktionen weiter unten.
   komplett auf bzw. zu.
 - **CSV für ETS6 herunterladen** exportiert dieselben Adressen als
   ETS6-kompatible CSV-Datei.
-- **⭳ Sichern (JSON)** (im Projektkopf oben, unterreiterübergreifend
-  sichtbar) speichert die komplette Projektdefinition (Metadaten,
-  Geschosse, Räume, Punkte, Sonderadressen) als `.json`-Datei — getrennt
-  von der ETS-CSV, gedacht zum Sichern / Duplizieren / Umziehen eines
-  Projekts zwischen Installationen. Beim Wiederherstellen werden
-  Funktionstypen/Kategorien per Name mit der Zielinstallation abgeglichen; was
-  nicht übereinstimmt, wird übersprungen und gemeldet, nie einfach
-  angenommen.
+- **⭳** (im Projektkopf oben, unterreiterübergreifend sichtbar) speichert
+  die komplette Projektdefinition (Metadaten, Geschosse, Räume, Punkte,
+  Sonderadressen) als `.json`-Datei — getrennt von der ETS-CSV, gedacht
+  zum Sichern oder Umziehen eines Projekts zwischen Installationen (über
+  das ⭱-Symbol in der Projektliste wieder einspielbar). Beim
+  Wiederherstellen werden Funktionstypen/Kategorien per Name mit der
+  Zielinstallation abgeglichen; was nicht übereinstimmt, wird
+  übersprungen und gemeldet, nie einfach angenommen. Für eine schnelle
+  Kopie auf derselben Installation (z.B. als Vorlage für ein ähnliches
+  Objekt) gibt es stattdessen **Duplizieren** (⧉ im Projektkopf, oder als
+  Button direkt in der Projektliste) — legt ohne Datei-Umweg sofort eine
+  komplette Kopie an.
 
 #### Abgangsliste
 

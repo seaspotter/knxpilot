@@ -8,6 +8,17 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- **Duplizieren** for projects: a one-click, same-install copy (floors,
+  rooms, points, specials, and metadata), available both from a project's
+  own header and as a button in each row of the project list. Auto-names
+  the copy "<Name> (Kopie)" (numbered if that name is already taken) and,
+  from the project header, switches straight into the new copy. New
+  `POST /api/projects/{id}/duplicate` endpoint - builds on the existing
+  export/import-json logic (now factored into shared
+  `_build_project_payload()`/`_insert_project_from_payload()` helpers) but
+  skips the JSON round-trip and can never skip an item, since Point Types/
+  Categories always match themselves on the same install.
+
 - Export/import (JSON) for Setup → Kategorien, Funktionstypen, and
   Zentral-/Allgemeinfunktions-Vorlagen — the same pattern the Geräte
   Katalog already had, so the new "Alle löschen" buttons (below) are
@@ -113,6 +124,10 @@ restructuring below — history before that is available via `git log`.
   corner (hover for a tooltip). Import now opens a small popup to choose
   the file instead of an always-visible file picker next to the button —
   new shared `openImportModal()` helper in `frontend/js/ui.js`.
+- The projects list's "Aus Sicherung wiederherstellen" and the opened
+  project's "Sichern (JSON)" moved the same way, into icon buttons (⭱ in
+  the list header, ⭳ next to the new ⧉ Duplizieren icon in the project
+  header) instead of a wide text button/inline file input.
 - README.md is now a short landing page (pitch, screenshots, key
   features, quickstart, links) instead of the full manual — all detailed
   per-tab usage instructions, the GA addressing model, and the CSV
