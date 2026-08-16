@@ -28,8 +28,8 @@ async function saveActorType() {
   const isAktor = group_name === 'Aktor';
   const channel_type = isAktor ? document.getElementById('actortype-channeltype').value.trim() : '';
   const channel_count = isAktor ? (parseInt(document.getElementById('actortype-count').value) || 1) : null;
-  if (!model) return alert('Modell ist erforderlich');
-  if (isAktor && !channel_type) return alert('Type ist für die Gruppe "Aktor" erforderlich');
+  if (!model) return showToast('Modell ist erforderlich', 'warning');
+  if (isAktor && !channel_type) return showToast('Type ist für die Gruppe "Aktor" erforderlich', 'warning');
   const body = JSON.stringify({manufacturer, model, group_name, description, channel_type, channel_count});
   if (EDITING_ACTOR_TYPE_ID) {
     await api('/actor-types/' + EDITING_ACTOR_TYPE_ID, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
@@ -122,7 +122,7 @@ function renderActorTypesList() {
 }
 
 async function deleteActorType(id) {
-  if (!confirm('Dieses Gerät löschen?')) return;
+  if (!(await showConfirm('Dieses Gerät löschen?', {danger: true}))) return;
   if (EDITING_ACTOR_TYPE_ID === id) cancelEditActorType();
   await api('/actor-types/' + id, {method:'DELETE'});
   await loadActorTypes();
@@ -135,17 +135,17 @@ function exportActorTypesJson() {
 async function importActorTypesJson() {
   const fileInput = document.getElementById('import-actortypes-file');
   const file = fileInput.files[0];
-  if (!file) return alert('Bitte zuerst eine Katalog-.json-Datei auswählen');
+  if (!file) return showToast('Bitte zuerst eine Katalog-.json-Datei auswählen', 'warning');
   const text = await file.text();
   let payload;
   try {
     payload = JSON.parse(text);
   } catch (e) {
-    return alert('Diese Datei ist kein gültiges JSON');
+    return showToast('Diese Datei ist kein gültiges JSON', 'error');
   }
   const result = await api('/actor-types/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
   fileInput.value = '';
   await loadActorTypes();
-  alert(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert.`);
+  showToast(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert.`, 'success');
 }
 

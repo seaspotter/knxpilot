@@ -51,7 +51,7 @@ function renderProjectsList() {
 }
 
 async function deleteProject(id) {
-  if (!confirm('Dieses Projekt und alles darin löschen?')) return;
+  if (!(await showConfirm('Dieses Projekt und alles darin löschen?', {danger: true}))) return;
   await api('/projects/' + id, {method:'DELETE'});
   if (CURRENT_PROJECT === id) {
     document.getElementById('project-detail').style.display = 'none';
@@ -78,6 +78,7 @@ async function openProject(id, name) {
   await renderSpecialLocationOptions();
   await renderSpecials();
   await refreshKlaerungsBadge();
+  await refreshAbgangslisteBadge();
 }
 
 function closeProject() {
@@ -116,7 +117,7 @@ function cancelEditProjectMeta() {
 
 async function saveProjectMeta() {
   const name = document.getElementById('pm-name').value.trim();
-  if (!name) return alert('Projektname ist erforderlich');
+  if (!name) return showToast('Projektname ist erforderlich', 'warning');
   const body = JSON.stringify({
     name,
     customer: document.getElementById('pm-customer').value.trim(),
@@ -265,7 +266,7 @@ async function createSpecial() {
     suffix: r.querySelector('.sp-suf-name').value.trim(),
     dpt: r.querySelector('.sp-suf-dpt').value.trim()
   })).filter(s => s.suffix);
-  if (!name || suffixes.length === 0) return alert('Name und mindestens ein Datenpunkt erforderlich');
+  if (!name || suffixes.length === 0) return showToast('Name und mindestens ein Datenpunkt erforderlich', 'warning');
   await api(`/projects/${CURRENT_PROJECT}/specials`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category_id, location, name, suffixes})});
   document.getElementById('special-name').value = '';
   document.getElementById('special-suffixes').innerHTML = '';
@@ -319,21 +320,21 @@ function exportProjectJson() {
 async function importProjectJson() {
   const fileInput = document.getElementById('import-json-file');
   const file = fileInput.files[0];
-  if (!file) return alert('Bitte zuerst eine Sicherungs-.json-Datei auswählen');
+  if (!file) return showToast('Bitte zuerst eine Sicherungs-.json-Datei auswählen', 'warning');
   const text = await file.text();
   let payload;
   try {
     payload = JSON.parse(text);
   } catch (e) {
-    return alert('Diese Datei ist kein gültiges JSON');
+    return showToast('Diese Datei ist kein gültiges JSON', 'error');
   }
   const result = await api('/projects/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
   fileInput.value = '';
   await loadProjects();
   if (result.skipped && result.skipped.length) {
-    alert(`Importiert als "${result.name}".\n\nEinige Elemente wurden übersprungen, da ihr Punkttyp/ihre Kategorie auf dieser Installation nicht existiert:\n- ${result.skipped.join('\n- ')}`);
+    showToast(`Importiert als "${result.name}".\n\nEinige Elemente wurden übersprungen, da ihr Punkttyp/ihre Kategorie auf dieser Installation nicht existiert:\n- ${result.skipped.join('\n- ')}`, 'warning', {sticky: true});
   } else {
-    alert(`Importiert als "${result.name}".`);
+    showToast(`Importiert als "${result.name}".`, 'success');
   }
 }
 

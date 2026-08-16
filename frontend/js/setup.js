@@ -82,7 +82,7 @@ function onCompanyLogoFileChange(event) {
   if (!file) return;
   const MAX_BYTES = 2 * 1024 * 1024; // 2 MB - round-trips as base64 on every Setup load
   if (file.size > MAX_BYTES) {
-    alert('Logo ist zu gross (max. 2 MB). Bitte ein kleineres Bild wählen.');
+    showToast('Logo ist zu gross (max. 2 MB). Bitte ein kleineres Bild wählen.', 'warning');
     event.target.value = '';
     return;
   }
@@ -161,7 +161,7 @@ async function createPointType() {
     suffix: r.querySelector('.pt-suf-name').value.trim(),
     dpt: r.querySelector('.pt-suf-dpt').value.trim()
   })).filter(s => s.suffix);
-  if (!name || suffixes.length === 0) return alert('Name und mindestens ein Datenpunkt erforderlich');
+  if (!name || suffixes.length === 0) return showToast('Name und mindestens ein Datenpunkt erforderlich', 'warning');
   await api('/point-types', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category_id, name, suffixes, block_size, channel_type, channels_needed})});
   document.getElementById('pt-name').value = '';
   document.getElementById('pt-channeltype').value = '';
@@ -186,7 +186,7 @@ async function loadPointTypes() {
 }
 
 async function deletePointType(id) {
-  if (!confirm('Diesen Punkttyp löschen?')) return;
+  if (!(await showConfirm('Diesen Punkttyp löschen?', {danger: true}))) return;
   await api('/point-types/' + id, {method:'DELETE'});
   await loadPointTypes();
 }
@@ -223,7 +223,7 @@ async function createCentralTemplate() {
     suffix: r.querySelector('.ct-suf-name').value.trim(),
     dpt: r.querySelector('.ct-suf-dpt').value.trim()
   })).filter(s => s.suffix);
-  if (suffixes.length === 0) return alert('Mindestens ein Datenpunkt erforderlich');
+  if (suffixes.length === 0) return showToast('Mindestens ein Datenpunkt erforderlich', 'warning');
   await api('/central-templates', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category_id, name, scope, suffixes, skip_outdoor_floors, block_size, trigger_count})});
   document.getElementById('ct-name').value = '';
   document.getElementById('ct-skip-outdoor').checked = false;
@@ -254,7 +254,7 @@ async function loadCentralTemplates() {
 }
 
 async function deleteCentralTemplate(id) {
-  if (!confirm('Diese Vorlage löschen?')) return;
+  if (!(await showConfirm('Diese Vorlage löschen?', {danger: true}))) return;
   await api('/central-templates/' + id, {method:'DELETE'});
   await loadCentralTemplates();
 }

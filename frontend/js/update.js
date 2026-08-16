@@ -29,7 +29,7 @@ async function checkForUpdate() {
 }
 
 async function performUpdate() {
-  if (!confirm('Neueste Version laden und die App jetzt neu starten?')) return;
+  if (!(await showConfirm('Neueste Version laden und die App jetzt neu starten?'))) return;
   const statusEl = document.getElementById('update-status');
   const btn = document.getElementById('update-btn');
   btn.disabled = true;
@@ -37,7 +37,7 @@ async function performUpdate() {
   try {
     const result = await api('/system/update', {method: 'POST'});
     if (!result.ok) {
-      alert('Update fehlgeschlagen:\n\n' + result.message);
+      showToast('Update fehlgeschlagen:\n\n' + result.message, 'error', {sticky: true});
       statusEl.textContent = '';
       btn.disabled = false;
       return;
@@ -46,13 +46,13 @@ async function performUpdate() {
       statusEl.textContent = 'Startet neu...';
       await waitForRestartThenReload();
     } else {
-      alert(result.message);
+      showToast(result.message, 'info', {sticky: true});
       statusEl.textContent = '';
       btn.disabled = false;
       await checkForUpdate();
     }
   } catch (e) {
-    alert('Update fehlgeschlagen: ' + e.message);
+    showToast('Update fehlgeschlagen: ' + e.message, 'error', {sticky: true});
     statusEl.textContent = '';
     btn.disabled = false;
   }

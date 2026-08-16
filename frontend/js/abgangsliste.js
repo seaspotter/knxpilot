@@ -19,6 +19,18 @@ async function renderChannelSummary() {
         <span class="pill" style="${s.open > 0 ? 'color:var(--warn);' : ''}">${s.open} offen</span>
       </div>
     </li>`).join('') || '<li class="muted">Noch keine Abgänge vorhanden</li>';
+  updateAbgangslisteBadgeText(summary);
+}
+
+function updateAbgangslisteBadgeText(summary) {
+  const openCount = summary.reduce((sum, s) => sum + (s.open || 0), 0);
+  const btn = document.querySelector('#workspace-subnav button[data-subtab="abgangsliste"]');
+  if (btn) btn.textContent = openCount > 0 ? `Abgangsliste (${openCount})` : 'Abgangsliste';
+}
+
+async function refreshAbgangslisteBadge() {
+  const summary = await api(`/projects/${CURRENT_PROJECT}/channel-summary`);
+  updateAbgangslisteBadgeText(summary);
 }
 
 // ---------- Abgangsliste: Actor Instances ----------
@@ -34,7 +46,7 @@ async function renderActorInstanceForm() {
 
 async function addActorInstance() {
   const actor_type_id = parseInt(document.getElementById('ai-actortype').value);
-  if (!actor_type_id) return alert('Zuerst einen Aktortyp im Aktoren-Tab anlegen');
+  if (!actor_type_id) return showToast('Zuerst einen Aktortyp im Aktoren-Tab anlegen', 'warning');
   const floorVal = document.getElementById('ai-floor').value;
   const floor_id = floorVal ? parseInt(floorVal) : null;
   const location_label = document.getElementById('ai-location').value.trim();
@@ -72,7 +84,7 @@ async function renderActorInstances() {
 }
 
 async function deleteActorInstance(id) {
-  if (!confirm('Diesen Aktor löschen? Zugeordnete Abgänge werden dadurch nicht mehr zugeordnet.')) return;
+  if (!(await showConfirm('Diesen Aktor löschen? Zugeordnete Abgänge werden dadurch nicht mehr zugeordnet.', {danger: true}))) return;
   await api('/actor-instances/' + id, {method:'DELETE'});
   await renderActorInstances();
   await renderCircuits();
@@ -137,7 +149,7 @@ async function onCircuitAssignChange(room_point_id, channel_seq, value) {
     try {
       await api(`/projects/${CURRENT_PROJECT}/circuits/assign`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({room_point_id, channel_seq, actor_instance_id: parseInt(actor_instance_id), channel_letter})});
     } catch (e) {
-      alert(e.message);
+      showToast(e.message, 'error');
     }
   }
   await renderCircuits();
@@ -151,11 +163,11 @@ async function autoAssignCircuits() {
   await renderActorInstances();
   await renderChannelSummary();
   if (result.unassigned.length) {
-    alert(`${result.assigned} Abgang/Abgänge zugeordnet.\n\nNicht zuordenbar (kein freier passender Aktorkanal auf demselben Geschoss):\n- ${result.unassigned.join('\n- ')}`);
+    showToast(`${result.assigned} Abgang/Abgänge zugeordnet.\n\nNicht zuordenbar (kein freier passender Aktorkanal auf demselben Geschoss):\n- ${result.unassigned.join('\n- ')}`, 'warning', {sticky: true});
   } else if (result.assigned) {
-    alert(`${result.assigned} Abgang/Abgänge zugeordnet.`);
+    showToast(`${result.assigned} Abgang/Abgänge zugeordnet.`, 'success');
   } else {
-    alert('Nichts zuzuordnen — bereits vollständig verdrahtet.');
+    showToast('Nichts zuzuordnen — bereits vollständig verdrahtet.', 'info');
   }
 }
 

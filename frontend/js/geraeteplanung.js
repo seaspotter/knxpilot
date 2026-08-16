@@ -50,7 +50,7 @@ async function addRoomDevice(roomId) {
   const device_type_id = parseInt(document.getElementById(`rd-device-${roomId}`).value);
   const quantity = parseInt(document.getElementById(`rd-qty-${roomId}`).value) || 1;
   const note = document.getElementById(`rd-note-${roomId}`).value.trim();
-  if (!device_type_id) return alert('Zuerst ein Gerät im Geräte-Tab anlegen');
+  if (!device_type_id) return showToast('Zuerst ein Gerät im Geräte-Tab anlegen', 'warning');
   await api(`/rooms/${roomId}/devices`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({device_type_id, quantity, note})});
   await renderGeraeteplanungRooms();
   await renderDeviceSummary();

@@ -6,6 +6,14 @@ restructuring below — history before that is available via `git log`.
 
 ## [Unreleased]
 
+### Added
+
+- Toast notifications and a custom confirm modal (`frontend/js/ui.js`),
+  replacing every native `alert()`/`confirm()` call across the frontend
+  (24 + 7 call sites).
+- An open-circuit-count badge on the Abgangsliste sub-tab button (e.g.
+  "Abgangsliste (3)"), mirroring the existing Klärungsliste badge pattern.
+
 ### Changed
 
 - Restructured the project into separate `backend/` (FastAPI) and

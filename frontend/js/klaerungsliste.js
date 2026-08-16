@@ -39,7 +39,7 @@ function onKlRoomChange() {
 
 async function saveKlaerung() {
   const text = document.getElementById('kl-text').value.trim();
-  if (!text) return alert('Text ist erforderlich');
+  if (!text) return showToast('Text ist erforderlich', 'warning');
   const typ = document.getElementById('kl-typ').value;
   const roomVal = document.getElementById('kl-room').value;
   const pointVal = document.getElementById('kl-point').value;
@@ -96,7 +96,7 @@ async function setKlaerungStatus(id, status) {
 }
 
 async function deleteKlaerung(id) {
-  if (!confirm('Diesen Eintrag löschen?')) return;
+  if (!(await showConfirm('Diesen Eintrag löschen?', {danger: true}))) return;
   if (EDITING_KLAERUNG_ID === id) cancelEditKlaerung();
   await api('/klaerungen/' + id, {method:'DELETE'});
   await loadKlaerungslisteForCurrentProject();
