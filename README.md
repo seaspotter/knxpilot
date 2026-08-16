@@ -69,15 +69,16 @@ in `backend/routers/projects.py` isoliert.
 - **Projekte** — Projekte anlegen/suchen/öffnen; ein Klick auf den kleinen
   Pfeil ▾ daneben öffnet ein Menü mit **Neues Projekt** und
   **Projekt öffnen** als Abkürzung von überall in der App aus. Ein
-  geöffnetes Projekt zeigt einen Arbeitsbereich mit sechs Unterreitern
-  (Übersicht, Gruppenadressen, Abgangsliste, Geräteplanung, Pflichtenheft,
-  Klärungsliste), die alle am selben Projekt arbeiten.
+  geöffnetes Projekt zeigt einen Arbeitsbereich mit sieben Unterreitern
+  (Übersicht, Gebäudestruktur, Funktionen, Abgangsliste, Geräteplanung,
+  Pflichtenheft, Klärungsliste), die alle am selben Projekt arbeiten.
 - **Geräte Katalog** — globaler Gerätekatalog (Aktoren, Sensoren,
   Bedienelemente usw.), gemeinsam für alle Projekte genutzt.
 - **Setup** — Firmenprofil (Name/Adresse/Kontakt/Logo), Kategorien,
   Punkttypen und Zentral-/Allgemeinfunktions-Vorlagen als eigene
-  Unterreiter; ausser dem Firmenprofil im Alltag selten angefasst, bereits
-  vorbelegt.
+  Unterreiter. Punkttypen und Vorlagen lassen sich nachträglich bearbeiten
+  (nicht nur löschen/neu anlegen); Kategorien sind bewusst nur lesbar, da
+  sie direkt den festen KNX-Hauptgruppennummern entsprechen.
 - **Update** — prüft auf Wunsch, ob auf GitHub eine neuere Version vorliegt,
   installiert sie, und zeigt das Änderungsprotokoll dieses Tools an.
 
@@ -100,31 +101,45 @@ Status/Bestellnummer/Kommentar nachträglich), daneben **⭳ Sichern (JSON)**
 und **× Schliessen**. **× Schliessen** kehrt zur Projektliste zurück, ohne
 etwas zu löschen — beim nächsten Öffnen startet der Arbeitsbereich wieder
 beim Unterreiter Übersicht, der auf einen Blick zeigt, wie weit jeder der
-übrigen fünf Unterreiter gediehen ist (mit direktem Sprung dorthin per
+übrigen sechs Unterreiter gediehen ist (mit direktem Sprung dorthin per
 Klick).
 
-#### Gruppenadressen
+#### Gebäudestruktur
+
+Nur das Gebäude selbst — welche Funktionen wo landen, ist Sache des
+Unterreiters Funktionen weiter unten.
 
 - Geschosse (Stockwerke) hinzufügen; ein Geschoss als **Aussen/unbeheizt**
   markieren (z.B. "Aussen", "Garage"), wenn es von entsprechend markierten
   Vorlagen ausgeschlossen werden soll.
-- Räume je Geschoss hinzufügen.
-- Für jeden Raum Punkte hinzufügen: Punkttyp wählen (z.B. "Licht (Dimmen)"),
-  ein Label vergeben (z.B. "Spots", "Decke", "Nord" für ein Fenster), bei
-  Bedarf eine Anzahl für mehrere gleiche auf einmal, und **+BWM** ankreuzen,
-  falls dieser Punkt eine Bewegungsmelder-Adresse braucht.
+- Räume je Geschoss hinzufügen — einzeln, oder über **Mehrere...** eine
+  Liste von Raumnamen (ein Name pro Zeile) auf einmal einfügen.
+- Sowohl Geschoss- als auch Raumnamen lassen sich über das ✎-Symbol
+  daneben jederzeit nachträglich umbenennen.
+
+#### Funktionen
+
+- Jedem im Unterreiter Gebäudestruktur angelegten Raum Punkte zuweisen:
+  Punkttyp wählen (z.B. "Licht (Dimmen)"), ein Label vergeben (z.B.
+  "Spots", "Decke", "Nord" für ein Fenster), bei Bedarf eine Anzahl für
+  mehrere gleiche auf einmal, und **+BWM** ankreuzen, falls dieser Punkt
+  eine Bewegungsmelder-Adresse braucht. Über das ✎-Symbol an jedem bereits
+  zugewiesenen Punkt lässt sich Punkttyp/Label/BWM nachträglich ändern,
+  ohne ihn löschen und neu anlegen zu müssen.
 - **Alles Spezielle** (Einzel-Szene, spezielle Zentralgruppe für einen
   bestimmten Raum wie "Kind1 Zentral") kommt unter **Sonder-/
   Zusatzadressen** — Kategorie wählen, festlegen ob es zu
   `Zentralfunktionen` oder einem bestimmten Geschoss gehört, benennen und
   die Datenpunkte angeben.
 - **Vorschau** zur Kontrolle, dann **CSV für ETS6 herunterladen**.
-- **⭳ Sichern (JSON)** speichert die komplette Projektdefinition (Metadaten,
-  Geschosse, Räume, Punkte, Sonderadressen) als `.json`-Datei — getrennt von
-  der ETS-CSV, gedacht zum Sichern / Duplizieren / Umziehen eines Projekts
-  zwischen Installationen. Beim Wiederherstellen werden Punkttypen/
-  Kategorien per Name mit der Zielinstallation abgeglichen; was nicht
-  übereinstimmt, wird übersprungen und gemeldet, nie einfach angenommen.
+- **⭳ Sichern (JSON)** (im Projektkopf oben, unterreiterübergreifend
+  sichtbar) speichert die komplette Projektdefinition (Metadaten,
+  Geschosse, Räume, Punkte, Sonderadressen) als `.json`-Datei — getrennt
+  von der ETS-CSV, gedacht zum Sichern / Duplizieren / Umziehen eines
+  Projekts zwischen Installationen. Beim Wiederherstellen werden
+  Punkttypen/Kategorien per Name mit der Zielinstallation abgeglichen; was
+  nicht übereinstimmt, wird übersprungen und gemeldet, nie einfach
+  angenommen.
 
 #### Abgangsliste
 

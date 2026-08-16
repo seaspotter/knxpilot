@@ -151,7 +151,9 @@ function addPtSuffixRow(suffix='', dpt='') {
   document.getElementById('pt-suffixes').appendChild(div);
 }
 
-async function createPointType() {
+let EDITING_POINT_TYPE_ID = null;
+
+async function savePointType() {
   const category_id = parseInt(document.getElementById('pt-category').value);
   const name = document.getElementById('pt-name').value.trim();
   const block_size = parseInt(document.getElementById('pt-blocksize').value) || 5;
@@ -162,12 +164,40 @@ async function createPointType() {
     dpt: r.querySelector('.pt-suf-dpt').value.trim()
   })).filter(s => s.suffix);
   if (!name || suffixes.length === 0) return showToast('Name und mindestens ein Datenpunkt erforderlich', 'warning');
-  await api('/point-types', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category_id, name, suffixes, block_size, channel_type, channels_needed})});
+  const body = JSON.stringify({category_id, name, suffixes, block_size, channel_type, channels_needed});
+  if (EDITING_POINT_TYPE_ID) {
+    await api('/point-types/' + EDITING_POINT_TYPE_ID, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
+  } else {
+    await api('/point-types', {method:'POST', headers:{'Content-Type':'application/json'}, body});
+  }
+  cancelEditPointType();
+  await loadPointTypes();
+}
+
+function editPointType(id) {
+  const pt = POINT_TYPES.find(p => p.id === id);
+  if (!pt) return;
+  EDITING_POINT_TYPE_ID = id;
+  document.getElementById('pt-category').value = pt.category_id;
+  document.getElementById('pt-name').value = pt.name;
+  document.getElementById('pt-blocksize').value = pt.block_size;
+  document.getElementById('pt-channeltype').value = pt.channel_type || '';
+  document.getElementById('pt-channelsneeded').value = pt.channels_needed || 1;
+  document.getElementById('pt-suffixes').innerHTML = '';
+  pt.suffixes.forEach(s => addPtSuffixRow(s.suffix, s.dpt));
+  document.getElementById('pt-save-btn').textContent = 'Änderungen speichern';
+  document.getElementById('pt-cancel-btn').style.display = '';
+  document.getElementById('pt-name').scrollIntoView({behavior: 'smooth', block: 'center'});
+}
+
+function cancelEditPointType() {
+  EDITING_POINT_TYPE_ID = null;
   document.getElementById('pt-name').value = '';
   document.getElementById('pt-channeltype').value = '';
   document.getElementById('pt-channelsneeded').value = '1';
   document.getElementById('pt-suffixes').innerHTML = '';
-  await loadPointTypes();
+  document.getElementById('pt-save-btn').textContent = 'Punkttyp speichern';
+  document.getElementById('pt-cancel-btn').style.display = 'none';
 }
 
 async function loadPointTypes() {
@@ -180,13 +210,17 @@ async function loadPointTypes() {
         ${pt.channel_type ? `<span class="pill">Kanal: ${pt.channel_type} ×${pt.channels_needed}</span>` : ''}
         ${pt.suffixes.map(s=>`<span class="pill">${s.suffix} · ${s.dpt}</span>`).join('')}
       </div>
-      <button class="btn danger small" onclick="deletePointType(${pt.id})">Löschen</button>
+      <div class="row" style="gap:6px;">
+        <button class="btn secondary small" onclick="editPointType(${pt.id})">Bearbeiten</button>
+        <button class="btn danger small" onclick="deletePointType(${pt.id})">Löschen</button>
+      </div>
     </li>`;
   }).join('') || '<li class="muted">Noch keine Punkttypen</li>';
 }
 
 async function deletePointType(id) {
   if (!(await showConfirm('Diesen Punkttyp löschen?', {danger: true}))) return;
+  if (EDITING_POINT_TYPE_ID === id) cancelEditPointType();
   await api('/point-types/' + id, {method:'DELETE'});
   await loadPointTypes();
 }
@@ -210,7 +244,9 @@ function onCtScopeChange() {
   document.getElementById('ct-trigger-label').style.display = scope === 'room_multi' ? 'flex' : 'none';
 }
 
-async function createCentralTemplate() {
+let EDITING_CENTRAL_TEMPLATE_ID = null;
+
+async function saveCentralTemplate() {
   const category_id = parseInt(document.getElementById('ct-category').value);
   const scope = document.getElementById('ct-scope').value;
   const name = document.getElementById('ct-name').value.trim();
@@ -224,13 +260,45 @@ async function createCentralTemplate() {
     dpt: r.querySelector('.ct-suf-dpt').value.trim()
   })).filter(s => s.suffix);
   if (suffixes.length === 0) return showToast('Mindestens ein Datenpunkt erforderlich', 'warning');
-  await api('/central-templates', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category_id, name, scope, suffixes, skip_outdoor_floors, block_size, trigger_count})});
+  if (EDITING_CENTRAL_TEMPLATE_ID) {
+    const existing = CENTRAL_TEMPLATES.find(c => c.id === EDITING_CENTRAL_TEMPLATE_ID);
+    const body = JSON.stringify({category_id, name, scope, suffixes, skip_outdoor_floors, block_size, trigger_count, order_idx: existing ? existing.order_idx : 0});
+    await api('/central-templates/' + EDITING_CENTRAL_TEMPLATE_ID, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
+  } else {
+    const body = JSON.stringify({category_id, name, scope, suffixes, skip_outdoor_floors, block_size, trigger_count});
+    await api('/central-templates', {method:'POST', headers:{'Content-Type':'application/json'}, body});
+  }
+  cancelEditCentralTemplate();
+  await loadCentralTemplates();
+}
+
+function editCentralTemplate(id) {
+  const ct = CENTRAL_TEMPLATES.find(c => c.id === id);
+  if (!ct) return;
+  EDITING_CENTRAL_TEMPLATE_ID = id;
+  document.getElementById('ct-category').value = ct.category_id;
+  document.getElementById('ct-scope').value = ct.scope;
+  onCtScopeChange();
+  document.getElementById('ct-name').value = ct.name || '';
+  document.getElementById('ct-skip-outdoor').checked = ct.skip_outdoor_floors;
+  document.getElementById('ct-blocksize').value = ct.block_size || '';
+  document.getElementById('ct-trigger').value = ct.trigger_count || 2;
+  document.getElementById('ct-suffixes').innerHTML = '';
+  ct.suffixes.forEach(s => addCtSuffixRow(s.suffix, s.dpt));
+  document.getElementById('ct-save-btn').textContent = 'Änderungen speichern';
+  document.getElementById('ct-cancel-btn').style.display = '';
+  document.getElementById('ct-category').scrollIntoView({behavior: 'smooth', block: 'center'});
+}
+
+function cancelEditCentralTemplate() {
+  EDITING_CENTRAL_TEMPLATE_ID = null;
   document.getElementById('ct-name').value = '';
   document.getElementById('ct-skip-outdoor').checked = false;
   document.getElementById('ct-blocksize').value = '';
   document.getElementById('ct-trigger').value = '2';
   document.getElementById('ct-suffixes').innerHTML = '';
-  await loadCentralTemplates();
+  document.getElementById('ct-save-btn').textContent = 'Vorlage speichern';
+  document.getElementById('ct-cancel-btn').style.display = 'none';
 }
 
 async function loadCentralTemplates() {
@@ -248,13 +316,17 @@ async function loadCentralTemplates() {
       <div><b>${ct.name || '(kein Präfix)'}</b> <span class="pill">${cat?.name||'?'}</span> <span class="pill">${ct.scope}</span> ${extra.join(' ')}
         ${ct.suffixes.map(s=>`<span class="pill">${s.suffix || '(keiner)'} · ${s.dpt}</span>`).join('')}
       </div>
-      <button class="btn danger small" onclick="deleteCentralTemplate(${ct.id})">Löschen</button>
+      <div class="row" style="gap:6px;">
+        <button class="btn secondary small" onclick="editCentralTemplate(${ct.id})">Bearbeiten</button>
+        <button class="btn danger small" onclick="deleteCentralTemplate(${ct.id})">Löschen</button>
+      </div>
     </li>`;
   }).join('') || '<li class="muted">Noch keine Vorlagen</li>';
 }
 
 async function deleteCentralTemplate(id) {
   if (!(await showConfirm('Diese Vorlage löschen?', {danger: true}))) return;
+  if (EDITING_CENTRAL_TEMPLATE_ID === id) cancelEditCentralTemplate();
   await api('/central-templates/' + id, {method:'DELETE'});
   await loadCentralTemplates();
 }

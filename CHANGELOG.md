@@ -35,9 +35,27 @@ restructuring below — history before that is available via `git log`.
   per line), instead of adding them one-by-one. Frontend-only, reuses the
   existing single-room endpoint in a loop; the original single-room input
   is unchanged.
+- Floors, rooms, and room functions can now be renamed/edited after
+  creation, not just deleted: floor and room names via a ✎ rename dialog
+  (`frontend/js/ui.js`'s `openRenameModal`), and a room's assigned
+  functions (point type/label/BWM) via a ✎ edit link that repurposes the
+  existing quick-add form into an edit form (same pattern already used
+  for actor types). New backend endpoints: `PUT /api/floors/{id}`,
+  `PUT /api/rooms/{id}`, `PUT /api/room-points/{id}`.
+- Setup's Punkttypen and Zentral-Vorlagen can now be edited in place
+  (the backend already supported this; only the frontend UI was missing)
+  — same "Bearbeiten" pattern as the Geräte Katalog's actor types.
+  Categories stay view-only, since they map directly to fixed KNX main
+  group numbers.
 
 ### Changed
 
+- Split the "Gruppenadressen" sub-tab into **Gebäudestruktur** (floors/
+  rooms only) and **Funktionen** (assigning KNX functions to rooms,
+  Sonderadressen, GA preview/export) — these were previously combined on
+  one page. `frontend/js/funktionen.js` is a new file for the latter,
+  following this project's one-file-per-sub-tab convention.
+- Renamed the "Setup (Kategorien & Vorlagen)" tab to plain "Setup".
 - Reworked the Projekte and Setup tabs from "everything stacked on one
   page" into focused views: the Setup tab now has a Firma/Kategorien/
   Punkttypen/Zentral-Vorlagen sub-nav (same pattern as the project
@@ -56,9 +74,6 @@ restructuring below — history before that is available via `git log`.
   (`GET /api/system/changelog`, new `.changelog` rendering in
   `frontend/js/update.js` — a small hand-written Markdown-to-HTML
   converter, no library added).
-
-### Changed
-
 - Restructured the project into separate `backend/` (FastAPI) and
   `frontend/` (plain HTML/CSS/JS, no build step) directories, replacing the
   previous single `app/` directory whose `static/index.html` held the

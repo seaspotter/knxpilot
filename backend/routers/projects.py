@@ -12,7 +12,7 @@ from fastapi.responses import StreamingResponse
 
 from ..db import get_db
 from ..ga_logic import build_ga_tree
-from ..models import ProjectIn, FloorIn, RoomIn, RoomPointIn, SpecialItemIn
+from ..models import ProjectIn, FloorIn, RoomIn, RoomPointIn, RoomPointEditIn, SpecialItemIn
 
 router = APIRouter(tags=["projects"])
 
@@ -71,6 +71,16 @@ def add_floor(project_id: int, f: FloorIn):
         return {"id": cur.lastrowid}
 
 
+@router.put("/api/floors/{floor_id}")
+def update_floor(floor_id: int, f: FloorIn):
+    with get_db() as db:
+        db.execute(
+            "UPDATE floors SET name=?, is_outdoor=? WHERE id=?",
+            (f.name, int(f.is_outdoor), floor_id),
+        )
+    return {"ok": True}
+
+
 @router.delete("/api/floors/{floor_id}")
 def delete_floor(floor_id: int):
     with get_db() as db:
@@ -87,6 +97,13 @@ def add_room(floor_id: int, r: RoomIn):
             (floor_id, r.name, count),
         )
         return {"id": cur.lastrowid}
+
+
+@router.put("/api/rooms/{room_id}")
+def update_room(room_id: int, r: RoomIn):
+    with get_db() as db:
+        db.execute("UPDATE rooms SET name=? WHERE id=?", (r.name, room_id))
+    return {"ok": True}
 
 
 @router.delete("/api/rooms/{room_id}")
@@ -111,6 +128,16 @@ def add_room_point(room_id: int, rp: RoomPointIn):
             )
             ids.append(cur.lastrowid)
         return {"ids": ids}
+
+
+@router.put("/api/room-points/{rp_id}")
+def update_room_point(rp_id: int, rp: RoomPointEditIn):
+    with get_db() as db:
+        db.execute(
+            "UPDATE room_points SET point_type_id=?, label=?, has_bwm=? WHERE id=?",
+            (rp.point_type_id, rp.label, int(rp.has_bwm), rp_id),
+        )
+    return {"ok": True}
 
 
 @router.delete("/api/room-points/{rp_id}")

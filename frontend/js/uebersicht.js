@@ -24,9 +24,14 @@ async function loadUebersichtForCurrentProject() {
 
   const cards = [
     {
-      subtab: 'ga',
-      title: 'Gruppenadressen',
-      body: `${floorCount} Geschosse · ${roomCount} Räume · ${pointCount} Punkte`,
+      subtab: 'struktur',
+      title: 'Gebäudestruktur',
+      body: `${floorCount} Geschosse · ${roomCount} Räume`,
+    },
+    {
+      subtab: 'funktionen',
+      title: 'Funktionen',
+      body: pointCount ? `${pointCount} Punkte definiert` : 'Noch keine Punkte definiert',
     },
     {
       subtab: 'abgangsliste',

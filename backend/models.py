@@ -52,6 +52,12 @@ class RoomPointIn(BaseModel):
     has_bwm: bool = False  # adds one extra "BWM" (motion sensor) address to this point
 
 
+class RoomPointEditIn(BaseModel):
+    point_type_id: int
+    label: str = ""
+    has_bwm: bool = False
+
+
 class SpecialItemIn(BaseModel):
     category_id: int
     location: str  # 'central' or floor id as string

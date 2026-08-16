@@ -113,6 +113,7 @@ async function openProject(id, name) {
   document.getElementById('subtab-uebersicht').classList.add('active');
 
   await renderFloors();
+  await renderFunktionenRooms();
   await renderSpecialLocationOptions();
   await renderSpecials();
   await refreshKlaerungsBadge();
@@ -180,15 +181,25 @@ async function addFloor() {
   document.getElementById('floor-name').value = '';
   document.getElementById('floor-outdoor').checked = false;
   await renderFloors();
+  await renderFunktionenRooms();
   await renderSpecialLocationOptions();
   await renderActorInstanceForm();
   await renderCircuits();
   await renderChannelSummary();
 }
 
+async function renameFloor(id, currentName, currentOutdoor) {
+  const newName = await openRenameModal(currentName, {title: 'Geschoss umbenennen'});
+  if (newName === null) return;
+  await api('/floors/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: newName, is_outdoor: currentOutdoor})});
+  await renderFloors();
+  await renderFunktionenRooms();
+}
+
 async function deleteFloor(id) {
   await api('/floors/' + id, {method:'DELETE'});
   await renderFloors();
+  await renderFunktionenRooms();
   await renderSpecialLocationOptions();
   await renderActorInstanceForm();
   await renderCircuits();
@@ -201,7 +212,10 @@ async function renderFloors() {
   container.innerHTML = tree.floors.map(floor => `
     <div class="floor-card">
       <div class="row" style="justify-content:space-between;">
-        <b>${floor.name}</b> ${floor.is_outdoor ? '<span class="pill">Aussen/unbeheizt</span>' : ''}
+        <div>
+          <b>${floor.name}</b> <a href="#" onclick="event.preventDefault(); renameFloor(${floor.id}, '${floor.name.replace(/'/g,"\\'")}', ${floor.is_outdoor})" style="color:var(--accent); text-decoration:none;" title="Umbenennen">✎</a>
+          ${floor.is_outdoor ? '<span class="pill">Aussen/unbeheizt</span>' : ''}
+        </div>
         <div>
           <input type="text" placeholder="Raumname" id="room-name-${floor.id}" style="width:140px;">
           <button class="btn secondary small" onclick="addRoom(${floor.id})">+ Raum hinzufügen</button>
@@ -219,33 +233,13 @@ async function renderFloors() {
 }
 
 function renderRoom(room) {
-  const pointsByType = {};
-  room.points.forEach(p => {
-    pointsByType[p.point_type_id] = pointsByType[p.point_type_id] || [];
-    pointsByType[p.point_type_id].push(p);
-  });
-  const pointsHtml = Object.entries(pointsByType).map(([ptId, pts]) => {
-    const pt = POINT_TYPES.find(p => p.id === parseInt(ptId));
-    const labels = pts.map(p => `<span class="pill">${p.label || '(kein Label)'}${p.has_bwm ? ' +BWM' : ''} <a href="#" onclick="deleteRoomPoint(event, ${p.id})" style="color:var(--danger); text-decoration:none;">×</a></span>`).join('');
-    return `<div style="margin:4px 0;"><b>${pt?.name || '?'}</b>: ${labels}</div>`;
-  }).join('') || '<p class="muted" style="margin:4px 0;">Noch keine Punkte</p>';
-
   return `
     <div class="room-card">
       <div class="row" style="justify-content:space-between;">
-        <b>${room.name}</b>
+        <div><b>${room.name}</b> <a href="#" onclick="event.preventDefault(); renameRoom(${room.id}, '${room.name.replace(/'/g,"\\'")}')" style="color:var(--accent); text-decoration:none;" title="Umbenennen">✎</a></div>
         <button class="btn danger small" onclick="deleteRoom(${room.id})">Raum löschen</button>
       </div>
-      ${pointsHtml}
-      <div class="quick-add">
-        <select id="ptype-${room.id}" class="wide">
-          ${POINT_TYPES.map(pt => `<option value="${pt.id}">${CATEGORIES.find(c=>c.id===pt.category_id)?.name} — ${pt.name}</option>`).join('')}
-        </select>
-        <input type="text" id="label-${room.id}" placeholder="Label z.B. Decke, Spots, Nord (leer = keins)" style="width:210px;">
-        <input type="number" id="qty-${room.id}" value="1" min="1" title="Anzahl">
-        <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="bwm-${room.id}"> +BWM<span class="info-icon" tabindex="0" data-tip="BWM = Bewegungsmelder. Fügt diesem Punkt eine zusätzliche Bewegungsmelder-Adresse hinzu, zusätzlich zu den normalen Datenpunkten des Punkttyps.">i</span></label>
-        <button class="btn secondary small" onclick="addPoint(${room.id})">+ Hinzufügen</button>
-      </div>
+      <p class="muted" style="margin:4px 0;">${room.points.length} Funktion(en) — im Unterreiter Funktionen zuweisen</p>
     </div>
   `;
 }
@@ -255,6 +249,7 @@ async function addRoom(floorId) {
   if (!name) return;
   await api(`/floors/${floorId}/rooms`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})});
   await renderFloors();
+  await renderFunktionenRooms();
   await renderCircuits();
   await renderChannelSummary();
 }
@@ -272,124 +267,26 @@ async function addRoomsBulk(floorId) {
     await api(`/floors/${floorId}/rooms`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})});
   }
   await renderFloors();
+  await renderFunktionenRooms();
   await renderCircuits();
   await renderChannelSummary();
   showToast(`${names.length} Raum/Räume hinzugefügt.`, 'success');
 }
 
+async function renameRoom(id, currentName) {
+  const newName = await openRenameModal(currentName, {title: 'Raum umbenennen'});
+  if (newName === null) return;
+  await api('/rooms/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: newName})});
+  await renderFloors();
+  await renderFunktionenRooms();
+}
+
 async function deleteRoom(id) {
   await api('/rooms/' + id, {method:'DELETE'});
   await renderFloors();
+  await renderFunktionenRooms();
   await renderCircuits();
   await renderChannelSummary();
-}
-
-async function addPoint(roomId) {
-  const point_type_id = parseInt(document.getElementById(`ptype-${roomId}`).value);
-  const label = document.getElementById(`label-${roomId}`).value.trim();
-  const quantity = parseInt(document.getElementById(`qty-${roomId}`).value) || 1;
-  const has_bwm = document.getElementById(`bwm-${roomId}`).checked;
-  await api(`/rooms/${roomId}/points`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({point_type_id, label, quantity, has_bwm})});
-  await renderFloors();
-  await renderCircuits();
-  await renderChannelSummary();
-}
-
-async function deleteRoomPoint(ev, id) {
-  ev.preventDefault();
-  await api('/room-points/' + id, {method:'DELETE'});
-  await renderFloors();
-  await renderCircuits();
-  await renderChannelSummary();
-}
-
-// ---------- Specials ----------
-function addSpecialSuffixRow(suffix='', dpt='') {
-  const div = document.createElement('div');
-  div.className = 'row';
-  div.innerHTML = `
-    <input type="text" placeholder="Suffix z.B. Auf/Ab" class="sp-suf-name" value="${suffix}">
-    <input type="text" placeholder="DPT z.B. DPST-1-8" class="sp-suf-dpt" value="${dpt}">
-    <button class="btn danger small" onclick="this.parentElement.remove()">x</button>`;
-  document.getElementById('special-suffixes').appendChild(div);
-}
-
-async function renderSpecialLocationOptions() {
-  const tree = await api(`/projects/${CURRENT_PROJECT}/tree`);
-  const sel = document.getElementById('special-location');
-  sel.innerHTML = `<option value="central">Zentralfunktionen (ganze Kategorie)</option>` +
-    tree.floors.map(f => `<option value="${f.id}">Geschoss: ${f.name}</option>`).join('');
-}
-
-async function createSpecial() {
-  const category_id = parseInt(document.getElementById('special-category').value);
-  const location = document.getElementById('special-location').value;
-  const name = document.getElementById('special-name').value.trim();
-  const suffixes = [...document.querySelectorAll('#special-suffixes .row')].map(r => ({
-    suffix: r.querySelector('.sp-suf-name').value.trim(),
-    dpt: r.querySelector('.sp-suf-dpt').value.trim()
-  })).filter(s => s.suffix);
-  if (!name || suffixes.length === 0) return showToast('Name und mindestens ein Datenpunkt erforderlich', 'warning');
-  await api(`/projects/${CURRENT_PROJECT}/specials`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category_id, location, name, suffixes})});
-  document.getElementById('special-name').value = '';
-  document.getElementById('special-suffixes').innerHTML = '';
-  await renderSpecials();
-}
-
-async function renderSpecials() {
-  const specials = await api(`/projects/${CURRENT_PROJECT}/specials`);
-  const ul = document.getElementById('specials-list');
-  ul.innerHTML = specials.map(s => {
-    const cat = CATEGORIES.find(c => c.id === s.category_id);
-    return `<li>
-      <div><b>${s.name}</b> <span class="pill">${cat?.name||'?'}</span> <span class="pill">${s.location === 'central' ? 'Zentral' : 'Geschoss'}</span>
-        ${s.suffixes.map(x=>`<span class="pill">${x.suffix} · ${x.dpt}</span>`).join('')}
-      </div>
-      <button class="btn danger small" onclick="deleteSpecial(${s.id})">Löschen</button>
-    </li>`;
-  }).join('') || '<li class="muted">Noch keine</li>';
-}
-
-async function deleteSpecial(id) {
-  await api('/specials/' + id, {method:'DELETE'});
-  await renderSpecials();
-}
-
-
-// ---------- Preview / Export ----------
-async function previewGA() {
-  document.getElementById('gen-error').textContent = '';
-  try {
-    const data = await api(`/projects/${CURRENT_PROJECT}/preview`);
-    const el = document.getElementById('ga-preview');
-    el.innerHTML = data.main_groups.map(m => {
-      const totalSubs = m.middles.reduce((sum, mid) => sum + mid.subs.length, 0);
-      return `
-      <details class="tree-main" open>
-        <summary><span class="main">${m.main} ${m.name}</span> <span class="muted">(${totalSubs})</span></summary>
-        ${m.middles.map(mid => `
-          <details class="tree-middle">
-            <summary><span class="middle">${m.main}/${mid.middle} ${mid.name}</span> <span class="muted">(${mid.subs.length})</span></summary>
-            <div class="tree-subs">
-              ${mid.subs.map(s => `
-                <div class="tree-sub-row">
-                  <span class="${s.name.endsWith('res') ? 'res' : 'sub'}">${m.main}/${mid.middle}/${s.sub} ${s.name}</span>${s.dpt ? ` <span class="addr">(${s.dpt})</span>` : ''}
-                </div>`).join('')}
-            </div>
-          </details>`).join('')}
-      </details>`;
-    }).join('');
-  } catch (e) {
-    document.getElementById('gen-error').textContent = e.message;
-  }
-}
-
-function expandAllGaTree(open) {
-  document.querySelectorAll('#ga-preview details').forEach(d => { d.open = open; });
-}
-
-function downloadCSV() {
-  window.location.href = `/api/projects/${CURRENT_PROJECT}/export.csv`;
 }
 
 function exportProjectJson() {

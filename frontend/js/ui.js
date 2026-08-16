@@ -65,3 +65,37 @@ function showConfirm(message, { danger = false } = {}) {
     });
   });
 }
+
+// Single-field rename dialog -> Promise<string|null> (null if cancelled/closed without saving).
+function openRenameModal(currentName, { title = 'Umbenennen' } = {}) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const modal = openModal(`
+      <h3>${title}</h3>
+      <div class="row"><input type="text" id="rename-input" style="min-width:260px; flex:1;"></div>
+      <div class="row modal-actions">
+        <button class="btn secondary" data-action="cancel">Abbrechen</button>
+        <button class="btn" data-action="save">Speichern</button>
+      </div>`, {
+      onClose: () => { if (!settled) { settled = true; resolve(null); } },
+    });
+    const input = modal.overlay.querySelector('#rename-input');
+    input.value = currentName;
+    input.focus();
+    input.select();
+
+    const save = () => {
+      const val = input.value.trim();
+      if (!val) return showToast('Name darf nicht leer sein', 'warning');
+      settled = true;
+      resolve(val);
+      modal.close();
+    };
+    input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') save(); });
+    modal.overlay.addEventListener('click', (ev) => {
+      const action = ev.target.dataset && ev.target.dataset.action;
+      if (action === 'save') save();
+      if (action === 'cancel') modal.close();
+    });
+  });
+}

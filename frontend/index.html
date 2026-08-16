@@ -31,7 +31,7 @@
     </div>
   </div>
   <button data-tab="aktoren">Geräte Katalog</button>
-  <button data-tab="setup">Setup (Kategorien &amp; Vorlagen)</button>
+  <button data-tab="setup">Setup</button>
   <button data-tab="update">Update</button>
 </nav>
 <main>
@@ -93,7 +93,8 @@
 
       <div class="subnav" id="workspace-subnav">
         <button data-subtab="uebersicht" class="active">Übersicht</button>
-        <button data-subtab="ga">Gruppenadressen</button>
+        <button data-subtab="struktur">Gebäudestruktur</button>
+        <button data-subtab="funktionen">Funktionen</button>
         <button data-subtab="abgangsliste">Abgangsliste</button>
         <button data-subtab="geraeteplanung">Geräteplanung</button>
         <button data-subtab="pflichtenheft">Pflichtenheft</button>
@@ -108,7 +109,7 @@
         </div>
       </div>
 
-      <div class="subtab" id="subtab-ga">
+      <div class="subtab" id="subtab-struktur">
         <div class="card">
           <div class="row">
             <input type="text" id="floor-name" placeholder="Geschossname, z.B. Erdgeschoss (EG)">
@@ -116,6 +117,14 @@
             <button class="btn secondary" onclick="addFloor()">+ Geschoss hinzufügen</button>
           </div>
           <div id="floors-container"></div>
+        </div>
+      </div>
+
+      <div class="subtab" id="subtab-funktionen">
+        <div class="card">
+          <h3>Räume &amp; Funktionen</h3>
+          <p class="muted">Jedem Raum die passenden Funktionen zuweisen (Licht, Dimmen, Heizkreis usw.). Räume selbst werden im Unterreiter Gebäudestruktur angelegt.</p>
+          <div id="funktionen-rooms"></div>
         </div>
 
         <div class="card">
@@ -346,7 +355,10 @@
       </div>
       <div id="pt-suffixes"></div>
       <button class="btn secondary small" onclick="addPtSuffixRow()">+ Datenpunkt hinzufügen</button>
-      <div style="margin-top:8px;"><button class="btn" onclick="createPointType()">Punkttyp speichern</button></div>
+      <div style="margin-top:8px;">
+        <button class="btn" id="pt-save-btn" onclick="savePointType()">Punkttyp speichern</button>
+        <button class="btn secondary small" id="pt-cancel-btn" onclick="cancelEditPointType()" style="display:none;">Abbrechen</button>
+      </div>
       <hr class="sep">
       <ul class="list" id="point-types-list"></ul>
     </div>
@@ -376,7 +388,10 @@
       </div>
       <div id="ct-suffixes"></div>
       <button class="btn secondary small" onclick="addCtSuffixRow()">+ Datenpunkt hinzufügen</button>
-      <div style="margin-top:8px;"><button class="btn" onclick="createCentralTemplate()">Vorlage speichern</button></div>
+      <div style="margin-top:8px;">
+        <button class="btn" id="ct-save-btn" onclick="saveCentralTemplate()">Vorlage speichern</button>
+        <button class="btn secondary small" id="ct-cancel-btn" onclick="cancelEditCentralTemplate()" style="display:none;">Abbrechen</button>
+      </div>
       <hr class="sep">
       <ul class="list" id="central-templates-list"></ul>
     </div>
@@ -409,6 +424,7 @@
 <script src="/js/setup.js"></script>
 <script src="/js/geraete.js"></script>
 <script src="/js/projekte.js"></script>
+<script src="/js/funktionen.js"></script>
 <script src="/js/uebersicht.js"></script>
 <script src="/js/abgangsliste.js"></script>
 <script src="/js/geraeteplanung.js"></script>
