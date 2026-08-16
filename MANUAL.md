@@ -289,7 +289,10 @@ automatisch ein Startkatalog gängiger KNX-Geräte eingefügt (u.a. MDT,
 Busch-Jaeger, Theben, Elsner Elektronik, Gira, Phoenix Contact, Hörmann —
 siehe `DEFAULT_ACTOR_TYPES` in `backend/db.py`). Das passiert nur einmalig, wenn
 die Tabelle leer ist — ein bereits befüllter oder bewusst geleerter Katalog
-wird dadurch nie überschrieben.
+wird dadurch nie überschrieben. Genau dieser Startkatalog liegt zusätzlich
+als Datei unter `docs/templates/geraete-katalog.json` im Repository —
+importierbar wie jede andere Katalogdatei, z.B. nach einem **Katalog
+leeren**, ohne alles neu eintippen zu müssen.
 
 ### Setup
 
@@ -309,7 +312,12 @@ gleichzeitig sichtbar.
   winzig wirkt.
 - **Kategorien** — die 6 Hauptgruppen, vorbelegt; der Name jeder Kategorie
   lässt sich über **Bearbeiten** umbenennen, Reihenfolge (=
-  Hauptgruppennummer) und Anzahl bleiben fest.
+  Hauptgruppennummer) und Anzahl bleiben fest — daher kein
+  Hinzufügen/Löschen hier (siehe Adressierungsmodell oben). **Namen
+  exportieren/importieren (JSON)** sichert bzw. stellt nur die 6 Namen
+  wieder her (abgeglichen nach Hauptgruppennummer, nie nach Reihenfolge
+  in der Datei) — z.B. um versehentliche Umbenennungen rückgängig zu
+  machen. Vorlage: `docs/templates/kategorien.json`.
 - **Funktionstypen** — wiederverwendbare Definitionen wie "Licht (Dimmen)",
   "Rollo (einfach)", "Jalousie (mit Lamelle)", "Heizkreis", jeweils mit
   Datenpunkten, reserviertem Blockumfang und einem **Kanaltyp** (z.B.
@@ -319,9 +327,16 @@ gleichzeitig sichtbar.
   löschen** entfernt auf einmal alle noch nicht in einem Projekt
   verwendeten Funktionstypen (mit Sicherheitsabfrage), um eigene von
   Grund auf anzulegen. Bereits verwendete bleiben dabei erhalten.
+  **Exportieren/Importieren (JSON)** sichert bzw. lädt einen kompletten
+  Satz Funktionstypen (Abgleich nach Kategorie+Name — erneutes
+  Importieren aktualisiert bestehende statt sie zu duplizieren); Vorlage
+  mit den mitgelieferten Standard-Funktionstypen:
+  `docs/templates/funktionstypen.json`.
 - **Zentral-/Allgemeinfunktions-Vorlagen** — automatisch erzeugte Blöcke
   (**Alle löschen** entfernt hier ausnahmslos alle, da nichts anderes im
-  Tool auf eine bestimmte Vorlage verweist):
+  Tool auf eine bestimmte Vorlage verweist; **Exportieren/Importieren
+  (JSON)** funktioniert wie bei Funktionstypen, Vorlage:
+  `docs/templates/zentral-vorlagen.json`):
   - `scope: building` → ein Block für das gesamte Projekt
   - `scope: floor` → ein Block je Geschoss (z.B. "Zentral EG", "Zentral OG")
   - `scope: room_multi` → ein Block **pro Raum**, nur für Räume mit einer

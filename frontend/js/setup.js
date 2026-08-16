@@ -168,6 +168,27 @@ async function renameCategory(id, currentName) {
   }
 }
 
+function exportCategoriesJson() {
+  window.location.href = `/api/categories/export-json`;
+}
+
+async function importCategoriesJson() {
+  const fileInput = document.getElementById('import-categories-file');
+  const file = fileInput.files[0];
+  if (!file) return showToast('Bitte zuerst eine Kategorien-.json-Datei auswählen', 'warning');
+  const text = await file.text();
+  let payload;
+  try {
+    payload = JSON.parse(text);
+  } catch (e) {
+    return showToast('Diese Datei ist kein gültiges JSON', 'error');
+  }
+  const result = await api('/categories/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+  fileInput.value = '';
+  await loadCategories();
+  showToast(`${result.updated} umbenannt${result.skipped ? `, ${result.skipped} übersprungen` : ''}.`, 'success');
+}
+
 // ---------- Setup: Point Types ----------
 function addPtSuffixRow(suffix='', dpt='') {
   const div = document.createElement('div');
@@ -262,6 +283,27 @@ async function clearPointTypes() {
   const result = await api('/point-types', {method:'DELETE'});
   await loadPointTypes();
   showToast(`${result.deleted} gelöscht${result.skipped_in_use ? `, ${result.skipped_in_use} in Verwendung übersprungen` : ''}.`, 'success');
+}
+
+function exportPointTypesJson() {
+  window.location.href = `/api/point-types/export-json`;
+}
+
+async function importPointTypesJson() {
+  const fileInput = document.getElementById('import-pointtypes-file');
+  const file = fileInput.files[0];
+  if (!file) return showToast('Bitte zuerst eine Funktionstypen-.json-Datei auswählen', 'warning');
+  const text = await file.text();
+  let payload;
+  try {
+    payload = JSON.parse(text);
+  } catch (e) {
+    return showToast('Diese Datei ist kein gültiges JSON', 'error');
+  }
+  const result = await api('/point-types/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+  fileInput.value = '';
+  await loadPointTypes();
+  showToast(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert${result.skipped ? `, ${result.skipped} übersprungen` : ''}.`, 'success');
 }
 
 
@@ -379,5 +421,26 @@ async function clearCentralTemplates() {
   const result = await api('/central-templates', {method:'DELETE'});
   await loadCentralTemplates();
   showToast(`${result.deleted} gelöscht.`, 'success');
+}
+
+function exportCentralTemplatesJson() {
+  window.location.href = `/api/central-templates/export-json`;
+}
+
+async function importCentralTemplatesJson() {
+  const fileInput = document.getElementById('import-centraltemplates-file');
+  const file = fileInput.files[0];
+  if (!file) return showToast('Bitte zuerst eine Vorlagen-.json-Datei auswählen', 'warning');
+  const text = await file.text();
+  let payload;
+  try {
+    payload = JSON.parse(text);
+  } catch (e) {
+    return showToast('Diese Datei ist kein gültiges JSON', 'error');
+  }
+  const result = await api('/central-templates/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+  fileInput.value = '';
+  await loadCentralTemplates();
+  showToast(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert${result.skipped ? `, ${result.skipped} übersprungen` : ''}.`, 'success');
 }
 

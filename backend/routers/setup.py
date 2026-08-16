@@ -1,13 +1,26 @@
 """Categories / Point types / Central templates / Company profile ("Setup" tab)."""
+import io
 import json
 import sqlite3
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 
 from ..db import get_db
 from ..models import PointTypeIn, CentralTemplateIn, CompanyProfileIn, CategoryRenameIn
 
 router = APIRouter(tags=["setup"])
+
+
+def _json_download(payload, filename):
+    buf = io.StringIO()
+    buf.write(json.dumps(payload, ensure_ascii=False, indent=2))
+    buf.seek(0)
+    return StreamingResponse(
+        iter([buf.getvalue().encode("utf-8")]),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get("/api/company-profile")
@@ -62,6 +75,49 @@ def rename_category(category_id: int, c: CategoryRenameIn):
         except sqlite3.IntegrityError:
             raise HTTPException(400, "A category with that name already exists")
     return {"ok": True}
+
+
+@router.get("/api/categories/export-json")
+def export_categories_json():
+    """Names only, keyed by order_idx (= the fixed KNX main group number) -
+    not a general backup/restore format like the other exports, since
+    categories can't be added/removed/reordered. Re-importing this only ever
+    renames the 6 existing categories back to whatever the file says."""
+    with get_db() as db:
+        rows = db.execute("SELECT * FROM categories ORDER BY order_idx").fetchall()
+        payload = {
+            "format": "knx-categories-v1",
+            "categories": [
+                {"order_idx": r["order_idx"], "name": r["name"], "is_allgemein": bool(r["is_allgemein"])}
+                for r in rows
+            ],
+        }
+    return _json_download(payload, "kategorien.json")
+
+
+@router.post("/api/categories/import-json")
+def import_categories_json(payload: dict):
+    """Renames categories by matching order_idx - never inserts, deletes, or
+    reorders, since that mapping is fixed to the KNX main group numbers."""
+    with get_db() as db:
+        updated = 0
+        skipped = 0
+        for c in payload.get("categories", []):
+            order_idx = c.get("order_idx")
+            name = c.get("name", "")
+            if order_idx is None or not name:
+                skipped += 1
+                continue
+            try:
+                cur = db.execute("UPDATE categories SET name=? WHERE order_idx=?", (name, order_idx))
+            except sqlite3.IntegrityError:
+                skipped += 1  # name collides with another category's current name
+                continue
+            if cur.rowcount:
+                updated += 1
+            else:
+                skipped += 1
+        return {"updated": updated, "skipped": skipped}
 
 
 @router.get("/api/point-types")
@@ -125,6 +181,69 @@ def clear_point_types():
     return {"deleted": total - remaining, "skipped_in_use": remaining}
 
 
+@router.get("/api/point-types/export-json")
+def export_point_types_json():
+    """References categories by order_idx (not the raw category_id, which
+    could in principle differ between installs) so the file stays portable
+    across any KNXpilot instance - it's a template of default/custom
+    Funktionstypen, not a snapshot of one specific database's row ids."""
+    with get_db() as db:
+        categories = {r["id"]: r["order_idx"] for r in db.execute("SELECT * FROM categories").fetchall()}
+        rows = db.execute("SELECT * FROM point_types ORDER BY category_id, id").fetchall()
+        payload = {
+            "format": "knx-point-types-v1",
+            "point_types": [
+                {
+                    "category_order_idx": categories.get(r["category_id"]),
+                    "name": r["name"], "suffixes": json.loads(r["suffixes_json"]),
+                    "block_size": r["block_size"], "channel_type": r["channel_type"],
+                    "channels_needed": r["channels_needed"],
+                }
+                for r in rows
+            ],
+        }
+    return _json_download(payload, "funktionstypen.json")
+
+
+@router.post("/api/point-types/import-json")
+def import_point_types_json(payload: dict):
+    """Upserts by (category, name) - re-importing the same file (e.g. after
+    'Alle löschen') recreates everything; running it again afterwards
+    updates in place instead of duplicating."""
+    with get_db() as db:
+        order_to_id = {r["order_idx"]: r["id"] for r in db.execute("SELECT * FROM categories").fetchall()}
+        imported = 0
+        updated = 0
+        skipped = 0
+        for pt in payload.get("point_types", []):
+            category_id = order_to_id.get(pt.get("category_order_idx"))
+            name = pt.get("name", "")
+            if category_id is None or not name:
+                skipped += 1
+                continue
+            suffixes_json = json.dumps(pt.get("suffixes", []))
+            existing = db.execute(
+                "SELECT id FROM point_types WHERE category_id=? AND name=?", (category_id, name)
+            ).fetchone()
+            if existing:
+                db.execute(
+                    "UPDATE point_types SET suffixes_json=?, block_size=?, channel_type=?, channels_needed=? "
+                    "WHERE id=?",
+                    (suffixes_json, pt.get("block_size", 5), pt.get("channel_type", ""),
+                     pt.get("channels_needed", 1), existing["id"]),
+                )
+                updated += 1
+            else:
+                db.execute(
+                    "INSERT INTO point_types (category_id, name, suffixes_json, block_size, channel_type, channels_needed) "
+                    "VALUES (?, ?, ?, ?, ?, ?)",
+                    (category_id, name, suffixes_json, pt.get("block_size", 5),
+                     pt.get("channel_type", ""), pt.get("channels_needed", 1)),
+                )
+                imported += 1
+        return {"imported": imported, "updated": updated, "skipped": skipped}
+
+
 @router.get("/api/central-templates")
 def list_central_templates():
     with get_db() as db:
@@ -183,3 +302,69 @@ def clear_central_templates():
         (total,) = db.execute("SELECT COUNT(*) FROM central_templates").fetchone()
         db.execute("DELETE FROM central_templates")
     return {"deleted": total}
+
+
+@router.get("/api/central-templates/export-json")
+def export_central_templates_json():
+    """References categories by order_idx, same portability reasoning as
+    the Funktionstypen export."""
+    with get_db() as db:
+        categories = {r["id"]: r["order_idx"] for r in db.execute("SELECT * FROM categories").fetchall()}
+        rows = db.execute("SELECT * FROM central_templates ORDER BY category_id, order_idx").fetchall()
+        payload = {
+            "format": "knx-central-templates-v1",
+            "central_templates": [
+                {
+                    "category_order_idx": categories.get(r["category_id"]),
+                    "name": r["name"], "scope": r["scope"], "suffixes": json.loads(r["suffixes_json"]),
+                    "order_idx": r["order_idx"], "skip_outdoor_floors": bool(r["skip_outdoor_floors"]),
+                    "block_size": r["block_size"], "trigger_count": r["trigger_count"],
+                }
+                for r in rows
+            ],
+        }
+    return _json_download(payload, "zentral-vorlagen.json")
+
+
+@router.post("/api/central-templates/import-json")
+def import_central_templates_json(payload: dict):
+    """Upserts by (category, name, scope) - re-importing the same file (e.g.
+    after 'Alle löschen') recreates everything; running it again afterwards
+    updates in place instead of duplicating."""
+    with get_db() as db:
+        order_to_id = {r["order_idx"]: r["id"] for r in db.execute("SELECT * FROM categories").fetchall()}
+        imported = 0
+        updated = 0
+        skipped = 0
+        for ct in payload.get("central_templates", []):
+            category_id = order_to_id.get(ct.get("category_order_idx"))
+            name = ct.get("name", "")
+            scope = ct.get("scope", "")
+            if category_id is None or scope not in ("building", "floor", "room_multi"):
+                skipped += 1
+                continue
+            suffixes_json = json.dumps(ct.get("suffixes", []))
+            existing = db.execute(
+                "SELECT id FROM central_templates WHERE category_id=? AND name=? AND scope=?",
+                (category_id, name, scope),
+            ).fetchone()
+            values_tail = (
+                suffixes_json, ct.get("order_idx", 0), int(ct.get("skip_outdoor_floors", False)),
+                ct.get("block_size"), ct.get("trigger_count"),
+            )
+            if existing:
+                db.execute(
+                    "UPDATE central_templates SET suffixes_json=?, order_idx=?, skip_outdoor_floors=?, "
+                    "block_size=?, trigger_count=? WHERE id=?",
+                    values_tail + (existing["id"],),
+                )
+                updated += 1
+            else:
+                db.execute(
+                    "INSERT INTO central_templates "
+                    "(category_id, name, scope, suffixes_json, order_idx, skip_outdoor_floors, block_size, trigger_count) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    (category_id, name, scope) + values_tail,
+                )
+                imported += 1
+        return {"imported": imported, "updated": updated, "skipped": skipped}

@@ -8,6 +8,17 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- Export/import (JSON) for Setup → Kategorien, Funktionstypen, and
+  Zentral-/Allgemeinfunktions-Vorlagen — the same pattern the Geräte
+  Katalog already had, so the new "Alle löschen" buttons (below) are
+  always recoverable without a database reset. Kategorien's import only
+  renames the 6 fixed categories (matched by main group number, never
+  adds/removes); Funktionstypen and Zentral-Vorlagen upsert by
+  category+name(+scope), so re-importing the same file twice updates in
+  place instead of duplicating. New `GET/POST .../export-json` and
+  `.../import-json` endpoints for all three. The current defaults for
+  all four importable sections (including the existing Geräte Katalog)
+  are now committed as reference/starter files under `docs/templates/`.
 - "Alle löschen" bulk-clear buttons, each with a confirmation popup, for
   the Geräte Katalog, Setup → Funktionstypen, and Setup →
   Zentral-/Allgemeinfunktions-Vorlagen — for starting over with your own

@@ -1,0 +1,260 @@
+{
+  "format": "knx-central-templates-v1",
+  "central_templates": [
+    {
+      "category_order_idx": 0,
+      "name": "Datum/Uhrzeit",
+      "scope": "building",
+      "suffixes": [
+        {
+          "suffix": "Datum",
+          "dpt": "DPST-11-1"
+        },
+        {
+          "suffix": "Uhrzeit",
+          "dpt": "DPST-10-1"
+        },
+        {
+          "suffix": "Datum/Uhrzeit",
+          "dpt": "DPST-19-1"
+        },
+        {
+          "suffix": "Tag/Nacht",
+          "dpt": "DPST-1-2"
+        }
+      ],
+      "order_idx": 0,
+      "skip_outdoor_floors": false,
+      "block_size": null,
+      "trigger_count": null
+    },
+    {
+      "category_order_idx": 0,
+      "name": "Klima",
+      "scope": "building",
+      "suffixes": [
+        {
+          "suffix": "Aussentemperatur Nord",
+          "dpt": "DPST-9-1"
+        },
+        {
+          "suffix": "Aussentemperatur Dach",
+          "dpt": "DPST-9-1"
+        },
+        {
+          "suffix": "Windgeschwindigkeit",
+          "dpt": "DPST-9-5"
+        },
+        {
+          "suffix": "Regen",
+          "dpt": "DPST-1-1"
+        },
+        {
+          "suffix": "Helligkeit Süd",
+          "dpt": "DPST-9-4"
+        },
+        {
+          "suffix": "Helligkeit West",
+          "dpt": "DPST-9-4"
+        },
+        {
+          "suffix": "Helligkeit Ost",
+          "dpt": "DPST-9-4"
+        },
+        {
+          "suffix": "Windalarm",
+          "dpt": "DPST-1-5"
+        }
+      ],
+      "order_idx": 1,
+      "skip_outdoor_floors": false,
+      "block_size": null,
+      "trigger_count": null
+    },
+    {
+      "category_order_idx": 1,
+      "name": "Zentral",
+      "scope": "building",
+      "suffixes": [
+        {
+          "suffix": "Ein/Aus",
+          "dpt": "DPST-1-1"
+        }
+      ],
+      "order_idx": 0,
+      "skip_outdoor_floors": false,
+      "block_size": null,
+      "trigger_count": null
+    },
+    {
+      "category_order_idx": 1,
+      "name": "Zentral",
+      "scope": "floor",
+      "suffixes": [
+        {
+          "suffix": "Ein/Aus",
+          "dpt": "DPST-1-1"
+        }
+      ],
+      "order_idx": 1,
+      "skip_outdoor_floors": false,
+      "block_size": null,
+      "trigger_count": null
+    },
+    {
+      "category_order_idx": 2,
+      "name": "Zentral",
+      "scope": "building",
+      "suffixes": [
+        {
+          "suffix": "Aus",
+          "dpt": "DPST-1-1"
+        }
+      ],
+      "order_idx": 0,
+      "skip_outdoor_floors": false,
+      "block_size": null,
+      "trigger_count": null
+    },
+    {
+      "category_order_idx": 3,
+      "name": "",
+      "scope": "building",
+      "suffixes": [
+        {
+          "suffix": "Betriebsartumschaltung",
+          "dpt": "DPST-20-102"
+        },
+        {
+          "suffix": "Betriebsartumschaltung Status",
+          "dpt": "DPST-20-102"
+        }
+      ],
+      "order_idx": 0,
+      "skip_outdoor_floors": false,
+      "block_size": null,
+      "trigger_count": null
+    },
+    {
+      "category_order_idx": 3,
+      "name": "Sommer/Winter",
+      "scope": "building",
+      "suffixes": [
+        {
+          "suffix": "Übersteuern",
+          "dpt": "DPST-1-1"
+        }
+      ],
+      "order_idx": 1,
+      "skip_outdoor_floors": false,
+      "block_size": null,
+      "trigger_count": null
+    },
+    {
+      "category_order_idx": 3,
+      "name": "Sommer/Winter",
+      "scope": "floor",
+      "suffixes": [
+        {
+          "suffix": "Status",
+          "dpt": "DPST-1-1"
+        }
+      ],
+      "order_idx": 2,
+      "skip_outdoor_floors": true,
+      "block_size": null,
+      "trigger_count": null
+    },
+    {
+      "category_order_idx": 4,
+      "name": "Beschattung Freigabe",
+      "scope": "building",
+      "suffixes": [
+        {
+          "suffix": "",
+          "dpt": "DPST-1-1"
+        }
+      ],
+      "order_idx": 0,
+      "skip_outdoor_floors": false,
+      "block_size": null,
+      "trigger_count": null
+    },
+    {
+      "category_order_idx": 4,
+      "name": "Fahrzeitmessung",
+      "scope": "floor",
+      "suffixes": [
+        {
+          "suffix": "",
+          "dpt": "DPST-1-10"
+        }
+      ],
+      "order_idx": 1,
+      "skip_outdoor_floors": true,
+      "block_size": null,
+      "trigger_count": null
+    },
+    {
+      "category_order_idx": 4,
+      "name": "Zentral",
+      "scope": "floor",
+      "suffixes": [
+        {
+          "suffix": "Auf/Ab",
+          "dpt": "DPST-1-8"
+        },
+        {
+          "suffix": "Stop",
+          "dpt": "DPST-1-17"
+        },
+        {
+          "suffix": "Position",
+          "dpt": "DPST-5-1"
+        }
+      ],
+      "order_idx": 2,
+      "skip_outdoor_floors": true,
+      "block_size": null,
+      "trigger_count": null
+    },
+    {
+      "category_order_idx": 4,
+      "name": "Zentral",
+      "scope": "room_multi",
+      "suffixes": [
+        {
+          "suffix": "Auf/Ab",
+          "dpt": "DPST-1-8"
+        },
+        {
+          "suffix": "Stop",
+          "dpt": "DPST-1-10"
+        },
+        {
+          "suffix": "Position",
+          "dpt": "DPST-5-1"
+        }
+      ],
+      "order_idx": 3,
+      "skip_outdoor_floors": true,
+      "block_size": 5,
+      "trigger_count": 2
+    },
+    {
+      "category_order_idx": 4,
+      "name": "",
+      "scope": "room_multi",
+      "suffixes": [
+        {
+          "suffix": "Sperre",
+          "dpt": "DPST-1-1"
+        }
+      ],
+      "order_idx": 4,
+      "skip_outdoor_floors": true,
+      "block_size": null,
+      "trigger_count": 2
+    }
+  ]
+}

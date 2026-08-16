@@ -1,0 +1,621 @@
+{
+  "format": "knx-actor-types-v2",
+  "actor_types": [
+    {
+      "manufacturer": "MDT",
+      "model": "AKH-0400.03",
+      "group_name": "Aktor",
+      "description": "Heizungsaktor 4 Kanäle",
+      "channel_type": "Heizung",
+      "channel_count": 4
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKH-0600.03",
+      "group_name": "Aktor",
+      "description": "Heizungsaktor 6 Kanäle",
+      "channel_type": "Heizung",
+      "channel_count": 6
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKH-0800.03",
+      "group_name": "Aktor",
+      "description": "Heizungsaktor 8 Kanäle",
+      "channel_type": "Heizung",
+      "channel_count": 8
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-04000.02",
+      "group_name": "Aktor",
+      "description": "Binäreingang 4 Kanäle (potentialfrei)",
+      "channel_type": "Binäreingang",
+      "channel_count": 4
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-04024.02",
+      "group_name": "Aktor",
+      "description": "Binäreingang 4 Kanäle (24V)",
+      "channel_type": "Binäreingang",
+      "channel_count": 4
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-04230.02",
+      "group_name": "Aktor",
+      "description": "Binäreingang 4 Kanäle (230V)",
+      "channel_type": "Binäreingang",
+      "channel_count": 4
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-08000.02",
+      "group_name": "Aktor",
+      "description": "Binäreingang 8 Kanäle (potentialfrei)",
+      "channel_type": "Binäreingang",
+      "channel_count": 8
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-08024.02",
+      "group_name": "Aktor",
+      "description": "Binäreingang 8 Kanäle (24V)",
+      "channel_type": "Binäreingang",
+      "channel_count": 8
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-08230.02",
+      "group_name": "Aktor",
+      "description": "Binäreingang 8 Kanäle (230V)",
+      "channel_type": "Binäreingang",
+      "channel_count": 8
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-16000.02",
+      "group_name": "Aktor",
+      "description": "Binäreingang 16 Kanäle (potentialfrei)",
+      "channel_type": "Binäreingang",
+      "channel_count": 16
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-16024.02",
+      "group_name": "Aktor",
+      "description": "Binäreingang 16 Kanäle (24V)",
+      "channel_type": "Binäreingang",
+      "channel_count": 16
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-16230.02",
+      "group_name": "Aktor",
+      "description": "Binäreingang 16 Kanäle (230V)",
+      "channel_type": "Binäreingang",
+      "channel_count": 16
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-32000.02",
+      "group_name": "Aktor",
+      "description": "Binäreingang 32 Kanäle (potentialfrei)",
+      "channel_type": "Binäreingang",
+      "channel_count": 32
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-GTS06TW.01S",
+      "group_name": "Bedienelement",
+      "description": "Glas Touch Smart 6 Zoll Weiß",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-GTS06TS.01S",
+      "group_name": "Bedienelement",
+      "description": "Glas Touch Smart 6 Zoll Schwarz",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-GTSP6TW.01S",
+      "group_name": "Bedienelement",
+      "description": "Glas Touch Smart Plus 6 Zoll Weiß",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-GTSP6TS.01S",
+      "group_name": "Bedienelement",
+      "description": "Glas Touch Smart Plus 6 Zoll Schwarz",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-GT20W.02",
+      "group_name": "Bedienelement",
+      "description": "Glastaster II Smart Weiß",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-GT20S.02S",
+      "group_name": "Bedienelement",
+      "description": "Glastaster II Smart Schwarz",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-GT2TW.02",
+      "group_name": "Bedienelement",
+      "description": "Glastaster II Smart Weiß mit Temperatursensor",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-GT2TS.02S",
+      "group_name": "Bedienelement",
+      "description": "Glastaster II Smart Schwarz mit Temperatursensor",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAS6304.01",
+      "group_name": "Bedienelement",
+      "description": "Taster Smart 63 4-fach",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAS63T4.01",
+      "group_name": "Bedienelement",
+      "description": "Taster Smart 63 4-fach mit Temperatursensor",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL6301.01",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 1-fach",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL63T1.01",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 1-fach mit Temperatursensor",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL6301.A1",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 1-fach (Auf/Ab)",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL63T1.A1",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 1-fach (Auf/Ab) mit Temperatursensor",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL6301.B1",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 1-fach (I/O)",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL63T1.B1",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 1-fach (I/O) mit Temperatursensor",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL6302.01",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 2-fach",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL63T2.01",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 2-fach mit Temperatursensor",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL6302.A1",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 2-fach (Auf/Ab)",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL63T2.A1",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 2-fach (Auf/Ab) mit Temperatursensor",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL6302.B1",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 2-fach (I/O)",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL63T2.B1",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 2-fach (I/O) mit Temperatursensor",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL6302.C1",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 2-fach (Auf/Ab, I/O)",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL63T2.C1",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 2-fach (Auf/Ab, I/O) mit Temperatursensor",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL6302.D1",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 2-fach (I/O, Auf/Ab)",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL6304.01",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 4-fach",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL63T4.01",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 4-fach mit Temperatursensor",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKS-0216.03",
+      "group_name": "Aktor",
+      "description": "Schaltaktor Standard 2 Kanäle",
+      "channel_type": "Schalten",
+      "channel_count": 2
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKS-0416.03",
+      "group_name": "Aktor",
+      "description": "Schaltaktor Standard 4 Kanäle",
+      "channel_type": "Schalten",
+      "channel_count": 4
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKS-0816.03",
+      "group_name": "Aktor",
+      "description": "Schaltaktor Standard 8 Kanäle",
+      "channel_type": "Schalten",
+      "channel_count": 8
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKS-1216.03",
+      "group_name": "Aktor",
+      "description": "Schaltaktor Standard 12 Kanäle",
+      "channel_type": "Schalten",
+      "channel_count": 12
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKS-1616.03",
+      "group_name": "Aktor",
+      "description": "Schaltaktor Standard 16 Kanäle",
+      "channel_type": "Schalten",
+      "channel_count": 16
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKS-2016.03",
+      "group_name": "Aktor",
+      "description": "Schaltaktor Standard 20 Kanäle",
+      "channel_type": "Schalten",
+      "channel_count": 20
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKS-2416.03",
+      "group_name": "Aktor",
+      "description": "Schaltaktor Standard 24 Kanäle",
+      "channel_type": "Schalten",
+      "channel_count": 24
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKK-0216.03",
+      "group_name": "Aktor",
+      "description": "Schaltaktor Kompakt 2 Kanäle",
+      "channel_type": "Schalten",
+      "channel_count": 2
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKK-0416.03",
+      "group_name": "Aktor",
+      "description": "Schaltaktor Kompakt 4 Kanäle",
+      "channel_type": "Schalten",
+      "channel_count": 4
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKK-0816.03",
+      "group_name": "Aktor",
+      "description": "Schaltaktor Kompakt 8 Kanäle",
+      "channel_type": "Schalten",
+      "channel_count": 8
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKK-1616.03",
+      "group_name": "Aktor",
+      "description": "Schaltaktor Kompakt 16 Kanäle",
+      "channel_type": "Schalten",
+      "channel_count": 16
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKK-2416.03",
+      "group_name": "Aktor",
+      "description": "Schaltaktor Kompakt 24 Kanäle",
+      "channel_type": "Schalten",
+      "channel_count": 24
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "JAL-0210.02",
+      "group_name": "Aktor",
+      "description": "Jalousieaktor 2 Kanäle",
+      "channel_type": "Rollo",
+      "channel_count": 2
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "JAL-0410.02",
+      "group_name": "Aktor",
+      "description": "Jalousieaktor 4 Kanäle",
+      "channel_type": "Rollo",
+      "channel_count": 4
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "JAL-0810.02",
+      "group_name": "Aktor",
+      "description": "Jalousieaktor 8 Kanäle",
+      "channel_type": "Rollo",
+      "channel_count": 8
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKD-0201.02",
+      "group_name": "Aktor",
+      "description": "Dimmaktor 2 Kanäle",
+      "channel_type": "Dimmen",
+      "channel_count": 2
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKD-0401.02",
+      "group_name": "Aktor",
+      "description": "Dimmaktor 4 Kanäle",
+      "channel_type": "Dimmen",
+      "channel_count": 4
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKD-0424R.02",
+      "group_name": "Aktor",
+      "description": "LED Controller 4 Kanäle",
+      "channel_type": "Dimmen",
+      "channel_count": 4
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "AKD-0424R2.02",
+      "group_name": "Aktor",
+      "description": "LED Controller 4 Kanäle",
+      "channel_type": "Dimmen",
+      "channel_count": 4
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "BE-TAL63T2.D1",
+      "group_name": "Bedienelement",
+      "description": "Taster Light 63 2-fach (I/O, Auf/Ab) mit Temperatursensor",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "SCN-BWM63.02",
+      "group_name": "Sensor",
+      "description": "Bewegungsmelder 63",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "SCN-BWM63T.02",
+      "group_name": "Sensor",
+      "description": "Bewegungsmelder 63 mit Temperatursensor",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "SCN-IP000.03",
+      "group_name": "Systemgerät",
+      "description": "IP Interface",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "Busch-Jaeger",
+      "model": "2CKA006132A0432",
+      "group_name": "Sensor",
+      "description": "Busch-Wächter PRO 280° KNX (Weiß)",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "Busch-Jaeger",
+      "model": "2CKA006132A0433",
+      "group_name": "Sensor",
+      "description": "Busch-Wächter PRO 280° KNX (Anthrazit/Schwarz)",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "Phoenix Contact",
+      "model": "1477019",
+      "group_name": "Systemgerät",
+      "description": "Busspannungsversorgung STEP3 640mA",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "Phoenix Contact",
+      "model": "1477020",
+      "group_name": "Systemgerät",
+      "description": "Busspannungsversorgung STEP3 1280mA",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "Elsner Elektronik",
+      "model": "Windancer 2.0 GPS KNX SEC",
+      "group_name": "Wetterstation",
+      "description": "Wetterstation mit GPS",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "Elsner Elektronik",
+      "model": "Windancer 2.0 KNX SEC",
+      "group_name": "Wetterstation",
+      "description": "Wetterstation",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "Theben",
+      "model": "1509201",
+      "group_name": "Wetterstation",
+      "description": "Wetterstation Meteodata 150/24V KNX",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "Theben",
+      "model": "1509204",
+      "group_name": "Wetterstation",
+      "description": "Wetterstation Meteodata 150/24V GPS KNX",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "Gira",
+      "model": "209600",
+      "group_name": "Visualisierung/Logik",
+      "description": "X1 Server",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "Gira",
+      "model": "208600",
+      "group_name": "Systemgerät",
+      "description": "S1 Fernzugriff-Modul",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "Theben",
+      "model": "1019610",
+      "group_name": "Sensor",
+      "description": "Bewegungsmelder theLuxa P300 KNX WH (Weiß)",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "Theben",
+      "model": "1019611",
+      "group_name": "Sensor",
+      "description": "Bewegungsmelder theLuxa P300 KNX BK (Schwarz)",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "1167-24",
+      "group_name": "Systemgerät",
+      "description": "LED PowerSupply 160-24",
+      "channel_type": "",
+      "channel_count": null
+    },
+    {
+      "manufacturer": "Hörmann",
+      "model": "4511630",
+      "group_name": "Aktor",
+      "description": "KNX Gateway Standard für Torantriebe",
+      "channel_type": "Tor",
+      "channel_count": 1
+    }
+  ]
+}

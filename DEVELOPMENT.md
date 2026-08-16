@@ -81,6 +81,14 @@ frontend/
     update.js          — self-update tab + changelog viewer + version badge
     hilfe.js           — in-app manual (renders MANUAL.md)
     init.js            — page-load bootstrap, must load last (calls functions from the files above)
+docs/
+  screenshots/      — README.md's screenshots
+  templates/        — default-data JSON exports (Kategorien, Funktionstypen,
+                      Zentral-/Allgemeinfunktions-Vorlagen, Geräte Katalog),
+                      importable via each Setup tab's "Importieren (JSON)"
+                      button - re-download the current defaults here after
+                      changing them, so an "Alle löschen" is always
+                      recoverable without a database reset
 ```
 
 The backend router split and the frontend JS-file split both follow the

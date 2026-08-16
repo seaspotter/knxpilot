@@ -1,0 +1,35 @@
+{
+  "format": "knx-categories-v1",
+  "categories": [
+    {
+      "order_idx": 0,
+      "name": "Allgemein",
+      "is_allgemein": true
+    },
+    {
+      "order_idx": 1,
+      "name": "Beleuchtung",
+      "is_allgemein": false
+    },
+    {
+      "order_idx": 2,
+      "name": "Steckdosen",
+      "is_allgemein": false
+    },
+    {
+      "order_idx": 3,
+      "name": "Heizung",
+      "is_allgemein": false
+    },
+    {
+      "order_idx": 4,
+      "name": "Rollo",
+      "is_allgemein": false
+    },
+    {
+      "order_idx": 5,
+      "name": "Tore",
+      "is_allgemein": false
+    }
+  ]
+}

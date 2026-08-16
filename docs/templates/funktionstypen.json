@@ -1,0 +1,217 @@
+{
+  "format": "knx-point-types-v1",
+  "point_types": [
+    {
+      "category_order_idx": 1,
+      "name": "Licht (Schalten)",
+      "suffixes": [
+        {
+          "suffix": "Schalten",
+          "dpt": "DPST-1-1"
+        },
+        {
+          "suffix": "Schalten Status",
+          "dpt": "DPST-1-11"
+        }
+      ],
+      "block_size": 5,
+      "channel_type": "Schalten",
+      "channels_needed": 1
+    },
+    {
+      "category_order_idx": 1,
+      "name": "Licht (Dimmen)",
+      "suffixes": [
+        {
+          "suffix": "Schalten",
+          "dpt": "DPST-1-1"
+        },
+        {
+          "suffix": "Schalten Status",
+          "dpt": "DPST-1-11"
+        },
+        {
+          "suffix": "Dimmen",
+          "dpt": "DPST-3-7"
+        },
+        {
+          "suffix": "Dimmen Status",
+          "dpt": "DPST-5-1"
+        }
+      ],
+      "block_size": 5,
+      "channel_type": "Dimmen",
+      "channels_needed": 1
+    },
+    {
+      "category_order_idx": 1,
+      "name": "LED (Tunable White)",
+      "suffixes": [
+        {
+          "suffix": "Schalten",
+          "dpt": "DPST-1-1"
+        },
+        {
+          "suffix": "Schalten Status",
+          "dpt": "DPST-1-11"
+        },
+        {
+          "suffix": "Helligkeit relativ",
+          "dpt": "DPST-3-7"
+        },
+        {
+          "suffix": "Helligkeit absolut",
+          "dpt": "DPST-5-1"
+        },
+        {
+          "suffix": "Helligkeit Status",
+          "dpt": "DPST-5-1"
+        },
+        {
+          "suffix": "Farbe relativ",
+          "dpt": "DPST-3-7"
+        },
+        {
+          "suffix": "Farbe Status",
+          "dpt": "DPST-7-600"
+        },
+        {
+          "suffix": "Farbe Anteil absolut",
+          "dpt": "DPST-5-1"
+        },
+        {
+          "suffix": "Farbe Anteil Status",
+          "dpt": "DPST-5-1"
+        }
+      ],
+      "block_size": 10,
+      "channel_type": "LED",
+      "channels_needed": 1
+    },
+    {
+      "category_order_idx": 2,
+      "name": "Steckdose (Schalten)",
+      "suffixes": [
+        {
+          "suffix": "Schalten",
+          "dpt": "DPST-1-1"
+        },
+        {
+          "suffix": "Schalten Status",
+          "dpt": "DPST-1-11"
+        }
+      ],
+      "block_size": 5,
+      "channel_type": "Schalten",
+      "channels_needed": 1
+    },
+    {
+      "category_order_idx": 3,
+      "name": "Heizkreis",
+      "suffixes": [
+        {
+          "suffix": "Temperatur",
+          "dpt": "DPST-9-1"
+        },
+        {
+          "suffix": "Sollwertverschiebung",
+          "dpt": "DPST-9-2"
+        },
+        {
+          "suffix": "Sollwertverschiebung Status",
+          "dpt": "DPST-9-2"
+        },
+        {
+          "suffix": "Sollwert",
+          "dpt": "DPST-9-1"
+        },
+        {
+          "suffix": "Sollwert Status",
+          "dpt": "DPST-9-1"
+        }
+      ],
+      "block_size": 5,
+      "channel_type": "Heizung",
+      "channels_needed": 1
+    },
+    {
+      "category_order_idx": 4,
+      "name": "Rollo (einfach)",
+      "suffixes": [
+        {
+          "suffix": "Auf/Ab",
+          "dpt": "DPST-1-8"
+        },
+        {
+          "suffix": "Stop",
+          "dpt": "DPST-1-10"
+        },
+        {
+          "suffix": "Position",
+          "dpt": "DPST-5-1"
+        },
+        {
+          "suffix": "Position Status",
+          "dpt": "DPST-5-1"
+        }
+      ],
+      "block_size": 5,
+      "channel_type": "Rollo",
+      "channels_needed": 1
+    },
+    {
+      "category_order_idx": 4,
+      "name": "Jalousie (mit Lamelle)",
+      "suffixes": [
+        {
+          "suffix": "Auf/Ab",
+          "dpt": "DPST-1-8"
+        },
+        {
+          "suffix": "Stop",
+          "dpt": "DPST-1-10"
+        },
+        {
+          "suffix": "Position",
+          "dpt": "DPST-5-1"
+        },
+        {
+          "suffix": "Position Status",
+          "dpt": "DPST-5-1"
+        },
+        {
+          "suffix": "Lamelle",
+          "dpt": "DPST-5-1"
+        },
+        {
+          "suffix": "Lamelle Status",
+          "dpt": "DPST-5-1"
+        }
+      ],
+      "block_size": 10,
+      "channel_type": "Rollo",
+      "channels_needed": 1
+    },
+    {
+      "category_order_idx": 5,
+      "name": "Tor",
+      "suffixes": [
+        {
+          "suffix": "Auf/Ab",
+          "dpt": "DPST-1-8"
+        },
+        {
+          "suffix": "Stop",
+          "dpt": "DPST-1-10"
+        },
+        {
+          "suffix": "Status",
+          "dpt": "DPST-1-11"
+        }
+      ],
+      "block_size": 5,
+      "channel_type": "Tor",
+      "channels_needed": 1
+    }
+  ]
+}

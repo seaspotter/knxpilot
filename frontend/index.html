@@ -350,7 +350,14 @@
     <div class="subtab" id="setup-subtab-kategorien">
     <div class="card">
       <h3>Kategorien (Hauptgruppen)</h3>
-      <p class="muted">Ihre Standard-Funktionskategorien. Reihenfolge = Hauptgruppennummer. Normalerweise einmalig festgelegt und danach unverändert. Das Adressierungsschema selbst (Hauptgruppe = Kategorie, Mittelgruppe = Geschoss, Untergruppe = Punkt) ist fest im Tool verankert, nicht nur hier in der Reihenfolge — ein anderes Schema (z.B. Geschoss als Hauptgruppe) würde eine andere Tool-Variante erfordern, siehe Hilfe-Tab.</p>
+      <p class="muted">Ihre Standard-Funktionskategorien. Reihenfolge = Hauptgruppennummer. Normalerweise einmalig festgelegt und danach unverändert. Das Adressierungsschema selbst (Hauptgruppe = Kategorie, Mittelgruppe = Geschoss, Untergruppe = Punkt) ist fest im Tool verankert, nicht nur hier in der Reihenfolge — ein anderes Schema (z.B. Geschoss als Hauptgruppe) würde eine andere Tool-Variante erfordern, siehe Hilfe-Tab. Deshalb gibt es hier bewusst kein Hinzufügen/Löschen, nur Umbenennen: es sind immer genau 6, jede an einer festen Hauptgruppennummer.</p>
+      <div class="row">
+        <button class="btn secondary small" onclick="exportCategoriesJson()">⭳ Namen exportieren (JSON)</button>
+        <input type="file" id="import-categories-file" accept="application/json">
+        <button class="btn secondary small" onclick="importCategoriesJson()">⭱ Namen importieren (JSON)</button>
+        <span class="info-icon" tabindex="0" data-tip="Nur die Namen werden abgeglichen (nach Hauptgruppennummer) - fügt nie eine Kategorie hinzu oder entfernt eine, benennt nur die 6 bestehenden um.">i</span>
+      </div>
+      <hr class="sep">
       <ul class="list" id="categories-list"></ul>
     </div>
     </div>
@@ -375,7 +382,12 @@
         <button class="btn secondary small" id="pt-cancel-btn" onclick="cancelEditPointType()" style="display:none;">Abbrechen</button>
       </div>
       <hr class="sep">
-      <div style="margin-bottom:8px;"><button class="btn danger small" onclick="clearPointTypes()">Alle löschen</button></div>
+      <div class="row" style="margin-bottom:8px;">
+        <button class="btn secondary small" onclick="exportPointTypesJson()">⭳ Exportieren (JSON)</button>
+        <input type="file" id="import-pointtypes-file" accept="application/json">
+        <button class="btn secondary small" onclick="importPointTypesJson()">⭱ Importieren (JSON)</button>
+        <button class="btn danger small" onclick="clearPointTypes()">Alle löschen</button>
+      </div>
       <ul class="list" id="point-types-list"></ul>
     </div>
     </div>
@@ -412,7 +424,12 @@
         <button class="btn secondary small" id="ct-cancel-btn" onclick="cancelEditCentralTemplate()" style="display:none;">Abbrechen</button>
       </div>
       <hr class="sep">
-      <div style="margin-bottom:8px;"><button class="btn danger small" onclick="clearCentralTemplates()">Alle löschen</button></div>
+      <div class="row" style="margin-bottom:8px;">
+        <button class="btn secondary small" onclick="exportCentralTemplatesJson()">⭳ Exportieren (JSON)</button>
+        <input type="file" id="import-centraltemplates-file" accept="application/json">
+        <button class="btn secondary small" onclick="importCentralTemplatesJson()">⭱ Importieren (JSON)</button>
+        <button class="btn danger small" onclick="clearCentralTemplates()">Alle löschen</button>
+      </div>
       <ul class="list" id="central-templates-list"></ul>
     </div>
     </div>
