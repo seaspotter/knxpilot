@@ -8,4 +8,5 @@
   await loadActorTypes();
   await loadProjects();
   await loadChangelog();
+  await loadManual();
 })();

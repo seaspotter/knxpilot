@@ -20,12 +20,21 @@ REPO_DIR = "/app"
 # container - unlike the git-based endpoints below, which only make sense
 # against the bind-mounted repo checkout.
 CHANGELOG_PATH = Path(__file__).parent.parent.parent / "CHANGELOG.md"
+MANUAL_PATH = Path(__file__).parent.parent.parent / "MANUAL.md"
 
 
 @router.get("/api/system/changelog")
 def get_changelog():
     try:
         return {"markdown": CHANGELOG_PATH.read_text(encoding="utf-8")}
+    except FileNotFoundError:
+        return {"markdown": ""}
+
+
+@router.get("/api/system/manual")
+def get_manual():
+    try:
+        return {"markdown": MANUAL_PATH.read_text(encoding="utf-8")}
     except FileNotFoundError:
         return {"markdown": ""}
 

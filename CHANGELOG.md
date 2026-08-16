@@ -8,6 +8,15 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- A new **Hilfe** tab renders the full usage manual (`MANUAL.md`) in-app,
+  via a new `GET /api/system/manual` endpoint and `frontend/js/hilfe.js`.
+  The Markdown-to-HTML renderer that used to be private to the Update
+  tab's changelog view moved into `frontend/js/ui.js` as a shared,
+  general-purpose `renderMarkdown()` (now also supports arbitrary
+  heading depth and fenced code blocks, needed for the manual's KNX
+  addressing table and CSV format block).
+- README.md screenshots (`docs/screenshots/`): Übersicht, Funktionen,
+  Gruppenadressen, and Abgangsliste.
 - A GitHub Actions workflow (`.github/workflows/docker-publish.yml`)
   builds and publishes the Docker image to `ghcr.io/seaspotter/knxpilot`
   on every push to `main` (tag `latest`, plus a short-sha tag) and on
@@ -21,6 +30,10 @@ restructuring below — history before that is available via `git log`.
 
 ### Changed
 
+- README.md is now a short landing page (pitch, screenshots, key
+  features, quickstart, links) instead of the full manual — all detailed
+  per-tab usage instructions, the GA addressing model, and the CSV
+  format moved to the new `MANUAL.md` (also viewable in-app via Hilfe).
 - `docker-compose.yml` now pulls the published `ghcr.io/seaspotter/
   knxpilot:latest` image instead of building locally — a fresh deploy or
   a dependency update is now `docker compose pull && docker compose up

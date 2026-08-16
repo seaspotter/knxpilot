@@ -55,26 +55,31 @@ backend/
   utils.py          — small dependency-free helpers
   routers/
     setup.py          — company profile, categories, point types, central templates (Setup tab)
-    geraete.py         — global device catalog (Geräte tab)
-    projects.py        — projects, floors/rooms/points, backup/restore, GA export (Projekte tab)
+    geraete.py         — global device catalog (Geräte Katalog tab)
+    projects.py        — projects, floors/rooms/points, backup/restore (Projekte tab: Gebäudestruktur sub-tab + project CRUD)
     abgangsliste.py    — actor instances, circuit assignment, CSV/PDF export (Abgangsliste sub-tab)
     geraeteplanung.py  — per-room device planning, bill of materials, PDF export (Geräteplanung sub-tab)
     pflichtenheft.py   — Pflichtenheft PDF export (Pflichtenheft sub-tab)
     klaerungsliste.py  — questions/tasks/notes per project (Klärungsliste sub-tab)
-    system.py          — self-update via git (Update tab)
+    system.py          — self-update via git, changelog + manual + version endpoints (Update/Hilfe tabs)
 frontend/
   index.html        — page shell: <head>, nav/tab markup, <script src> tags in load order
   css/style.css      — the entire stylesheet (single file, theming via CSS custom properties)
   js/
     api.js            — shared api() fetch wrapper, global state vars, theme toggle, tab-switch wiring
+    ui.js              — toasts, modals, shared Markdown renderer (used by Update + Hilfe)
     setup.js           — company profile + categories + point types + central templates
     geraete.js         — actor types catalog
-    projekte.js        — project CRUD/meta, floors/rooms/points (GA tree), specials, preview/export
+    projekte.js        — project CRUD/meta, floors/rooms (Gebäudestruktur sub-tab)
+    funktionen.js      — assigning functions to rooms, Sonderadressen (Funktionen sub-tab)
+    gruppenadressen.js — GA tree preview + CSV export (Gruppenadressen sub-tab)
+    uebersicht.js      — project status dashboard (Übersicht sub-tab)
     abgangsliste.js    — actor instances + circuit assignment
     geraeteplanung.js  — per-room device planning
     pflichtenheft.js   — Pflichtenheft preview
     klaerungsliste.js  — questions/tasks/notes
-    update.js          — self-update tab
+    update.js          — self-update tab + changelog viewer + version badge
+    hilfe.js           — in-app manual (renders MANUAL.md)
     init.js            — page-load bootstrap, must load last (calls functions from the files above)
 ```
 

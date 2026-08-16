@@ -99,13 +99,16 @@
   .stat-card:hover { border-color:var(--accent); }
   .stat-card h4 { margin:0 0 6px; font-size:13px; color:var(--accent); }
   .stat-card p { font-size:13px; }
-  .changelog h3 { margin:16px 0 8px; font-size:14px; color:var(--accent); }
-  .changelog h3:first-child { margin-top:0; }
-  .changelog h4 { margin:10px 0 6px; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
-  .changelog ul { margin:0 0 6px; padding-left:20px; }
-  .changelog li { margin-bottom:6px; font-size:13px; line-height:1.5; }
-  .changelog p { font-size:13px; line-height:1.5; }
-  .changelog code { background:var(--panel2); padding:1px 5px; border-radius:4px; font-family:ui-monospace, monospace; font-size:12px; }
+  .markdown-view h3 { margin:16px 0 8px; font-size:14px; color:var(--accent); }
+  .markdown-view h3:first-child { margin-top:0; }
+  .markdown-view h4 { margin:14px 0 6px; font-size:13px; color:var(--text); font-weight:700; }
+  .markdown-view h5 { margin:10px 0 4px; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+  .markdown-view ul { margin:0 0 6px; padding-left:20px; }
+  .markdown-view li { margin-bottom:6px; font-size:13px; line-height:1.5; }
+  .markdown-view p { font-size:13px; line-height:1.5; }
+  .markdown-view code { background:var(--panel2); padding:1px 5px; border-radius:4px; font-family:ui-monospace, monospace; font-size:12px; }
+  .markdown-view pre { background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:10px 12px; overflow-x:auto; margin:0 0 10px; }
+  .markdown-view pre code { background:none; padding:0; font-size:12px; }
   .ga-tree { font-size:13px; }
   .ga-tree summary { cursor:pointer; padding:4px 0; list-style-position:inside; }
   .ga-tree summary:hover { color:var(--accent); }

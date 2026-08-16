@@ -66,6 +66,65 @@ function showConfirm(message, { danger = false } = {}) {
   });
 }
 
+// ---------- Small hand-written Markdown renderer (no library) ----------
+// Used for both the Update tab's changelog and the Hilfe tab's manual.
+// Supports: headings (any # depth, top-level # skipped since it's implied by
+// the card heading), bullet lists with multi-line continuation, fenced code
+// blocks, and inline `code`/**bold**.
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function inlineMarkdown(s) {
+  return escapeHtml(s)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
+function renderMarkdown(markdown) {
+  const lines = markdown.split('\n');
+  let html = '';
+  let listOpen = false;
+  const closeList = () => { if (listOpen) { html += '</ul>'; listOpen = false; } };
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const heading = line.match(/^(#{1,6})\s+(.*)/);
+    if (heading) {
+      closeList();
+      const level = heading[1].length;
+      if (level === 1) { i++; continue; } // top-level title, implied by the card heading
+      const tag = 'h' + Math.min(level + 1, 6);
+      html += `<${tag}>${inlineMarkdown(heading[2])}</${tag}>`;
+      i++;
+    } else if (/^```/.test(line)) {
+      closeList();
+      i++;
+      const code = [];
+      while (i < lines.length && !/^```/.test(lines[i])) { code.push(lines[i]); i++; }
+      i++; // skip closing fence
+      html += `<pre><code>${escapeHtml(code.join('\n'))}</code></pre>`;
+    } else if (/^-\s/.test(line)) {
+      if (!listOpen) { html += '<ul>'; listOpen = true; }
+      let text = line.replace(/^-\s*/, '');
+      i++;
+      while (i < lines.length && /^\s+\S/.test(lines[i])) { text += ' ' + lines[i].trim(); i++; }
+      html += `<li>${inlineMarkdown(text)}</li>`;
+    } else if (line.trim() === '') {
+      closeList();
+      i++;
+    } else {
+      closeList();
+      let text = line.trim();
+      i++;
+      while (i < lines.length && lines[i].trim() !== '' && !/^[#-]/.test(lines[i]) && !/^```/.test(lines[i])) { text += ' ' + lines[i].trim(); i++; }
+      html += `<p class="muted">${inlineMarkdown(text)}</p>`;
+    }
+  }
+  closeList();
+  return html;
+}
+
 // Single-field rename dialog -> Promise<string|null> (null if cancelled/closed without saving).
 function openRenameModal(currentName, { title = 'Umbenennen' } = {}) {
   return new Promise((resolve) => {

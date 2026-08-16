@@ -34,6 +34,7 @@
   <button data-tab="aktoren">Geräte Katalog</button>
   <button data-tab="setup">Setup</button>
   <button data-tab="update">Update</button>
+  <button data-tab="hilfe">Hilfe</button>
 </nav>
 <main>
 
@@ -417,7 +418,14 @@
 
     <div class="card">
       <h3>Änderungsprotokoll</h3>
-      <div id="changelog-content" class="changelog"></div>
+      <div id="changelog-content" class="markdown-view"></div>
+    </div>
+  </div>
+
+  <!-- HILFE TAB -->
+  <div class="tab" id="tab-hilfe">
+    <div class="card">
+      <div id="manual-content" class="markdown-view"></div>
     </div>
   </div>
 
@@ -436,6 +444,7 @@
 <script src="/js/pflichtenheft.js"></script>
 <script src="/js/klaerungsliste.js"></script>
 <script src="/js/update.js"></script>
+<script src="/js/hilfe.js"></script>
 <script src="/js/init.js"></script>
 </body>
 </html>

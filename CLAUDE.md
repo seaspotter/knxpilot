@@ -65,12 +65,19 @@ the user to make explicitly, not something to introduce as a side effect of
 
 ## Docs map
 
-- [`README.md`](./README.md) — what the product does, how to use it, GA
-  addressing model, the four tabs.
+- [`README.md`](./README.md) — short landing page: what the product does,
+  screenshots, key features, quickstart, links to everything else. Deliberately
+  kept brief — detailed usage lives in `MANUAL.md`.
+- [`MANUAL.md`](./MANUAL.md) — the detailed usage guide: GA addressing model,
+  CSV format, every tab/sub-tab explained. Also served in-app via the **Hilfe**
+  tab (`GET /api/system/manual` in `backend/routers/system.py`, rendered by
+  `frontend/js/hilfe.js` using the shared Markdown renderer in
+  `frontend/js/ui.js`) — keep the file and the in-app rendering in mind
+  together, they're the same content.
 - [`DEVELOPMENT.md`](./DEVELOPMENT.md) — local dev setup, project structure,
-  how to add a feature.
+  branch workflow, how to add a feature.
 - [`DEPLOYMENT.md`](./DEPLOYMENT.md) — persistence, the self-update
-  mechanism, Proxmox/LXC deployment.
+  mechanism, Docker image publishing, Proxmox/LXC deployment.
 - [`CHANGELOG.md`](./CHANGELOG.md) — notable changes over time.
 
 ## Keep docs in sync with code changes
@@ -80,8 +87,13 @@ path referenced in docs (e.g. `backend/...`, `frontend/...`), or a
 deployment/dev-setup step, **update the relevant `.md` file(s) in the same
 change** — don't leave it for later:
 
-- `README.md` — if the change affects what a user of the app sees/does (a
-  tab, a workflow, an export format) or any file path mentioned in it.
+- `MANUAL.md` — if the change affects what a user of the app sees/does (a
+  tab, a workflow, an export format). This is where tab-by-tab detail goes;
+  README.md only needs a matching update if the change is headline-level
+  (a new major feature, a changed quickstart step, a new key-figures bullet).
+- `README.md` — if the change affects the quickstart, the feature-highlights
+  list, or any file path mentioned in it. Keep it short — move detail to
+  `MANUAL.md` instead of growing README.md back out.
 - `DEVELOPMENT.md` — if it affects project structure, dev setup, or
   conventions.
 - `DEPLOYMENT.md` — if it affects persistence, the update mechanism, or
