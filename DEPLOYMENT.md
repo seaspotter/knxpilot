@@ -81,6 +81,15 @@ compose up -d`). Das Image dafür baut GitHub Actions bereits bei jedem
 Push auf `main` (siehe oben) — auf dem Server ist dafür kein lokaler
 Build nötig, nur ein Pull.
 
+Der Browser bekommt die aktualisierten HTML/CSS/JS-Dateien nach einem
+Neustart auch **ohne Hard-Refresh** — `backend/main.py` liefert `frontend/`
+mit `Cache-Control: no-cache` aus, was den Browser zu einer bedingten
+Anfrage (ETag) vor jeder Verwendung einer zwischengespeicherten Kopie
+zwingt statt sie blind zu übernehmen; ein normales Neuladen (F5) reicht
+also. Ein gewöhnlicher `Cache-Control`-Header hätte hier tagelang zu
+scheinbar "kaputten" Updates geführt, weil einzelne JS-Dateien im
+Browser-Cache hängen bleiben, obwohl `index.html` schon neu geladen wird.
+
 **Wichtig für zukünftige Änderungen:** Dieser Mechanismus setzt voraus,
 dass das Frontend ohne Build-Schritt auskommt (reines HTML/CSS/JS, direkt
 von `backend/main.py` als Static Files ausgeliefert). Ein Bundler/Build-Step

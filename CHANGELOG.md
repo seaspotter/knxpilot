@@ -22,6 +22,19 @@ restructuring below — history before that is available via `git log`.
   a second format is just a new registry entry + `<option>`, not a
   rewrite. New `GET /api/projects/{id}/export-labels.pdf`.
 
+### Fixed
+
+- Frontend files (`frontend/`, served as static files by `backend/
+  main.py`) were browser-cacheable with no revalidation hint, so after
+  the self-update flow's `git pull` + restart, a browser could keep
+  serving pre-update HTML/CSS/JS until the user happened to hard-refresh
+  — several reported "the update isn't showing up" cases this session
+  turned out to be exactly this. Now served with `Cache-Control:
+  no-cache`: the browser still keeps a local copy, but must revalidate
+  it (a cheap conditional GET via the ETag Starlette's `StaticFiles`
+  already sends) before using it, so a normal reload always picks up
+  changed files while unchanged ones still avoid a full re-download.
+
 ## [0.2.0] - 2026-08-16
 
 ### Added

@@ -49,4 +49,21 @@ app.include_router(klaerungsliste.router)
 app.include_router(pflichtenheft.router)
 app.include_router(system.router)
 
-app.mount("/", StaticFiles(directory=Path(__file__).parent.parent / "frontend", html=True), name="static")
+class NoCacheStaticFiles(StaticFiles):
+    """Serves frontend/ with Cache-Control: no-cache instead of Starlette's
+    default (browser-cacheable with no revalidation hint). The self-update
+    flow (git pull + restart, see routers/system.py) changes these files
+    on disk without changing their URLs, so a plain browser cache would
+    keep serving pre-update HTML/CSS/JS after a restart until the user
+    happens to hard-refresh. no-cache still lets the browser keep a local
+    copy - it just forces a conditional GET (via the ETag/Last-Modified
+    headers FileResponse already sends) before using it, so an unchanged
+    file is a cheap 304 and a changed one is picked up immediately."""
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
+app.mount("/", NoCacheStaticFiles(directory=Path(__file__).parent.parent / "frontend", html=True), name="static")
