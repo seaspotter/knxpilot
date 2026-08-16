@@ -83,6 +83,19 @@
   .stat-card:hover { border-color:var(--accent); }
   .stat-card h4 { margin:0 0 6px; font-size:13px; color:var(--accent); }
   .stat-card p { font-size:13px; }
+  .ga-tree { font-size:13px; }
+  .ga-tree summary { cursor:pointer; padding:4px 0; list-style-position:outside; }
+  .ga-tree summary:hover { color:var(--accent); }
+  .ga-tree .tree-main { margin-bottom:6px; }
+  .ga-tree .tree-main > summary { font-weight:700; }
+  .ga-tree .tree-middle { margin:2px 0 2px 20px; }
+  .ga-tree .tree-subs { margin-left:20px; }
+  .ga-tree .tree-sub-row { padding:2px 0; font-family: ui-monospace, monospace; font-size:12.5px; }
+  .ga-tree .main { color:var(--accent); font-weight:700; }
+  .ga-tree .middle { color:var(--accent2); }
+  .ga-tree .sub { color:var(--text); }
+  .ga-tree .res { color:var(--muted); font-style:italic; }
+  .ga-tree .addr { color:var(--muted); }
   .toast-container { position:fixed; bottom:20px; right:20px; z-index:100; display:flex; flex-direction:column; gap:8px; max-width:360px; }
   .toast {
     background:var(--panel); border:1px solid var(--border); border-left:4px solid var(--accent);

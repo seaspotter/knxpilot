@@ -18,6 +18,12 @@ restructuring below — history before that is available via `git log`.
   per other sub-tab) summarizing floors/rooms/points, circuit assignment
   progress, planned device count, and open Klärungen at a glance, each
   jumping straight to the relevant sub-tab on click.
+- The Gruppenadressen preview is now a collapsible tree (native
+  `<details>`/`<summary>`, `.ga-tree` in `frontend/css/style.css`) instead
+  of one long block of monospace text — main groups open by default,
+  middle groups (the actual source of clutter on larger projects) start
+  collapsed, each showing an address count. "Alle aufklappen"/"Alle
+  einklappen" buttons toggle everything at once.
 
 ### Changed
 

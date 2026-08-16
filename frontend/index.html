@@ -144,11 +144,13 @@
             <h3 style="margin:0;">Vorschau &amp; Export</h3>
             <div class="row" style="margin:0;">
               <button class="btn secondary" onclick="previewGA()">Vorschau</button>
+              <button class="btn secondary small" onclick="expandAllGaTree(true)">Alle aufklappen</button>
+              <button class="btn secondary small" onclick="expandAllGaTree(false)">Alle einklappen</button>
               <button class="btn" onclick="downloadCSV()">CSV für ETS6 herunterladen</button>
             </div>
           </div>
           <div class="error" id="gen-error"></div>
-          <div class="tree" id="ga-preview"></div>
+          <div class="ga-tree" id="ga-preview"></div>
         </div>
       </div>
 
