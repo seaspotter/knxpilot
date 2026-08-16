@@ -1,11 +1,11 @@
   :root {
     --bg: #0f172a; --panel: #1e293b; --panel2: #0b1220; --panel3: #111c30; --border: #334155;
-    --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; --accent2: #22c55e;
+    --text: #e2e8f0; --muted: #94a3b8; --accent: #2dd4bf; --accent2: #22c55e;
     --danger: #f87171; --warn: #fbbf24; --btn-text: #0b1220;
   }
   :root[data-theme="light"] {
     --bg: #f8fafc; --panel: #ffffff; --panel2: #f1f5f9; --panel3: #eef2f7; --border: #cbd5e1;
-    --text: #0f172a; --muted: #55647a; --accent: #0284c7; --accent2: #16a34a;
+    --text: #0f172a; --muted: #55647a; --accent: #0d9488; --accent2: #16a34a;
     --danger: #dc2626; --warn: #b45309; --btn-text: #ffffff;
   }
   * { box-sizing: border-box; }

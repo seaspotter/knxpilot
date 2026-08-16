@@ -100,11 +100,13 @@ restructuring below — history before that is available via `git log`.
 
 ### Changed
 
-- Setup → Pflichtenheft's save button now reads "Speichern" instead of
-  "Firmenprofil speichern" — that label made sense on the Firma tab
-  (where it still says that), but was confusing on a tab about
-  Pflichtenheft settings, even though both save the same underlying
-  profile record.
+- The Firma and Pflichtenheft tabs' save buttons now both read simply
+  "Speichern" instead of "Firmenprofil speichern" — clearer given both
+  tabs save fields on the same underlying profile record.
+- The app's accent color (buttons, headings, active-tab underline,
+  links) changed from blue to a green/teal, and the PDF exports'
+  accent color (room/section headings) changed from blue to green
+  (`#15803d`) — no more blue left in the design system.
 - README.md is now a short landing page (pitch, screenshots, key
   features, quickstart, links) instead of the full manual — all detailed
   per-tab usage instructions, the GA addressing model, and the CSV
