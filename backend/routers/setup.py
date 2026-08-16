@@ -37,6 +37,17 @@ def get_company_profile():
             "pflichtenheft_include_gruppenadressen": bool(r["pflichtenheft_include_gruppenadressen"]),
             "pflichtenheft_include_abgangsliste": bool(r["pflichtenheft_include_abgangsliste"]),
             "pflichtenheft_include_klaerungsliste": bool(r["pflichtenheft_include_klaerungsliste"]),
+            "backup_enabled": bool(r["backup_enabled"]),
+            "backup_interval_hours": r["backup_interval_hours"],
+            "backup_retention_count": r["backup_retention_count"],
+            "backup_local_enabled": bool(r["backup_local_enabled"]),
+            "backup_local_path": r["backup_local_path"],
+            "backup_nextcloud_enabled": bool(r["backup_nextcloud_enabled"]),
+            "backup_nextcloud_url": r["backup_nextcloud_url"],
+            "backup_nextcloud_username": r["backup_nextcloud_username"],
+            "backup_nextcloud_password": r["backup_nextcloud_password"],
+            "backup_last_run_at": r["backup_last_run_at"],
+            "backup_last_run_status": r["backup_last_run_status"],
         }
 
 
@@ -49,13 +60,21 @@ def update_company_profile(cp: CompanyProfileIn):
             "pflichtenheft_include_vorbemerkungen=?, "
             "pflichtenheft_include_struktur=?, pflichtenheft_include_geraeteliste=?, "
             "pflichtenheft_include_gruppenadressen=?, pflichtenheft_include_abgangsliste=?, "
-            "pflichtenheft_include_klaerungsliste=? WHERE id=1",
+            "pflichtenheft_include_klaerungsliste=?, "
+            "backup_enabled=?, backup_interval_hours=?, backup_retention_count=?, "
+            "backup_local_enabled=?, backup_local_path=?, "
+            "backup_nextcloud_enabled=?, backup_nextcloud_url=?, "
+            "backup_nextcloud_username=?, backup_nextcloud_password=? WHERE id=1",
             (cp.name, cp.address, cp.email, cp.website, cp.phone, cp.logo_data_url,
              int(cp.show_on_pdf), cp.pflichtenheft_preamble,
              int(cp.pflichtenheft_include_vorbemerkungen),
              int(cp.pflichtenheft_include_struktur), int(cp.pflichtenheft_include_geraeteliste),
              int(cp.pflichtenheft_include_gruppenadressen), int(cp.pflichtenheft_include_abgangsliste),
-             int(cp.pflichtenheft_include_klaerungsliste)),
+             int(cp.pflichtenheft_include_klaerungsliste),
+             int(cp.backup_enabled), cp.backup_interval_hours, cp.backup_retention_count,
+             int(cp.backup_local_enabled), cp.backup_local_path,
+             int(cp.backup_nextcloud_enabled), cp.backup_nextcloud_url,
+             cp.backup_nextcloud_username, cp.backup_nextcloud_password),
         )
     return {"ok": True}
 

@@ -28,15 +28,60 @@ HTML/CSS/JS, no build step) lives in ../frontend/, mounted below.
 
 Run with: uvicorn backend.main:app --host 0.0.0.0 --port 8000
 """
+import asyncio
+import logging
+from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from .db import init_db
+from .backup import run_backup_now
+from .db import get_db, init_db
 from .routers import setup, geraete, projects, abgangsliste, geraeteplanung, klaerungsliste, pflichtenheft, system
 
-app = FastAPI(title="KNXpilot")
+logger = logging.getLogger("knxpilot.backup")
+
+# How often the background loop wakes up to check whether a backup is due -
+# just the polling granularity, not the backup cadence itself (that's
+# company_profile.backup_interval_hours, set in Setup -> Backup).
+BACKUP_CHECK_INTERVAL_SECONDS = 900
+
+
+def _maybe_run_scheduled_backup():
+    """Runs inside a worker thread (via asyncio.to_thread below) - opens
+    its own db connection rather than being handed one, since sqlite3
+    connections can't cross threads with the default check_same_thread."""
+    with get_db() as db:
+        cp = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
+        if not cp["backup_enabled"]:
+            return
+        due = True
+        if cp["backup_last_run_at"]:
+            last = datetime.fromisoformat(cp["backup_last_run_at"])
+            due = (datetime.now(timezone.utc) - last) >= timedelta(hours=cp["backup_interval_hours"])
+        if due:
+            run_backup_now(db)
+
+
+async def _backup_scheduler_loop():
+    while True:
+        await asyncio.sleep(BACKUP_CHECK_INTERVAL_SECONDS)
+        try:
+            await asyncio.to_thread(_maybe_run_scheduled_backup)
+        except Exception:
+            logger.exception("Backup scheduler iteration failed")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    task = asyncio.create_task(_backup_scheduler_loop())
+    yield
+    task.cancel()
+
+
+app = FastAPI(title="KNXpilot", lifespan=lifespan)
 
 init_db()
 

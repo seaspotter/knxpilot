@@ -122,3 +122,12 @@ class CompanyProfileIn(BaseModel):
     pflichtenheft_include_gruppenadressen: bool = False
     pflichtenheft_include_abgangsliste: bool = False
     pflichtenheft_include_klaerungsliste: bool = False
+    backup_enabled: bool = False
+    backup_interval_hours: int = 24
+    backup_retention_count: int = 14
+    backup_local_enabled: bool = False
+    backup_local_path: str = ""
+    backup_nextcloud_enabled: bool = False
+    backup_nextcloud_url: str = ""
+    backup_nextcloud_username: str = ""
+    backup_nextcloud_password: str = ""

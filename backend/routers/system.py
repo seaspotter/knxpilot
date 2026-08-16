@@ -12,6 +12,9 @@ from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks
 
+from ..backup import run_backup_now
+from ..db import get_db
+
 router = APIRouter(tags=["system"])
 
 REPO_DIR = "/app"
@@ -119,3 +122,15 @@ def system_update(background_tasks: BackgroundTasks):
         return {"ok": False, "message": "git pull timed out", "restarting": False}
     except subprocess.CalledProcessError as e:
         return {"ok": False, "message": e.stderr or str(e), "restarting": False}
+
+
+@router.post("/api/system/backup")
+def trigger_backup():
+    """Manual "Jetzt sichern" trigger (Setup -> Backup) - runs the same
+    logic as the automatic scheduler in main.py, just on demand. Always
+    returns 200 with a result payload rather than raising, even on
+    per-destination failure, since a partial failure (e.g. local ok,
+    Nextcloud unreachable) is still useful status to show, not a hard
+    error the caller needs to catch."""
+    with get_db() as db:
+        return run_backup_now(db)

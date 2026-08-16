@@ -381,7 +381,18 @@ def init_db():
                 pflichtenheft_include_geraeteliste INTEGER NOT NULL DEFAULT 1,
                 pflichtenheft_include_gruppenadressen INTEGER NOT NULL DEFAULT 0,
                 pflichtenheft_include_abgangsliste INTEGER NOT NULL DEFAULT 0,
-                pflichtenheft_include_klaerungsliste INTEGER NOT NULL DEFAULT 0
+                pflichtenheft_include_klaerungsliste INTEGER NOT NULL DEFAULT 0,
+                backup_enabled INTEGER NOT NULL DEFAULT 0,
+                backup_interval_hours INTEGER NOT NULL DEFAULT 24,
+                backup_retention_count INTEGER NOT NULL DEFAULT 14,
+                backup_local_enabled INTEGER NOT NULL DEFAULT 0,
+                backup_local_path TEXT NOT NULL DEFAULT '',
+                backup_nextcloud_enabled INTEGER NOT NULL DEFAULT 0,
+                backup_nextcloud_url TEXT NOT NULL DEFAULT '',
+                backup_nextcloud_username TEXT NOT NULL DEFAULT '',
+                backup_nextcloud_password TEXT NOT NULL DEFAULT '',
+                backup_last_run_at TEXT NOT NULL DEFAULT '',
+                backup_last_run_status TEXT NOT NULL DEFAULT ''
             );
             """
         )
@@ -418,6 +429,28 @@ def init_db():
              "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_abgangsliste INTEGER NOT NULL DEFAULT 0"),
             ("company_profile", "pflichtenheft_include_klaerungsliste",
              "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_klaerungsliste INTEGER NOT NULL DEFAULT 0"),
+            ("company_profile", "backup_enabled",
+             "ALTER TABLE company_profile ADD COLUMN backup_enabled INTEGER NOT NULL DEFAULT 0"),
+            ("company_profile", "backup_interval_hours",
+             "ALTER TABLE company_profile ADD COLUMN backup_interval_hours INTEGER NOT NULL DEFAULT 24"),
+            ("company_profile", "backup_retention_count",
+             "ALTER TABLE company_profile ADD COLUMN backup_retention_count INTEGER NOT NULL DEFAULT 14"),
+            ("company_profile", "backup_local_enabled",
+             "ALTER TABLE company_profile ADD COLUMN backup_local_enabled INTEGER NOT NULL DEFAULT 0"),
+            ("company_profile", "backup_local_path",
+             "ALTER TABLE company_profile ADD COLUMN backup_local_path TEXT NOT NULL DEFAULT ''"),
+            ("company_profile", "backup_nextcloud_enabled",
+             "ALTER TABLE company_profile ADD COLUMN backup_nextcloud_enabled INTEGER NOT NULL DEFAULT 0"),
+            ("company_profile", "backup_nextcloud_url",
+             "ALTER TABLE company_profile ADD COLUMN backup_nextcloud_url TEXT NOT NULL DEFAULT ''"),
+            ("company_profile", "backup_nextcloud_username",
+             "ALTER TABLE company_profile ADD COLUMN backup_nextcloud_username TEXT NOT NULL DEFAULT ''"),
+            ("company_profile", "backup_nextcloud_password",
+             "ALTER TABLE company_profile ADD COLUMN backup_nextcloud_password TEXT NOT NULL DEFAULT ''"),
+            ("company_profile", "backup_last_run_at",
+             "ALTER TABLE company_profile ADD COLUMN backup_last_run_at TEXT NOT NULL DEFAULT ''"),
+            ("company_profile", "backup_last_run_status",
+             "ALTER TABLE company_profile ADD COLUMN backup_last_run_status TEXT NOT NULL DEFAULT ''"),
         ]:
             cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]
             if column not in cols:

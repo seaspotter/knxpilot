@@ -16,9 +16,41 @@ async function loadCompanyProfile() {
   document.getElementById('pht-include-gruppenadressen').checked = !!c.pflichtenheft_include_gruppenadressen;
   document.getElementById('pht-include-abgangsliste').checked = !!c.pflichtenheft_include_abgangsliste;
   document.getElementById('pht-include-klaerungsliste').checked = !!c.pflichtenheft_include_klaerungsliste;
+  document.getElementById('backup-enabled').checked = !!c.backup_enabled;
+  document.getElementById('backup-interval-hours').value = c.backup_interval_hours || 24;
+  document.getElementById('backup-retention-count').value = c.backup_retention_count || 14;
+  document.getElementById('backup-local-enabled').checked = !!c.backup_local_enabled;
+  document.getElementById('backup-local-path').value = c.backup_local_path || '';
+  document.getElementById('backup-nextcloud-enabled').checked = !!c.backup_nextcloud_enabled;
+  document.getElementById('backup-nextcloud-url').value = c.backup_nextcloud_url || '';
+  document.getElementById('backup-nextcloud-username').value = c.backup_nextcloud_username || '';
+  document.getElementById('backup-nextcloud-password').value = c.backup_nextcloud_password || '';
+  renderBackupStatus(c);
   COMPANY_LOGO_DATA_URL = c.logo_data_url || '';
   updateCompanyLogoPreview();
   renderHeaderCompanyBranding(c);
+}
+
+function renderBackupStatus(c) {
+  const el = document.getElementById('backup-status-text');
+  if (!c.backup_last_run_at) {
+    el.textContent = 'Noch keine Sicherung durchgeführt.';
+    return;
+  }
+  const when = new Date(c.backup_last_run_at).toLocaleString('de-DE');
+  el.textContent = `Letzte Sicherung: ${when} — ${c.backup_last_run_status || '?'}`;
+  el.style.color = c.backup_last_run_status === 'OK' ? '' : 'var(--danger)';
+}
+
+async function runBackupNow() {
+  const result = await api('/system/backup', {method: 'POST'});
+  await loadCompanyProfile();
+  if (result.ok) {
+    showToast('Sicherung erfolgreich.', 'success');
+  } else {
+    const detail = Object.entries(result.results).map(([k, v]) => `${k}: ${v}`).join('\n');
+    showToast(`Sicherung fehlgeschlagen:\n${detail}`, 'error', {sticky: true});
+  }
 }
 
 function autocropLogoDataUrl(dataUrl) {
@@ -129,6 +161,15 @@ async function saveCompanyProfile() {
     pflichtenheft_include_gruppenadressen: document.getElementById('pht-include-gruppenadressen').checked,
     pflichtenheft_include_abgangsliste: document.getElementById('pht-include-abgangsliste').checked,
     pflichtenheft_include_klaerungsliste: document.getElementById('pht-include-klaerungsliste').checked,
+    backup_enabled: document.getElementById('backup-enabled').checked,
+    backup_interval_hours: parseInt(document.getElementById('backup-interval-hours').value) || 24,
+    backup_retention_count: parseInt(document.getElementById('backup-retention-count').value) || 14,
+    backup_local_enabled: document.getElementById('backup-local-enabled').checked,
+    backup_local_path: document.getElementById('backup-local-path').value.trim(),
+    backup_nextcloud_enabled: document.getElementById('backup-nextcloud-enabled').checked,
+    backup_nextcloud_url: document.getElementById('backup-nextcloud-url').value.trim(),
+    backup_nextcloud_username: document.getElementById('backup-nextcloud-username').value.trim(),
+    backup_nextcloud_password: document.getElementById('backup-nextcloud-password').value,
   });
   await api('/company-profile', {method:'PUT', headers:{'Content-Type':'application/json'}, body});
   await loadCompanyProfile();

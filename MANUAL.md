@@ -341,9 +341,9 @@ leeren**, ohne alles neu eintippen zu müssen.
 
 ### Setup
 
-Firma, Kategorien, Funktionstypen, Zentral-/Allgemeinfunktions-Vorlagen und
-Pflichtenheft sind eigene Unterreiter innerhalb des Setup-Tabs, nicht alle
-gleichzeitig sichtbar.
+Firma, Kategorien, Funktionstypen, Zentral-/Allgemeinfunktions-Vorlagen,
+Pflichtenheft und Backup sind eigene Unterreiter innerhalb des Setup-Tabs,
+nicht alle gleichzeitig sichtbar.
 
 - **Firma** — Name, Adresse, Telefon, E-Mail, Website und ein Logo,
   einmalig hinterlegt. Erscheint als Badge im Programmkopf neben dem
@@ -398,13 +398,23 @@ gleichzeitig sichtbar.
   tatsächlich verwendet wird** — z.B. erscheint keine Hauptgruppe
   Steckdosen samt Zentralfunktion, wenn nie eine Steckdose hinzugefügt wird.
 - **Pflichtenheft** — der Vorbemerkungen-Text (mit einem sinnvollen
-  Standardtext vorbelegt: kurzer/langer Tastendruck, Beleuchtung,
-  Rollladen/Jalousie, Heizung, Zentral-/Wetterfunktionen) sowie sechs
-  Kontrollkästchen, die steuern, was im Pflichtenheft-PDF erscheint:
+  Standardtext vorbelegt, siehe Abschnitt *Pflichtenheft* oben) sowie
+  sechs Kontrollkästchen, die steuern, was im Pflichtenheft-PDF erscheint:
   Vorbemerkungen, Stockwerk-/Raumverzeichnis, Geräteliste (alle drei
   standardmässig an), Gruppenadressen, Abgangsliste und Klärungsliste
   (standardmässig aus). Gilt global für alle Projekte,
   wie der Rest des Firmenprofils.
+- **Backup** — automatische und/oder manuelle (**Jetzt sichern**) Sicherung
+  der kompletten Datenbank (alle Projekte, Geräte-Katalog, restliches
+  Setup — nicht nur ein einzelnes Projekt) auf ein NAS/gemountetes
+  Verzeichnis und/oder Nextcloud (WebDAV), beide unabhängig voneinander
+  aktivierbar. Bei aktiver automatischer Sicherung läuft im Hintergrund
+  eine einfache Prüfung (alle 15 Minuten: ist seit der letzten Sicherung
+  mehr Zeit vergangen als das eingestellte Intervall?), keine externe
+  Aufgabenplanung nötig. Je Ziel wird nur die eingestellte Anzahl
+  neuester Sicherungen behalten, ältere werden automatisch gelöscht.
+  Details zur NAS-Einbindung und den Nextcloud-Zugangsdaten:
+  [`DEPLOYMENT.md`](./DEPLOYMENT.md).
 
 ### Update
 

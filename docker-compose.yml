@@ -20,6 +20,12 @@ services:
       # automatically persisted without a separate volume line.
       - .:/app
 
+      # Uncomment and point at a NAS/network share (or any other host path)
+      # to enable the "NAS / gemountetes Verzeichnis" backup destination in
+      # Setup -> Backup. The path after the colon must match what you enter
+      # there (backup_local_path), e.g. /app/backups:
+      # - /mnt/nas/knxpilot-backups:/app/backups
+
       # Uncomment ONE of these so `git pull` works from inside the container too
       # (only needed if your GitHub repo is private):
 

@@ -336,6 +336,7 @@
       <button data-subtab="punkttypen">Funktionstypen</button>
       <button data-subtab="zentralvorlagen">Zentral-/Allgemeinfunktions-Vorlagen</button>
       <button data-subtab="pflichtenheft">Pflichtenheft</button>
+      <button data-subtab="backup">Backup</button>
     </div>
 
     <div class="subtab active" id="setup-subtab-firma">
@@ -491,6 +492,47 @@
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-klaerungsliste"> Klärungsliste</label>
       </div>
       <div style="margin-top:10px;"><button class="btn" onclick="saveCompanyProfile()">Speichern</button></div>
+    </div>
+    </div>
+
+    <div class="subtab" id="setup-subtab-backup">
+    <div class="card">
+      <h3>Backup <span class="info-icon" tabindex="0" data-tip="Sichert die komplette Datenbank (alle Projekte, Geräte-Katalog, Setup) als eine Datei - anders als 'Sichern (JSON)' im Projektkopf, das nur ein einzelnes Projekt exportiert. Wiederherstellen: heruntergeladene .db-Datei als backend/data/knx_ga.db einspielen und neu starten.">i</span></h3>
+      <p class="muted">Automatische und/oder manuelle Sicherung auf ein NAS/gemountetes Verzeichnis und/oder Nextcloud — beide Ziele lassen sich unabhängig voneinander aktivieren.</p>
+
+      <div class="row">
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="backup-enabled"> Automatische Sicherung aktiv</label>
+        <label style="display:flex; align-items:center; gap:4px;">alle <input type="number" id="backup-interval-hours" min="1" style="width:60px;"> Stunden</label>
+        <label style="display:flex; align-items:center; gap:4px;">Aufbewahren: letzte <input type="number" id="backup-retention-count" min="1" style="width:60px;"> Sicherungen
+          <span class="info-icon" tabindex="0" data-tip="Gilt je Ziel getrennt - ältere Sicherungen über dieser Anzahl werden bei jedem Lauf automatisch gelöscht.">i</span>
+        </label>
+      </div>
+      <p class="muted" id="backup-status-text"></p>
+      <hr class="sep">
+
+      <h4>NAS / gemountetes Verzeichnis</h4>
+      <p class="muted">Das Verzeichnis muss im Container erreichbar sein, z.B. per Bind-Mount in <code>docker-compose.yml</code> auf einen NAS-Freigabe-Pfad (siehe DEPLOYMENT.md).</p>
+      <div class="row">
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="backup-local-enabled"> Aktiv</label>
+        <input type="text" id="backup-local-path" placeholder="Pfad im Container, z.B. /app/backups" style="min-width:320px; flex:1;">
+      </div>
+      <hr class="sep">
+
+      <h4>Nextcloud (WebDAV)</h4>
+      <div class="row">
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="backup-nextcloud-enabled"> Aktiv</label>
+        <input type="text" id="backup-nextcloud-url" placeholder="WebDAV-Ordner-URL, z.B. https://cloud.example.com/remote.php/dav/files/BENUTZER/Backups/KNXpilot/" style="min-width:340px; flex:1;">
+      </div>
+      <div class="row">
+        <input type="text" id="backup-nextcloud-username" placeholder="Benutzername">
+        <input type="password" id="backup-nextcloud-password" placeholder="Passwort">
+        <span class="info-icon" tabindex="0" data-tip="Ein Nextcloud-App-Passwort (Einstellungen -> Sicherheit -> Geräte & Sitzungen) statt des echten Kontopassworts wird empfohlen - lässt sich einzeln widerrufen, ohne das Hauptpasswort zu ändern.">i</span>
+      </div>
+
+      <div style="margin-top:10px;">
+        <button class="btn" onclick="saveCompanyProfile()">Speichern</button>
+        <button class="btn secondary" onclick="runBackupNow()">Jetzt sichern</button>
+      </div>
     </div>
     </div>
   </div>

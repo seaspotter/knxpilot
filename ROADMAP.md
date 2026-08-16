@@ -26,10 +26,10 @@ letting it drift into a wishlist nobody trusts.
 
 ## Good ideas, not yet sequenced
 
-- [ ] **Automated backups** to a NAS (mounted volume) or Nextcloud (WebDAV),
-  not just the existing manual JSON download per project. A Google-Drive
-  destination would need OAuth2 — meaningfully more work, worth scoping
-  separately/later if actually wanted.
+- [x] **Automated backups** to a NAS (mounted volume) or Nextcloud (WebDAV) —
+  Setup → Backup, see `CHANGELOG.md`. A Google-Drive destination would need
+  OAuth2 — meaningfully more work, not built, worth scoping separately if
+  actually wanted later.
 - [ ] **.knxproj / ETS import** — parse an existing ETS project export (a
   zip of XML) to pre-populate a KNXpilot project's group addresses, instead
   of always starting from a blank building. High value, but real work

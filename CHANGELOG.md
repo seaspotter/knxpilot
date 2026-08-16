@@ -8,6 +8,20 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- A new **Setup → Backup** sub-tab: automatic and/or manual (**Jetzt
+  sichern**) backups of the whole database (not just one project - a
+  complete, atomic snapshot via SQLite's own `.backup()` API, restoring
+  is just replacing `backend/data/knx_ga.db`) to a NAS/mounted folder
+  and/or Nextcloud (WebDAV), independently toggleable, each with its own
+  retention count (oldest backups beyond it are pruned automatically).
+  Automatic backups run from a lightweight in-process background task
+  (checks every 15 min whether the configured interval has elapsed) -
+  no external scheduler/cron needed, though the manual button plus
+  `POST /api/system/backup` work fine for a host-cron setup too, if
+  preferred. Nextcloud upload uses plain WebDAV over the standard
+  library (`urllib`) - no new dependency. New `backend/backup.py`, 11 new
+  `company_profile` columns, see `DEPLOYMENT.md` for the NAS bind-mount
+  and Nextcloud app-password setup.
 - A new **Labels** project sub-tab (next to Abgangsliste, whose actor/
   channel data it reuses): prints a label sheet for the Schaltschrank —
   one label per actor instance (physical address + location) or per

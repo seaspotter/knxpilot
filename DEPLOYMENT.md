@@ -20,6 +20,36 @@ Gruppenadressen) ist für explizite Portabilität gedacht (Projekt zwischen
 Installationen umziehen, manuelles Backup), nicht für die normale
 Persistenz im Alltag nötig.
 
+## Backups (Setup → Backup)
+
+Für den Fall eines Server-/Festplattenausfalls: **Setup → Backup** sichert
+die komplette `knxpilot_backup_<Zeitstempel>.db`-Datei (alle Projekte,
+Geräte-Katalog, Setup — nicht nur ein einzelnes Projekt wie die
+JSON-Sicherung oben) automatisch und/oder auf Knopfdruck auf ein NAS/
+gemountetes Verzeichnis und/oder Nextcloud. Beide Ziele sind unabhängig
+voneinander aktivierbar; eine Aufbewahrungsanzahl (je Ziel getrennt)
+löscht ältere Sicherungen automatisch.
+
+Für das NAS-Ziel muss der Zielordner als Docker-Volume eingebunden sein —
+in `docker-compose.yml` ist dafür eine Beispielzeile vorbereitet:
+```yaml
+- /mnt/nas/knxpilot-backups:/app/backups
+```
+Der in Setup → Backup eingetragene Pfad (`backup_local_path`) muss dabei
+dem Pfad **rechts** vom Doppelpunkt entsprechen (hier `/app/backups`), da
+dieser Pfad *innerhalb* des Containers gemeint ist, nicht der Host-Pfad
+links davon.
+
+Für das Nextcloud-Ziel: die WebDAV-Ordner-URL (z.B.
+`https://cloud.example.com/remote.php/dav/files/BENUTZER/Backups/
+KNXpilot/`), Benutzername und ein
+[App-Passwort](https://docs.nextcloud.com/server/latest/user_manual/en/session_management.html#managing-devices)
+statt des echten Kontopassworts eintragen — lässt sich bei Bedarf einzeln
+widerrufen.
+
+Wiederherstellen: die heruntergeladene/gesicherte `.db`-Datei als
+`backend/data/knx_ga.db` einspielen und den Container neu starten.
+
 ## Update von einer früheren Version dieses Tools
 
 Das Datenbankschema migriert beim Start automatisch (neue Spalten werden
