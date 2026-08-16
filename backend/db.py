@@ -332,6 +332,19 @@ def init_db():
                 (DEFAULT_PFLICHTENHEFT_PREAMBLE,),
             )
 
+        # Backfill for installs that already had a company_profile row before
+        # this default text existed (the pflichtenheft_preamble column's own
+        # ADD COLUMN migration above defaults it to '', so the count==0 seed
+        # above never touches them) - only fills in a still-empty field,
+        # never overwrites text someone has actually written. An empty text
+        # field isn't a meaningful "I want this hidden" signal anymore either,
+        # now that pflichtenheft_include_vorbemerkungen (a real checkbox)
+        # covers that.
+        db.execute(
+            "UPDATE company_profile SET pflichtenheft_preamble=? WHERE pflichtenheft_preamble=''",
+            (DEFAULT_PFLICHTENHEFT_PREAMBLE,),
+        )
+
 
 def seed_defaults(db):
     """Seed categories, point types and central templates from the analysed real projects."""

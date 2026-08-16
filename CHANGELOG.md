@@ -24,6 +24,10 @@ restructuring below — history before that is available via `git log`.
   more ground - Beleuchtung, Rollladen/Jalousie treated separately,
   Heizung, and Zentral-/Wetterfunktionen - condensed from common
   real-world Pflichtenheft templates without their page-length detail.
+  Installs that already had a `company_profile` row before this default
+  text existed (so the fresh-install seed never touched them) get it
+  backfilled on next startup too, but only if the field is still empty -
+  never overwrites text someone has actually written.
 - Pflichtenheft PDF, made more professional: a **Vorbemerkungen** section
   (general operating-convention text, editable/clearable in the new Setup
   → Pflichtenheft tab, seeded with sensible default wording on fresh
