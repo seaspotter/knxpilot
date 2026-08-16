@@ -6,6 +6,14 @@ restructuring below — history before that is available via `git log`.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-08-16
+
+First release: the backend/frontend restructuring plus the full UI/UX
+rework that followed it (toasts/modals, workflow dashboard, interactive
+GA tree, mobile pass, bulk room add, focused views, nav dropdown,
+in-app changelog, editable structure/functions/setup, and the
+Gruppenadressen split) — see below for the full detail.
+
 ### Added
 
 - Toast notifications and a custom confirm modal (`frontend/js/ui.js`),
