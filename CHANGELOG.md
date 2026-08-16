@@ -24,6 +24,12 @@ restructuring below — history before that is available via `git log`.
   middle groups (the actual source of clutter on larger projects) start
   collapsed, each showing an address count. "Alle aufklappen"/"Alle
   einklappen" buttons toggle everything at once.
+- A responsive pass for phones/small tablets (`@media (max-width: 700px)`
+  in `frontend/css/style.css`): the main nav and project sub-nav scroll
+  horizontally instead of overflowing the page (the sub-nav has 6 buttons
+  now after the Übersicht addition), list rows reflow instead of clipping,
+  and touch targets are slightly larger. Purely additive — desktop layout
+  is unaffected.
 
 ### Changed
 

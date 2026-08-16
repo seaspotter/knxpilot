@@ -117,3 +117,16 @@
   }
   .modal-card p { margin:0 0 16px; font-size:13.5px; line-height:1.5; white-space:pre-line; }
   .modal-card .row { justify-content:flex-end; margin:0; }
+
+  @media (max-width: 700px) {
+    main { padding:12px; }
+    .card { padding:12px; }
+    header { flex-wrap:wrap; gap:10px; }
+    nav { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    nav button { white-space:nowrap; }
+    .subnav { overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap; }
+    .subnav button { white-space:nowrap; }
+    ul.list li { flex-wrap:wrap; gap:6px; }
+    .ga-tree .tree-middle, .ga-tree .tree-subs { margin-left:12px; }
+    button.btn { padding:9px 14px; }
+  }
