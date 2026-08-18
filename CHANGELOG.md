@@ -9,14 +9,21 @@ restructuring below — history before that is available via `git log`.
 ### Added
 
 - Geräte-Katalog entries can now record a **TE** (Teilungseinheiten, DIN-
-  rail width - 1 TE = 18mm) alongside Type/Kanäle. Optional, blank by
-  default (including on the seeded starter catalog, since real widths
-  need to come from each device's actual datasheet, not guessed) - only
-  meaningful for rail-mounted devices. First piece of the still-unbuilt
-  DIN-Rail/Verteiler layout roadmap item (`ROADMAP.md`): capturing device
-  widths now, independent of the bigger allocation/layout work that
-  builds on it later. New `actor_types.width_te` column, included in
-  export/import JSON.
+  rail width - 1 TE = 18mm) alongside Type/Kanäle. Optional, blank unless
+  known - only meaningful for rail-mounted devices. First piece of the
+  still-unbuilt DIN-Rail/Verteiler layout roadmap item (`ROADMAP.md`):
+  capturing device widths now, independent of the bigger allocation/
+  layout work that builds on it later. New `actor_types.width_te`
+  column, included in export/import JSON.
+- The seeded starter catalog now includes real datasheet TE widths for
+  most rail-mounted devices (MDT, Phoenix Contact, Gira, Enertex - fed
+  in by the user), plus 14 previously-uncatalogued devices found along
+  the way (two more MDT Jalousieaktoren with Fahrtzeitmessung, nine
+  Enertex system/power-supply/dimmer devices, three Theben presence/
+  motion sensors). Existing installs pick this up automatically on next
+  restart via a value-based backfill (only fills a still-empty TE field
+  or adds a device that isn't in the catalog yet - never touches
+  anything already edited or added by hand).
 - **Projektübersicht** — a status dashboard above the Projekte list,
   summarizing every project at once: total count with clickable
   per-status badges (click sets the search field to that status),

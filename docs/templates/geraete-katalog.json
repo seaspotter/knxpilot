@@ -8,7 +8,7 @@
       "description": "Heizungsaktor 4 Kanäle",
       "channel_type": "Heizung",
       "channel_count": 4,
-      "width_te": null
+      "width_te": 2
     },
     {
       "manufacturer": "MDT",
@@ -17,7 +17,7 @@
       "description": "Heizungsaktor 6 Kanäle",
       "channel_type": "Heizung",
       "channel_count": 6,
-      "width_te": null
+      "width_te": 3
     },
     {
       "manufacturer": "MDT",
@@ -26,7 +26,7 @@
       "description": "Heizungsaktor 8 Kanäle",
       "channel_type": "Heizung",
       "channel_count": 8,
-      "width_te": null
+      "width_te": 4
     },
     {
       "manufacturer": "MDT",
@@ -35,7 +35,7 @@
       "description": "Binäreingang 4 Kanäle (potentialfrei)",
       "channel_type": "Binäreingang",
       "channel_count": 4,
-      "width_te": null
+      "width_te": 2
     },
     {
       "manufacturer": "MDT",
@@ -62,7 +62,7 @@
       "description": "Binäreingang 8 Kanäle (potentialfrei)",
       "channel_type": "Binäreingang",
       "channel_count": 8,
-      "width_te": null
+      "width_te": 4
     },
     {
       "manufacturer": "MDT",
@@ -89,7 +89,7 @@
       "description": "Binäreingang 16 Kanäle (potentialfrei)",
       "channel_type": "Binäreingang",
       "channel_count": 16,
-      "width_te": null
+      "width_te": 8
     },
     {
       "manufacturer": "MDT",
@@ -116,7 +116,7 @@
       "description": "Binäreingang 32 Kanäle (potentialfrei)",
       "channel_type": "Binäreingang",
       "channel_count": 32,
-      "width_te": null
+      "width_te": 12
     },
     {
       "manufacturer": "MDT",
@@ -368,7 +368,7 @@
       "description": "Schaltaktor Standard 2 Kanäle",
       "channel_type": "Schalten",
       "channel_count": 2,
-      "width_te": null
+      "width_te": 2
     },
     {
       "manufacturer": "MDT",
@@ -377,7 +377,7 @@
       "description": "Schaltaktor Standard 4 Kanäle",
       "channel_type": "Schalten",
       "channel_count": 4,
-      "width_te": null
+      "width_te": 4
     },
     {
       "manufacturer": "MDT",
@@ -386,7 +386,7 @@
       "description": "Schaltaktor Standard 8 Kanäle",
       "channel_type": "Schalten",
       "channel_count": 8,
-      "width_te": null
+      "width_te": 6
     },
     {
       "manufacturer": "MDT",
@@ -395,7 +395,7 @@
       "description": "Schaltaktor Standard 12 Kanäle",
       "channel_type": "Schalten",
       "channel_count": 12,
-      "width_te": null
+      "width_te": 8
     },
     {
       "manufacturer": "MDT",
@@ -404,7 +404,7 @@
       "description": "Schaltaktor Standard 16 Kanäle",
       "channel_type": "Schalten",
       "channel_count": 16,
-      "width_te": null
+      "width_te": 8
     },
     {
       "manufacturer": "MDT",
@@ -413,7 +413,7 @@
       "description": "Schaltaktor Standard 20 Kanäle",
       "channel_type": "Schalten",
       "channel_count": 20,
-      "width_te": null
+      "width_te": 12
     },
     {
       "manufacturer": "MDT",
@@ -422,7 +422,7 @@
       "description": "Schaltaktor Standard 24 Kanäle",
       "channel_type": "Schalten",
       "channel_count": 24,
-      "width_te": null
+      "width_te": 12
     },
     {
       "manufacturer": "MDT",
@@ -431,7 +431,7 @@
       "description": "Schaltaktor Kompakt 2 Kanäle",
       "channel_type": "Schalten",
       "channel_count": 2,
-      "width_te": null
+      "width_te": 2
     },
     {
       "manufacturer": "MDT",
@@ -440,7 +440,7 @@
       "description": "Schaltaktor Kompakt 4 Kanäle",
       "channel_type": "Schalten",
       "channel_count": 4,
-      "width_te": null
+      "width_te": 2
     },
     {
       "manufacturer": "MDT",
@@ -449,7 +449,7 @@
       "description": "Schaltaktor Kompakt 8 Kanäle",
       "channel_type": "Schalten",
       "channel_count": 8,
-      "width_te": null
+      "width_te": 4
     },
     {
       "manufacturer": "MDT",
@@ -458,7 +458,7 @@
       "description": "Schaltaktor Kompakt 16 Kanäle",
       "channel_type": "Schalten",
       "channel_count": 16,
-      "width_te": null
+      "width_te": 8
     },
     {
       "manufacturer": "MDT",
@@ -467,7 +467,7 @@
       "description": "Schaltaktor Kompakt 24 Kanäle",
       "channel_type": "Schalten",
       "channel_count": 24,
-      "width_te": null
+      "width_te": 12
     },
     {
       "manufacturer": "MDT",
@@ -476,7 +476,7 @@
       "description": "Jalousieaktor 2 Kanäle",
       "channel_type": "Rollo",
       "channel_count": 2,
-      "width_te": null
+      "width_te": 2
     },
     {
       "manufacturer": "MDT",
@@ -485,7 +485,7 @@
       "description": "Jalousieaktor 4 Kanäle",
       "channel_type": "Rollo",
       "channel_count": 4,
-      "width_te": null
+      "width_te": 4
     },
     {
       "manufacturer": "MDT",
@@ -494,7 +494,7 @@
       "description": "Jalousieaktor 8 Kanäle",
       "channel_type": "Rollo",
       "channel_count": 8,
-      "width_te": null
+      "width_te": 8
     },
     {
       "manufacturer": "MDT",
@@ -503,7 +503,7 @@
       "description": "Dimmaktor 2 Kanäle",
       "channel_type": "Dimmen",
       "channel_count": 2,
-      "width_te": null
+      "width_te": 3
     },
     {
       "manufacturer": "MDT",
@@ -512,7 +512,7 @@
       "description": "Dimmaktor 4 Kanäle",
       "channel_type": "Dimmen",
       "channel_count": 4,
-      "width_te": null
+      "width_te": 6
     },
     {
       "manufacturer": "MDT",
@@ -521,7 +521,7 @@
       "description": "LED Controller 4 Kanäle",
       "channel_type": "Dimmen",
       "channel_count": 4,
-      "width_te": null
+      "width_te": 4
     },
     {
       "manufacturer": "MDT",
@@ -530,7 +530,7 @@
       "description": "LED Controller 4 Kanäle",
       "channel_type": "Dimmen",
       "channel_count": 4,
-      "width_te": null
+      "width_te": 4
     },
     {
       "manufacturer": "MDT",
@@ -566,7 +566,7 @@
       "description": "IP Interface",
       "channel_type": "",
       "channel_count": null,
-      "width_te": null
+      "width_te": 2
     },
     {
       "manufacturer": "Busch-Jaeger",
@@ -593,7 +593,7 @@
       "description": "Busspannungsversorgung STEP3 640mA",
       "channel_type": "",
       "channel_count": null,
-      "width_te": null
+      "width_te": 3
     },
     {
       "manufacturer": "Phoenix Contact",
@@ -602,7 +602,7 @@
       "description": "Busspannungsversorgung STEP3 1280mA",
       "channel_type": "",
       "channel_count": null,
-      "width_te": null
+      "width_te": 4
     },
     {
       "manufacturer": "Elsner Elektronik",
@@ -647,7 +647,7 @@
       "description": "X1 Server",
       "channel_type": "",
       "channel_count": null,
-      "width_te": null
+      "width_te": 2
     },
     {
       "manufacturer": "Gira",
@@ -656,7 +656,7 @@
       "description": "S1 Fernzugriff-Modul",
       "channel_type": "",
       "channel_count": null,
-      "width_te": null
+      "width_te": 2
     },
     {
       "manufacturer": "Theben",
@@ -683,7 +683,7 @@
       "description": "LED PowerSupply 160-24",
       "channel_type": "",
       "channel_count": null,
-      "width_te": null
+      "width_te": 4
     },
     {
       "manufacturer": "Hörmann",
@@ -692,6 +692,132 @@
       "description": "KNX Gateway Standard für Torantriebe",
       "channel_type": "Tor",
       "channel_count": 1,
+      "width_te": null
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "JAL-0410M.02",
+      "group_name": "Aktor",
+      "description": "Jalousieaktor 4 Kanäle mit Fahrtzeitmessung",
+      "channel_type": "Rollo",
+      "channel_count": 4,
+      "width_te": 4
+    },
+    {
+      "manufacturer": "MDT",
+      "model": "JAL-0810M.02",
+      "group_name": "Aktor",
+      "description": "Jalousieaktor 8 Kanäle mit Fahrtzeitmessung",
+      "channel_type": "Rollo",
+      "channel_count": 8,
+      "width_te": 8
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "EibPC²",
+      "group_name": "Visualisierung/Logik",
+      "description": "EibPC² IP-Logikserver",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 4
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "ENA²",
+      "group_name": "Systemgerät",
+      "description": "Enertex KNX Net-Access (ENA²)",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 4
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "KNX IP Secure Interface",
+      "group_name": "Systemgerät",
+      "description": "Enertex KNX IP Secure Interface",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 2
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "KNX TP Secure Coupler",
+      "group_name": "Systemgerät",
+      "description": "Enertex KNX TP Secure Coupler",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 2
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "KNX HV Dimmer (4-Kanal)",
+      "group_name": "Aktor",
+      "description": "Enertex KNX HV Dimmer 4 Kanäle",
+      "channel_type": "Dimmen",
+      "channel_count": 4,
+      "width_te": 4
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "KNX HV Dimmer (8-Kanal)",
+      "group_name": "Aktor",
+      "description": "Enertex KNX HV Dimmer 8 Kanäle",
+      "channel_type": "Dimmen",
+      "channel_count": 8,
+      "width_te": 6
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "KNX PowerSupply 960³",
+      "group_name": "Systemgerät",
+      "description": "Enertex KNX PowerSupply 960mA",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 6
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "KNX Dual PowerSupply 1280",
+      "group_name": "Systemgerät",
+      "description": "Enertex KNX Dual PowerSupply 1280mA",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 6
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "KNX SmartMeter² 85A",
+      "group_name": "Sensor",
+      "description": "Enertex KNX SmartMeter² 85A Stromzähler",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 4
+    },
+    {
+      "manufacturer": "Theben",
+      "model": "theMura P180 KNX UP WH",
+      "group_name": "Sensor",
+      "description": "Präsenz-/Bewegungsmelder theMura P180 KNX Unterputz Weiß",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": null
+    },
+    {
+      "manufacturer": "Theben",
+      "model": "theLuxa P300 KNX WH",
+      "group_name": "Sensor",
+      "description": "Wand-Bewegungsmelder theLuxa P300 KNX Weiß",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": null
+    },
+    {
+      "manufacturer": "Theben",
+      "model": "theLuxa P300 KNX BK",
+      "group_name": "Sensor",
+      "description": "Wand-Bewegungsmelder theLuxa P300 KNX Schwarz",
+      "channel_type": "",
+      "channel_count": null,
       "width_te": null
     }
   ]

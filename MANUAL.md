@@ -353,8 +353,8 @@ unten) — bei Bedarf vorher den eigenen Katalog importieren.
 
 Bei einer frischen Installation (leerer Katalog) wird beim ersten Start
 automatisch ein Startkatalog gängiger KNX-Geräte eingefügt (u.a. MDT,
-Busch-Jaeger, Theben, Elsner Elektronik, Gira, Phoenix Contact, Hörmann —
-siehe `DEFAULT_ACTOR_TYPES` in `backend/db.py`). Das passiert nur einmalig, wenn
+Busch-Jaeger, Theben, Elsner Elektronik, Gira, Phoenix Contact, Hörmann,
+Enertex — siehe `DEFAULT_ACTOR_TYPES` in `backend/db.py`). Das passiert nur einmalig, wenn
 die Tabelle leer ist — ein bereits befüllter oder bewusst geleerter Katalog
 wird dadurch nie überschrieben. Genau dieser Startkatalog liegt zusätzlich
 als Datei unter `docs/templates/geraete-katalog.json` im Repository —
