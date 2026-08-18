@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.units import mm
-from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import KeepTogether, Paragraph, Spacer, Table, TableStyle
 
 from ..db import get_db
 from ..models import VerteilerIn, VerteilerUpdateIn, VerteilerItemIn, VerteilerItemMoveIn
@@ -271,12 +271,23 @@ def build_verteilerplanung_story(db, project_id, styles):
         heading = v["name"] or "Verteiler"
         if floor_name:
             heading += f" — {floor_name}"
-        story.append(Paragraph(heading, styles["RoomHeading"]))
-        for row_items in serialized["rows"]:
-            table = _verteiler_row_table(row_items, serialized["row_width_te"], styles)
-            if table:
+        heading_para = Paragraph(heading, styles["RoomHeading"])
+        row_tables = [t for t in (
+            _verteiler_row_table(row_items, serialized["row_width_te"], styles)
+            for row_items in serialized["rows"]
+        ) if t]
+        if row_tables:
+            # Only the first row-table needs to be kept with the heading -
+            # that's enough to stop the heading itself from ever being
+            # stranded alone at the bottom of a page; later rows paginate
+            # normally.
+            story.append(KeepTogether([heading_para, row_tables[0]]))
+            story.append(Spacer(1, 2 * mm))
+            for table in row_tables[1:]:
                 story.append(table)
                 story.append(Spacer(1, 2 * mm))
+        else:
+            story.append(heading_para)
 
     return story
 

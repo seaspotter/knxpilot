@@ -19,14 +19,6 @@ nobody trusts.
   is more fiddly than it should be on a small screen. Would need a pass
   over form layouts, touch target sizes, and table/card handling on
   narrow viewports across tabs, not just the nav.
-- [ ] **Keep PDF section headings with their first table/paragraph** — in
-  some exports a section's heading has landed at the bottom of one page
-  with its actual content (e.g. a table) starting on the next, instead of
-  moving the heading down onto the same page as its content. ReportLab
-  supports `KeepTogether` (wraps flowables so they break as a unit) - needs
-  a pass across the shared PDF story-builders (`pdf_design.py` and the
-  various `build_*_story` functions) to wrap each heading with at least
-  its first following flowable.
 - [ ] **File attachments per project** — store a handful of files per
   project (building drawings, manuals, an ETS export) alongside the rest
   of the project data. Deliberately scoped to "a few files," not a general

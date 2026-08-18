@@ -5,7 +5,7 @@ materials, the Geräteliste PDF export (order list), and the Geräte je Raum
 PDF export (installation reference - every device, grouped by Geschoss/Raum).
 """
 from fastapi import APIRouter, HTTPException
-from reportlab.platypus import Paragraph, Spacer, Table
+from reportlab.platypus import KeepTogether, Paragraph, Spacer, Table
 from reportlab.lib.units import mm
 
 from ..db import get_db
@@ -254,22 +254,24 @@ def export_geraeteliste_pdf(project_id: int):
         styles = pdf_styles()
         story = company_header_block(company) + pdf_title_banner(f"Geräteliste — {project['name']}", "Bestellübersicht")
 
-        story.append(Paragraph("Stückliste (Bestellung)", styles["SectionHeading"]))
+        heading = Paragraph("Stückliste (Bestellung)", styles["SectionHeading"])
         table_data = [["Gruppe", "Hersteller", "Typ", "Anzahl"]]
         for s in to_order:
             table_data.append([s["group_name"], s["manufacturer"], s["model"], str(s["total"])])
         if len(table_data) == 1:
-            story.append(Paragraph("Noch keine Geräte geplant.", styles["BodyMuted"]))
+            story.append(KeepTogether([heading, Paragraph("Noch keine Geräte geplant.", styles["BodyMuted"])]))
         else:
             table = Table(table_data, colWidths=[30 * mm, 55 * mm, 65 * mm, 15 * mm])
             table.setStyle(pdf_table_style())
-            story.append(table)
+            story.append(KeepTogether([heading, table]))
 
         if already_have:
             story.append(Spacer(1, 4 * mm))
-            story.append(Paragraph("Bereits vorhanden (nicht bestellt)", styles["SubHeading"]))
             text = ", ".join(f"{s['total']}× {s['device_name']}" for s in already_have)
-            story.append(Paragraph(text, styles["BodyMuted"]))
+            story.append(KeepTogether([
+                Paragraph("Bereits vorhanden (nicht bestellt)", styles["SubHeading"]),
+                Paragraph(text, styles["BodyMuted"]),
+            ]))
 
         return build_pdf_response(
             story,
@@ -358,18 +360,26 @@ def build_geraete_je_raum_story(db, project_id, styles):
 
     current_floor = None
     for floor_name, room_name, devices in rows:
+        group = []
         if floor_name != current_floor:
             if current_floor is not None:
                 story.append(Spacer(1, 3 * mm))
-            story.append(Paragraph(floor_name, styles["SectionHeading"]))
+            group.append(Paragraph(floor_name, styles["SectionHeading"]))
             current_floor = floor_name
-        story.append(Paragraph(room_name, styles["RoomHeading"]))
+        group.append(Paragraph(room_name, styles["RoomHeading"]))
         table_data = [["Gruppe", "Hersteller", "Typ", "Adresse"]]
         for d in devices:
             table_data.append([d["group_name"], d["manufacturer"], d["model"], d["physical_address"] or "—"])
         table = Table(table_data, colWidths=[25 * mm, 45 * mm, 65 * mm, 35 * mm], repeatRows=1)
         table.setStyle(pdf_table_style())
-        story.append(table)
+        group.append(table)
+        # Keep the (optional floor +) room heading together with its table
+        # so ReportLab never strands a heading alone at the bottom of a
+        # page with the table starting on the next one - safe for a long
+        # table too, KeepTogether only forces a fresh-page start for the
+        # group, it doesn't stop the table itself from paginating normally
+        # afterwards.
+        story.append(KeepTogether(group))
         story.append(Spacer(1, 2 * mm))
 
     return story

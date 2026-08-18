@@ -8,6 +8,15 @@ restructuring below — history before that is available via `git log`.
 
 ### Fixed
 
+- PDF exports no longer strand a section heading alone at the bottom of a
+  page with its table/content starting on the next one - every
+  `SectionHeading`/`RoomHeading` across the shared PDF story-builders
+  (Geräteliste, Geräte je Raum, Verteilerplanung, Abgangsliste,
+  Pflichtenheft incl. Gruppenadressen, Übergabe-Checkliste) is now wrapped
+  with at least its first following flowable in a ReportLab `KeepTogether`
+  group. Safe for long tables too - `KeepTogether` only forces a
+  fresh-page start for the group, it doesn't stop a long table from
+  paginating normally afterwards (verified against a 200-row table).
 - The header version badge now shows something meaningful in a plain-image
   deployment too (Portainer, bare `docker run`, no `docker-compose.yml`
   bind-mount) instead of going blank - `GET /api/system/version` fell back

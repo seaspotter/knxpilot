@@ -8,7 +8,7 @@ alongside it.
 import re
 
 from fastapi import APIRouter, HTTPException
-from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, PageBreak, HRFlowable
+from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, PageBreak, HRFlowable, KeepTogether
 from reportlab.lib.units import mm
 
 from ..db import get_db
@@ -136,11 +136,11 @@ def _gruppenadressen_story(project_id, styles):
         if m_idx > 0:
             story.append(PageBreak())
         total_subs = sum(len(mid["subs"]) for mid in main["middles"])
-        story.append(Paragraph(f"{main['main']} {main['name']} ({total_subs})", styles["SectionHeading"]))
-        for mid in main["middles"]:
-            story.append(Paragraph(
+        main_heading = Paragraph(f"{main['main']} {main['name']} ({total_subs})", styles["SectionHeading"])
+        for mid_idx, mid in enumerate(main["middles"]):
+            mid_heading = Paragraph(
                 f"{main['main']}/{mid['middle']} {mid['name']} ({len(mid['subs'])})", styles["RoomHeading"]
-            ))
+            )
             table_data = [["Adresse", "Name", "DPT"]]
             for s in mid["subs"]:
                 table_data.append([
@@ -150,8 +150,16 @@ def _gruppenadressen_story(project_id, styles):
                 ])
             table = Table(table_data, colWidths=[25 * mm, 115 * mm, 40 * mm], repeatRows=1)
             table.setStyle(pdf_table_style([("VALIGN", (0, 0), (-1, -1), "MIDDLE")]))
-            story.append(table)
+            # Keep each (middle-group) heading with its own table so it's
+            # never stranded alone at the bottom of a page - the first
+            # middle group in a main group also carries the main-group
+            # heading along, since that one has no PageBreak of its own
+            # (m_idx == 0, see above).
+            group = [main_heading, mid_heading, table] if mid_idx == 0 else [mid_heading, table]
+            story.append(KeepTogether(group))
             story.append(Spacer(1, 3 * mm))
+        if not main["middles"]:
+            story.append(main_heading)
     return story
 
 
@@ -205,8 +213,13 @@ def export_pflichtenheft_pdf(project_id: int):
 
         preamble = (company.get("pflichtenheft_preamble") or "").strip()
         if preamble and company.get("pflichtenheft_include_vorbemerkungen", True):
-            story.append(Paragraph("Vorbemerkungen", styles["SectionHeading"]))
-            story += _preamble_story(preamble, styles)
+            preamble_flowables = _preamble_story(preamble, styles)
+            heading = Paragraph("Vorbemerkungen", styles["SectionHeading"])
+            if preamble_flowables:
+                story.append(KeepTogether([heading, preamble_flowables[0]]))
+                story += preamble_flowables[1:]
+            else:
+                story.append(heading)
             story.append(Spacer(1, 2 * mm))
 
         # Collect floor/room data once, used for both the directory table and
@@ -219,18 +232,28 @@ def export_pflichtenheft_pdf(project_id: int):
         if company.get("pflichtenheft_include_struktur", True):
             directory_table = _floor_room_table(styles, [(f["name"], [r["name"] for r in rooms]) for f, rooms in floor_rooms if rooms])
             if directory_table:
-                story.append(Paragraph("Stockwerk- und Raumverzeichnis", styles["SectionHeading"]))
-                story.append(directory_table)
+                story.append(KeepTogether([
+                    Paragraph("Stockwerk- und Raumverzeichnis", styles["SectionHeading"]), directory_table,
+                ]))
                 story.append(PageBreak())
 
         any_room = False
         for floor, rooms in floor_rooms:
             if not rooms:
                 continue
-            story.append(Paragraph(floor["name"], styles["SectionHeading"]))
+            floor_heading = Paragraph(floor["name"], styles["SectionHeading"])
+            first_room_in_floor = True
             for room in rooms:
                 any_room = True
-                story.append(Paragraph(room["name"], styles["RoomHeading"]))
+                room_heading = Paragraph(room["name"], styles["RoomHeading"])
+                # Only the first room of a floor needs to carry the floor
+                # heading along - it has no PageBreak/Spacer of its own
+                # before it, so it's the one at risk of being stranded
+                # alone; later rooms in the same floor already start their
+                # own KeepTogether group with a room heading.
+                heading_group = [floor_heading, room_heading] if first_room_in_floor else [room_heading]
+                first_room_in_floor = False
+
                 functions = get_room_functions_by_category(db, room["id"])
                 devices = db.execute(
                     "SELECT rd.*, at.manufacturer, at.model FROM room_devices rd "
@@ -239,12 +262,11 @@ def export_pflichtenheft_pdf(project_id: int):
                     (room["id"],),
                 ).fetchall()
                 if not functions and not devices:
-                    story.append(Paragraph("Keine Funktionen oder Geräte geplant.", styles["BodyMuted"]))
+                    heading_group.append(Paragraph("Keine Funktionen oder Geräte geplant.", styles["BodyMuted"]))
+                    story.append(KeepTogether(heading_group))
                     continue
-                function_table = _function_checklist_table(styles, functions)
-                if function_table:
-                    story.append(function_table)
-                    story.append(Spacer(1, 2 * mm))
+
+                device_list_para = None
                 if devices:
                     device_list = ", ".join(
                         (f"{d['quantity']}× " if d["quantity"] != 1 else "") + join_parts(d['manufacturer'], d['model'])
@@ -252,7 +274,20 @@ def export_pflichtenheft_pdf(project_id: int):
                         + (f" ({d['note']})" if d["note"] else "")
                         for d in devices
                     )
-                    story.append(Paragraph(f"<b>Geräte:</b> {device_list}", styles["Body"]))
+                    device_list_para = Paragraph(f"<b>Geräte:</b> {device_list}", styles["Body"])
+
+                function_table = _function_checklist_table(styles, functions)
+                if function_table:
+                    heading_group.append(function_table)
+                    story.append(KeepTogether(heading_group))
+                    story.append(Spacer(1, 2 * mm))
+                    if device_list_para:
+                        story.append(device_list_para)
+                elif device_list_para:
+                    heading_group.append(device_list_para)
+                    story.append(KeepTogether(heading_group))
+                else:
+                    story.append(KeepTogether(heading_group))
                 story.append(Spacer(1, 2.5 * mm))
 
         if not any_room:
@@ -410,8 +445,9 @@ def export_uebergabe_checkliste_pdf(project_id: int):
     for i, (section_title, items) in enumerate(CHECKLIST_SECTIONS):
         if i > 0:
             story.append(Spacer(1, 4 * mm))
-        story.append(Paragraph(section_title, styles["SectionHeading"]))
-        story.append(_checklist_section_table(styles, items))
+        story.append(KeepTogether([
+            Paragraph(section_title, styles["SectionHeading"]), _checklist_section_table(styles, items),
+        ]))
 
     story.append(Spacer(1, 8 * mm))
     sig_row = Table([[

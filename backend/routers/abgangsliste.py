@@ -8,7 +8,7 @@ import io
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from reportlab.platypus import Paragraph, Spacer, Table, PageBreak
+from reportlab.platypus import KeepTogether, Paragraph, Spacer, Table, PageBreak
 from reportlab.lib.units import mm
 
 from ..db import get_db
@@ -395,17 +395,16 @@ def build_abgangsliste_story(db, project_id, styles, page_break_between_floors=T
         first_floor = False
 
         floor_label = floor_names.get(floor_id, "Ohne Geschoss")
-        story.append(Paragraph(floor_label, styles["SectionHeading"]))
-        story.append(Spacer(1, 2 * mm))
+        floor_heading = Paragraph(floor_label, styles["SectionHeading"])
 
-        for ai in by_floor[floor_id]:
+        for idx, ai in enumerate(by_floor[floor_id]):
             actor_display = join_parts(ai["at_manufacturer"], ai["at_model"]) or "?"
             subtitle_parts = [actor_display]
             if ai["location_label"]:
                 subtitle_parts.append(ai["location_label"])
             if ai["physical_address"]:
                 subtitle_parts.append(ai["physical_address"])
-            story.append(Paragraph(" · ".join(subtitle_parts), styles["RoomHeading"]))
+            actor_heading = Paragraph(" · ".join(subtitle_parts), styles["RoomHeading"])
 
             by_letter = {}
             for a in assignments:
@@ -424,7 +423,15 @@ def build_abgangsliste_story(db, project_id, styles, page_break_between_floors=T
 
             table = Table(table_data, colWidths=[25 * mm, 130 * mm])
             table.setStyle(pdf_table_style(row_styles))
-            story.append(table)
+
+            # Keep the floor heading with the first actuator's own heading +
+            # channel table (not just the floor heading alone), and every
+            # actuator heading with its own table - a heading never gets
+            # stranded at the bottom of a page with its table starting on
+            # the next one, but a long floor's later actuators still
+            # paginate normally.
+            group = [floor_heading, Spacer(1, 2 * mm), actor_heading, table] if idx == 0 else [actor_heading, table]
+            story.append(KeepTogether(group))
             story.append(Spacer(1, 5 * mm))
 
     return story
