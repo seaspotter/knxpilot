@@ -50,6 +50,7 @@ document.querySelectorAll('#workspace-subnav button').forEach(btn => {
     if (btn.dataset.subtab === 'abgangsliste') await loadAbgangForCurrentProject();
     if (btn.dataset.subtab === 'labels') renderLabelGrid();
     if (btn.dataset.subtab === 'geraeteplanung') await loadGeraeteplanungForCurrentProject();
+    if (btn.dataset.subtab === 'verteilerplanung') await loadVerteilerplanungForCurrentProject();
     if (btn.dataset.subtab === 'pflichtenheft') await loadPflichtenheftForCurrentProject();
     if (btn.dataset.subtab === 'klaerungsliste') await loadKlaerungslisteForCurrentProject();
   };

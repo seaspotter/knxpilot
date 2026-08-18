@@ -169,6 +169,26 @@
   .label-cell.used { background:var(--bg); border-style:dashed; opacity:0.6; }
   .label-cell.start { background:var(--accent); border-color:var(--accent); }
 
+  .verteiler-row { display:flex; height:64px; border:1px solid var(--border); border-radius:6px; overflow:hidden; margin-bottom:6px; }
+  .verteiler-item {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-size:11px; text-align:center; border-right:1px solid var(--border); padding:2px 4px;
+    overflow:hidden;
+  }
+  .verteiler-item:last-child { border-right:none; }
+  .verteiler-item.rcd, .verteiler-item.ls { background:var(--panel2); }
+  .verteiler-item.device { background:var(--panel3); }
+  .verteiler-item-empty {
+    display:flex; align-items:center; justify-content:center; font-size:11px;
+    color:var(--muted); border-style:dashed; border-left:1px dashed var(--border);
+  }
+  .verteiler-item-actions { display:none; gap:4px; margin-top:2px; }
+  .verteiler-item:hover .verteiler-item-actions { display:flex; }
+  .verteiler-item-actions button {
+    background:var(--panel); border:1px solid var(--border); border-radius:3px;
+    color:var(--text); font-size:10px; line-height:1; padding:1px 4px; cursor:pointer;
+  }
+
   @media (max-width: 700px) {
     main { padding:12px; }
     .card { padding:12px; }

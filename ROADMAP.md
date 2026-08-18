@@ -13,21 +13,17 @@ letting it drift into a wishlist nobody trusts.
   sub-tab), one label per actor instance or per channel, with a position
   picker to resume a partially-used sheet and a test-print/alignment mode.
   See `CHANGELOG.md` for detail.
-- [ ] **DIN-Rail / Verteiler (cabinet) layout** — given a cabinet's DIN-rail
-  rows, RCD/LS Schalter inventory, and available space, generate the
-  physical layout: which fuse/RCD group belongs to which circuit, and which
-  actor channel goes where in the Verteiler. Builds on Labels above (once a
-  circuit has a physical position, its label prints at that position). User
-  confirmed the RCD/LS-Schalter relationship should be modeled explicitly
-  (an RCD groups several LS-Schalter, each protecting one or more circuits/
-  actor channels), not just tracked as flat inventory - that hierarchy is
-  the real substance of a Verteilerplan, not just bin-packing by width.
-  First piece already landed: Geräte-Katalog entries can record a **TE**
-  width (see `CHANGELOG.md`). Still needed: a Sicherungselement (RCD/LS-
-  Schalter) catalog with its own TE width + the grouping hierarchy above,
-  the per-project Verteiler config (rows, TE per row), the actual
-  allocation/packing step, and a rendered layout diagram. Not yet spec'd
-  in detail beyond this — needs its own planning pass before starting.
+- [x] **DIN-Rail / Verteiler (cabinet) layout** — new Verteilerplanung
+  sub-tab: fixed 12-TE rows per Geschoss, RCD (4TE)/LS-Schalter (1TE)
+  placeholder blocks, and already-placed Abgangsliste actor instances
+  (sized by their Geräte-Katalog TE width) all placeable into rows, with
+  capacity/uniqueness enforced. See `CHANGELOG.md` for detail. Scoped
+  down from an earlier idea of an explicit RCD→LS-Schalter→circuit
+  protection hierarchy (each RCD grouping specific LS-Schalter, each
+  protecting specific circuits/channels) — user confirmed RCD/LS should
+  just be simple labeled blocks for now, not linked to specific circuits.
+  That fuller hierarchy is a possible future refinement, not currently
+  planned.
 
 ## Good ideas, not yet sequenced
 

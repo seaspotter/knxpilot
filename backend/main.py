@@ -21,7 +21,7 @@ CSV export format (verified against real ETS6 exports):
 
 This file just wires everything together - see backend/routers/ for the
 actual endpoints, grouped by tab (setup, geraete, projects, abgangsliste,
-geraeteplanung, klaerungsliste, pflichtenheft, system), backend/db.py for the
+geraeteplanung, verteiler, klaerungsliste, pflichtenheft, system), backend/db.py for the
 schema/migrations/seed data, backend/ga_logic.py for GA-tree generation, and
 backend/pdf_design.py for the shared PDF look-and-feel. The frontend (plain
 HTML/CSS/JS, no build step) lives in ../frontend/, mounted below.
@@ -39,7 +39,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .backup import run_backup_now
 from .db import get_db, init_db
-from .routers import setup, geraete, projects, abgangsliste, geraeteplanung, klaerungsliste, pflichtenheft, system
+from .routers import setup, geraete, projects, abgangsliste, geraeteplanung, klaerungsliste, pflichtenheft, system, verteiler
 
 logger = logging.getLogger("knxpilot.backup")
 
@@ -90,6 +90,7 @@ app.include_router(geraete.router)
 app.include_router(projects.router)
 app.include_router(abgangsliste.router)
 app.include_router(geraeteplanung.router)
+app.include_router(verteiler.router)
 app.include_router(klaerungsliste.router)
 app.include_router(pflichtenheft.router)
 app.include_router(system.router)

@@ -101,6 +101,29 @@ class RoomDeviceIn(BaseModel):
     note: str = ""
 
 
+class VerteilerIn(BaseModel):
+    floor_id: int | None = None
+    name: str = ""
+    row_count: int = 4
+
+
+class VerteilerUpdateIn(BaseModel):
+    name: str
+    row_count: int
+
+
+class VerteilerItemIn(BaseModel):
+    row_idx: int
+    item_type: str          # 'rcd' | 'ls' | 'device'
+    label: str = ""         # only used for rcd/ls
+    width_te: int | None = None   # only used for rcd/ls - server fills a default if omitted
+    actor_instance_id: int | None = None   # required for item_type == 'device'
+
+
+class VerteilerItemMoveIn(BaseModel):
+    direction: str   # 'left' | 'right'
+
+
 class KlaerungIn(BaseModel):
     room_id: int | None = None
     room_point_id: int | None = None

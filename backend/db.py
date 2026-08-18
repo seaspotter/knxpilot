@@ -346,6 +346,34 @@ def init_db():
                 order_idx INTEGER NOT NULL DEFAULT 0
             );
 
+            -- Verteilerplanung: a physical DIN-rail cabinet layout for one Geschoss.
+            -- Fixed 12-TE-wide rows (row_count of them); each row holds verteiler_items
+            -- left to right. RCD/LS items are simple labeled/sized blocks (no link to
+            -- specific circuits - that's a possible future refinement, see ROADMAP.md);
+            -- device items reference an existing actor_instance (placed via Abgangsliste),
+            -- whose width comes live from actor_types.width_te, not copied here.
+            CREATE TABLE IF NOT EXISTS verteiler (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                floor_id INTEGER REFERENCES floors(id) ON DELETE SET NULL,
+                name TEXT NOT NULL DEFAULT '',
+                row_count INTEGER NOT NULL DEFAULT 4,
+                order_idx INTEGER NOT NULL DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS verteiler_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                verteiler_id INTEGER NOT NULL REFERENCES verteiler(id) ON DELETE CASCADE,
+                row_idx INTEGER NOT NULL,
+                position_idx INTEGER NOT NULL DEFAULT 0,
+                item_type TEXT NOT NULL,          -- 'rcd' | 'ls' | 'device'
+                label TEXT NOT NULL DEFAULT '',   -- only used for rcd/ls (e.g. "RCD 40A/30mA")
+                width_te INTEGER,                 -- only used for rcd/ls; device width is looked up live
+                actor_instance_id INTEGER REFERENCES actor_instances(id) ON DELETE CASCADE
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_verteiler_items_actor_instance
+                ON verteiler_items(actor_instance_id) WHERE actor_instance_id IS NOT NULL;
+
             -- Klärungsliste: per-project questions/tasks/notes for site visits,
             -- optionally tied to a room and/or a specific point within it. Internal
             -- working list by default - only appears in the Pflichtenheft export if

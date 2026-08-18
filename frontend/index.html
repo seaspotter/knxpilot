@@ -111,6 +111,7 @@
         <button data-subtab="abgangsliste">Abgangsliste</button>
         <button data-subtab="labels">Labels</button>
         <button data-subtab="geraeteplanung">Geräteplanung</button>
+        <button data-subtab="verteilerplanung">Verteilerplanung</button>
         <button data-subtab="pflichtenheft">Pflichtenheft</button>
         <button data-subtab="klaerungsliste">Klärungsliste</button>
       </div>
@@ -245,6 +246,20 @@
             <div id="geraeteplanung-rooms"></div>
           </div>
         </div>
+      </div>
+
+      <div class="subtab" id="subtab-verteilerplanung">
+        <div class="card">
+          <h4>Verteiler anlegen</h4>
+          <p class="muted">Ein Verteiler gehört zu einem Geschoss und hat eine feste Anzahl Reihen à 12 TE (Teilungseinheiten). RCD/LS-Schalter sind einfache, benannte Platzhalter ohne Bezug zu bestimmten Abgängen. Nur Geräte mit gesetzter TE-Breite im Geräte-Katalog lassen sich platzieren.</p>
+          <div class="row">
+            <select id="verteiler-floor"></select>
+            <input type="text" id="verteiler-name" placeholder="Name, z.B. Verteiler EG" style="width:200px;">
+            <label style="display:flex; align-items:center; gap:4px;">Reihen <input type="number" id="verteiler-rows" value="4" min="1" style="width:55px;"></label>
+            <button class="btn" onclick="createVerteiler()">+ Verteiler anlegen</button>
+          </div>
+        </div>
+        <div id="verteiler-list"></div>
       </div>
 
       <div class="subtab" id="subtab-pflichtenheft">
@@ -598,6 +613,7 @@
 <script src="/js/abgangsliste.js"></script>
 <script src="/js/labels.js"></script>
 <script src="/js/geraeteplanung.js"></script>
+<script src="/js/verteiler.js"></script>
 <script src="/js/pflichtenheft.js"></script>
 <script src="/js/klaerungsliste.js"></script>
 <script src="/js/update.js"></script>

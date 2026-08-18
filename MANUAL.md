@@ -59,10 +59,10 @@ in `backend/routers/projects.py` isoliert.
   Programmkopf (neben der Versionsnummer) jederzeit, welches — ein Klick
   darauf springt dorthin, das **×** daneben schliesst es direkt von
   überall aus, ohne erst zum Projekte-Tab wechseln zu müssen. Ein
-  geöffnetes Projekt zeigt einen Arbeitsbereich mit neun Unterreitern
+  geöffnetes Projekt zeigt einen Arbeitsbereich mit zehn Unterreitern
   (Übersicht, Gebäudestruktur, Funktionen, Gruppenadressen, Abgangsliste,
-  Labels, Geräteplanung, Pflichtenheft, Klärungsliste), die alle am selben
-  Projekt arbeiten.
+  Labels, Geräteplanung, Verteilerplanung, Pflichtenheft, Klärungsliste),
+  die alle am selben Projekt arbeiten.
 - **Geräte Katalog** — globaler Gerätekatalog (Aktoren, Sensoren,
   Bedienelemente usw.), gemeinsam für alle Projekte genutzt.
 - **Setup** — Firmenprofil (Name/Adresse/Kontakt/Logo), Kategorien,
@@ -241,6 +241,34 @@ unabhängig davon ob dafür eine Gruppenadresse oder ein Aktorkanal existiert.
    Praktisch für Bestellung oder Angebotskalkulation.
 3. **PDF herunterladen** exportiert diese Stückliste als Bestellliste, plus
    eine Aufschlüsselung je Raum.
+
+#### Verteilerplanung
+
+Ein einfaches visuelles Layout des Schaltschranks (Hutschiene) je Geschoss.
+Ein **Verteiler** gehört zu einem Geschoss und hat eine feste Anzahl Reihen
+— jede Reihe ist immer 12 TE (Teilungseinheiten, 1 TE = 18 mm) breit.
+
+- **+ Verteiler anlegen** — Geschoss, Name und Anzahl Reihen wählen. Über
+  **Bearbeiten** lassen sich beide später ändern (die Reihenzahl nicht
+  unter die höchste noch belegte Reihe, sonst Fehlermeldung).
+- Jede Reihe zeigt ihre Elemente als proportional breite Kästchen (nach
+  TE), freier Platz erscheint gestrichelt. Drei Buttons je Reihe:
+  - **+ RCD (4 TE)** / **+ LS (1 TE)** — einfache, benannte Platzhalter
+    mit Standardbreite. Aktuell ohne Bezug zu bestimmten Abgängen/Kanälen
+    — reine Platzhalter für den Hutschienenplatz, keine eigene Auswertung
+    (siehe `ROADMAP.md`).
+  - **+ Gerät...** — Auswahl aus den bereits in der Abgangsliste
+    angelegten Aktoren desselben Geschosses (Anzeige: Standort/Modell +
+    physikalische Adresse, z.B. "Dimmaktor 4fach · 1.1.13"). Nur Geräte
+    mit gesetzter **TE**-Breite im Geräte-Katalog sind auswählbar — fehlt
+    sie, zuerst dort nachtragen. Ein Gerät lässt sich nur in einem
+    Verteiler gleichzeitig platzieren.
+- Reicht der freie Platz einer Reihe nicht, meldet das Tool die noch
+  freie TE-Zahl statt stillschweigend zu überfüllen.
+- Über die Pfeile an jedem Kästchen lässt sich die Reihenfolge innerhalb
+  einer Reihe anpassen; **×** entfernt ein Element wieder (das zugehörige
+  Gerät selbst bleibt in der Abgangsliste erhalten — nur die Platzierung
+  im Verteiler wird gelöscht).
 
 #### Pflichtenheft
 
