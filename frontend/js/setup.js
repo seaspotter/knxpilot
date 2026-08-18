@@ -311,7 +311,7 @@ async function importCategoriesJson() {
 // ---------- Setup: Point Types ----------
 function addPtSuffixRow(suffix='', dpt='') {
   const div = document.createElement('div');
-  div.className = 'row';
+  div.className = 'row mobile-fields';
   div.innerHTML = `
     <input type="text" placeholder="Suffix z.B. Schalten" class="pt-suf-name" value="${suffix}">
     <input type="text" placeholder="DPT z.B. DPST-1-1" class="pt-suf-dpt" value="${dpt}">
@@ -427,7 +427,7 @@ async function importPointTypesJson() {
 // ---------- Setup: Central Templates ----------
 function addCtSuffixRow(suffix='', dpt='') {
   const div = document.createElement('div');
-  div.className = 'row';
+  div.className = 'row mobile-fields';
   div.innerHTML = `
     <input type="text" placeholder="Suffix z.B. Ein/Aus" class="ct-suf-name" value="${suffix}">
     <input type="text" placeholder="DPT z.B. DPST-1-1" class="ct-suf-dpt" value="${dpt}">

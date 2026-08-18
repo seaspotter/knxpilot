@@ -64,7 +64,7 @@ function renderVerteilerRow(v, row_idx, items) {
     ? `<div class="verteiler-item-empty" style="flex:0 0 ${free / v.row_width_te * 100}%;">${free} TE frei</div>`
     : '';
   return `
-    <div class="verteiler-row">${boxes}${emptyBox}</div>
+    <div class="verteiler-row-scroll"><div class="verteiler-row">${boxes}${emptyBox}</div></div>
     <div class="row" style="margin:0 0 14px; gap:6px;">
       <button class="btn secondary small" onclick="addVerteilerItem(${v.id}, ${row_idx}, 'rcd')">+ RCD (4 TE)</button>
       <button class="btn secondary small" onclick="addVerteilerItem(${v.id}, ${row_idx}, 'ls')">+ LS (1 TE)</button>
@@ -101,7 +101,7 @@ function openAddDeviceModal(verteiler_id, row_idx) {
 
   const modal = openModal(`
     <h3>Gerät hinzufügen</h3>
-    <div class="row"><select id="verteiler-device-select" style="min-width:320px; flex:1;">${options}</select></div>
+    <div class="row"><select id="verteiler-device-select" class="flex-input-wide">${options}</select></div>
     <div class="row modal-actions">
       <button class="btn secondary" data-action="cancel">Abbrechen</button>
       <button class="btn" data-action="add">Hinzufügen</button>
@@ -147,7 +147,7 @@ function editVerteiler(verteiler_id) {
   const v = VERTEILER_LIST.find(x => x.id === verteiler_id);
   const modal = openModal(`
     <h3>Verteiler bearbeiten</h3>
-    <div class="row"><input type="text" id="verteiler-edit-name" style="min-width:220px; flex:1;"></div>
+    <div class="row"><input type="text" id="verteiler-edit-name" class="flex-input"></div>
     <div class="row"><label style="display:flex; align-items:center; gap:4px;">Reihen <input type="number" id="verteiler-edit-rows" min="1" style="width:60px;"></label></div>
     <div class="row modal-actions">
       <button class="btn secondary" data-action="cancel">Abbrechen</button>

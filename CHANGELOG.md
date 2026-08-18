@@ -8,18 +8,33 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
-- Mobile/tablet-optimized data entry for the tabs actually usable on-site
-  from a phone: Klärungsliste's new-entry form, Geräteplanung's per-room/
-  per-floor device quick-add, and Abgangsliste's actor quick-add now
-  stack each field onto its own full-width line below 700px instead of
-  wrapping several fixed-width fields into a cramped multi-column jumble
-  - opt-in via a new `.mobile-fields` class, not applied to every `.row`
-    (most are button toolbars that already wrap fine). Also: bigger touch
-    targets app-wide below 700px (buttons, inputs/selects incl. 16px font
-    to avoid iOS Safari's auto-zoom-on-focus, icon buttons, inline pill
-    edit/delete links), and info-icon/icon-button tooltips now cap their
-    width to the viewport instead of potentially running off a narrow
-    screen's edge.
+- Mobile/tablet-optimized data entry across the whole app, not just the
+  on-site-usable tabs from the previous pass: every genuine multi-field
+  form row now stacks each field onto its own full-width line below
+  700px instead of wrapping several fixed-width fields into a cramped
+  multi-column jumble - Funktionen's room-function quick-add, the
+  Geräte-Katalog add-device form, Gebäudestruktur, Setup (Firma,
+  Funktionstypen, Zentral-/Allgemeinfunktions-Vorlagen, Backup), project
+  create/rename/meta-edit modals, Verteilerplanung's "Verteiler anlegen",
+  and more - via an opt-in `.mobile-fields` class, not applied to every
+  `.row` (most are button toolbars that already wrap fine as-is). Several
+  inline `style="width:…"`/`style="min-width:…; flex:1"` attributes were
+  converted to shared width classes (`.w-60`/`.w-110`/.../`.w-220`,
+  `.flex-input`, `.flex-input-wide`) along the way, since a mobile media
+  query can't override an inline style without `!important`.
+  Verteilerplanung's DIN-rail row diagram (percentage-width boxes that
+  became illegible, though not page-overflowing, once squeezed onto a
+  narrow screen) gets a horizontal-scroll wrapper with a legible minimum
+  width instead of being force-stacked like a form. Also: bigger touch
+  targets app-wide below 700px (buttons, inputs/selects incl. 16px font
+  to avoid iOS Safari's auto-zoom-on-focus, icon buttons, inline pill
+  edit/delete links), info-icon/icon-button tooltips capped to the
+  viewport width, and a fix for the Update/Hilfe tabs' markdown-rendered
+  `<pre><code>` blocks (e.g. the CSV column list in the manual) causing
+  page-level horizontal overflow despite their own `overflow-x:auto`.
+  Verified via CDP at a 375px viewport across all 19 tabs/subtabs -
+  zero horizontal overflow anywhere - and confirmed desktop (1400px) is
+  visually unchanged.
 
 ### Fixed
 

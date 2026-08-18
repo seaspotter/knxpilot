@@ -38,11 +38,11 @@ function renderRoomFunctions(room) {
     <div class="room-card">
       <b>${room.name}</b>
       ${pointsHtml}
-      <div class="quick-add">
+      <div class="quick-add mobile-fields">
         <select id="ptype-${room.id}" class="wide">
           ${POINT_TYPES.map(pt => `<option value="${pt.id}">${CATEGORIES.find(c=>c.id===pt.category_id)?.name} — ${pt.name}</option>`).join('')}
         </select>
-        <input type="text" id="label-${room.id}" placeholder="Label z.B. Decke, Spots, Nord (leer = keins)" style="width:210px;">
+        <input type="text" id="label-${room.id}" class="w-210" placeholder="Label z.B. Decke, Spots, Nord (leer = keins)">
         <input type="number" id="qty-${room.id}" value="1" min="1" title="Anzahl">
         <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="bwm-${room.id}"> +BWM<span class="info-icon" tabindex="0" data-tip="BWM = Bewegungsmelder. Fügt diesem Punkt eine zusätzliche Bewegungsmelder-Adresse hinzu, zusätzlich zu den normalen Datenpunkten des Funktionstyps.">i</span></label>
         <button class="btn secondary small" id="save-btn-${room.id}" onclick="saveRoomPoint(${room.id})">+ Hinzufügen</button>
@@ -115,7 +115,7 @@ async function deleteRoomPoint(ev, id) {
 // ---------- Specials ----------
 function addSpecialSuffixRow(suffix='', dpt='') {
   const div = document.createElement('div');
-  div.className = 'row';
+  div.className = 'row mobile-fields';
   div.innerHTML = `
     <input type="text" placeholder="Suffix z.B. Auf/Ab" class="sp-suf-name" value="${suffix}">
     <input type="text" placeholder="DPT z.B. DPST-1-8" class="sp-suf-dpt" value="${dpt}">

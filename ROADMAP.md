@@ -13,15 +13,6 @@ nobody trusts.
   zip of XML) to pre-populate a KNXpilot project's group addresses, instead
   of always starting from a blank building. High value, but real work
   against ETS's file format.
-- [ ] **Mobile/tablet-optimized UI, remaining tabs** — the on-site-usable
-  tabs (Klärungsliste, Geräteplanung/Abgangsliste quick-add) got a mobile
-  pass: stacked full-width fields, bigger touch targets, viewport-capped
-  tooltips - see `CHANGELOG.md`. Not yet covered: Setup/Geräte-Katalog
-  (not realistically used from a phone, lower priority) and wide data
-  displays (Gruppenadressen tree, Verteilerplanung's row layout, various
-  tables) which may need horizontal-scroll wrappers or a different
-  narrow-viewport presentation rather than the stacked-fields approach
-  used for forms.
 - [ ] **File attachments per project** — store a handful of files per
   project (building drawings, manuals, an ETS export) alongside the rest
   of the project data. Deliberately scoped to "a few files," not a general

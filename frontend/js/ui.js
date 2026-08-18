@@ -131,7 +131,7 @@ function openRenameModal(currentName, { title = 'Umbenennen' } = {}) {
     let settled = false;
     const modal = openModal(`
       <h3>${title}</h3>
-      <div class="row"><input type="text" id="rename-input" style="min-width:260px; flex:1;"></div>
+      <div class="row"><input type="text" id="rename-input" class="flex-input"></div>
       <div class="row modal-actions">
         <button class="btn secondary" data-action="cancel">Abbrechen</button>
         <button class="btn" data-action="save">Speichern</button>

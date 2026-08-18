@@ -53,6 +53,8 @@
   input[type=number] { width: 60px; }
   .kl-text-input { min-width: 320px; flex: 1; }
   .kl-answer-input { min-width: 220px; flex: 1; }
+  .flex-input { min-width: 220px; flex: 1; }
+  .flex-input-wide { min-width: 300px; flex: 1; }
   button.btn { background:var(--accent); border:none; color:var(--btn-text); padding:7px 13px; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px; }
   button.btn.secondary { background:transparent; border:1px solid var(--border); color:var(--text); }
   button.btn.danger { background:transparent; border:1px solid var(--danger); color:var(--danger); }
@@ -82,8 +84,12 @@
   .error { color:var(--danger); font-size:13px; margin-top:8px; }
   .quick-add { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
   select.wide { min-width: 180px; }
+  .w-60 { width: 60px; }
+  .w-110 { width: 110px; }
   .w-140 { width: 140px; }
   .w-160 { width: 160px; }
+  .w-200 { width: 200px; }
+  .w-210 { width: 210px; }
   .w-220 { width: 220px; }
   .info-icon {
     display:inline-flex; align-items:center; justify-content:center;
@@ -129,7 +135,8 @@
   .markdown-view li { margin-bottom:6px; font-size:13px; line-height:1.5; }
   .markdown-view p { font-size:13px; line-height:1.5; }
   .markdown-view code { background:var(--panel2); padding:1px 5px; border-radius:4px; font-family:ui-monospace, monospace; font-size:12px; }
-  .markdown-view pre { background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:10px 12px; overflow-x:auto; margin:0 0 10px; }
+  .markdown-view { overflow-x:hidden; }
+  .markdown-view pre { background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:10px 12px; overflow-x:auto; margin:0 0 10px; max-width:100%; }
   .markdown-view pre code { background:none; padding:0; font-size:12px; }
   .ga-tree { font-size:13px; }
   .ga-tree summary { cursor:pointer; padding:4px 0; list-style-position:inside; }
@@ -174,7 +181,8 @@
   .label-cell.used { background:var(--bg); border-style:dashed; opacity:0.6; }
   .label-cell.start { background:var(--accent); border-color:var(--accent); }
 
-  .verteiler-row { display:flex; height:64px; border:1px solid var(--border); border-radius:6px; overflow:hidden; margin-bottom:6px; }
+  .verteiler-row-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom:6px; }
+  .verteiler-row { display:flex; height:64px; border:1px solid var(--border); border-radius:6px; overflow:hidden; min-width:340px; }
   .verteiler-item {
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     font-size:11px; text-align:center; border-right:1px solid var(--border); padding:2px 4px;
@@ -228,7 +236,11 @@
     .mobile-fields > button, .mobile-fields > .info-icon, .mobile-fields > label {
       align-self:flex-start;
     }
-    .kl-text-input, .kl-answer-input { min-width:0; }
+    /* A bare (unlabeled) number field - e.g. a block size or row count -
+       is inherently short; stretching it full-width like a text field
+       would just look like an oversized empty box. */
+    .mobile-fields > input[type=number] { width:70px; align-self:flex-start; }
+    .kl-text-input, .kl-answer-input, .flex-input, .flex-input-wide { min-width:0; }
 
     /* Anchored tooltips can otherwise run off the right edge of a narrow
        viewport. */

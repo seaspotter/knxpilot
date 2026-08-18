@@ -3,13 +3,13 @@ function openCreateProjectModal() {
   const modal = openModal(`
     <h3>Neues Projekt</h3>
     <div class="row">
-      <input type="text" id="new-proj-name" placeholder="Projektname" style="min-width:300px; flex:1;">
+      <input type="text" id="new-proj-name" class="flex-input-wide" placeholder="Projektname">
     </div>
-    <div class="row">
+    <div class="row mobile-fields">
       <input type="text" id="new-proj-customer" placeholder="Kunde">
       <input type="text" id="new-proj-location" placeholder="Standort">
     </div>
-    <div class="row">
+    <div class="row mobile-fields">
       <select id="new-proj-status">
         <option value="">— Status —</option>
         <option value="In Planung">In Planung</option>
@@ -20,7 +20,7 @@ function openCreateProjectModal() {
       <input type="text" id="new-proj-order-number" placeholder="Bestellnummer">
     </div>
     <div class="row">
-      <input type="text" id="new-proj-comment" placeholder="Kommentar (optional)" style="min-width:300px; flex:1;">
+      <input type="text" id="new-proj-comment" class="flex-input-wide" placeholder="Kommentar (optional)">
     </div>
     <div class="row modal-actions">
       <button class="btn secondary" data-action="cancel">Abbrechen</button>
@@ -59,7 +59,7 @@ async function openProjectPickerModal() {
   const modal = openModal(`
     <h3>Projekt öffnen</h3>
     <div class="row">
-      <input type="text" id="picker-project-filter" placeholder="🔍 Suchen (Name, Kunde, Standort, Status, Bestellnummer)..." style="min-width:300px; flex:1;">
+      <input type="text" id="picker-project-filter" class="flex-input-wide" placeholder="🔍 Suchen (Name, Kunde, Standort, Status, Bestellnummer)...">
     </div>
     <ul class="list" id="picker-projects-list" style="max-height:400px; overflow-y:auto;"></ul>
     <div class="row modal-actions">
@@ -345,8 +345,8 @@ async function renderFloors() {
           <button class="btn danger small" onclick="deleteFloor(${floor.id})">Geschoss löschen</button>
         </div>
       </div>
-      <div class="row" id="bulk-room-row-${floor.id}" style="display:none;">
-        <textarea id="bulk-room-names-${floor.id}" placeholder="Ein Raumname pro Zeile, z.B.:&#10;Wohnzimmer&#10;Küche&#10;Bad" rows="4" style="flex:1; min-width:220px;"></textarea>
+      <div class="row mobile-fields" id="bulk-room-row-${floor.id}" style="display:none;">
+        <textarea id="bulk-room-names-${floor.id}" class="flex-input" placeholder="Ein Raumname pro Zeile, z.B.:&#10;Wohnzimmer&#10;Küche&#10;Bad" rows="4"></textarea>
         <button class="btn secondary small" onclick="addRoomsBulk(${floor.id})">Alle hinzufügen</button>
       </div>
       ${floor.rooms.map(room => renderRoom(room)).join('') || '<p class="muted">Noch keine Räume</p>'}

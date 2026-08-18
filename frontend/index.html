@@ -58,7 +58,7 @@
       <div class="stat-grid" id="projects-dashboard-cards"></div>
       <hr class="sep">
       <div class="row">
-        <input type="text" id="project-filter" placeholder="🔍 Suchen (Name, Kunde, Standort, Status, Bestellnummer)..." style="min-width:320px; flex:1;" oninput="renderProjectsList()">
+        <input type="text" id="project-filter" class="flex-input-wide" placeholder="🔍 Suchen (Name, Kunde, Standort, Status, Bestellnummer)..." oninput="renderProjectsList()">
         <span class="muted" id="project-filter-count"></span>
       </div>
       <ul class="list" id="projects-list"></ul>
@@ -82,7 +82,7 @@
           <button class="btn secondary small" onclick="editProjectMeta()">Bearbeiten</button>
         </div>
         <div id="project-meta-edit" style="display:none;">
-          <div class="row">
+          <div class="row mobile-fields">
             <input type="text" id="pm-name" placeholder="Projektname">
             <input type="text" id="pm-customer" placeholder="Kunde">
             <input type="text" id="pm-location" placeholder="Standort">
@@ -95,8 +95,8 @@
             </select>
             <input type="text" id="pm-order-number" placeholder="Bestellnummer">
           </div>
-          <div class="row">
-            <input type="text" id="pm-comment" placeholder="Kommentar (optional)" style="min-width:300px; flex:1;">
+          <div class="row mobile-fields">
+            <input type="text" id="pm-comment" class="flex-input-wide" placeholder="Kommentar (optional)">
             <button class="btn" onclick="saveProjectMeta()">Änderungen speichern</button>
             <button class="btn secondary small" onclick="cancelEditProjectMeta()">Abbrechen</button>
           </div>
@@ -126,7 +126,7 @@
 
       <div class="subtab" id="subtab-struktur">
         <div class="card">
-          <div class="row">
+          <div class="row mobile-fields">
             <input type="text" id="floor-name" placeholder="Geschossname, z.B. Erdgeschoss (EG)">
             <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="floor-outdoor"> Aussen / unbeheizt (z.B. Aussen, Garage)<span class="info-icon" tabindex="0" data-tip="Schliesst dieses Geschoss von Zentral-Vorlagen aus, die im Setup-Tab mit &quot;Aussen-/unbeheizte Geschosse überspringen&quot; markiert sind (z.B. Fahrzeitmessung, Sommer/Winter-Status) - ergibt für Aussenbereiche meist keinen Sinn.">i</span></label>
             <button class="btn secondary" onclick="addFloor()">+ Geschoss hinzufügen</button>
@@ -145,7 +145,7 @@
         <div class="card">
           <h3>Sonder- / Zusatzadressen</h3>
           <p class="muted">Alles, was nicht ins Standardschema passt — Einzel-Szenen, spezielle Zentralgruppen usw.</p>
-          <div class="row">
+          <div class="row mobile-fields">
             <select id="special-category"></select>
             <select id="special-location" class="wide"></select>
             <input type="text" id="special-name" placeholder="Name, z.B. Langschläfer Kind1">
@@ -220,7 +220,7 @@
         <div class="card">
           <h4>Labels</h4>
           <p class="muted">Bedruckt einen Etikettenbogen für die Schaltschrankbeschriftung. Startposition wählen, um einen bereits teilweise bedruckten Bogen weiter zu nutzen — Etiketten davor bleiben leer.</p>
-          <div class="row">
+          <div class="row mobile-fields">
             <select id="label-format" onchange="renderLabelGrid()">
               <option value="l6037">Avery Zweckform L6037 (25,4 × 10 mm, 189/Bogen)</option>
             </select>
@@ -271,9 +271,9 @@
         <div class="card">
           <h4>Verteiler anlegen</h4>
           <p class="muted">Ein Verteiler gehört zu einem Geschoss und hat eine feste Anzahl Reihen à 12 TE (Teilungseinheiten). RCD/LS-Schalter sind einfache, benannte Platzhalter ohne Bezug zu bestimmten Abgängen. Nur Geräte mit gesetzter TE-Breite im Geräte-Katalog lassen sich platzieren.</p>
-          <div class="row">
+          <div class="row mobile-fields">
             <select id="verteiler-floor"></select>
-            <input type="text" id="verteiler-name" placeholder="Name, z.B. Verteiler EG" style="width:200px;">
+            <input type="text" id="verteiler-name" class="w-200" placeholder="Name, z.B. Verteiler EG">
             <label style="display:flex; align-items:center; gap:4px;">Reihen <input type="number" id="verteiler-rows" value="4" min="1" style="width:55px;"></label>
             <button class="btn" onclick="createVerteiler()">+ Verteiler anlegen</button>
           </div>
@@ -340,7 +340,7 @@
         </div>
       </div>
       <p class="muted">Globaler Katalog, gemeinsam für alle Projekte genutzt — Aktoren, Sensoren, Wetterstationen, Bedienelemente usw. Kanaltyp/Kanäle sind nur für die Gruppe "Aktor" nötig und müssen dann dem Kanaltyp eines Funktionstyps (Setup-Tab) entsprechen, damit der Aktor in der Abgangsliste eines Projekts zuordenbar ist.</p>
-      <div class="row">
+      <div class="row mobile-fields">
         <input type="text" id="actortype-manufacturer" placeholder="Hersteller, z.B. MDT">
         <input type="text" id="actortype-model" placeholder="Modell, z.B. AKS-2016.03">
         <select id="actortype-group" onchange="onDeviceGroupChange()">
@@ -351,21 +351,21 @@
           <option value="Sonstiges">Sonstiges</option>
           <option value="__custom__">Andere (eingeben)...</option>
         </select>
-        <input type="text" id="actortype-group-custom" placeholder="Eigene Gruppe" style="display:none; width:140px;" oninput="onDeviceGroupChange()">
-        <label id="actortype-channeltype-label" style="display:flex; align-items:center; gap:4px;">Type <input type="text" id="actortype-channeltype" placeholder="z.B. Schalten" style="width:110px;"></label>
+        <input type="text" id="actortype-group-custom" class="w-140" placeholder="Eigene Gruppe" style="display:none;" oninput="onDeviceGroupChange()">
+        <label id="actortype-channeltype-label" style="display:flex; align-items:center; gap:4px;">Type <input type="text" id="actortype-channeltype" class="w-110" placeholder="z.B. Schalten"></label>
         <label id="actortype-count-label" style="display:flex; align-items:center; gap:4px;">Kanäle <input type="number" id="actortype-count" value="8" min="1" style="width:60px;"></label>
         <label style="display:flex; align-items:center; gap:4px;">TE <input type="number" id="actortype-te" placeholder="z.B. 4" min="1" style="width:55px;">
           <span class="info-icon" tabindex="0" data-tip="Breite auf der Hutschiene in Teilungseinheiten (1 TE = 18 mm), laut Datenblatt. Nur für hutschienenmontierte Geräte relevant - bei Tastern/Sensoren/Wetterstationen leer lassen.">i</span>
         </label>
       </div>
-      <div class="row">
-        <input type="text" id="actortype-description" placeholder="Beschreibung (optional)" style="min-width:300px; flex:1;">
+      <div class="row mobile-fields">
+        <input type="text" id="actortype-description" class="flex-input-wide" placeholder="Beschreibung (optional)">
         <button class="btn" id="actortype-save-btn" onclick="saveActorType()">Gerät speichern</button>
         <button class="btn secondary small" id="actortype-cancel-btn" onclick="cancelEditActorType()" style="display:none;">Abbrechen</button>
       </div>
       <hr class="sep">
       <div class="row">
-        <input type="text" id="actortype-filter" placeholder="🔍 Suchen (Hersteller, Modell, Beschreibung, Gruppe, Type)..." style="min-width:320px; flex:1;" oninput="renderActorTypesList()">
+        <input type="text" id="actortype-filter" class="flex-input-wide" placeholder="🔍 Suchen (Hersteller, Modell, Beschreibung, Gruppe, Type)..." oninput="renderActorTypesList()">
         <span class="muted" id="actortype-filter-count"></span>
       </div>
       <div id="actor-types-groups"></div>
@@ -398,15 +398,15 @@
       <hr class="sep">
 
       <div class="row">
-        <input type="text" id="company-name" placeholder="Firmenname" style="min-width:300px; flex:1;">
+        <input type="text" id="company-name" class="flex-input-wide" placeholder="Firmenname">
       </div>
       <div class="row">
-        <input type="text" id="company-address" placeholder="Adresse (Strasse, PLZ Ort)" style="min-width:300px; flex:1;">
+        <input type="text" id="company-address" class="flex-input-wide" placeholder="Adresse (Strasse, PLZ Ort)">
       </div>
-      <div class="row">
-        <input type="text" id="company-phone" placeholder="Telefon" style="flex:1;">
-        <input type="text" id="company-email" placeholder="E-Mail" style="flex:1;">
-        <input type="text" id="company-website" placeholder="Website" style="flex:1;">
+      <div class="row mobile-fields">
+        <input type="text" id="company-phone" style="flex:1;" placeholder="Telefon">
+        <input type="text" id="company-email" style="flex:1;" placeholder="E-Mail">
+        <input type="text" id="company-website" style="flex:1;" placeholder="Website">
       </div>
       <hr class="sep">
 
@@ -447,12 +447,12 @@
         </div>
       </div>
       <p class="muted">Wiederverwendbare Bausteine (ein Licht, eine Jalousie, eine Steckdose...) mit ihren Datenpunkten und reserviertem Blockumfang. Ein Funktionstyp bestimmt, welche Untergruppen entstehen, wenn er im Funktionen-Unterreiter einem Raum zugewiesen wird (z.B. erzeugt "Licht (Dimmen)" die Datenpunkte Schalten/Status/Dimmen unter einer eigenen Adresse je Raum/Label). Der "Kanaltyp" verknüpft einen Punkt mit passenden Aktortypen weiter unten, damit er in der Abgangsliste eines Projekts einem physischen Aktorkanal zugeordnet werden kann. Die vorbelegten Funktionstypen sind ein Vorschlag, kein festes Schema — Datenpunkte/Suffixe/DPTs frei anpassen, oder unten den kompletten Satz löschen und eigene anlegen.</p>
-      <div class="row">
+      <div class="row mobile-fields">
         <select id="pt-category"></select>
         <input type="text" id="pt-name" placeholder="Name, z.B. Licht (Dimmen)">
         <input type="number" id="pt-blocksize" value="5" title="Blockgrösse (reservierte Adressen)">
       </div>
-      <div class="row">
+      <div class="row mobile-fields">
         <input type="text" id="pt-channeltype" placeholder="Kanaltyp, z.B. Schalten, Dimmen, Rollo, Heizung, Tor (leer = kein physischer Kanal)">
         <label style="display:flex; align-items:center; gap:4px;">Benötigte Kanäle <input type="number" id="pt-channelsneeded" value="1" min="1" style="width:60px;"></label>
       </div>
@@ -487,7 +487,7 @@
         Wie bei Funktionstypen sind auch dies nur Vorschläge — frei anpassen oder unten den kompletten
         Satz löschen, um eigene Sammel-/Zentralfunktionen von Grund auf zu definieren.
       </p>
-      <div class="row">
+      <div class="row mobile-fields">
         <select id="ct-category"></select>
         <select id="ct-scope" onchange="onCtScopeChange()">
           <option value="building">building (einmal je Projekt)</option>
@@ -546,7 +546,7 @@
       <h3>Backup <span class="info-icon" tabindex="0" data-tip="Sichert die komplette Datenbank (alle Projekte, Geräte-Katalog, Setup) als eine Datei - anders als 'Sichern (JSON)' im Projektkopf, das nur ein einzelnes Projekt exportiert. Wiederherstellen weiter unten auf dieser Seite, direkt in der App.">i</span></h3>
       <p class="muted">Automatische und/oder manuelle Sicherung auf ein NAS/gemountetes Verzeichnis und/oder Nextcloud — beide Ziele lassen sich unabhängig voneinander aktivieren.</p>
 
-      <div class="row">
+      <div class="row mobile-fields">
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="backup-enabled"> Automatische Sicherung aktiv</label>
         <label style="display:flex; align-items:center; gap:4px;">alle <input type="number" id="backup-interval-hours" min="1" style="width:60px;"> Stunden</label>
         <label style="display:flex; align-items:center; gap:4px;">Aufbewahren: letzte <input type="number" id="backup-retention-count" min="1" style="width:60px;"> Sicherungen
@@ -558,18 +558,18 @@
 
       <h4>NAS / gemountetes Verzeichnis</h4>
       <p class="muted">Das Verzeichnis muss im Container erreichbar sein, z.B. per Bind-Mount in <code>docker-compose.yml</code> auf einen NAS-Freigabe-Pfad (siehe DEPLOYMENT.md).</p>
-      <div class="row">
+      <div class="row mobile-fields">
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="backup-local-enabled"> Aktiv</label>
-        <input type="text" id="backup-local-path" placeholder="Pfad im Container, z.B. /app/backups" style="min-width:320px; flex:1;">
+        <input type="text" id="backup-local-path" class="flex-input-wide" placeholder="Pfad im Container, z.B. /app/backups">
       </div>
       <hr class="sep">
 
       <h4>Nextcloud (WebDAV)</h4>
-      <div class="row">
+      <div class="row mobile-fields">
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="backup-nextcloud-enabled"> Aktiv</label>
-        <input type="text" id="backup-nextcloud-url" placeholder="WebDAV-Ordner-URL, z.B. https://cloud.example.com/remote.php/dav/files/BENUTZER/Backups/KNXpilot/" style="min-width:340px; flex:1;">
+        <input type="text" id="backup-nextcloud-url" class="flex-input-wide" placeholder="WebDAV-Ordner-URL, z.B. https://cloud.example.com/remote.php/dav/files/BENUTZER/Backups/KNXpilot/">
       </div>
-      <div class="row">
+      <div class="row mobile-fields">
         <input type="text" id="backup-nextcloud-username" placeholder="Benutzername">
         <input type="password" id="backup-nextcloud-password" placeholder="Passwort">
         <span class="info-icon" tabindex="0" data-tip="Ein Nextcloud-App-Passwort (Einstellungen -> Sicherheit -> Geräte & Sitzungen) statt des echten Kontopassworts wird empfohlen - lässt sich einzeln widerrufen, ohne das Hauptpasswort zu ändern.">i</span>
