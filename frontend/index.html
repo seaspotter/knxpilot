@@ -236,7 +236,9 @@
           </div>
           <div class="label-grid" id="label-position-grid"></div>
           <p class="muted" id="label-start-text" style="margin-top:6px;"></p>
-          <button class="btn" onclick="downloadLabelsPdf()">PDF herunterladen</button>
+          <div class="row" style="justify-content:flex-end;">
+            <button class="btn" onclick="downloadLabelsPdf()">PDF herunterladen</button>
+          </div>
         </div>
       </div>
 
@@ -253,10 +255,10 @@
             <div class="row" style="justify-content:space-between;">
               <h4 style="margin:0;">Geräte je Raum</h4>
               <div class="row" style="margin:0;">
-                <button class="btn secondary" onclick="downloadGeraeteJeRaumPdf()">PDF herunterladen</button>
                 <input type="text" id="pa-prefix-geraeteplanung" value="1.1" style="width:55px;" title="Bereich.Linie-Präfix">
                 <button class="btn secondary" onclick="assignPhysicalAddresses('pa-prefix-geraeteplanung')">PA automatisch zuordnen</button>
                 <span class="info-icon" tabindex="0" data-tip="Vergibt physikalische Adressen für alle Geräte im Projekt ohne Adresse - Geräte hier UND Aktoren in der Abgangsliste. Reihenfolge: Systemgeräte (0-5), je Geschoss ein Aktoren-Block, je Geschoss ein Sensoren/Bedienelemente-Block, dann Aussen-Geräte (Wetterstation zuerst). Jeder Block reserviert volle Zehnerblöcke je nach Gerätezahl. Bereits gesetzte Adressen werden nie verändert.">i</span>
+                <button class="btn" onclick="downloadGeraeteJeRaumPdf()">PDF herunterladen</button>
               </div>
             </div>
             <p class="muted">Sensoren, Bedienelemente, Wetterstationen usw. — Aktoren mit physischen Kanälen (Schalten, Dimmen, Rollo, Heizung, Tor) werden stattdessen in der Abgangsliste angelegt, dort mit Geschoss, Standort und physischer Adresse; sie erscheinen automatisch mit in der Stückliste oben. Passt ein Gerät zu keinem bestimmten Raum (z.B. eine Wetterstation an der Fassade), lässt es sich direkt unter "Geräte ohne Raum" je Geschoss anlegen — ganz ohne eigens dafür einen Raum zu erstellen. <b>PDF herunterladen</b> exportiert alle Geräte (inkl. Aktoren aus der Abgangsliste) gruppiert nach Geschoss/Raum mit Hersteller, Typ und physischer Adresse — als Installationsreferenz, getrennt von der Bestellliste oben.</p>
@@ -277,7 +279,7 @@
           </div>
         </div>
         <div class="row" style="justify-content:flex-end;">
-          <button class="btn secondary" onclick="downloadVerteilerplanungPdf()">PDF herunterladen</button>
+          <button class="btn" onclick="downloadVerteilerplanungPdf()">PDF herunterladen</button>
         </div>
         <div id="verteiler-list"></div>
       </div>
