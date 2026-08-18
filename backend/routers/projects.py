@@ -13,6 +13,7 @@ from fastapi.responses import StreamingResponse
 from ..db import get_db
 from ..ga_logic import build_ga_tree
 from ..models import ProjectIn, FloorIn, RoomIn, RoomPointIn, RoomPointEditIn, SpecialItemIn
+from ..utils import AGED_KLAERUNG_DAYS
 
 router = APIRouter(tags=["projects"])
 
@@ -24,6 +25,56 @@ router = APIRouter(tags=["projects"])
 def list_projects():
     with get_db() as db:
         return [dict(r) for r in db.execute("SELECT * FROM projects ORDER BY id").fetchall()]
+
+
+@router.get("/api/projects/dashboard")
+def projects_dashboard():
+    """Aggregated status across every project, for the all-projects
+    dashboard shown above the Projekte list (frontend/js/projekte.js's
+    loadProjectsDashboard(), called every time loadProjects() is - so it
+    stays in sync with every create/delete/duplicate automatically). Kept
+    as one query pass per concern rather than N+1 per-project calls,
+    since it needs to cover every project on every project-list load."""
+    with get_db() as db:
+        projects = db.execute("SELECT id, name, status FROM projects ORDER BY name").fetchall()
+
+        by_status = {}
+        for p in projects:
+            status = p["status"] or "(ohne Status)"
+            by_status[status] = by_status.get(status, 0) + 1
+
+        floor_counts = {
+            r["project_id"] for r in db.execute("SELECT DISTINCT project_id FROM floors").fetchall()
+        }
+        without_structure = [{"id": p["id"], "name": p["name"]} for p in projects if p["id"] not in floor_counts]
+
+        klaerung_rows = db.execute(
+            "SELECT project_id, COUNT(*) AS open_count, "
+            "SUM(CASE WHEN julianday('now') - julianday(created_at) >= ? THEN 1 ELSE 0 END) AS aged_count "
+            "FROM klaerungen WHERE status='offen' GROUP BY project_id",
+            (AGED_KLAERUNG_DAYS,),
+        ).fetchall()
+        by_project = {r["project_id"]: r for r in klaerung_rows}
+
+        projects_with_open = [
+            {
+                "id": p["id"], "name": p["name"],
+                "open_count": by_project[p["id"]]["open_count"],
+                "aged_count": by_project[p["id"]]["aged_count"] or 0,
+            }
+            for p in projects if p["id"] in by_project
+        ]
+        projects_with_open.sort(key=lambda x: (-x["aged_count"], -x["open_count"]))
+
+        return {
+            "total": len(projects),
+            "by_status": by_status,
+            "open_klaerungen_total": sum(r["open_count"] for r in klaerung_rows),
+            "aged_klaerungen_total": sum(r["aged_count"] or 0 for r in klaerung_rows),
+            "aged_threshold_days": AGED_KLAERUNG_DAYS,
+            "projects_with_open_klaerungen": projects_with_open,
+            "projects_without_structure": without_structure,
+        }
 
 
 @router.post("/api/projects")

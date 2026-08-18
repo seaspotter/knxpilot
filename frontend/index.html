@@ -55,6 +55,8 @@
         </div>
       </div>
       <hr class="sep">
+      <div class="stat-grid" id="projects-dashboard-cards"></div>
+      <hr class="sep">
       <div class="row">
         <input type="text" id="project-filter" placeholder="🔍 Suchen (Name, Kunde, Standort, Status, Bestellnummer)..." style="min-width:320px; flex:1;" oninput="renderProjectsList()">
         <span class="muted" id="project-filter-count"></span>
@@ -282,6 +284,7 @@
             <button class="btn secondary small" id="kl-cancel-btn" onclick="cancelEditKlaerung()" style="display:none;">Abbrechen</button>
           </div>
         </div>
+        <div id="klaerungsliste-digest"></div>
         <div id="klaerungsliste-groups"></div>
       </div>
     </div>

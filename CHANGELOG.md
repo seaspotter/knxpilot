@@ -4,6 +4,29 @@ Notable changes to KNXpilot. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this file starts from the
 restructuring below — history before that is available via `git log`.
 
+## [Unreleased]
+
+### Added
+
+- **Projektübersicht** — a status dashboard above the Projekte list,
+  summarizing every project at once: total count with clickable
+  per-status badges (click sets the search field to that status),
+  open Klärungen total (with an "aged" sub-count — see below — and each
+  affected project listed, clicking jumps straight into its
+  Klärungsliste), and projects with no floors defined yet (each
+  clicking straight into Gebäudestruktur). New `GET /api/projects/
+  dashboard`, computed with a handful of aggregate SQL queries rather
+  than one call per project.
+- **Aging on Klärungsliste**: an open entry unanswered for more than 7
+  days is now flagged - an "N Tage offen" badge on the entry itself, the
+  sub-tab button turns warn-colored, and a summary line appears above
+  the list ("⚠ N Einträge sind seit mehr als 7 Tagen unbeantwortet").
+  The same 7-day threshold and aged-count feed the new Projektübersicht
+  above. `GET /projects/{id}/klaerungen` now includes `age_days`/`aged`
+  per entry (computed in SQL via `julianday()`, not client-side, to
+  avoid timezone-parsing ambiguity). New shared `AGED_KLAERUNG_DAYS`
+  constant in `backend/utils.py`.
+
 ## [0.3.1] - 2026-08-16
 
 ### Fixed

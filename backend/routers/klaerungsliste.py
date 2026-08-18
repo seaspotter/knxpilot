@@ -7,6 +7,7 @@ from fastapi import APIRouter
 
 from ..db import get_db
 from ..models import KlaerungIn
+from ..utils import AGED_KLAERUNG_DAYS
 
 router = APIRouter(tags=["klaerungsliste"])
 
@@ -15,7 +16,8 @@ router = APIRouter(tags=["klaerungsliste"])
 def list_klaerungen(project_id: int):
     with get_db() as db:
         rows = db.execute(
-            "SELECT k.*, r.name AS room_name, rp.label AS point_label "
+            "SELECT k.*, r.name AS room_name, rp.label AS point_label, "
+            "CAST(julianday('now') - julianday(k.created_at) AS INTEGER) AS age_days "
             "FROM klaerungen k "
             "LEFT JOIN rooms r ON k.room_id = r.id "
             "LEFT JOIN room_points rp ON k.room_point_id = rp.id "
@@ -27,6 +29,8 @@ def list_klaerungen(project_id: int):
                 "id": r["id"], "room_id": r["room_id"], "room_point_id": r["room_point_id"],
                 "room_name": r["room_name"], "point_label": r["point_label"],
                 "text": r["text"], "typ": r["typ"], "status": r["status"], "antwort": r["antwort"],
+                "age_days": r["age_days"] or 0,
+                "aged": r["status"] == "offen" and (r["age_days"] or 0) >= AGED_KLAERUNG_DAYS,
             }
             for r in rows
         ]

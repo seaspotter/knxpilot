@@ -77,6 +77,16 @@ in `backend/routers/projects.py` isoliert.
 
 ### Projekte
 
+**Projektübersicht** (oben in der Projektliste, sobald mindestens ein
+Projekt existiert): drei Karten fassen den Stand über alle Projekte
+hinweg zusammen — **Projekte gesamt** (Anzahl je Status als klickbare
+Badges, ein Klick trägt den Status direkt ins Suchfeld ein), **Offene
+Klärungen** (Gesamtzahl, plus wie viele davon seit mehr als 7 Tagen
+unbeantwortet sind — jedes betroffene Projekt einzeln aufgelistet, ein
+Klick öffnet es direkt im Unterreiter Klärungsliste) und **Ohne
+Struktur** (Projekte ohne ein einziges angelegtes Geschoss, ein Klick
+öffnet sie direkt im Unterreiter Gebäudestruktur).
+
 **Projektliste** (Standardansicht): ein Suchfeld filtert live nach Name,
 Kunde, Standort, Status und Bestellnummer, die als Badges neben jedem
 Projektnamen erscheinen. **+ Neues Projekt** öffnet ein Formular (Name,
@@ -298,6 +308,12 @@ Kundentermin anfallen (etwa "Tasterfarbe schwarz oder weiss?") — erscheint
   erhalten.
 - Der Unterreiter-Button zeigt die Anzahl noch offener Einträge an
   (z.B. "Klärungsliste (3)"), sobald ein Projekt geöffnet ist.
+- Ein offener Eintrag, der seit mehr als 7 Tagen unbeantwortet ist, gilt
+  als **veraltet**: er bekommt ein zusätzliches Badge ("12 Tage offen"),
+  der Unterreiter-Button färbt sich gelb, und oben in der Liste erscheint
+  ein Hinweis ("⚠ N Einträge sind seit mehr als 7 Tagen unbeantwortet").
+  Dieselbe Kennzahl fliesst auch in die Projektübersicht auf der
+  Projektliste ein (siehe oben).
 
 ### Geräte Katalog
 

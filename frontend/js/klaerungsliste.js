@@ -2,6 +2,10 @@
 let EDITING_KLAERUNG_ID = null;
 let KLAERUNGEN = [];
 let KL_ROOMS = [];
+// Must match backend/utils.py's AGED_KLAERUNG_DAYS - only used here for
+// the on-screen label text (the actual "aged" flag/age_days per entry
+// always comes from the API, this doesn't re-derive it).
+const KL_AGED_DAYS = 7;
 
 async function loadKlaerungslisteForCurrentProject() {
   const tree = await api(`/projects/${CURRENT_PROJECT}/tree`);
@@ -121,6 +125,7 @@ const KL_STATUS_CLASS = {offen: 'status-offen', 'geklärt': 'status-geklaert', a
 
 function renderKlaerungsliste() {
   const container = document.getElementById('klaerungsliste-groups');
+  const digestEl = document.getElementById('klaerungsliste-digest');
   const groups = new Map();
   const order = [];
   KLAERUNGEN.forEach(k => {
@@ -131,6 +136,13 @@ function renderKlaerungsliste() {
     }
     groups.get(key).push(k);
   });
+
+  if (digestEl) {
+    const agedCount = KLAERUNGEN.filter(k => k.aged).length;
+    digestEl.innerHTML = agedCount
+      ? `<p style="color:var(--warn); margin:0 0 10px;">⚠ ${agedCount} offene${agedCount === 1 ? 'r Eintrag ist' : ' Einträge sind'} seit mehr als ${KL_AGED_DAYS} Tagen unbeantwortet.</p>`
+      : '';
+  }
 
   container.innerHTML = order.map(key => {
     const entries = groups.get(key);
@@ -146,6 +158,7 @@ function renderKlaerungsliste() {
                 <span class="pill">${k.typ}</span>
                 <span class="pill ${KL_STATUS_CLASS[k.status] || ''}">${k.status}</span>
                 ${k.point_label ? `<span class="pill">${k.point_label}</span>` : ''}
+                ${k.aged ? `<span class="pill" style="border-color:var(--warn); color:var(--warn);">${k.age_days} Tage offen</span>` : ''}
               </div>
               <div class="row" style="gap:6px; margin:0;">
                 ${k.status !== 'offen' ? `<button class="btn secondary small" onclick="setKlaerungStatus(${k.id}, 'offen')">Offen</button>` : ''}
@@ -168,8 +181,11 @@ function renderKlaerungsliste() {
 
 function updateKlaerungsBadgeText(entries) {
   const openCount = entries.filter(k => k.status === 'offen').length;
+  const agedCount = entries.filter(k => k.aged).length;
   const btn = document.querySelector('#workspace-subnav button[data-subtab="klaerungsliste"]');
-  if (btn) btn.textContent = openCount > 0 ? `Klärungsliste (${openCount})` : 'Klärungsliste';
+  if (!btn) return;
+  btn.textContent = openCount > 0 ? `Klärungsliste (${openCount})` : 'Klärungsliste';
+  btn.style.color = agedCount > 0 ? 'var(--warn)' : '';
 }
 
 async function refreshKlaerungsBadge() {

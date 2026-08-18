@@ -34,11 +34,11 @@ letting it drift into a wishlist nobody trusts.
   zip of XML) to pre-populate a KNXpilot project's group addresses, instead
   of always starting from a blank building. High value, but real work
   against ETS's file format.
-- [ ] **All-projects dashboard** — a landing page aggregating status across
-  every project (open Klärungen, stale/inactive projects), complementing
-  the existing per-project Übersicht sub-tab.
-- [ ] **Reminders/aging on Klärungsliste** — flag open items older than N
-  days, maybe a digest.
+- [x] **All-projects dashboard** — Projektübersicht above the Projekte
+  list (status breakdown, open/aged Klärungen, projects without
+  structure). See `CHANGELOG.md`.
+- [x] **Reminders/aging on Klärungsliste** — 7-day aged badge + digest
+  banner + warn-colored sub-tab button. See `CHANGELOG.md`.
 
 ## Explicitly deferred
 

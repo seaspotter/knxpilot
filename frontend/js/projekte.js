@@ -113,6 +113,66 @@ function updateHeaderProjectChip() {
 async function loadProjects() {
   PROJECTS_LIST = await api('/projects');
   renderProjectsList();
+  await loadProjectsDashboard();
+}
+
+// ---------- All-projects dashboard (above the Projekte list) ----------
+async function loadProjectsDashboard() {
+  const d = await api('/projects/dashboard');
+  const el = document.getElementById('projects-dashboard-cards');
+  if (!d.total) { el.innerHTML = ''; return; }
+
+  const statusPills = Object.entries(d.by_status).map(([status, count]) => `
+    <span class="pill" style="cursor:pointer;" onclick="filterProjectsByStatus('${status.replace(/'/g, "\\'")}')">${status}: ${count}</span>
+  `).join('');
+
+  const klaerungenWarn = d.aged_klaerungen_total > 0;
+  const klaerungenBody = d.open_klaerungen_total
+    ? `${d.open_klaerungen_total} offen${klaerungenWarn ? `, davon ${d.aged_klaerungen_total} seit ${d.aged_threshold_days}+ Tagen` : ''}`
+    : 'Keine offenen Klärungen';
+  const klaerungenList = d.projects_with_open_klaerungen.map(p => `
+    <div class="row" style="margin:2px 0; cursor:pointer;" onclick="openProjectToSubtab(${p.id}, '${p.name.replace(/'/g, "\\'")}', 'klaerungsliste')">
+      <span>${p.name}</span>
+      <span class="pill" style="${p.aged_count > 0 ? 'border-color:var(--warn); color:var(--warn);' : ''}">${p.open_count}${p.aged_count > 0 ? ` (${p.aged_count} alt)` : ''}</span>
+    </div>
+  `).join('');
+
+  const structureBody = d.projects_without_structure.length
+    ? `${d.projects_without_structure.length} Projekt(e) ohne Geschosse`
+    : 'Alle Projekte haben eine Struktur';
+  const structureList = d.projects_without_structure.map(p => `
+    <div class="row" style="margin:2px 0; cursor:pointer;" onclick="openProjectToSubtab(${p.id}, '${p.name.replace(/'/g, "\\'")}', 'struktur')">${p.name}</div>
+  `).join('');
+
+  el.innerHTML = `
+    <div class="stat-card">
+      <h4>Projekte gesamt</h4>
+      <p style="margin:0 0 6px;">${d.total}</p>
+      <div>${statusPills || '<span class="muted">Kein Status vergeben</span>'}</div>
+    </div>
+    <div class="stat-card">
+      <h4>Offene Klärungen</h4>
+      <p class="${klaerungenWarn ? '' : 'muted'}" style="margin:0 0 6px; ${klaerungenWarn ? 'color:var(--warn);' : ''}">${klaerungenBody}</p>
+      ${klaerungenList}
+    </div>
+    <div class="stat-card">
+      <h4>Ohne Struktur</h4>
+      <p class="${d.projects_without_structure.length ? '' : 'muted'}" style="margin:0 0 6px;">${structureBody}</p>
+      ${structureList}
+    </div>
+  `;
+}
+
+function filterProjectsByStatus(status) {
+  document.getElementById('project-filter').value = status;
+  renderProjectsList();
+  document.getElementById('projects-list').scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+async function openProjectToSubtab(id, name, subtab) {
+  document.querySelector('nav button[data-tab="projects"]').click();
+  await openProject(id, name);
+  document.querySelector(`#workspace-subnav button[data-subtab="${subtab}"]`).click();
 }
 
 function renderProjectsList() {

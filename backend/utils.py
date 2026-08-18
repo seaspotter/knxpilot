@@ -1,5 +1,10 @@
 """Small shared helpers with no dependencies on the rest of the app."""
 
+# An open Klärung older than this counts as "aged" - used both by
+# klaerungsliste.py (per-entry age_days/aged flag) and projects.py (the
+# all-projects dashboard's aged-count rollup), so the two stay consistent.
+AGED_KLAERUNG_DAYS = 7
+
 
 def join_parts(*parts):
     """Join name fragments with a single space, skipping empty ones (avoids double spaces)."""
