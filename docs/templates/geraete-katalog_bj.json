@@ -1,0 +1,23 @@
+{
+  "format": "knx-actor-types-v2",
+  "actor_types": [
+    {
+      "manufacturer": "Busch-Jaeger",
+      "model": "2CKA006132A0432",
+      "group_name": "Sensor",
+      "description": "Busch-Wächter PRO 280° KNX (Weiß)",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": null
+    },
+    {
+      "manufacturer": "Busch-Jaeger",
+      "model": "2CKA006132A0433",
+      "group_name": "Sensor",
+      "description": "Busch-Wächter PRO 280° KNX (Anthrazit/Schwarz)",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": null
+    }
+  ]
+}

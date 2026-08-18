@@ -1,0 +1,68 @@
+{
+  "format": "knx-actor-types-v2",
+  "actor_types": [
+    {
+      "manufacturer": "Theben",
+      "model": "1509201",
+      "group_name": "Wetterstation",
+      "description": "Wetterstation Meteodata 150/24V KNX",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": null
+    },
+    {
+      "manufacturer": "Theben",
+      "model": "1509204",
+      "group_name": "Wetterstation",
+      "description": "Wetterstation Meteodata 150/24V GPS KNX",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": null
+    },
+    {
+      "manufacturer": "Theben",
+      "model": "1019610",
+      "group_name": "Sensor",
+      "description": "Bewegungsmelder theLuxa P300 KNX WH (Weiß)",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": null
+    },
+    {
+      "manufacturer": "Theben",
+      "model": "1019611",
+      "group_name": "Sensor",
+      "description": "Bewegungsmelder theLuxa P300 KNX BK (Schwarz)",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": null
+    },
+    {
+      "manufacturer": "Theben",
+      "model": "theMura P180 KNX UP WH",
+      "group_name": "Sensor",
+      "description": "Präsenz-/Bewegungsmelder theMura P180 KNX Unterputz Weiß",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": null
+    },
+    {
+      "manufacturer": "Theben",
+      "model": "theLuxa P300 KNX WH",
+      "group_name": "Sensor",
+      "description": "Wand-Bewegungsmelder theLuxa P300 KNX Weiß",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": null
+    },
+    {
+      "manufacturer": "Theben",
+      "model": "theLuxa P300 KNX BK",
+      "group_name": "Sensor",
+      "description": "Wand-Bewegungsmelder theLuxa P300 KNX Schwarz",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": null
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "format": "knx-actor-types-v2",
+  "actor_types": [
+    {
+      "manufacturer": "Gira",
+      "model": "209600",
+      "group_name": "Visualisierung/Logik",
+      "description": "X1 Server",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 2
+    },
+    {
+      "manufacturer": "Gira",
+      "model": "208600",
+      "group_name": "Systemgerät",
+      "description": "S1 Fernzugriff-Modul",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 2
+    }
+  ]
+}

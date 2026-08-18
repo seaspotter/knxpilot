@@ -1,0 +1,23 @@
+{
+  "format": "knx-actor-types-v2",
+  "actor_types": [
+    {
+      "manufacturer": "Phoenix Contact",
+      "model": "1477019",
+      "group_name": "Systemgerät",
+      "description": "Busspannungsversorgung STEP3 640mA",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 3
+    },
+    {
+      "manufacturer": "Phoenix Contact",
+      "model": "1477020",
+      "group_name": "Systemgerät",
+      "description": "Busspannungsversorgung STEP3 1280mA",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 4
+    }
+  ]
+}

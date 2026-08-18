@@ -1,0 +1,14 @@
+{
+  "format": "knx-actor-types-v2",
+  "actor_types": [
+    {
+      "manufacturer": "Hörmann",
+      "model": "4511630",
+      "group_name": "Aktor",
+      "description": "KNX Gateway Standard für Torantriebe",
+      "channel_type": "Tor",
+      "channel_count": 1,
+      "width_te": null
+    }
+  ]
+}

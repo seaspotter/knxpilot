@@ -1,0 +1,23 @@
+{
+  "format": "knx-actor-types-v2",
+  "actor_types": [
+    {
+      "manufacturer": "Elsner Elektronik",
+      "model": "Windancer 2.0 GPS KNX SEC",
+      "group_name": "Wetterstation",
+      "description": "Wetterstation mit GPS",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": null
+    },
+    {
+      "manufacturer": "Elsner Elektronik",
+      "model": "Windancer 2.0 KNX SEC",
+      "group_name": "Wetterstation",
+      "description": "Wetterstation",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": null
+    }
+  ]
+}

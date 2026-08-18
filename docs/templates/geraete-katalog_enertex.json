@@ -1,0 +1,95 @@
+{
+  "format": "knx-actor-types-v2",
+  "actor_types": [
+    {
+      "manufacturer": "Enertex",
+      "model": "1167-24",
+      "group_name": "Systemgerät",
+      "description": "LED PowerSupply 160-24",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 4
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "EibPC²",
+      "group_name": "Visualisierung/Logik",
+      "description": "EibPC² IP-Logikserver",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 4
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "ENA²",
+      "group_name": "Systemgerät",
+      "description": "Enertex KNX Net-Access (ENA²)",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 4
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "KNX IP Secure Interface",
+      "group_name": "Systemgerät",
+      "description": "Enertex KNX IP Secure Interface",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 2
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "KNX TP Secure Coupler",
+      "group_name": "Systemgerät",
+      "description": "Enertex KNX TP Secure Coupler",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 2
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "KNX HV Dimmer (4-Kanal)",
+      "group_name": "Aktor",
+      "description": "Enertex KNX HV Dimmer 4 Kanäle",
+      "channel_type": "Dimmen",
+      "channel_count": 4,
+      "width_te": 4
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "KNX HV Dimmer (8-Kanal)",
+      "group_name": "Aktor",
+      "description": "Enertex KNX HV Dimmer 8 Kanäle",
+      "channel_type": "Dimmen",
+      "channel_count": 8,
+      "width_te": 6
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "KNX PowerSupply 960³",
+      "group_name": "Systemgerät",
+      "description": "Enertex KNX PowerSupply 960mA",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 6
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "KNX Dual PowerSupply 1280",
+      "group_name": "Systemgerät",
+      "description": "Enertex KNX Dual PowerSupply 1280mA",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 6
+    },
+    {
+      "manufacturer": "Enertex",
+      "model": "KNX SmartMeter² 85A",
+      "group_name": "Sensor",
+      "description": "Enertex KNX SmartMeter² 85A Stromzähler",
+      "channel_type": "",
+      "channel_count": null,
+      "width_te": 4
+    }
+  ]
+}
