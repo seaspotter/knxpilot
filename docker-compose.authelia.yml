@@ -18,8 +18,13 @@ services:
     image: authelia/authelia:latest
     container_name: knxpilot-authelia
     restart: unless-stopped
-    expose:
-      - "9091"
+    ports:
+      # Published (not just "expose"): your edge reverse proxy (Synology's
+      # DSM reverse proxy included) needs to reach Authelia's login portal
+      # directly for the auth.* subdomain, and it runs on the host, not
+      # inside this compose network - "expose" alone is only reachable
+      # from other containers on the same network, not from the host.
+      - "9091:9091"
     volumes:
       - ./authelia/config:/config
     environment:

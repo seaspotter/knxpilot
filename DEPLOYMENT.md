@@ -230,6 +230,13 @@ bevor sie zu KNXpilot durchgereicht wird.
 beiden Compose-Dateien gleichzeitig verwenden, nicht beide zusammen
 starten.
 
+**Portainer statt `docker compose` auf einem geklonten Checkout?** Ein
+getestetes, eigenständiges Setup (Image-only, kein `git clone` auf dem
+Server nötig) für genau diesen Fall — inklusive Synology-Reverse-Proxy-
+Konfiguration und einer Troubleshooting-Tabelle mit den Stolpersteinen,
+die dabei real aufgetreten sind — steht in
+[`DEPLOYMENT-authelia-synology-portainer.md`](./DEPLOYMENT-authelia-synology-portainer.md).
+
 ### Aufbau
 
 ```

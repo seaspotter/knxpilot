@@ -6,8 +6,29 @@ restructuring below — history before that is available via `git log`.
 
 ## [Unreleased]
 
+### Added
+
+- New [`DEPLOYMENT-authelia-synology-portainer.md`](./DEPLOYMENT-authelia-synology-portainer.md) -
+  a tested, standalone walkthrough for running KNXpilot behind Authelia
+  on a Synology NAS via Portainer (image-only, no git checkout on the
+  server), including the Synology reverse-proxy configuration and a
+  troubleshooting table for the real issues hit along the way.
+
 ### Fixed
 
+- `authelia/nginx.conf` hardcodes the forwarded scheme to `https` instead
+  of reflecting the incoming connection's own scheme (`$scheme`) - this
+  front proxy only makes sense behind a TLS-terminating edge reverse
+  proxy, and most of those (Synology's DSM reverse proxy included)
+  forward internally over plain HTTP after terminating TLS themselves, so
+  `$scheme` evaluated to `http` and Authelia rejected the session cookie
+  as an "insecure scheme". Found via real-world testing behind a Synology
+  reverse proxy.
+- `docker-compose.authelia.yml`'s `authelia` service now publishes port
+  9091 (`ports`) instead of only `expose`-ing it - an edge reverse proxy
+  (Synology's included) runs on the host, not inside the compose network,
+  so it could never actually reach the login portal with `expose` alone;
+  the `auth.*` subdomain would 404 instead of showing the Authelia login.
 - `Dockerfile` now also copies `CHANGELOG.md`/`MANUAL.md` into the image -
   previously only `backend/`/`frontend/` were included, so the **Hilfe**
   tab and the Update tab's changelog viewer came up empty when running
