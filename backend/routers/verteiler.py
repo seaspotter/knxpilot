@@ -7,6 +7,7 @@ actor_types.width_te).
 """
 from fastapi import APIRouter, HTTPException
 from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
 
@@ -209,6 +210,14 @@ def _verteiler_row_table(row_items, row_width_te, styles):
     muted cell, same as the dashed placeholder in the UI."""
     if not row_items and row_width_te <= 0:
         return None
+    # ALIGN in the TableStyle below only centers the Paragraph flowable within
+    # its cell - since each Paragraph already fills the full cell width, the
+    # text inside it still renders left-justified unless the *style itself*
+    # centers it, hence these cloned variants rather than reusing styles[...]
+    # directly.
+    body_center = styles["Body"].clone("VerteilerBody", alignment=TA_CENTER)
+    muted_center = styles["BodyMuted"].clone("VerteilerBodyMuted", alignment=TA_CENTER)
+
     cells, widths, bg_commands = [], [], []
     for i, it in enumerate(row_items):
         w = it["width_te"] or 0
@@ -216,7 +225,7 @@ def _verteiler_row_table(row_items, row_width_te, styles):
         text = f"<b>{it['label']}</b>"
         if it["sublabel"]:
             text += f"<br/>{it['sublabel']}"
-        cells.append(Paragraph(text, styles["Body"]))
+        cells.append(Paragraph(text, body_center))
         bg = _PDF_DEVICE_COLOR if it["item_type"] == "device" else _PDF_PROTECTIVE_COLOR
         bg_commands.append(("BACKGROUND", (i, 0), (i, 0), bg))
 
@@ -224,7 +233,7 @@ def _verteiler_row_table(row_items, row_width_te, styles):
     free = row_width_te - used
     if free > 0:
         widths.append(free / row_width_te * ROW_TABLE_WIDTH_MM * mm)
-        cells.append(Paragraph(f"{free} TE frei", styles["BodyMuted"]))
+        cells.append(Paragraph(f"{free} TE frei", muted_center))
 
     if not cells:
         return None
