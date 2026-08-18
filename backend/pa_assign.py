@@ -1,9 +1,9 @@
 """
 Physical-address (PA) auto-assign: fills in KNX individual/physical
-addresses (e.g. "1.1.10") for actor instances (Abgangsliste) and room
-devices (Geräteplanung) that don't have one yet, following a bucket
-convention: a fixed Systemgeräte block (0-5), then one Aktoren block per
-indoor Geschoss, then one Sensoren/Bedienelemente block per indoor
+addresses (e.g. "1.1.10") for actor instances (Abgangsliste), room devices,
+and floor devices (Geräteplanung) that don't have one yet, following a
+bucket convention: a fixed Systemgeräte block (0-5), then one Aktoren block
+per indoor Geschoss, then one Sensoren/Bedienelemente block per indoor
 Geschoss, then one Aussen block for anything on a Geschoss marked
 Aussen/unbeheizt (Wetterstation devices first within it). Never touches an
 address that's already set - same "only fill gaps" contract as the
@@ -35,9 +35,9 @@ def _extract_suffix(address, prefix):
 
 def compute_pa_assignments(db, project_id, prefix):
     """Returns (assignments, skipped). `assignments` is a list of
-    {"table": "actor_instances"|"room_devices", "id": int, "address": str}
-    ready to write; `skipped` is a list of human-readable reasons (devices
-    with no floor, or a full Systemgeräte block)."""
+    {"table": "actor_instances"|"room_devices"|"floor_devices", "id": int,
+    "address": str} ready to write; `skipped` is a list of human-readable
+    reasons (devices with no floor, or a full Systemgeräte block)."""
     floors = db.execute(
         "SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)
     ).fetchall()
@@ -76,6 +76,17 @@ def compute_pa_assignments(db, project_id, prefix):
             "group_name": rd["group_name"], "address": rd["physical_address"],
         })
 
+    for fd in db.execute(
+        "SELECT fd.*, at.group_name FROM floor_devices fd "
+        "JOIN actor_types at ON fd.device_type_id = at.id "
+        "JOIN floors f ON fd.floor_id = f.id WHERE f.project_id=?",
+        (project_id,),
+    ).fetchall():
+        items.append({
+            "table": "floor_devices", "id": fd["id"], "floor_id": fd["floor_id"],
+            "group_name": fd["group_name"], "address": fd["physical_address"],
+        })
+
     used = set()
     for row in db.execute(
         "SELECT physical_address FROM actor_instances WHERE project_id=? AND physical_address != ''",
@@ -87,6 +98,14 @@ def compute_pa_assignments(db, project_id, prefix):
     for row in db.execute(
         "SELECT rd.physical_address FROM room_devices rd JOIN rooms r ON rd.room_id=r.id "
         "JOIN floors f ON r.floor_id=f.id WHERE f.project_id=? AND rd.physical_address != ''",
+        (project_id,),
+    ).fetchall():
+        n = _extract_suffix(row["physical_address"], prefix)
+        if n is not None:
+            used.add(n)
+    for row in db.execute(
+        "SELECT fd.physical_address FROM floor_devices fd JOIN floors f ON fd.floor_id=f.id "
+        "WHERE f.project_id=? AND fd.physical_address != ''",
         (project_id,),
     ).fetchall():
         n = _extract_suffix(row["physical_address"], prefix)

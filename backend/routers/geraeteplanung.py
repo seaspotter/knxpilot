@@ -77,6 +77,70 @@ def delete_room_device(rd_id: int):
     return {"ok": True}
 
 
+# --------------------------------------------------------------------------
+# Floor-level devices: a device that isn't "in" any particular room - e.g. an
+# outdoor temperature sensor or a Wetterstation on the facade, on an Aussen-
+# marked floor with no natural room to attach it to. Same shape/semantics as
+# room_devices above, just anchored to a floor instead of a room.
+# --------------------------------------------------------------------------
+@router.get("/api/floors/{floor_id}/devices")
+def list_floor_devices(floor_id: int):
+    with get_db() as db:
+        device_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM actor_types").fetchall()}
+        rows = db.execute(
+            "SELECT * FROM floor_devices WHERE floor_id=? ORDER BY order_idx", (floor_id,)
+        ).fetchall()
+        result = []
+        for r in rows:
+            dt = device_types.get(r["device_type_id"], {})
+            result.append(
+                {
+                    "id": r["id"], "device_type_id": r["device_type_id"],
+                    "device_name": join_parts(dt.get("manufacturer", ""), dt.get("model", "")) or "?",
+                    "group_name": dt.get("group_name", ""),
+                    "quantity": r["quantity"], "note": r["note"],
+                    "physical_address": r["physical_address"],
+                }
+            )
+        return result
+
+
+@router.post("/api/floors/{floor_id}/devices")
+def add_floor_device(floor_id: int, rd: RoomDeviceIn):
+    """Same "quantity = how many blank rows at once" semantics as add_room_device."""
+    with get_db() as db:
+        (count,) = db.execute("SELECT COUNT(*) FROM floor_devices WHERE floor_id=?", (floor_id,)).fetchone()
+        quantity = max(1, rd.quantity)
+        address = rd.physical_address if quantity == 1 else ""
+        first_id = None
+        for i in range(quantity):
+            cur = db.execute(
+                "INSERT INTO floor_devices (floor_id, device_type_id, quantity, note, physical_address, order_idx) "
+                "VALUES (?, ?, 1, ?, ?, ?)",
+                (floor_id, rd.device_type_id, rd.note, address, count + i),
+            )
+            if first_id is None:
+                first_id = cur.lastrowid
+        return {"id": first_id}
+
+
+@router.put("/api/floor-devices/{fd_id}")
+def update_floor_device(fd_id: int, rd: RoomDeviceEditIn):
+    with get_db() as db:
+        db.execute(
+            "UPDATE floor_devices SET note=?, physical_address=? WHERE id=?",
+            (rd.note, rd.physical_address, fd_id),
+        )
+    return {"ok": True}
+
+
+@router.delete("/api/floor-devices/{fd_id}")
+def delete_floor_device(fd_id: int):
+    with get_db() as db:
+        db.execute("DELETE FROM floor_devices WHERE id=?", (fd_id,))
+    return {"ok": True}
+
+
 @router.put("/api/projects/{project_id}/device-order-flags/{device_type_id}")
 def set_device_order_flag(project_id: int, device_type_id: int, flag: DeviceOrderFlagIn):
     """Marks (or unmarks) a device type as "already have it, don't order" for this
@@ -95,9 +159,10 @@ def set_device_order_flag(project_id: int, device_type_id: int, flag: DeviceOrde
 @router.get("/api/projects/{project_id}/device-summary")
 def device_summary(project_id: int):
     """Project-wide bill of materials: total quantity needed per device type,
-    plus which rooms use it - built from the room_devices planning list AND
-    the actor instances already placed via the Abgangsliste tab (a device
-    shouldn't need re-entering here just to show up in the overall total)."""
+    plus which rooms/floors use it - built from the room_devices planning
+    list, floor_devices (room-less, e.g. outdoor devices), AND the actor
+    instances already placed via the Abgangsliste tab (a device shouldn't
+    need re-entering here just to show up in the overall total)."""
     with get_db() as db:
         device_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM actor_types").fetchall()}
         order_flags = {
@@ -124,6 +189,19 @@ def device_summary(project_id: int):
                             "physical_address": rd["physical_address"],
                         }
                     )
+
+            floor_devices = db.execute(
+                "SELECT * FROM floor_devices WHERE floor_id=? ORDER BY order_idx", (floor["id"],)
+            ).fetchall()
+            for fd in floor_devices:
+                entry = totals.setdefault(fd["device_type_id"], {"total": 0, "rooms": []})
+                entry["total"] += fd["quantity"]
+                entry["rooms"].append(
+                    {
+                        "floor_name": floor["name"], "room_name": "(kein Raum)", "quantity": fd["quantity"],
+                        "physical_address": fd["physical_address"],
+                    }
+                )
 
         actor_instances = db.execute(
             "SELECT ai.*, f.name as floor_name FROM actor_instances ai "

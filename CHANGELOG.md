@@ -8,6 +8,15 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- Geräteplanung devices can now attach directly to a **Geschoss** instead
+  of always requiring a room - for devices that don't belong to any
+  particular room, e.g. a Wetterstation on the facade or an outdoor
+  Bewegungsmelder. New "Geräte ohne Raum" section per floor, same
+  add/edit/quantity/address behavior as room devices (including working
+  with PA automatisch zuordnen and Nicht bestellen). New `floor_devices`
+  table (sibling to `room_devices` rather than an in-place migration),
+  new `GET/POST /api/floors/{id}/devices`,
+  `PUT/DELETE /api/floor-devices/{id}`.
 - Geräteplanung's Stückliste entries can be marked **Nicht bestellen**
   (per project, per device type) for devices already on hand - e.g. a
   spare Wetterstation or Tor-Aktor left over from another job. Stays

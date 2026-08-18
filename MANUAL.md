@@ -272,7 +272,11 @@ erscheinen, siehe Punkt 2).
    lässt sich nicht sinnvoll auf mehrere neue Geräte verteilen) — dann
    über **Bearbeiten** je Eintrag einzeln nachtragen. Genauso praktisch,
    wenn Geräte zuerst grob geplant und die Adresse erst später (z.B. bei
-   der Verkabelung) feststeht.
+   der Verkabelung) feststeht. Passt ein Gerät zu keinem bestimmten Raum
+   (z.B. eine Wetterstation an der Fassade oder ein Aussen-Bewegungsmelder),
+   lässt es sich stattdessen direkt unter **Geräte ohne Raum** je Geschoss
+   anlegen — funktioniert genau wie die Raum-Geräte, nur ohne eigens dafür
+   einen (unpassenden) Raum erstellen zu müssen.
 2. Oben erscheint automatisch eine **Stückliste** — die Gesamtanzahl jedes
    benötigten Geräts über das ganze Projekt hinweg, nach Gruppe sortiert.
    Praktisch für Bestellung oder Angebotskalkulation. Zählt sowohl hier

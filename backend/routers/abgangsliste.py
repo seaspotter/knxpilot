@@ -106,15 +106,16 @@ def delete_actor_instance(ai_id: int):
 @router.post("/api/projects/{project_id}/assign-physical-addresses")
 def assign_physical_addresses(project_id: int, body: PhysicalAddressAssignIn):
     """Fills in KNX physical addresses for every actor instance (Abgangsliste)
-    and room device (Geräteplanung) in the project that doesn't have one yet -
-    see pa_assign.py for the bucket/spacing convention. Never touches an
+    and room/floor device (Geräteplanung) in the project that doesn't have one
+    yet - see pa_assign.py for the bucket/spacing convention. Never touches an
     address already set; devices with no Geschoss are skipped and reported."""
     prefix = body.prefix.strip() or "1.1"
     with get_db() as db:
         assignments, skipped = compute_pa_assignments(db, project_id, prefix)
         for a in assignments:
             # a["table"] only ever comes from pa_assign.py's own hardcoded
-            # literals ("actor_instances" / "room_devices"), never user input.
+            # literals ("actor_instances" / "room_devices" / "floor_devices"),
+            # never user input.
             db.execute(f"UPDATE {a['table']} SET physical_address=? WHERE id=?", (a["address"], a["id"]))
     return {"assigned": len(assignments), "skipped": skipped}
 

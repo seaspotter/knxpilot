@@ -346,6 +346,21 @@ def init_db():
                 order_idx INTEGER NOT NULL DEFAULT 0
             );
 
+            -- Same idea as room_devices, but for a device that isn't "in" any
+            -- particular room - e.g. an outdoor temperature sensor or a Wetterstation
+            -- mounted on the facade, on an Aussen-marked floor with no natural room to
+            -- attach it to. Sibling table rather than making room_devices.room_id
+            -- nullable, to avoid an in-place migration of an already-live table.
+            CREATE TABLE IF NOT EXISTS floor_devices (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                floor_id INTEGER NOT NULL REFERENCES floors(id) ON DELETE CASCADE,
+                device_type_id INTEGER NOT NULL REFERENCES actor_types(id),
+                quantity INTEGER NOT NULL DEFAULT 1,
+                note TEXT NOT NULL DEFAULT '',
+                physical_address TEXT NOT NULL DEFAULT '',
+                order_idx INTEGER NOT NULL DEFAULT 0
+            );
+
             -- Per-project "already have this, don't order it" flag on a device type
             -- (e.g. a spare Wetterstation or Tor-Aktor left over from another job) -
             -- keeps it visible in the Stückliste but out of the order table/count.
