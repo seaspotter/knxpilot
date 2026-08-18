@@ -73,13 +73,13 @@ function renderFloorDevices(floor, devices) {
         <span class="info-icon" tabindex="0" data-tip="Für Geräte, die keinem bestimmten Raum zuzuordnen sind - z.B. eine Wetterstation an der Fassade oder ein Aussen-Bewegungsmelder.">i</span>
       </div>
       <div style="margin:6px 0;">${devicesHtml}</div>
-      <div class="quick-add">
+      <div class="quick-add mobile-fields">
         <select id="fd-device-${floor.id}" class="wide">
           ${ACTOR_TYPES.filter(at => at.group_name !== 'Aktor').map(at => `<option value="${at.id}">${at.group_name} — ${[at.manufacturer, at.model].filter(Boolean).join(' ')}</option>`).join('')}
         </select>
         <input type="number" id="fd-qty-${floor.id}" value="1" min="1" title="Anzahl" oninput="updateFloorDeviceAddressState(${floor.id})">
-        <input type="text" id="fd-note-${floor.id}" placeholder="Notiz (optional)" style="width:160px;">
-        <input type="text" id="fd-address-${floor.id}" placeholder="Physikalische Adresse" style="width:140px;">
+        <input type="text" id="fd-note-${floor.id}" class="w-160" placeholder="Notiz (optional)">
+        <input type="text" id="fd-address-${floor.id}" class="w-140" placeholder="Physikalische Adresse">
         <button class="btn secondary small" id="fd-save-btn-${floor.id}" onclick="saveFloorDevice(${floor.id})">+ Hinzufügen</button>
         <button class="btn secondary small" id="fd-cancel-btn-${floor.id}" onclick="cancelEditFloorDevice(${floor.id})" style="display:none;">Abbrechen</button>
       </div>
@@ -168,13 +168,13 @@ function renderRoomDevices(room, devices) {
     <div class="room-card">
       <b>${room.name}</b>
       <div style="margin:6px 0;">${devicesHtml}</div>
-      <div class="quick-add">
+      <div class="quick-add mobile-fields">
         <select id="rd-device-${room.id}" class="wide">
           ${ACTOR_TYPES.filter(at => at.group_name !== 'Aktor').map(at => `<option value="${at.id}">${at.group_name} — ${[at.manufacturer, at.model].filter(Boolean).join(' ')}</option>`).join('')}
         </select>
         <input type="number" id="rd-qty-${room.id}" value="1" min="1" title="Anzahl" oninput="updateRoomDeviceAddressState(${room.id})">
-        <input type="text" id="rd-note-${room.id}" placeholder="Notiz (optional)" style="width:160px;">
-        <input type="text" id="rd-address-${room.id}" placeholder="Physikalische Adresse" style="width:140px;">
+        <input type="text" id="rd-note-${room.id}" class="w-160" placeholder="Notiz (optional)">
+        <input type="text" id="rd-address-${room.id}" class="w-140" placeholder="Physikalische Adresse">
         <button class="btn secondary small" id="rd-save-btn-${room.id}" onclick="saveRoomDevice(${room.id})">+ Hinzufügen</button>
         <button class="btn secondary small" id="rd-cancel-btn-${room.id}" onclick="cancelEditRoomDevice(${room.id})" style="display:none;">Abbrechen</button>
       </div>

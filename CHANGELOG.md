@@ -6,6 +6,21 @@ restructuring below — history before that is available via `git log`.
 
 ## [Unreleased]
 
+### Added
+
+- Mobile/tablet-optimized data entry for the tabs actually usable on-site
+  from a phone: Klärungsliste's new-entry form, Geräteplanung's per-room/
+  per-floor device quick-add, and Abgangsliste's actor quick-add now
+  stack each field onto its own full-width line below 700px instead of
+  wrapping several fixed-width fields into a cramped multi-column jumble
+  - opt-in via a new `.mobile-fields` class, not applied to every `.row`
+    (most are button toolbars that already wrap fine). Also: bigger touch
+    targets app-wide below 700px (buttons, inputs/selects incl. 16px font
+    to avoid iOS Safari's auto-zoom-on-focus, icon buttons, inline pill
+    edit/delete links), and info-icon/icon-button tooltips now cap their
+    width to the viewport instead of potentially running off a narrow
+    screen's edge.
+
 ### Fixed
 
 - PDF exports no longer strand a section heading alone at the bottom of a

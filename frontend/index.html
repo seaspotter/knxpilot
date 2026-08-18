@@ -190,11 +190,11 @@
                 <span class="info-icon" tabindex="0" data-tip="Vergibt physikalische Adressen für alle Geräte im Projekt ohne Adresse - Aktoren hier UND Geräte in der Geräteplanung. Reihenfolge: Systemgeräte (0-5), je Geschoss ein Aktoren-Block, je Geschoss ein Sensoren/Bedienelemente-Block, dann Aussen-Geräte (Wetterstation zuerst). Jeder Block reserviert volle Zehnerblöcke je nach Gerätezahl. Bereits gesetzte Adressen werden nie verändert.">i</span>
               </div>
             </div>
-            <div class="row">
+            <div class="row mobile-fields">
               <select id="ai-actortype" class="wide"></select>
               <select id="ai-floor"></select>
-              <input type="text" id="ai-location" placeholder="Standort, z.B. EG Technik Verteilung" style="width:220px;">
-              <input type="text" id="ai-address" placeholder="Physikalische Adresse, z.B. 1.1.2" style="width:140px;">
+              <input type="text" id="ai-location" class="w-220" placeholder="Standort, z.B. EG Technik Verteilung">
+              <input type="text" id="ai-address" class="w-140" placeholder="Physikalische Adresse, z.B. 1.1.2">
               <button class="btn secondary" id="ai-save-btn" onclick="saveActorInstance()">+ Aktor hinzufügen</button>
               <button class="btn secondary small" id="ai-cancel-btn" onclick="cancelEditActorInstance()" style="display:none;">Abbrechen</button>
             </div>
@@ -302,7 +302,7 @@
       <div class="subtab" id="subtab-klaerungsliste">
         <div class="card">
           <h4 id="kl-form-title">Neuer Eintrag</h4>
-          <div class="row">
+          <div class="row mobile-fields">
             <select id="kl-typ">
               <option value="Frage">Frage</option>
               <option value="Aufgabe">Aufgabe</option>
@@ -315,8 +315,8 @@
               <option value="">(kein bestimmter Punkt)</option>
             </select>
           </div>
-          <div class="row">
-            <input type="text" id="kl-text" placeholder="Frage, Aufgabe oder Notiz..." style="min-width:320px; flex:1;">
+          <div class="row mobile-fields">
+            <input type="text" id="kl-text" class="kl-text-input" placeholder="Frage, Aufgabe oder Notiz...">
             <button class="btn" id="kl-save-btn" onclick="saveKlaerung()">+ Hinzufügen</button>
             <button class="btn secondary small" id="kl-cancel-btn" onclick="cancelEditKlaerung()" style="display:none;">Abbrechen</button>
           </div>

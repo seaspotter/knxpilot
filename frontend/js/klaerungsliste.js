@@ -170,7 +170,7 @@ function renderKlaerungsliste() {
             </div>
             <div style="margin-top:4px;">${k.text}</div>
             <div class="row" style="margin-top:6px;">
-              <input type="text" data-id="${k.id}" value="${escapeAttr(k.antwort || '')}" placeholder="Antwort/Ergebnis..." style="min-width:220px; flex:1;" onblur="saveKlAntwortInline(this)" onkeydown="if(event.key==='Enter'){this.blur();}">
+              <input type="text" class="kl-answer-input" data-id="${k.id}" value="${escapeAttr(k.antwort || '')}" placeholder="Antwort/Ergebnis..." onblur="saveKlAntwortInline(this)" onkeydown="if(event.key==='Enter'){this.blur();}">
             </div>
           </div>`).join('')}
       </div>`;

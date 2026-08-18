@@ -51,6 +51,8 @@
   textarea { font-family:inherit; resize:vertical; }
   input[type=text] { min-width: 140px; }
   input[type=number] { width: 60px; }
+  .kl-text-input { min-width: 320px; flex: 1; }
+  .kl-answer-input { min-width: 220px; flex: 1; }
   button.btn { background:var(--accent); border:none; color:var(--btn-text); padding:7px 13px; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px; }
   button.btn.secondary { background:transparent; border:1px solid var(--border); color:var(--text); }
   button.btn.danger { background:transparent; border:1px solid var(--danger); color:var(--danger); }
@@ -80,6 +82,9 @@
   .error { color:var(--danger); font-size:13px; margin-top:8px; }
   .quick-add { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
   select.wide { min-width: 180px; }
+  .w-140 { width: 140px; }
+  .w-160 { width: 160px; }
+  .w-220 { width: 220px; }
   .info-icon {
     display:inline-flex; align-items:center; justify-content:center;
     width:15px; height:15px; border-radius:50%; flex-shrink:0;
@@ -200,4 +205,35 @@
     ul.list li { flex-wrap:wrap; gap:6px; }
     .ga-tree .tree-middle, .ga-tree .tree-subs { margin-left:12px; }
     button.btn { padding:9px 14px; }
+
+    /* Bigger touch targets - the desktop sizing (13px buttons, 3px/8px
+       padding on "small" ones) is comfortable for a mouse but too small
+       to reliably tap. 16px input/select font also avoids iOS Safari's
+       auto-zoom-on-focus below that size. */
+    button.btn.small { padding:7px 11px; font-size:13px; }
+    input, select, textarea { padding:9px 10px; font-size:16px; }
+    input[type=number] { width:70px; }
+    .icon-btn { width:36px; height:36px; }
+    .pill a { padding:2px 4px; display:inline-block; }
+
+    /* Data-entry rows (opt-in via .mobile-fields, not every .row - most
+       .row usages are button toolbars that wrap fine as-is) stack each
+       field onto its own full-width line instead of several fixed-width
+       fields crammed into partial lines - easier to read and tap one at
+       a time than a wrapped jumble of short fields. */
+    .mobile-fields { flex-direction:column; align-items:stretch; }
+    .mobile-fields > input, .mobile-fields > select, .mobile-fields > textarea {
+      width:100%; min-width:0;
+    }
+    .mobile-fields > button, .mobile-fields > .info-icon, .mobile-fields > label {
+      align-self:flex-start;
+    }
+    .kl-text-input, .kl-answer-input { min-width:0; }
+
+    /* Anchored tooltips can otherwise run off the right edge of a narrow
+       viewport. */
+    .info-icon:hover::after, .info-icon:focus::after,
+    .icon-btn:hover::after, .icon-btn:focus::after {
+      width:min(220px, calc(100vw - 40px));
+    }
   }
