@@ -295,7 +295,13 @@ erscheinen, siehe Punkt 2).
    keine Raumaufschlüsselung mehr (die steht im Pflichtenheft, falls dort
    gewünscht) — dieser Export ist als reine Liste für den Lieferanten
    gedacht.
-4. **PA automatisch zuordnen** vergibt physikalische Adressen für alle
+4. Im Bereich **Geräte je Raum** exportiert **PDF herunterladen** stattdessen
+   alle Geräte des Projekts (inkl. der Aktoren aus der Abgangsliste)
+   gruppiert nach Geschoss/Raum, mit Gruppe, Hersteller, Typ und
+   physischer Adresse — als Installationsreferenz für die Ausführung vor
+   Ort, getrennt von der Bestellliste oben. Lässt sich zusätzlich optional
+   ins Pflichtenheft-PDF aufnehmen (siehe unten, Setup → Pflichtenheft).
+5. **PA automatisch zuordnen** vergibt physikalische Adressen für alle
    Geräte im Projekt ohne eine — siehe Abgangsliste, Punkt 7, für die
    genaue Reihenfolge/Logik; hier wie dort wirkt der Klick projektweit auf
    beide Tabs gleichzeitig.
@@ -357,7 +363,8 @@ wird; **PDF herunterladen** erzeugt ein mehrseitiges Dokument mit:
 Zusätzlich lassen sich im Setup-Tab unter *Pflichtenheft* (siehe unten)
 weitere Abschnitte optional dazuschalten: **Stockwerk- und
 Raumverzeichnis** sowie **Geräteliste** (Stückliste, standardmässig an),
-und **Abgangsliste**, **Klärungsliste** sowie **Gruppenadressen**
+und **Geräte je Raum**, **Abgangsliste**, **Verteilerplanung**,
+**Klärungsliste** sowie **Gruppenadressen**
 (standardmässig aus, da sie ein Projekt schnell sehr lang machen können —
 gezielt für den Einzelfall dazuschalten). Gruppenadressen steht dabei
 immer als letzter Abschnitt im PDF, auch wenn die anderen optionalen
@@ -527,11 +534,11 @@ nicht alle gleichzeitig sichtbar.
   Steckdosen samt Zentralfunktion, wenn nie eine Steckdose hinzugefügt wird.
 - **Pflichtenheft** — der Vorbemerkungen-Text (mit einem sinnvollen
   Standardtext vorbelegt, siehe Abschnitt *Pflichtenheft* oben) sowie
-  sieben Kontrollkästchen, die steuern, was im Pflichtenheft-PDF erscheint:
+  acht Kontrollkästchen, die steuern, was im Pflichtenheft-PDF erscheint:
   Vorbemerkungen, Stockwerk-/Raumverzeichnis, Geräteliste (alle drei
-  standardmässig an), Gruppenadressen, Abgangsliste, Verteilerplanung
-  und Klärungsliste (standardmässig aus). Gilt global für alle Projekte,
-  wie der Rest des Firmenprofils.
+  standardmässig an), Geräte je Raum, Gruppenadressen, Abgangsliste,
+  Verteilerplanung und Klärungsliste (standardmässig aus). Gilt global für
+  alle Projekte, wie der Rest des Firmenprofils.
 - **Backup** — automatische und/oder manuelle (**Jetzt sichern**) Sicherung
   der kompletten Datenbank (alle Projekte, Geräte-Katalog, restliches
   Setup — nicht nur ein einzelnes Projekt) auf ein NAS/gemountetes

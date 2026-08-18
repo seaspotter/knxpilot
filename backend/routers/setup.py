@@ -34,6 +34,7 @@ def get_company_profile():
             "pflichtenheft_include_vorbemerkungen": bool(r["pflichtenheft_include_vorbemerkungen"]),
             "pflichtenheft_include_struktur": bool(r["pflichtenheft_include_struktur"]),
             "pflichtenheft_include_geraeteliste": bool(r["pflichtenheft_include_geraeteliste"]),
+            "pflichtenheft_include_geraete_je_raum": bool(r["pflichtenheft_include_geraete_je_raum"]),
             "pflichtenheft_include_gruppenadressen": bool(r["pflichtenheft_include_gruppenadressen"]),
             "pflichtenheft_include_abgangsliste": bool(r["pflichtenheft_include_abgangsliste"]),
             "pflichtenheft_include_verteilerplanung": bool(r["pflichtenheft_include_verteilerplanung"]),
@@ -60,6 +61,7 @@ def update_company_profile(cp: CompanyProfileIn):
             "logo_data_url=?, show_on_pdf=?, pflichtenheft_preamble=?, "
             "pflichtenheft_include_vorbemerkungen=?, "
             "pflichtenheft_include_struktur=?, pflichtenheft_include_geraeteliste=?, "
+            "pflichtenheft_include_geraete_je_raum=?, "
             "pflichtenheft_include_gruppenadressen=?, pflichtenheft_include_abgangsliste=?, "
             "pflichtenheft_include_verteilerplanung=?, pflichtenheft_include_klaerungsliste=?, "
             "backup_enabled=?, backup_interval_hours=?, backup_retention_count=?, "
@@ -70,6 +72,7 @@ def update_company_profile(cp: CompanyProfileIn):
              int(cp.show_on_pdf), cp.pflichtenheft_preamble,
              int(cp.pflichtenheft_include_vorbemerkungen),
              int(cp.pflichtenheft_include_struktur), int(cp.pflichtenheft_include_geraeteliste),
+             int(cp.pflichtenheft_include_geraete_je_raum),
              int(cp.pflichtenheft_include_gruppenadressen), int(cp.pflichtenheft_include_abgangsliste),
              int(cp.pflichtenheft_include_verteilerplanung), int(cp.pflichtenheft_include_klaerungsliste),
              int(cp.backup_enabled), cp.backup_interval_hours, cp.backup_retention_count,

@@ -18,7 +18,7 @@ from ..pdf_design import (
     company_header_block, company_footer_line, checkbox_cell, signature_block,
 )
 from ..utils import join_parts
-from .geraeteplanung import device_summary
+from .geraeteplanung import device_summary, build_geraete_je_raum_story
 from .abgangsliste import build_abgangsliste_story
 from .verteiler import build_verteilerplanung_story
 
@@ -299,6 +299,14 @@ def export_pflichtenheft_pdf(project_id: int):
                 table = Table(table_data, colWidths=[35 * mm, 105 * mm, 25 * mm])
                 table.setStyle(pdf_table_style())
                 story.append(table)
+
+        if company.get("pflichtenheft_include_geraete_je_raum", False):
+            geraete_je_raum_story = build_geraete_je_raum_story(db, project_id, styles)
+            if geraete_je_raum_story:
+                story.append(PageBreak())
+                story.append(Paragraph("Geräte je Raum", styles["SectionHeading"]))
+                story.append(Spacer(1, 2 * mm))
+                story += geraete_je_raum_story
 
         if company.get("pflichtenheft_include_klaerungsliste", False):
             story.append(PageBreak())

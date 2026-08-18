@@ -8,6 +8,16 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- New **Geräte je Raum** PDF export (Geräteplanung → PDF herunterladen in
+  that section) - every device in the project (room devices, floor
+  devices, and Abgangsliste's actor instances) grouped by Geschoss/Raum
+  with Gruppe, Hersteller, Typ and physische Adresse, as an installation
+  reference distinct from the order-focused Geräteliste export. Also
+  available as an optional Pflichtenheft section (new
+  "Geräte je Raum"-Kontrollkästchen in Setup → Pflichtenheft, same pattern
+  as the existing Abgangsliste/Verteilerplanung sections there). New
+  `GET /api/projects/{id}/export-geraete-je-raum.pdf`, new
+  `pflichtenheft_include_geraete_je_raum` company-profile column.
 - Geräteplanung devices can now attach directly to a **Geschoss** instead
   of always requiring a room - for devices that don't belong to any
   particular room, e.g. a Wetterstation on the facade or an outdoor

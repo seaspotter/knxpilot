@@ -13,6 +13,7 @@ async function loadCompanyProfile() {
   document.getElementById('pht-include-vorbemerkungen').checked = !!c.pflichtenheft_include_vorbemerkungen;
   document.getElementById('pht-include-struktur').checked = !!c.pflichtenheft_include_struktur;
   document.getElementById('pht-include-geraeteliste').checked = !!c.pflichtenheft_include_geraeteliste;
+  document.getElementById('pht-include-geraete-je-raum').checked = !!c.pflichtenheft_include_geraete_je_raum;
   document.getElementById('pht-include-gruppenadressen').checked = !!c.pflichtenheft_include_gruppenadressen;
   document.getElementById('pht-include-abgangsliste').checked = !!c.pflichtenheft_include_abgangsliste;
   document.getElementById('pht-include-verteilerplanung').checked = !!c.pflichtenheft_include_verteilerplanung;
@@ -235,6 +236,7 @@ async function saveCompanyProfile() {
     pflichtenheft_include_vorbemerkungen: document.getElementById('pht-include-vorbemerkungen').checked,
     pflichtenheft_include_struktur: document.getElementById('pht-include-struktur').checked,
     pflichtenheft_include_geraeteliste: document.getElementById('pht-include-geraeteliste').checked,
+    pflichtenheft_include_geraete_je_raum: document.getElementById('pht-include-geraete-je-raum').checked,
     pflichtenheft_include_gruppenadressen: document.getElementById('pht-include-gruppenadressen').checked,
     pflichtenheft_include_abgangsliste: document.getElementById('pht-include-abgangsliste').checked,
     pflichtenheft_include_verteilerplanung: document.getElementById('pht-include-verteilerplanung').checked,

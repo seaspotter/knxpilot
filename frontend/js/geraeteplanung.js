@@ -261,3 +261,7 @@ async function deleteRoomDevice(ev, id) {
 function downloadGeraeteliste() {
   window.location.href = `/api/projects/${CURRENT_PROJECT}/export-geraeteliste.pdf`;
 }
+
+function downloadGeraeteJeRaumPdf() {
+  window.location.href = `/api/projects/${CURRENT_PROJECT}/export-geraete-je-raum.pdf`;
+}

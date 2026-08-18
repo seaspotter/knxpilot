@@ -174,6 +174,7 @@ class CompanyProfileIn(BaseModel):
     pflichtenheft_include_vorbemerkungen: bool = True
     pflichtenheft_include_struktur: bool = True
     pflichtenheft_include_geraeteliste: bool = True
+    pflichtenheft_include_geraete_je_raum: bool = False
     pflichtenheft_include_gruppenadressen: bool = False
     pflichtenheft_include_abgangsliste: bool = False
     pflichtenheft_include_verteilerplanung: bool = False
