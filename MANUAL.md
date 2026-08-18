@@ -266,10 +266,13 @@ erscheinen, siehe Punkt 2).
 
 1. Für jeden Raum Geräte hinzufügen — **Anzahl** legt fest, wie viele
    Geräte auf einmal angelegt werden, jedes davon als eigener,
-   unabhängiger Eintrag (nicht eine gemeinsame Stückzahl). Jeder Eintrag
-   lässt sich über **Bearbeiten** einzeln mit Notiz und physischer Adresse
-   versehen — praktisch, wenn Geräte zuerst grob geplant und die Adresse
-   erst später (z.B. bei der Verkabelung) feststeht.
+   unabhängiger Eintrag (nicht eine gemeinsame Stückzahl). Bei Anzahl 1
+   lässt sich die **physische Adresse** direkt beim Anlegen eintragen; bei
+   mehreren auf einmal ist das Feld deaktiviert (eine einzelne Adresse
+   lässt sich nicht sinnvoll auf mehrere neue Geräte verteilen) — dann
+   über **Bearbeiten** je Eintrag einzeln nachtragen. Genauso praktisch,
+   wenn Geräte zuerst grob geplant und die Adresse erst später (z.B. bei
+   der Verkabelung) feststeht.
 2. Oben erscheint automatisch eine **Stückliste** — die Gesamtanzahl jedes
    benötigten Geräts über das ganze Projekt hinweg, nach Gruppe sortiert.
    Praktisch für Bestellung oder Angebotskalkulation. Zählt sowohl hier

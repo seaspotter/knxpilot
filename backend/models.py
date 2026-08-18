@@ -110,6 +110,9 @@ class RoomDeviceIn(BaseModel):
     device_type_id: int
     quantity: int = 1   # how many blank rows to create at once - each becomes its own row
     note: str = ""
+    # Only meaningful (and only applied) when quantity == 1 - a single address
+    # can't be sensibly distributed across several newly-created rows.
+    physical_address: str = ""
 
 
 class RoomDeviceEditIn(BaseModel):

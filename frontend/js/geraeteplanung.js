@@ -48,9 +48,9 @@ function renderRoomDevices(room, devices) {
         <select id="rd-device-${room.id}" class="wide">
           ${ACTOR_TYPES.filter(at => at.group_name !== 'Aktor').map(at => `<option value="${at.id}">${at.group_name} — ${[at.manufacturer, at.model].filter(Boolean).join(' ')}</option>`).join('')}
         </select>
-        <input type="number" id="rd-qty-${room.id}" value="1" min="1" title="Anzahl">
+        <input type="number" id="rd-qty-${room.id}" value="1" min="1" title="Anzahl" oninput="updateRoomDeviceAddressState(${room.id})">
         <input type="text" id="rd-note-${room.id}" placeholder="Notiz (optional)" style="width:160px;">
-        <input type="text" id="rd-address-${room.id}" placeholder="Physikalische Adresse" style="width:140px; display:none;">
+        <input type="text" id="rd-address-${room.id}" placeholder="Physikalische Adresse" style="width:140px;">
         <button class="btn secondary small" id="rd-save-btn-${room.id}" onclick="saveRoomDevice(${room.id})">+ Hinzufügen</button>
         <button class="btn secondary small" id="rd-cancel-btn-${room.id}" onclick="cancelEditRoomDevice(${room.id})" style="display:none;">Abbrechen</button>
       </div>
@@ -67,12 +67,24 @@ async function saveRoomDevice(roomId) {
     const device_type_id = parseInt(document.getElementById(`rd-device-${roomId}`).value);
     const quantity = parseInt(document.getElementById(`rd-qty-${roomId}`).value) || 1;
     const note = document.getElementById(`rd-note-${roomId}`).value.trim();
+    const physical_address = document.getElementById(`rd-address-${roomId}`).value.trim();
     if (!device_type_id) return showToast('Zuerst ein Gerät im Geräte-Katalog-Tab anlegen', 'warning');
-    await api(`/rooms/${roomId}/devices`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({device_type_id, quantity, note})});
+    await api(`/rooms/${roomId}/devices`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({device_type_id, quantity, note, physical_address})});
   }
   cancelEditRoomDevice(roomId);
   await renderGeraeteplanungRooms();
   await renderDeviceSummary();
+}
+
+// The address field only makes sense when adding exactly one device at once -
+// several newly-created rows can't share a single typed-in address. Disabled
+// (not hidden) when quantity != 1, so it stays visible/discoverable either way.
+function updateRoomDeviceAddressState(roomId) {
+  if (EDITING_ROOM_DEVICE_ID && EDITING_ROOM_DEVICE_ROOM_ID === roomId) return; // edit mode always allows it
+  const qty = parseInt(document.getElementById(`rd-qty-${roomId}`).value) || 1;
+  const addressField = document.getElementById(`rd-address-${roomId}`);
+  addressField.disabled = qty !== 1;
+  if (qty !== 1) addressField.value = '';
 }
 
 function editRoomDevice(ev, roomId, deviceId) {
@@ -87,8 +99,9 @@ function editRoomDevice(ev, roomId, deviceId) {
   document.getElementById(`rd-device-${roomId}`).style.display = 'none';
   document.getElementById(`rd-qty-${roomId}`).style.display = 'none';
   document.getElementById(`rd-note-${roomId}`).value = device.note || '';
-  document.getElementById(`rd-address-${roomId}`).style.display = '';
-  document.getElementById(`rd-address-${roomId}`).value = device.physical_address || '';
+  const addressField = document.getElementById(`rd-address-${roomId}`);
+  addressField.disabled = false;
+  addressField.value = device.physical_address || '';
   document.getElementById(`rd-save-btn-${roomId}`).textContent = 'Änderungen speichern';
   document.getElementById(`rd-cancel-btn-${roomId}`).style.display = '';
 }
@@ -107,7 +120,7 @@ function cancelEditRoomDevice(roomId) {
   qtyField.style.display = '';
   qtyField.value = '1';
   noteField.value = '';
-  addressField.style.display = 'none';
+  addressField.disabled = false;
   addressField.value = '';
   saveBtn.textContent = '+ Hinzufügen';
   cancelBtn.style.display = 'none';

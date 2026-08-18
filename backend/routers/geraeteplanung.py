@@ -41,14 +41,19 @@ def list_room_devices(room_id: int):
 def add_room_device(room_id: int, rd: RoomDeviceIn):
     """Each call creates `quantity` independent quantity=1 rows (one per physical
     device, so each can get its own physical_address later) - `quantity` here just
-    means "how many at once", it's never stored as an aggregate count."""
+    means "how many at once", it's never stored as an aggregate count. A given
+    physical_address is only applied when quantity == 1 - can't sensibly hand the
+    same address to several newly-created rows."""
     with get_db() as db:
         (count,) = db.execute("SELECT COUNT(*) FROM room_devices WHERE room_id=?", (room_id,)).fetchone()
+        quantity = max(1, rd.quantity)
+        address = rd.physical_address if quantity == 1 else ""
         first_id = None
-        for i in range(max(1, rd.quantity)):
+        for i in range(quantity):
             cur = db.execute(
-                "INSERT INTO room_devices (room_id, device_type_id, quantity, note, order_idx) VALUES (?, ?, 1, ?, ?)",
-                (room_id, rd.device_type_id, rd.note, count + i),
+                "INSERT INTO room_devices (room_id, device_type_id, quantity, note, physical_address, order_idx) "
+                "VALUES (?, ?, 1, ?, ?, ?)",
+                (room_id, rd.device_type_id, rd.note, address, count + i),
             )
             if first_id is None:
                 first_id = cur.lastrowid

@@ -17,7 +17,11 @@ restructuring below — history before that is available via `git log`.
   means "how many independent rows to create at once"; each is editable
   (note + address) via a new **Bearbeiten** link. One-time, idempotent
   migration splits any pre-existing aggregated row into that many
-  quantity=1 rows - no data lost. New `PUT /api/room-devices/{id}`.
+  quantity=1 rows - no data lost. New `PUT /api/room-devices/{id}`. The
+  quick-add form itself now also takes a physical address directly when
+  adding exactly one device at once (disabled for bulk-adds of more than
+  one, since a single typed-in address can't be distributed across
+  several new rows).
 - **PA automatisch zuordnen** (Abgangsliste and Geräteplanung, both act
   project-wide across both tabs) fills in physical KNX addresses for
   every device without one, following a fixed convention: a Systemgeräte
