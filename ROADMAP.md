@@ -3,43 +3,16 @@
 Working list of ideas for KNXpilot beyond what's already shipped — see
 [`CHANGELOG.md`](./CHANGELOG.md) for what's actually been built, release by
 release. This file is where "we should do X" goes before it's scoped or
-built. Check items off (or delete them once they've landed and have a
-CHANGELOG entry of their own) as they're done — keep it current rather than
-letting it drift into a wishlist nobody trusts.
-
-## Up next
-
-- [x] **Labels** — Avery Zweckform L6037 label sheet export (Abgangsliste
-  sub-tab), one label per actor instance or per channel, with a position
-  picker to resume a partially-used sheet and a test-print/alignment mode.
-  See `CHANGELOG.md` for detail.
-- [x] **DIN-Rail / Verteiler (cabinet) layout** — new Verteilerplanung
-  sub-tab: fixed 12-TE rows per Geschoss, RCD (4TE)/LS-Schalter (1TE)
-  placeholder blocks, and already-placed Abgangsliste actor instances
-  (sized by their Geräte-Katalog TE width) all placeable into rows, with
-  capacity/uniqueness enforced. See `CHANGELOG.md` for detail. Scoped
-  down from an earlier idea of an explicit RCD→LS-Schalter→circuit
-  protection hierarchy (each RCD grouping specific LS-Schalter, each
-  protecting specific circuits/channels) — user confirmed RCD/LS should
-  just be simple labeled blocks for now, not linked to specific circuits.
-  That fuller hierarchy is a possible future refinement, not currently
-  planned.
+built. Items are removed once they've landed and have a CHANGELOG entry of
+their own — keep it current rather than letting it drift into a wishlist
+nobody trusts.
 
 ## Good ideas, not yet sequenced
 
-- [x] **Automated backups** to a NAS (mounted volume) or Nextcloud (WebDAV) —
-  Setup → Backup, see `CHANGELOG.md`. A Google-Drive destination would need
-  OAuth2 — meaningfully more work, not built, worth scoping separately if
-  actually wanted later.
 - [ ] **.knxproj / ETS import** — parse an existing ETS project export (a
   zip of XML) to pre-populate a KNXpilot project's group addresses, instead
   of always starting from a blank building. High value, but real work
   against ETS's file format.
-- [x] **All-projects dashboard** — Projektübersicht above the Projekte
-  list (status breakdown, open/aged Klärungen, projects without
-  structure). See `CHANGELOG.md`.
-- [x] **Reminders/aging on Klärungsliste** — 7-day aged badge + digest
-  banner + warn-colored sub-tab button. See `CHANGELOG.md`.
 - [ ] **Mobile/tablet-optimized UI** — the app is usable on a phone today
   (the subnav already scrolls/wraps) but isn't really optimized for it,
   e.g. adding a Klärungsliste entry on-site during a customer conversation
