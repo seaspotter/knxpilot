@@ -15,6 +15,7 @@ async function loadCompanyProfile() {
   document.getElementById('pht-include-geraeteliste').checked = !!c.pflichtenheft_include_geraeteliste;
   document.getElementById('pht-include-gruppenadressen').checked = !!c.pflichtenheft_include_gruppenadressen;
   document.getElementById('pht-include-abgangsliste').checked = !!c.pflichtenheft_include_abgangsliste;
+  document.getElementById('pht-include-verteilerplanung').checked = !!c.pflichtenheft_include_verteilerplanung;
   document.getElementById('pht-include-klaerungsliste').checked = !!c.pflichtenheft_include_klaerungsliste;
   document.getElementById('backup-enabled').checked = !!c.backup_enabled;
   document.getElementById('backup-interval-hours').value = c.backup_interval_hours || 24;
@@ -236,6 +237,7 @@ async function saveCompanyProfile() {
     pflichtenheft_include_geraeteliste: document.getElementById('pht-include-geraeteliste').checked,
     pflichtenheft_include_gruppenadressen: document.getElementById('pht-include-gruppenadressen').checked,
     pflichtenheft_include_abgangsliste: document.getElementById('pht-include-abgangsliste').checked,
+    pflichtenheft_include_verteilerplanung: document.getElementById('pht-include-verteilerplanung').checked,
     pflichtenheft_include_klaerungsliste: document.getElementById('pht-include-klaerungsliste').checked,
     backup_enabled: document.getElementById('backup-enabled').checked,
     backup_interval_hours: parseInt(document.getElementById('backup-interval-hours').value) || 24,

@@ -269,17 +269,24 @@ Ein **Verteiler** gehört zu einem Geschoss und hat eine feste Anzahl Reihen
     — reine Platzhalter für den Hutschienenplatz, keine eigene Auswertung
     (siehe `ROADMAP.md`).
   - **+ Gerät...** — Auswahl aus den bereits in der Abgangsliste
-    angelegten Aktoren desselben Geschosses (Anzeige: Standort/Modell +
-    physikalische Adresse, z.B. "Dimmaktor 4fach · 1.1.13"). Nur Geräte
-    mit gesetzter **TE**-Breite im Geräte-Katalog sind auswählbar — fehlt
-    sie, zuerst dort nachtragen. Ein Gerät lässt sich nur in einem
-    Verteiler gleichzeitig platzieren.
+    angelegten Aktoren desselben Geschosses, die noch in keinem Verteiler
+    platziert sind (Anzeige: Aktortyp, Standort, physikalische Adresse
+    und TE-Breite, z.B. "MDT AKD-0401.02 · Technik · 1.1.13 (6 TE)"). Nur
+    Geräte mit gesetzter **TE**-Breite im Geräte-Katalog erscheinen zur
+    Auswahl — fehlt sie, zuerst dort nachtragen. Ein Gerät lässt sich nur
+    in einem Verteiler gleichzeitig platzieren.
 - Reicht der freie Platz einer Reihe nicht, meldet das Tool die noch
   freie TE-Zahl statt stillschweigend zu überfüllen.
 - Über die Pfeile an jedem Kästchen lässt sich die Reihenfolge innerhalb
   einer Reihe anpassen; **×** entfernt ein Element wieder (das zugehörige
   Gerät selbst bleibt in der Abgangsliste erhalten — nur die Platzierung
-  im Verteiler wird gelöscht).
+  im Verteiler wird gelöscht). Ein Gerätekästchen zeigt Aktortyp und
+  physikalische Adresse (falls gesetzt); beim Zeigen mit der Maus
+  erscheinen zusätzlich TE-Breite und Standortbezeichnung als Tooltip.
+- **PDF herunterladen** exportiert alle Verteiler des Projekts als
+  formatiertes PDF — je Verteiler eine Reihenübersicht, optisch analog
+  zur Bildschirmansicht. Lässt sich zusätzlich optional ins
+  Pflichtenheft-PDF aufnehmen (siehe unten, Setup → Pflichtenheft).
 
 #### Pflichtenheft
 
@@ -473,10 +480,10 @@ nicht alle gleichzeitig sichtbar.
   Steckdosen samt Zentralfunktion, wenn nie eine Steckdose hinzugefügt wird.
 - **Pflichtenheft** — der Vorbemerkungen-Text (mit einem sinnvollen
   Standardtext vorbelegt, siehe Abschnitt *Pflichtenheft* oben) sowie
-  sechs Kontrollkästchen, die steuern, was im Pflichtenheft-PDF erscheint:
+  sieben Kontrollkästchen, die steuern, was im Pflichtenheft-PDF erscheint:
   Vorbemerkungen, Stockwerk-/Raumverzeichnis, Geräteliste (alle drei
-  standardmässig an), Gruppenadressen, Abgangsliste und Klärungsliste
-  (standardmässig aus). Gilt global für alle Projekte,
+  standardmässig an), Gruppenadressen, Abgangsliste, Verteilerplanung
+  und Klärungsliste (standardmässig aus). Gilt global für alle Projekte,
   wie der Rest des Firmenprofils.
 - **Backup** — automatische und/oder manuelle (**Jetzt sichern**) Sicherung
   der kompletten Datenbank (alle Projekte, Geräte-Katalog, restliches

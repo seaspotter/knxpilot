@@ -20,6 +20,7 @@ from ..pdf_design import (
 from ..utils import join_parts
 from .geraeteplanung import device_summary
 from .abgangsliste import build_abgangsliste_story
+from .verteiler import build_verteilerplanung_story
 
 router = APIRouter(tags=["pflichtenheft"])
 
@@ -276,6 +277,14 @@ def export_pflichtenheft_pdf(project_id: int):
                 story.append(Paragraph("Abgangsliste", styles["SectionHeading"]))
                 story.append(Spacer(1, 2 * mm))
                 story += abgangsliste_story
+
+        if company.get("pflichtenheft_include_verteilerplanung", False):
+            verteilerplanung_story = build_verteilerplanung_story(db, project_id, styles)
+            if verteilerplanung_story:
+                story.append(PageBreak())
+                story.append(Paragraph("Verteilerplanung", styles["SectionHeading"]))
+                story.append(Spacer(1, 2 * mm))
+                story += verteilerplanung_story
 
         if company.get("pflichtenheft_include_geraeteliste", True):
             summary = device_summary(project_id)

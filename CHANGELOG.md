@@ -20,10 +20,18 @@ restructuring below — history before that is available via `git log`.
   placeholders, default 4TE/1TE, no link to specific circuits yet - see
   `ROADMAP.md`) and/or actor instances already placed via the
   Abgangsliste tab, sized from their Geräte-Katalog TE width (a device
-  without a TE width set can't be placed). Rows enforce the 12 TE
+  without a TE width set can't be placed, and the device picker shows
+  each candidate's TE alongside its address). Rows enforce the 12 TE
   capacity and a device can only be placed once across all Verteiler in
   a project. New `verteiler`/`verteiler_items` tables, new
   `backend/routers/verteiler.py`.
+- Verteilerplanung: **PDF herunterladen** exports every Verteiler in the
+  project as one document - one proportionally-sized row table per DIN-
+  rail row, matching the on-screen layout. Can also be optionally
+  included in the Pflichtenheft PDF (new checkbox in Setup →
+  Pflichtenheft, same on/off pattern as Abgangsliste/Gruppenadressen/
+  Klärungsliste). New `GET /api/projects/{id}/export-verteilerplanung.pdf`,
+  new `company_profile.pflichtenheft_include_verteilerplanung` column.
 - Geräte-Katalog entries can now record a **TE** (Teilungseinheiten, DIN-
   rail width - 1 TE = 18mm) alongside Type/Kanäle. Optional, blank unless
   known - only meaningful for rail-mounted devices. First piece of the

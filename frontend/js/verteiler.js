@@ -12,6 +12,10 @@ async function loadVerteilerplanungForCurrentProject() {
   renderVerteilerList();
 }
 
+function downloadVerteilerplanungPdf() {
+  window.location.href = `/api/projects/${CURRENT_PROJECT}/export-verteilerplanung.pdf`;
+}
+
 async function createVerteiler() {
   const floorVal = document.getElementById('verteiler-floor').value;
   if (!floorVal) return showToast('Zuerst ein Geschoss in Gebäudestruktur anlegen', 'warning');
@@ -47,7 +51,7 @@ function renderVerteilerRow(v, row_idx, items) {
   const used = items.reduce((sum, it) => sum + (it.width_te || 0), 0);
   const free = v.row_width_te - used;
   const boxes = items.map((it, i) => `
-    <div class="verteiler-item ${it.item_type}" style="flex:0 0 ${it.width_te / v.row_width_te * 100}%;" title="${it.width_te} TE">
+    <div class="verteiler-item ${it.item_type}" style="flex:0 0 ${it.width_te / v.row_width_te * 100}%;" title="${it.width_te} TE${it.location_label ? ' · ' + it.location_label : ''}">
       <div>${it.label}</div>
       ${it.sublabel ? `<div class="muted" style="font-size:10px;">${it.sublabel}</div>` : ''}
       <div class="verteiler-item-actions">
@@ -86,11 +90,14 @@ function openAddDeviceModal(verteiler_id, row_idx) {
   const placed = new Set(
     VERTEILER_LIST.flatMap(x => x.rows.flat()).map(it => it.actor_instance_id).filter(Boolean)
   );
-  const candidates = VERTEILER_ACTOR_INSTANCES.filter(ai => ai.floor_id === v.floor_id && !placed.has(ai.id));
+  const candidates = VERTEILER_ACTOR_INSTANCES
+    .filter(ai => ai.floor_id === v.floor_id && !placed.has(ai.id))
+    .map(ai => ({ai, width_te: (ACTOR_TYPES.find(at => at.id === ai.actor_type_id) || {}).width_te}))
+    .filter(({width_te}) => width_te != null);
 
-  const options = candidates.map(ai =>
-    `<option value="${ai.id}">${[ai.actor_type_name, ai.location_label, ai.physical_address].filter(Boolean).join(' · ')}</option>`
-  ).join('') || '<option value="">Keine verfügbaren Geräte auf diesem Geschoss</option>';
+  const options = candidates.map(({ai, width_te}) =>
+    `<option value="${ai.id}">${[ai.actor_type_name, ai.location_label, ai.physical_address].filter(Boolean).join(' · ')} (${width_te} TE)</option>`
+  ).join('') || '<option value="">Keine verfügbaren Geräte auf diesem Geschoss (evtl. fehlt die TE-Breite im Geräte-Katalog)</option>';
 
   const modal = openModal(`
     <h3>Gerät hinzufügen</h3>

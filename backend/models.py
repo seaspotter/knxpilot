@@ -158,6 +158,7 @@ class CompanyProfileIn(BaseModel):
     pflichtenheft_include_geraeteliste: bool = True
     pflichtenheft_include_gruppenadressen: bool = False
     pflichtenheft_include_abgangsliste: bool = False
+    pflichtenheft_include_verteilerplanung: bool = False
     pflichtenheft_include_klaerungsliste: bool = False
     backup_enabled: bool = False
     backup_interval_hours: int = 24

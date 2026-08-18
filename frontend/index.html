@@ -260,6 +260,9 @@
             <button class="btn" onclick="createVerteiler()">+ Verteiler anlegen</button>
           </div>
         </div>
+        <div class="row" style="justify-content:flex-end;">
+          <button class="btn secondary" onclick="downloadVerteilerplanungPdf()">PDF herunterladen</button>
+        </div>
         <div id="verteiler-list"></div>
       </div>
 
@@ -512,6 +515,7 @@
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-geraeteliste"> Geräteliste (Stückliste)</label>
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-gruppenadressen"> Gruppenadressen<span class="info-icon" tabindex="0" data-tip="Kann bei grösseren Projekten sehr lang werden (eine Zeile je Adresse).">i</span></label>
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-abgangsliste"> Abgangsliste</label>
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-verteilerplanung"> Verteilerplanung</label>
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-klaerungsliste"> Klärungsliste</label>
       </div>
       <div style="margin-top:10px;"><button class="btn" onclick="saveCompanyProfile()">Speichern</button></div>
