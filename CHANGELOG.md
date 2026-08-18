@@ -6,6 +6,17 @@ restructuring below — history before that is available via `git log`.
 
 ## [Unreleased]
 
+### Fixed
+
+- The header version badge now shows something meaningful in a plain-image
+  deployment too (Portainer, bare `docker run`, no `docker-compose.yml`
+  bind-mount) instead of going blank - `GET /api/system/version` fell back
+  to `None` whenever there was no live `.git` checkout to `git describe`.
+  The version is now baked into the image at build time (`KNXPILOT_IMAGE_VERSION`,
+  set via `--build-arg` in `.github/workflows/docker-publish.yml`, which
+  now also fetches full tag history to compute it) and used as a fallback
+  only when the live git describe isn't available.
+
 ### Added
 
 - New [`DEPLOYMENT-authelia-synology-portainer.md`](./DEPLOYMENT-authelia-synology-portainer.md) -

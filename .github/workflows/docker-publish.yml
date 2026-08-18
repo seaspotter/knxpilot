@@ -19,6 +19,14 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history/tags, not the default shallow clone - needed for
+          # `git describe` below to find the right tag.
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        run: echo "value=$(git describe --tags --always --dirty)" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-qemu-action@v3
 
@@ -46,5 +54,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ steps.version.outputs.value }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

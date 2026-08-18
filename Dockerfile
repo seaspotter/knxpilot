@@ -12,6 +12,14 @@ COPY backend ./backend
 COPY frontend ./frontend
 COPY CHANGELOG.md MANUAL.md ./
 
+# Baked-in fallback for the header version badge (GET /api/system/version)
+# when there's no live git checkout at /app to `git describe` - e.g. a
+# plain `docker run`/Portainer deployment straight from this image,
+# without the docker-compose.yml bind-mount. Set from CI, see
+# .github/workflows/docker-publish.yml.
+ARG VERSION=unknown
+ENV KNXPILOT_IMAGE_VERSION=$VERSION
+
 EXPOSE 8000
 
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

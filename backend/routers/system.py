@@ -58,7 +58,13 @@ def get_version():
     from the image - the Dockerfile only COPYs backend/ and frontend/, no
     .git). The frontend uses this to hide the Update tab entirely instead
     of showing a confusing raw git error for a deployment where self-update
-    can never work."""
+    can never work.
+
+    version falls back to KNXPILOT_IMAGE_VERSION when there's no live git
+    checkout to describe - baked into the image at build time via
+    --build-arg (see Dockerfile and .github/workflows/docker-publish.yml),
+    so the header badge still shows something meaningful in a plain-image
+    deployment instead of going blank."""
     self_update_available = (Path(REPO_DIR) / ".git").exists()
     try:
         result = subprocess.run(
@@ -67,7 +73,7 @@ def get_version():
         )
         return {"version": result.stdout.strip(), "self_update_available": self_update_available}
     except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
-        return {"version": None, "self_update_available": self_update_available}
+        return {"version": os.environ.get("KNXPILOT_IMAGE_VERSION") or None, "self_update_available": self_update_available}
 
 
 @router.get("/api/system/status")
