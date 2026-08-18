@@ -278,10 +278,19 @@ erscheinen, siehe Punkt 2).
    Praktisch für Bestellung oder Angebotskalkulation. Zählt sowohl hier
    geplante Geräte **als auch** die bereits in der Abgangsliste
    angelegten Aktoren mit — ein Aktor muss also nicht doppelt erfasst
-   werden, um in der Gesamtübersicht zu erscheinen.
-3. **PDF herunterladen** exportiert diese Stückliste als Bestellliste, plus
-   eine Aufschlüsselung je Raum bzw. — bei Aktoren aus der Abgangsliste —
-   je Standortbezeichnung, jeweils mit physischer Adresse, sofern gesetzt.
+   werden, um in der Gesamtübersicht zu erscheinen. Jeder Eintrag hat ein
+   Kontrollkästchen **Nicht bestellen** — für Geräte, die bereits vorhanden
+   sind (z.B. eine übrige Wetterstation oder ein Tor-Aktor aus einem
+   anderen Projekt): bleibt in der Stückliste sichtbar (mit dem Hinweis
+   "Bereits vorhanden"), fällt aber aus der Bestellliste im PDF-Export
+   heraus.
+3. **PDF herunterladen** exportiert die Bestellliste — Gruppe, Hersteller
+   und Typ in getrennten Spalten, plus Anzahl. Als "Nicht bestellen"
+   markierte Geräte stehen separat darunter ("Bereits vorhanden, nicht
+   bestellt"), nicht in der eigentlichen Bestelltabelle. Enthält bewusst
+   keine Raumaufschlüsselung mehr (die steht im Pflichtenheft, falls dort
+   gewünscht) — dieser Export ist als reine Liste für den Lieferanten
+   gedacht.
 4. **PA automatisch zuordnen** vergibt physikalische Adressen für alle
    Geräte im Projekt ohne eine — siehe Abgangsliste, Punkt 7, für die
    genaue Reihenfolge/Logik; hier wie dort wirkt der Klick projektweit auf

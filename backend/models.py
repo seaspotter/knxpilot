@@ -126,6 +126,10 @@ class PhysicalAddressAssignIn(BaseModel):
     prefix: str = "1.1"   # area.line prefix, e.g. "1.1" -> addresses like "1.1.10"
 
 
+class DeviceOrderFlagIn(BaseModel):
+    not_ordering: bool = True
+
+
 class VerteilerIn(BaseModel):
     floor_id: int | None = None
     name: str = ""

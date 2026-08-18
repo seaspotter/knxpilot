@@ -14,9 +14,22 @@ async function renderDeviceSummary() {
   const ul = document.getElementById('device-summary-list');
   ul.innerHTML = summary.map(s => `
     <li>
-      <div><b>${s.device_name}</b> <span class="pill">${s.group_name}</span></div>
-      <div><span class="pill">${s.total} Stück</span></div>
+      <div><b${s.not_ordering ? ' class="muted"' : ''}>${s.device_name}</b> <span class="pill">${s.group_name}</span>${s.not_ordering ? ' <span class="pill">Bereits vorhanden</span>' : ''}</div>
+      <div class="row" style="margin:0; gap:10px;">
+        <span class="pill">${s.total} Stück</span>
+        <label style="display:flex; align-items:center; gap:4px; font-size:12px; white-space:nowrap;">
+          <input type="checkbox" ${s.not_ordering ? 'checked' : ''} onchange="toggleDeviceOrderFlag(${s.device_type_id}, this.checked)">
+          Nicht bestellen
+        </label>
+      </div>
     </li>`).join('') || '<li class="muted">Noch keine Geräte geplant</li>';
+}
+
+async function toggleDeviceOrderFlag(deviceTypeId, notOrdering) {
+  await api(`/projects/${CURRENT_PROJECT}/device-order-flags/${deviceTypeId}`, {
+    method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({not_ordering: notOrdering}),
+  });
+  await renderDeviceSummary();
 }
 
 async function renderGeraeteplanungRooms() {

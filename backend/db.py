@@ -346,6 +346,17 @@ def init_db():
                 order_idx INTEGER NOT NULL DEFAULT 0
             );
 
+            -- Per-project "already have this, don't order it" flag on a device type
+            -- (e.g. a spare Wetterstation or Tor-Aktor left over from another job) -
+            -- keeps it visible in the Stückliste but out of the order table/count.
+            CREATE TABLE IF NOT EXISTS device_order_flags (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                device_type_id INTEGER NOT NULL REFERENCES actor_types(id),
+                not_ordering INTEGER NOT NULL DEFAULT 0,
+                UNIQUE(project_id, device_type_id)
+            );
+
             -- Verteilerplanung: a physical DIN-rail cabinet layout for one Geschoss.
             -- Fixed 12-TE-wide rows (row_count of them); each row holds verteiler_items
             -- left to right. RCD/LS items are simple labeled/sized blocks (no link to

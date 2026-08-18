@@ -8,6 +8,19 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- Geräteplanung's Stückliste entries can be marked **Nicht bestellen**
+  (per project, per device type) for devices already on hand - e.g. a
+  spare Wetterstation or Tor-Aktor left over from another job. Stays
+  visible in the Stückliste (with a "Bereits vorhanden" note) but drops
+  out of the Geräteliste PDF's order table, listed separately underneath
+  instead. New `device_order_flags` table, new
+  `PUT /api/projects/{id}/device-order-flags/{device_type_id}`.
+- Geräteliste PDF (Setup → Geräteplanung → PDF herunterladen) reworked:
+  Hersteller and Typ are now separate table columns (previously combined
+  into one "Gerät" column), and the per-room "Verteilung je Raum" section
+  is gone - this export is meant as a clean order list for a supplier,
+  not a room-by-room breakdown (that's what Pflichtenheft's own device
+  listing is for).
 - Geräteplanung entries are now **per-instance** instead of quantity-
   aggregated (one row was "N× DeviceType"; now each physical device is its
   own row) so each can carry its own **physische Adresse**, the way

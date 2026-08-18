@@ -4,11 +4,11 @@ station, actuator...) are planned per room, a project-wide bill of
 materials, and the Geräteliste PDF export (order list).
 """
 from fastapi import APIRouter, HTTPException
-from reportlab.platypus import Paragraph, Spacer, Table, PageBreak
+from reportlab.platypus import Paragraph, Spacer, Table
 from reportlab.lib.units import mm
 
 from ..db import get_db
-from ..models import RoomDeviceIn, RoomDeviceEditIn
+from ..models import RoomDeviceIn, RoomDeviceEditIn, DeviceOrderFlagIn
 from ..pdf_design import pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response, company_header_block, company_footer_line
 from ..utils import join_parts
 
@@ -77,15 +77,35 @@ def delete_room_device(rd_id: int):
     return {"ok": True}
 
 
+@router.put("/api/projects/{project_id}/device-order-flags/{device_type_id}")
+def set_device_order_flag(project_id: int, device_type_id: int, flag: DeviceOrderFlagIn):
+    """Marks (or unmarks) a device type as "already have it, don't order" for this
+    project only - e.g. a spare Wetterstation or Tor-Aktor left over from another
+    job. Stays visible in the Stückliste, just excluded from the order table/count
+    on the PDF export."""
+    with get_db() as db:
+        db.execute(
+            "INSERT INTO device_order_flags (project_id, device_type_id, not_ordering) VALUES (?, ?, ?) "
+            "ON CONFLICT(project_id, device_type_id) DO UPDATE SET not_ordering=excluded.not_ordering",
+            (project_id, device_type_id, int(flag.not_ordering)),
+        )
+    return {"ok": True}
+
+
 @router.get("/api/projects/{project_id}/device-summary")
 def device_summary(project_id: int):
     """Project-wide bill of materials: total quantity needed per device type,
     plus which rooms use it - built from the room_devices planning list AND
     the actor instances already placed via the Abgangsliste tab (a device
-    shouldn't need re-entering here just to show up in the overall total -
-    see _actor_instance_room_rows() for the parallel PDF-side merge)."""
+    shouldn't need re-entering here just to show up in the overall total)."""
     with get_db() as db:
         device_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM actor_types").fetchall()}
+        order_flags = {
+            r["device_type_id"]: bool(r["not_ordering"])
+            for r in db.execute(
+                "SELECT * FROM device_order_flags WHERE project_id=?", (project_id,)
+            ).fetchall()
+        }
         floors = db.execute("SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall()
 
         totals = {}  # device_type_id -> {"total": int, "rooms": [...]}
@@ -125,99 +145,52 @@ def device_summary(project_id: int):
             result.append(
                 {
                     "device_type_id": device_type_id,
+                    "manufacturer": dt.get("manufacturer", ""), "model": dt.get("model", ""),
                     "device_name": join_parts(dt.get("manufacturer", ""), dt.get("model", "")) or "?",
                     "group_name": dt.get("group_name", ""),
                     "total": entry["total"], "rooms": entry["rooms"],
+                    "not_ordering": order_flags.get(device_type_id, False),
                 }
             )
         result.sort(key=lambda r: (r["group_name"], r["device_name"]))
         return result
 
 
-def _actor_instance_room_rows(db, project_id, floor_id, floor_name):
-    """Actor instances placed via Abgangsliste, grouped by location_label so
-    several devices at the same spot combine into one row - same shape as a
-    room_devices row (dict with manufacturer/model/quantity/note/
-    physical_address), so they can be appended straight into
-    export_geraeteliste_pdf()'s room_rows without a separate rendering path.
-    quantity is always 1 (one physical device per row)."""
-    actor_rows = db.execute(
-        "SELECT ai.*, at.manufacturer, at.model, at.group_name FROM actor_instances ai "
-        "JOIN actor_types at ON ai.actor_type_id = at.id "
-        "WHERE ai.project_id=? AND ai.floor_id " + ("IS NULL" if floor_id is None else "=?") + " "
-        "ORDER BY ai.order_idx",
-        (project_id,) if floor_id is None else (project_id, floor_id),
-    ).fetchall()
-    by_label = {}
-    for ai in actor_rows:
-        by_label.setdefault(ai["location_label"] or "Sonstige Aktoren", []).append(ai)
-    return [
-        (floor_name, label, [
-            {"manufacturer": ai["manufacturer"], "model": ai["model"], "quantity": 1,
-             "note": "", "physical_address": ai["physical_address"]}
-            for ai in group
-        ])
-        for label, group in by_label.items()
-    ]
-
-
 @router.get("/api/projects/{project_id}/export-geraeteliste.pdf")
 def export_geraeteliste_pdf(project_id: int):
+    """Just the order-relevant Stückliste (Gruppe/Hersteller/Typ/Anzahl) - no
+    per-room breakdown, this is meant as a clean list to hand to a supplier.
+    Devices marked "nicht bestellen" (see set_device_order_flag) are left out
+    of the order table itself and listed separately underneath instead."""
     with get_db() as db:
         project = db.execute("SELECT * FROM projects WHERE id=?", (project_id,)).fetchone()
         if not project:
             raise HTTPException(404, "Project not found")
 
         summary = device_summary(project_id)
-
-        floors = db.execute("SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall()
-        room_rows = []
-        for floor in floors:
-            rooms = db.execute("SELECT * FROM rooms WHERE floor_id=? ORDER BY order_idx", (floor["id"],)).fetchall()
-            for room in rooms:
-                devices = db.execute(
-                    "SELECT rd.*, at.manufacturer, at.model, at.group_name FROM room_devices rd "
-                    "JOIN actor_types at ON rd.device_type_id = at.id "
-                    "WHERE rd.room_id=? ORDER BY rd.order_idx",
-                    (room["id"],),
-                ).fetchall()
-                if devices:
-                    room_rows.append((floor["name"], room["name"], devices))
-            room_rows += _actor_instance_room_rows(db, project_id, floor["id"], floor["name"])
-        room_rows += _actor_instance_room_rows(db, project_id, None, "Ohne Geschoss")
+        to_order = [s for s in summary if not s["not_ordering"]]
+        already_have = [s for s in summary if s["not_ordering"]]
 
         company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
         styles = pdf_styles()
         story = company_header_block(company) + pdf_title_banner(f"Geräteliste — {project['name']}", "Bestellübersicht")
 
         story.append(Paragraph("Stückliste (Bestellung)", styles["SectionHeading"]))
-        table_data = [["Gruppe", "Gerät", "Anzahl"]]
-        for s in summary:
-            table_data.append([s["group_name"], s["device_name"], str(s["total"])])
+        table_data = [["Gruppe", "Hersteller", "Typ", "Anzahl"]]
+        for s in to_order:
+            table_data.append([s["group_name"], s["manufacturer"], s["model"], str(s["total"])])
         if len(table_data) == 1:
             story.append(Paragraph("Noch keine Geräte geplant.", styles["BodyMuted"]))
         else:
-            table = Table(table_data, colWidths=[35 * mm, 105 * mm, 25 * mm])
+            table = Table(table_data, colWidths=[30 * mm, 55 * mm, 65 * mm, 15 * mm])
             table.setStyle(pdf_table_style())
             story.append(table)
 
-        if room_rows:
-            story.append(PageBreak())
-            story.append(Paragraph("Verteilung je Raum", styles["SectionHeading"]))
-            current_floor = None
-            for floor_name, room_name, devices in room_rows:
-                if floor_name != current_floor:
-                    story.append(Spacer(1, 2 * mm))
-                    story.append(Paragraph(floor_name, styles["RoomHeading"]))
-                    current_floor = floor_name
-                device_list = ", ".join(
-                    (f"{d['quantity']}× " if d["quantity"] != 1 else "") + join_parts(d['manufacturer'], d['model'])
-                    + (f" [{d['physical_address']}]" if d["physical_address"] else "")
-                    + (f" ({d['note']})" if d["note"] else "")
-                    for d in devices
-                )
-                story.append(Paragraph(f"<b>{room_name}:</b> {device_list}", styles["Body"]))
-                story.append(Spacer(1, 1.5 * mm))
+        if already_have:
+            story.append(Spacer(1, 4 * mm))
+            story.append(Paragraph("Bereits vorhanden (nicht bestellt)", styles["SubHeading"]))
+            text = ", ".join(f"{s['total']}× {s['device_name']}" for s in already_have)
+            story.append(Paragraph(text, styles["BodyMuted"]))
 
         return build_pdf_response(
             story,
