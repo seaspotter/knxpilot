@@ -348,18 +348,31 @@ sie werden zusammengeführt, nicht ersetzt. **Katalog leeren** entfernt
 den kompletten Katalog auf einmal (mit Sicherheitsabfrage) — Geräte, die
 bereits in einem Projekt verwendet werden, bleiben dabei erhalten und
 werden übersprungen. Bleibt der Katalog danach leer, wird beim nächsten
-Neustart automatisch wieder der Standard-Startkatalog eingefügt (siehe
-unten) — bei Bedarf vorher den eigenen Katalog importieren.
+Neustart automatisch wieder der mitgelieferte Standard-Startkatalog
+eingefügt (siehe unten) — bei Bedarf vorher den eigenen Katalog
+exportieren, um ihn danach wieder zu importieren.
 
 Bei einer frischen Installation (leerer Katalog) wird beim ersten Start
 automatisch ein Startkatalog gängiger KNX-Geräte eingefügt (u.a. MDT,
 Busch-Jaeger, Theben, Elsner Elektronik, Gira, Phoenix Contact, Hörmann,
-Enertex — siehe `DEFAULT_ACTOR_TYPES` in `backend/db.py`). Das passiert nur einmalig, wenn
-die Tabelle leer ist — ein bereits befüllter oder bewusst geleerter Katalog
-wird dadurch nie überschrieben. Genau dieser Startkatalog liegt zusätzlich
-als Datei unter `docs/templates/geraete-katalog.json` im Repository —
-importierbar wie jede andere Katalogdatei, z.B. nach einem **Katalog
-leeren**, ohne alles neu eintippen zu müssen.
+Enertex), eingelesen aus den mitgelieferten Dateien unter
+`docs/templates/geraete-katalog_<hersteller>.json` im Repository — ein
+File je Hersteller (`_mdt`, `_bj`, `_phoenix`, `_elsner`, `_theben`,
+`_gira`, `_enertex`, `_hoermann`), automatisch eingesammelt beim Start
+(`load_bundled_actor_type_defaults()` in `backend/db.py`) — eine weitere
+Herstellerdatei nach diesem Namensschema abzulegen reicht, ohne
+Codeänderung. Das passiert nur, wenn die Tabelle beim Start leer ist — ein
+bereits befüllter Katalog wird dadurch nie automatisch überschrieben, auch
+nicht bei einem späteren Neustart (z.B. nachdem einzelne Standardgeräte
+absichtlich gelöscht wurden).
+
+**⟲ Standard-Katalog importieren** stößt genau diesen Import manuell noch
+einmal an, jederzeit später — z.B. um neu hinzugekommene Standardgeräte
+nachzuziehen, ohne die mitgelieferten Dateien einzeln herunterladen und
+importieren zu müssen. Gleicht wie jeder andere Import nach (Hersteller,
+Modell) ab (vorhandene werden aktualisiert, fehlende ergänzt) — bewusst
+gelöschte Geräte kommen dadurch **nicht von allein zurück**, nur auf
+diesen expliziten Klick hin.
 
 ### Setup
 

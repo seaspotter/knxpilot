@@ -8,10 +8,40 @@ import json
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
-from ..db import get_db
+from ..db import get_db, load_bundled_actor_type_defaults
 from ..models import ActorTypeIn
 
 router = APIRouter(tags=["geraete"])
+
+
+def _upsert_actor_types(db, actor_types):
+    """Upserts by (manufacturer, model): updates group/description/channel info if that
+    combination already exists, otherwise inserts a new device type. Shared by the
+    manual JSON import and the "import bundled defaults" action below."""
+    imported = 0
+    updated = 0
+    for at in actor_types:
+        manufacturer = at.get("manufacturer", "")
+        model = at.get("model", "")
+        existing = db.execute(
+            "SELECT id FROM actor_types WHERE manufacturer=? AND model=?", (manufacturer, model)
+        ).fetchone()
+        if existing:
+            db.execute(
+                "UPDATE actor_types SET group_name=?, description=?, channel_type=?, channel_count=?, width_te=? WHERE id=?",
+                (at.get("group_name", "Aktor"), at.get("description", ""),
+                 at.get("channel_type", ""), at.get("channel_count"), at.get("width_te"), existing["id"]),
+            )
+            updated += 1
+        else:
+            db.execute(
+                "INSERT INTO actor_types (manufacturer, model, group_name, description, channel_type, channel_count, width_te) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (manufacturer, model, at.get("group_name", "Aktor"), at.get("description", ""),
+                 at.get("channel_type", ""), at.get("channel_count"), at.get("width_te")),
+            )
+            imported += 1
+    return imported, updated
 
 
 @router.get("/api/actor-types")
@@ -104,30 +134,18 @@ def export_actor_types_json():
 
 @router.post("/api/actor-types/import-json")
 def import_actor_types_json(payload: dict):
-    """Upserts by (manufacturer, model): updates group/description/channel info if that
-    combination already exists, otherwise inserts a new device type."""
     with get_db() as db:
-        imported = 0
-        updated = 0
-        for at in payload.get("actor_types", []):
-            manufacturer = at.get("manufacturer", "")
-            model = at.get("model", "")
-            existing = db.execute(
-                "SELECT id FROM actor_types WHERE manufacturer=? AND model=?", (manufacturer, model)
-            ).fetchone()
-            if existing:
-                db.execute(
-                    "UPDATE actor_types SET group_name=?, description=?, channel_type=?, channel_count=?, width_te=? WHERE id=?",
-                    (at.get("group_name", "Aktor"), at.get("description", ""),
-                     at.get("channel_type", ""), at.get("channel_count"), at.get("width_te"), existing["id"]),
-                )
-                updated += 1
-            else:
-                db.execute(
-                    "INSERT INTO actor_types (manufacturer, model, group_name, description, channel_type, channel_count, width_te) "
-                    "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (manufacturer, model, at.get("group_name", "Aktor"), at.get("description", ""),
-                     at.get("channel_type", ""), at.get("channel_count"), at.get("width_te")),
-                )
-                imported += 1
+        imported, updated = _upsert_actor_types(db, payload.get("actor_types", []))
+        return {"imported": imported, "updated": updated}
+
+
+@router.post("/api/actor-types/import-defaults")
+def import_default_actor_types():
+    """Re-imports every bundled docs/templates/geraete-katalog_*.json file (the same
+    ones a fresh install seeds from), using the same upsert-by-(manufacturer, model)
+    merge as a manual JSON import. Opt-in only, unlike the old startup-backfill
+    behaviour this replaces - a device you've deliberately deleted stays deleted
+    unless you click this yourself."""
+    with get_db() as db:
+        imported, updated = _upsert_actor_types(db, load_bundled_actor_type_defaults())
         return {"imported": imported, "updated": updated}

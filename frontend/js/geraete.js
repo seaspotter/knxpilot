@@ -152,6 +152,15 @@ async function importActorTypesJson() {
   showToast(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert.`, 'success');
 }
 
+async function importDefaultActorTypes() {
+  if (!(await showConfirm(
+    'Mitgelieferten Standard-Katalog (er)neut importieren?\n\nGleicht wie ein normaler Import nach Hersteller+Modell ab: bereits vorhandene Geräte werden aktualisiert (Gruppe/Beschreibung/Type/Kanäle/TE), fehlende werden ergänzt. Selbst gelöschte Geräte kommen dabei nicht von allein zurück - nur was Sie hier anstoßen.'
+  ))) return;
+  const result = await api('/actor-types/import-defaults', {method:'POST'});
+  await loadActorTypes();
+  showToast(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert.`, 'success');
+}
+
 async function clearActorTypeCatalog() {
   if (!(await showConfirm(
     'Kompletten Gerätekatalog leeren?\n\nGeräte, die bereits in einem Projekt (Geräteplanung oder Abgangsliste) verwendet werden, bleiben erhalten.\n\nHinweis: Bleibt der Katalog danach leer, wird beim nächsten Neustart automatisch wieder der Standard-Startkatalog eingefügt - bei Bedarf vorher Ihren eigenen Katalog importieren.',

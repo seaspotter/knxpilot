@@ -20,10 +20,19 @@ restructuring below — history before that is available via `git log`.
   in by the user), plus 14 previously-uncatalogued devices found along
   the way (two more MDT Jalousieaktoren with Fahrtzeitmessung, nine
   Enertex system/power-supply/dimmer devices, three Theben presence/
-  motion sensors). Existing installs pick this up automatically on next
-  restart via a value-based backfill (only fills a still-empty TE field
-  or adds a device that isn't in the catalog yet - never touches
-  anything already edited or added by hand).
+  motion sensors).
+- The starter catalog is no longer a hardcoded Python list - a fresh
+  install now seeds directly from the bundled `docs/templates/
+  geraete-katalog_<hersteller>.json` files (one per manufacturer:
+  `_mdt`, `_bj`, `_phoenix`, `_elsner`, `_theben`, `_gira`, `_enertex`,
+  `_hoermann`), the same files also offered as downloadable templates -
+  a new manufacturer file just needs to follow the naming pattern to be
+  picked up, no code change. New **⟲ Standard-Katalog importieren**
+  button (Geräte-Katalog tab) re-runs that same import on demand later
+  (e.g. to pick up newly-added default devices) - deliberately **not**
+  automatic on every restart like an earlier version of this change did,
+  since a device someone intentionally deleted shouldn't silently
+  reappear. New `POST /api/actor-types/import-defaults`.
 - **Projektübersicht** — a status dashboard above the Projekte list,
   summarizing every project at once: total count with clickable
   per-status badges (click sets the search field to that status),

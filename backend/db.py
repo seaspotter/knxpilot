@@ -507,7 +507,6 @@ def init_db():
         (count,) = db.execute("SELECT COUNT(*) FROM actor_types").fetchone()
         if count == 0:
             seed_default_actor_types(db)
-        backfill_actor_type_catalog(db)
 
         (count,) = db.execute("SELECT COUNT(*) FROM company_profile").fetchone()
         if count == 0:
@@ -761,191 +760,37 @@ def seed_defaults(db):
     )
 
 
-# (manufacturer, model, group_name, description, channel_type, channel_count, width_te)
-DEFAULT_ACTOR_TYPES = [
-    ('MDT', 'AKH-0400.03', 'Aktor', 'Heizungsaktor 4 Kanäle', 'Heizung', 4, 2),
-    ('MDT', 'AKH-0600.03', 'Aktor', 'Heizungsaktor 6 Kanäle', 'Heizung', 6, 3),
-    ('MDT', 'AKH-0800.03', 'Aktor', 'Heizungsaktor 8 Kanäle', 'Heizung', 8, 4),
-    ('MDT', 'BE-04000.02', 'Aktor', 'Binäreingang 4 Kanäle (potentialfrei)', 'Binäreingang', 4, 2),
-    ('MDT', 'BE-04024.02', 'Aktor', 'Binäreingang 4 Kanäle (24V)', 'Binäreingang', 4, None),
-    ('MDT', 'BE-04230.02', 'Aktor', 'Binäreingang 4 Kanäle (230V)', 'Binäreingang', 4, None),
-    ('MDT', 'BE-08000.02', 'Aktor', 'Binäreingang 8 Kanäle (potentialfrei)', 'Binäreingang', 8, 4),
-    ('MDT', 'BE-08024.02', 'Aktor', 'Binäreingang 8 Kanäle (24V)', 'Binäreingang', 8, None),
-    ('MDT', 'BE-08230.02', 'Aktor', 'Binäreingang 8 Kanäle (230V)', 'Binäreingang', 8, None),
-    ('MDT', 'BE-16000.02', 'Aktor', 'Binäreingang 16 Kanäle (potentialfrei)', 'Binäreingang', 16, 8),
-    ('MDT', 'BE-16024.02', 'Aktor', 'Binäreingang 16 Kanäle (24V)', 'Binäreingang', 16, None),
-    ('MDT', 'BE-16230.02', 'Aktor', 'Binäreingang 16 Kanäle (230V)', 'Binäreingang', 16, None),
-    ('MDT', 'BE-32000.02', 'Aktor', 'Binäreingang 32 Kanäle (potentialfrei)', 'Binäreingang', 32, 12),
-    ('MDT', 'BE-GTS06TW.01S', 'Bedienelement', 'Glas Touch Smart 6 Zoll Weiß', '', None, None),
-    ('MDT', 'BE-GTS06TS.01S', 'Bedienelement', 'Glas Touch Smart 6 Zoll Schwarz', '', None, None),
-    ('MDT', 'BE-GTSP6TW.01S', 'Bedienelement', 'Glas Touch Smart Plus 6 Zoll Weiß', '', None, None),
-    ('MDT', 'BE-GTSP6TS.01S', 'Bedienelement', 'Glas Touch Smart Plus 6 Zoll Schwarz', '', None, None),
-    ('MDT', 'BE-GT20W.02', 'Bedienelement', 'Glastaster II Smart Weiß', '', None, None),
-    ('MDT', 'BE-GT20S.02S', 'Bedienelement', 'Glastaster II Smart Schwarz', '', None, None),
-    ('MDT', 'BE-GT2TW.02', 'Bedienelement', 'Glastaster II Smart Weiß mit Temperatursensor', '', None, None),
-    ('MDT', 'BE-GT2TS.02S', 'Bedienelement', 'Glastaster II Smart Schwarz mit Temperatursensor', '', None, None),
-    ('MDT', 'BE-TAS6304.01', 'Bedienelement', 'Taster Smart 63 4-fach', '', None, None),
-    ('MDT', 'BE-TAS63T4.01', 'Bedienelement', 'Taster Smart 63 4-fach mit Temperatursensor', '', None, None),
-    ('MDT', 'BE-TAL6301.01', 'Bedienelement', 'Taster Light 63 1-fach', '', None, None),
-    ('MDT', 'BE-TAL63T1.01', 'Bedienelement', 'Taster Light 63 1-fach mit Temperatursensor', '', None, None),
-    ('MDT', 'BE-TAL6301.A1', 'Bedienelement', 'Taster Light 63 1-fach (Auf/Ab)', '', None, None),
-    ('MDT', 'BE-TAL63T1.A1', 'Bedienelement', 'Taster Light 63 1-fach (Auf/Ab) mit Temperatursensor', '', None, None),
-    ('MDT', 'BE-TAL6301.B1', 'Bedienelement', 'Taster Light 63 1-fach (I/O)', '', None, None),
-    ('MDT', 'BE-TAL63T1.B1', 'Bedienelement', 'Taster Light 63 1-fach (I/O) mit Temperatursensor', '', None, None),
-    ('MDT', 'BE-TAL6302.01', 'Bedienelement', 'Taster Light 63 2-fach', '', None, None),
-    ('MDT', 'BE-TAL63T2.01', 'Bedienelement', 'Taster Light 63 2-fach mit Temperatursensor', '', None, None),
-    ('MDT', 'BE-TAL6302.A1', 'Bedienelement', 'Taster Light 63 2-fach (Auf/Ab)', '', None, None),
-    ('MDT', 'BE-TAL63T2.A1', 'Bedienelement', 'Taster Light 63 2-fach (Auf/Ab) mit Temperatursensor', '', None, None),
-    ('MDT', 'BE-TAL6302.B1', 'Bedienelement', 'Taster Light 63 2-fach (I/O)', '', None, None),
-    ('MDT', 'BE-TAL63T2.B1', 'Bedienelement', 'Taster Light 63 2-fach (I/O) mit Temperatursensor', '', None, None),
-    ('MDT', 'BE-TAL6302.C1', 'Bedienelement', 'Taster Light 63 2-fach (Auf/Ab, I/O)', '', None, None),
-    ('MDT', 'BE-TAL63T2.C1', 'Bedienelement', 'Taster Light 63 2-fach (Auf/Ab, I/O) mit Temperatursensor', '', None, None),
-    ('MDT', 'BE-TAL6302.D1', 'Bedienelement', 'Taster Light 63 2-fach (I/O, Auf/Ab)', '', None, None),
-    ('MDT', 'BE-TAL6304.01', 'Bedienelement', 'Taster Light 63 4-fach', '', None, None),
-    ('MDT', 'BE-TAL63T4.01', 'Bedienelement', 'Taster Light 63 4-fach mit Temperatursensor', '', None, None),
-    ('MDT', 'AKS-0216.03', 'Aktor', 'Schaltaktor Standard 2 Kanäle', 'Schalten', 2, 2),
-    ('MDT', 'AKS-0416.03', 'Aktor', 'Schaltaktor Standard 4 Kanäle', 'Schalten', 4, 4),
-    ('MDT', 'AKS-0816.03', 'Aktor', 'Schaltaktor Standard 8 Kanäle', 'Schalten', 8, 6),
-    ('MDT', 'AKS-1216.03', 'Aktor', 'Schaltaktor Standard 12 Kanäle', 'Schalten', 12, 8),
-    ('MDT', 'AKS-1616.03', 'Aktor', 'Schaltaktor Standard 16 Kanäle', 'Schalten', 16, 8),
-    ('MDT', 'AKS-2016.03', 'Aktor', 'Schaltaktor Standard 20 Kanäle', 'Schalten', 20, 12),
-    ('MDT', 'AKS-2416.03', 'Aktor', 'Schaltaktor Standard 24 Kanäle', 'Schalten', 24, 12),
-    ('MDT', 'AKK-0216.03', 'Aktor', 'Schaltaktor Kompakt 2 Kanäle', 'Schalten', 2, 2),
-    ('MDT', 'AKK-0416.03', 'Aktor', 'Schaltaktor Kompakt 4 Kanäle', 'Schalten', 4, 2),
-    ('MDT', 'AKK-0816.03', 'Aktor', 'Schaltaktor Kompakt 8 Kanäle', 'Schalten', 8, 4),
-    ('MDT', 'AKK-1616.03', 'Aktor', 'Schaltaktor Kompakt 16 Kanäle', 'Schalten', 16, 8),
-    ('MDT', 'AKK-2416.03', 'Aktor', 'Schaltaktor Kompakt 24 Kanäle', 'Schalten', 24, 12),
-    ('MDT', 'JAL-0210.02', 'Aktor', 'Jalousieaktor 2 Kanäle', 'Rollo', 2, 2),
-    ('MDT', 'JAL-0410.02', 'Aktor', 'Jalousieaktor 4 Kanäle', 'Rollo', 4, 4),
-    ('MDT', 'JAL-0810.02', 'Aktor', 'Jalousieaktor 8 Kanäle', 'Rollo', 8, 8),
-    ('MDT', 'AKD-0201.02', 'Aktor', 'Dimmaktor 2 Kanäle', 'Dimmen', 2, 3),
-    ('MDT', 'AKD-0401.02', 'Aktor', 'Dimmaktor 4 Kanäle', 'Dimmen', 4, 6),
-    ('MDT', 'AKD-0424R.02', 'Aktor', 'LED Controller 4 Kanäle', 'Dimmen', 4, 4),
-    ('MDT', 'AKD-0424R2.02', 'Aktor', 'LED Controller 4 Kanäle', 'Dimmen', 4, 4),
-    ('MDT', 'BE-TAL63T2.D1', 'Bedienelement', 'Taster Light 63 2-fach (I/O, Auf/Ab) mit Temperatursensor', '', None, None),
-    ('MDT', 'SCN-BWM63.02', 'Sensor', 'Bewegungsmelder 63', '', None, None),
-    ('MDT', 'SCN-BWM63T.02', 'Sensor', 'Bewegungsmelder 63 mit Temperatursensor', '', None, None),
-    ('MDT', 'SCN-IP000.03', 'Systemgerät', 'IP Interface', '', None, 2),
-    ('Busch-Jaeger', '2CKA006132A0432', 'Sensor', 'Busch-Wächter PRO 280° KNX (Weiß)', '', None, None),
-    ('Busch-Jaeger', '2CKA006132A0433', 'Sensor', 'Busch-Wächter PRO 280° KNX (Anthrazit/Schwarz)', '', None, None),
-    ('Phoenix Contact', '1477019', 'Systemgerät', 'Busspannungsversorgung STEP3 640mA', '', None, 3),
-    ('Phoenix Contact', '1477020', 'Systemgerät', 'Busspannungsversorgung STEP3 1280mA', '', None, 4),
-    ('Elsner Elektronik', 'Windancer 2.0 GPS KNX SEC', 'Wetterstation', 'Wetterstation mit GPS', '', None, None),
-    ('Elsner Elektronik', 'Windancer 2.0 KNX SEC', 'Wetterstation', 'Wetterstation', '', None, None),
-    ('Theben', '1509201', 'Wetterstation', 'Wetterstation Meteodata 150/24V KNX', '', None, None),
-    ('Theben', '1509204', 'Wetterstation', 'Wetterstation Meteodata 150/24V GPS KNX', '', None, None),
-    ('Gira', '209600', 'Visualisierung/Logik', 'X1 Server', '', None, 2),
-    ('Gira', '208600', 'Systemgerät', 'S1 Fernzugriff-Modul', '', None, 2),
-    ('Theben', '1019610', 'Sensor', 'Bewegungsmelder theLuxa P300 KNX WH (Weiß)', '', None, None),
-    ('Theben', '1019611', 'Sensor', 'Bewegungsmelder theLuxa P300 KNX BK (Schwarz)', '', None, None),
-    ('Enertex', '1167-24', 'Systemgerät', 'LED PowerSupply 160-24', '', None, 4),
-    ('Hörmann', '4511630', 'Aktor', 'KNX Gateway Standard für Torantriebe', 'Tor', 1, None),
-    ('MDT', 'JAL-0410M.02', 'Aktor', 'Jalousieaktor 4 Kanäle mit Fahrtzeitmessung', 'Rollo', 4, 4),
-    ('MDT', 'JAL-0810M.02', 'Aktor', 'Jalousieaktor 8 Kanäle mit Fahrtzeitmessung', 'Rollo', 8, 8),
-    ('Enertex', 'EibPC²', 'Visualisierung/Logik', 'EibPC² IP-Logikserver', '', None, 4),
-    ('Enertex', 'ENA²', 'Systemgerät', 'Enertex KNX Net-Access (ENA²)', '', None, 4),
-    ('Enertex', 'KNX IP Secure Interface', 'Systemgerät', 'Enertex KNX IP Secure Interface', '', None, 2),
-    ('Enertex', 'KNX TP Secure Coupler', 'Systemgerät', 'Enertex KNX TP Secure Coupler', '', None, 2),
-    ('Enertex', 'KNX HV Dimmer (4-Kanal)', 'Aktor', 'Enertex KNX HV Dimmer 4 Kanäle', 'Dimmen', 4, 4),
-    ('Enertex', 'KNX HV Dimmer (8-Kanal)', 'Aktor', 'Enertex KNX HV Dimmer 8 Kanäle', 'Dimmen', 8, 6),
-    ('Enertex', 'KNX PowerSupply 960³', 'Systemgerät', 'Enertex KNX PowerSupply 960mA', '', None, 6),
-    ('Enertex', 'KNX Dual PowerSupply 1280', 'Systemgerät', 'Enertex KNX Dual PowerSupply 1280mA', '', None, 6),
-    ('Enertex', 'KNX SmartMeter² 85A', 'Sensor', 'Enertex KNX SmartMeter² 85A Stromzähler', '', None, 4),
-    ('Theben', 'theMura P180 KNX UP WH', 'Sensor', 'Präsenz-/Bewegungsmelder theMura P180 KNX Unterputz Weiß', '', None, None),
-    ('Theben', 'theLuxa P300 KNX WH', 'Sensor', 'Wand-Bewegungsmelder theLuxa P300 KNX Weiß', '', None, None),
-    ('Theben', 'theLuxa P300 KNX BK', 'Sensor', 'Wand-Bewegungsmelder theLuxa P300 KNX Schwarz', '', None, None),
-]
+# Bundled starter catalog: one docs/templates/geraete-katalog_<hersteller>.json file
+# per manufacturer, same format as a user-exported/imported catalog file (see
+# routers/geraete.py). Single source of truth for both the fresh-install seed below
+# and the "Standard-Katalog importieren" button (POST /api/actor-types/import-defaults)
+# - adding a new manufacturer file here is picked up by both without any code change.
+ACTOR_TYPE_TEMPLATES_DIR = Path(__file__).parent.parent / "docs" / "templates"
 
-# TE-value + newly-catalogued-device backfill for installs that were already seeded
-# before this data existed (mirrors the Pflichtenheft-preamble backfill pattern
-# above): _ACTOR_TYPE_TE_BACKFILL only fills a still-NULL width_te, never overwrites
-# one a user has since edited; _ACTOR_TYPE_NEW_BACKFILL only inserts a device if no
-# row with that (manufacturer, model) exists yet, never duplicates.
-_ACTOR_TYPE_TE_BACKFILL = [
-    ('MDT', 'AKH-0400.03', 2),
-    ('MDT', 'AKH-0600.03', 3),
-    ('MDT', 'AKH-0800.03', 4),
-    ('MDT', 'BE-04000.02', 2),
-    ('MDT', 'BE-08000.02', 4),
-    ('MDT', 'BE-16000.02', 8),
-    ('MDT', 'BE-32000.02', 12),
-    ('MDT', 'AKS-0216.03', 2),
-    ('MDT', 'AKS-0416.03', 4),
-    ('MDT', 'AKS-0816.03', 6),
-    ('MDT', 'AKS-1216.03', 8),
-    ('MDT', 'AKS-1616.03', 8),
-    ('MDT', 'AKS-2016.03', 12),
-    ('MDT', 'AKS-2416.03', 12),
-    ('MDT', 'AKK-0216.03', 2),
-    ('MDT', 'AKK-0416.03', 2),
-    ('MDT', 'AKK-0816.03', 4),
-    ('MDT', 'AKK-1616.03', 8),
-    ('MDT', 'AKK-2416.03', 12),
-    ('MDT', 'JAL-0210.02', 2),
-    ('MDT', 'JAL-0410.02', 4),
-    ('MDT', 'JAL-0810.02', 8),
-    ('MDT', 'AKD-0201.02', 3),
-    ('MDT', 'AKD-0401.02', 6),
-    ('MDT', 'AKD-0424R.02', 4),
-    ('MDT', 'AKD-0424R2.02', 4),
-    ('MDT', 'SCN-IP000.03', 2),
-    ('Phoenix Contact', '1477019', 3),
-    ('Phoenix Contact', '1477020', 4),
-    ('Gira', '209600', 2),
-    ('Gira', '208600', 2),
-    ('Enertex', '1167-24', 4),
-]
 
-_ACTOR_TYPE_NEW_BACKFILL = [
-    ('MDT', 'JAL-0410M.02', 'Aktor', 'Jalousieaktor 4 Kanäle mit Fahrtzeitmessung', 'Rollo', 4, 4),
-    ('MDT', 'JAL-0810M.02', 'Aktor', 'Jalousieaktor 8 Kanäle mit Fahrtzeitmessung', 'Rollo', 8, 8),
-    ('Enertex', 'EibPC²', 'Visualisierung/Logik', 'EibPC² IP-Logikserver', '', None, 4),
-    ('Enertex', 'ENA²', 'Systemgerät', 'Enertex KNX Net-Access (ENA²)', '', None, 4),
-    ('Enertex', 'KNX IP Secure Interface', 'Systemgerät', 'Enertex KNX IP Secure Interface', '', None, 2),
-    ('Enertex', 'KNX TP Secure Coupler', 'Systemgerät', 'Enertex KNX TP Secure Coupler', '', None, 2),
-    ('Enertex', 'KNX HV Dimmer (4-Kanal)', 'Aktor', 'Enertex KNX HV Dimmer 4 Kanäle', 'Dimmen', 4, 4),
-    ('Enertex', 'KNX HV Dimmer (8-Kanal)', 'Aktor', 'Enertex KNX HV Dimmer 8 Kanäle', 'Dimmen', 8, 6),
-    ('Enertex', 'KNX PowerSupply 960³', 'Systemgerät', 'Enertex KNX PowerSupply 960mA', '', None, 6),
-    ('Enertex', 'KNX Dual PowerSupply 1280', 'Systemgerät', 'Enertex KNX Dual PowerSupply 1280mA', '', None, 6),
-    ('Enertex', 'KNX SmartMeter² 85A', 'Sensor', 'Enertex KNX SmartMeter² 85A Stromzähler', '', None, 4),
-    ('Theben', 'theMura P180 KNX UP WH', 'Sensor', 'Präsenz-/Bewegungsmelder theMura P180 KNX Unterputz Weiß', '', None, None),
-    ('Theben', 'theLuxa P300 KNX WH', 'Sensor', 'Wand-Bewegungsmelder theLuxa P300 KNX Weiß', '', None, None),
-    ('Theben', 'theLuxa P300 KNX BK', 'Sensor', 'Wand-Bewegungsmelder theLuxa P300 KNX Schwarz', '', None, None),
-]
+def load_bundled_actor_type_defaults():
+    """Reads every docs/templates/geraete-katalog_*.json file and returns their
+    combined actor_types list (as dicts, same shape as an imported catalog file)."""
+    result = []
+    for path in sorted(ACTOR_TYPE_TEMPLATES_DIR.glob("geraete-katalog_*.json")):
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        result.extend(payload.get("actor_types", []))
+    return result
 
 
 def seed_default_actor_types(db):
-    """Seed the device catalog with a starter set of common KNX devices (MDT/Busch-Jaeger/
-    Theben/Elsner/Gira/Phoenix Contact/Hörmann) so new installs aren't empty. Only runs
-    once, when actor_types is empty - never overwrites a catalog the user has since edited."""
-    db.executemany(
-        "INSERT INTO actor_types "
-        "(manufacturer, model, group_name, description, channel_type, channel_count, width_te) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?)",
-        DEFAULT_ACTOR_TYPES,
-    )
-
-
-def backfill_actor_type_catalog(db):
-    """Fills in TE widths and newly-catalogued devices for installs whose actor_types
-    catalog was already seeded before this data existed. Runs on every startup (cheap,
-    idempotent) - only touches width_te where it's still NULL, only inserts a device if
-    no row with that (manufacturer, model) exists yet. Never overwrites anything a user
-    has since edited or added themselves."""
-    for manufacturer, model, width_te in _ACTOR_TYPE_TE_BACKFILL:
+    """Seed the device catalog with the bundled starter files (docs/templates/
+    geraete-katalog_*.json, one per manufacturer) so new installs aren't empty. Only
+    runs once, when actor_types is empty - deliberately NOT re-run on later startups,
+    since by then the catalog is the user's own (they may have deleted starter devices
+    on purpose, or edited them) - see import_default_actor_types() in
+    routers/geraete.py for the equivalent manual, opt-in re-import."""
+    for at in load_bundled_actor_type_defaults():
         db.execute(
-            "UPDATE actor_types SET width_te=? WHERE manufacturer=? AND model=? AND width_te IS NULL",
-            (width_te, manufacturer, model),
+            "INSERT INTO actor_types "
+            "(manufacturer, model, group_name, description, channel_type, channel_count, width_te) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (at.get("manufacturer", ""), at.get("model", ""), at.get("group_name", "Aktor"),
+             at.get("description", ""), at.get("channel_type", ""), at.get("channel_count"),
+             at.get("width_te")),
         )
-    for manufacturer, model, group_name, description, channel_type, channel_count, width_te in _ACTOR_TYPE_NEW_BACKFILL:
-        exists = db.execute(
-            "SELECT 1 FROM actor_types WHERE manufacturer=? AND model=?",
-            (manufacturer, model),
-        ).fetchone()
-        if not exists:
-            db.execute(
-                "INSERT INTO actor_types "
-                "(manufacturer, model, group_name, description, channel_type, channel_count, width_te) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (manufacturer, model, group_name, description, channel_type, channel_count, width_te),
-            )
