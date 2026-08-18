@@ -155,6 +155,12 @@ restructuring below — history before that is available via `git log`.
   always has the column, just `NULL` for non-Aktor groups. Only surfaced
   once non-Aktor devices could plausibly end up referenced from this
   table (surfaced while testing PA auto-assign's Systemgeräte bucket).
+- The project workspace's sub-tab row (now 10 tabs after this session's
+  additions) could run out of room and misalign the active-tab underline
+  against the row's bottom border. `.subnav` now wraps onto a second row
+  on narrow-ish desktop widths instead of cramming everything onto one
+  line - mobile keeps its existing horizontal-scroll behavior unchanged
+  (that media query already overrides wrapping back off).
 
 ## [0.3.1] - 2026-08-16
 
