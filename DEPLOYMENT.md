@@ -198,5 +198,84 @@ GHCR-Package könnte privat sein (Packages erben die Sichtbarkeit eines
 `github.com/seaspotter?tab=packages` → **knxpilot** → **Package settings**
 → Sichtbarkeit auf **Public** stellen.
 
+## KNXpilot hinter Authelia (Domain-/Reverse-Proxy-Zugriff)
+
+KNXpilot hat bewusst keine eigene Authentifizierung (siehe README) — für
+den Betrieb im eigenen internen Netzwerk völlig ausreichend. Soll das Tool
+stattdessen über eine Domain erreichbar sein (z.B. über den Reverse Proxy
+einer Synology DSM), gehört eine Zugriffskontrolle davor.
+`docker-compose.authelia.yml` baut dafür einen alternativen Stack mit
+[Authelia](https://www.authelia.com/) (Login mit Passwort + TOTP) und
+einem vorgeschalteten nginx, der jede Anfrage erst bei Authelia prüft,
+bevor sie zu KNXpilot durchgereicht wird.
+
+**Wichtig:** Diese Datei ersetzt `docker-compose.yml` — nur eine der
+beiden Compose-Dateien gleichzeitig verwenden, nicht beide zusammen
+starten.
+
+### Aufbau
+
+```
+Internet → Synology Reverse Proxy (Domain + TLS-Zertifikat)
+             ├─ auth.ihredomain.tld      → authelia:9091 (Login-Portal)
+             └─ knxpilot.ihredomain.tld  → nginx-front:8080 → (nach Login) → knxpilot:8000
+```
+
+Die Synology übernimmt Domain und TLS-Zertifikat wie gewohnt; intern
+laufen zwei zusätzliche Container neben `knxpilot`: `nginx-front` (prüft
+jede Anfrage bei Authelia, leitet erst danach zu KNXpilot weiter) und
+`authelia` (das eigentliche Login-Portal, inkl. TOTP-Verwaltung).
+
+### Einrichtung
+
+1. Geheimnisse einmalig erzeugen (je Datei ein zufälliger String, landen
+   ungetrackt in `authelia/config/secrets/`):
+   ```bash
+   mkdir -p authelia/config/secrets
+   openssl rand -hex 64 > authelia/config/secrets/jwt_secret
+   openssl rand -hex 64 > authelia/config/secrets/session_secret
+   openssl rand -hex 64 > authelia/config/secrets/storage_encryption_key
+   ```
+2. Benutzer anlegen: `authelia/config/users_database.yml.example` nach
+   `authelia/config/users_database.yml` kopieren, Passwort-Hash erzeugen
+   und eintragen (Befehl dafür steht als Kommentar in der Datei).
+3. Domain eintragen: in `authelia/config/configuration.yml` und
+   `authelia/nginx.conf` alle `example.com` / `knxpilot.example.com` /
+   `auth.example.com`-Platzhalter durch die eigene Domain ersetzen — zwei
+   Subdomains nötig, eine fürs Login-Portal und eine für KNXpilot selbst
+   (siehe Aufbau oben).
+4. Stack starten: `docker compose -f docker-compose.authelia.yml up -d`.
+5. Auf der Synology (**Systemsteuerung → Anmeldeportal → Erweitert →
+   Reverse-Proxy**) zwei Regeln anlegen: `auth.ihredomain.tld` → interne
+   IP des Docker-Hosts, Port `9091` (`authelia`); `knxpilot.ihredomain.tld`
+   → interne IP des Docker-Hosts, Port `8080` (`nginx-front`) — die
+   Container-Namen selbst gelten nur intern zwischen den Containern, die
+   Synology braucht IP:Port im LAN.
+6. Erster Login: die TOTP-Einrichtung erzeugt einen QR-Code-Link statt
+   einer E-Mail (kein SMTP-Server konfiguriert) — direkt danach mit
+   `docker compose -f docker-compose.authelia.yml exec authelia cat
+   /config/notification.txt` auslesen.
+
+### Bewusste Vereinfachungen
+
+- **Ein Benutzer statt LDAP/OIDC** — Authelia kann deutlich mehr, aber für
+  einen einzelnen Systemintegrator reicht die dateibasierte Benutzerliste.
+- **Kein SMTP-Server** — Benachrichtigungen (TOTP-Einrichtung,
+  Passwort-Reset) landen in einer lokalen Datei statt per E-Mail, siehe
+  Schritt 6.
+- **SQLite statt Redis/PostgreSQL** — für eine Handvoll Logins völlig
+  ausreichend, kein zusätzlicher Dienst nötig.
+
+Diese Konfiguration richtet sich nach Authelias Schema-Stand rund um
+Version 4.38 — schlägt der Start nach einem Image-Update fehl, meldet
+Authelia in den Logs (`docker compose -f docker-compose.authelia.yml logs
+authelia`) meist genau, welcher Konfigurationsschlüssel sich geändert hat;
+die [offizielle Doku](https://www.authelia.com/configuration/) ist die
+verbindliche Referenz, diese Dateien nur ein Startpunkt.
+
+Reicht stattdessen ein VPN zum eigenen Netzwerk (WireGuard/Tailscale),
+ist das oft die einfachere Alternative zu Domain + Reverse Proxy + Login —
+kein Setup hier nötig, siehe README.
+
 Das Dateisystem des LXC (inkl. der Datenbank) wird automatisch von den
 üblichen Proxmox-Backup-Jobs erfasst.

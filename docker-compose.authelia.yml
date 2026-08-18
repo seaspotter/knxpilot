@@ -1,0 +1,44 @@
+services:
+  # Same KNXpilot service as docker-compose.yml, except it no longer
+  # publishes a host port directly - only nginx-front (below) can reach
+  # it, and nginx-front only forwards requests Authelia has approved.
+  knxpilot:
+    image: ghcr.io/seaspotter/knxpilot:latest
+    container_name: knxpilot
+    restart: unless-stopped
+    expose:
+      - "8000"
+    volumes:
+      # Same bind mount as docker-compose.yml - see the comments there for
+      # the NAS-backup and git-credentials volume lines, add them here too
+      # if you need them.
+      - .:/app
+
+  authelia:
+    image: authelia/authelia:latest
+    container_name: knxpilot-authelia
+    restart: unless-stopped
+    expose:
+      - "9091"
+    volumes:
+      - ./authelia/config:/config
+    environment:
+      AUTHELIA_JWT_SECRET_FILE: /config/secrets/jwt_secret
+      AUTHELIA_SESSION_SECRET_FILE: /config/secrets/session_secret
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /config/secrets/storage_encryption_key
+
+  # Front proxy: everything goes through here first. Point your Synology's
+  # reverse proxy (or any other edge reverse proxy handling the public
+  # domain/TLS) at this container's published port instead of at knxpilot
+  # directly.
+  nginx-front:
+    image: nginx:alpine
+    container_name: knxpilot-nginx-front
+    restart: unless-stopped
+    depends_on:
+      - knxpilot
+      - authelia
+    volumes:
+      - ./authelia/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:80"

@@ -12,3 +12,11 @@ __pycache__/
 # OS cruft
 .DS_Store
 Thumbs.db
+
+# Authelia (docker-compose.authelia.yml) - generated secrets and runtime
+# state, never commit. Keep configuration.yml and users_database.yml.example
+# tracked; everything else under authelia/config/ is local-only.
+authelia/config/secrets/
+authelia/config/users_database.yml
+authelia/config/db.sqlite3
+authelia/config/notification.txt

@@ -1,0 +1,20 @@
+---
+# Copy this file to users_database.yml (gitignored - it holds a real
+# password hash) and fill in your own user. One entry is enough for a
+# single-integrator setup.
+#
+# Generate the password hash first (don't type a real password on the
+# command line in a shared/logged shell - this is just for local setup):
+#
+#   docker run --rm authelia/authelia:latest \
+#     authelia crypto hash generate argon2 --password 'your-password-here'
+#
+# Paste the resulting "$argon2id$..." string below as-is.
+
+users:
+  florian:
+    displayname: 'Florian'
+    password: '$argon2id$v=19$m=65536,t=3,p=4$REPLACE_WITH_GENERATED_HASH'
+    email: florian@example.com
+    groups:
+      - admins

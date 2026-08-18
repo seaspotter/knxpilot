@@ -32,8 +32,11 @@ Vorlagen erzeugt.
   Kunden-PDF und interne Rückfragenliste, alle aus denselben Projektdaten.
 - **Globaler Gerätekatalog**, mit Startkatalog gängiger KNX-Hersteller
   vorbelegt.
-- Einzelbenutzer, **keine Authentifizierung** — nur im eigenen internen
-  Netzwerk betreiben, nie direkt ans Internet exponieren.
+- Einzelbenutzer, **keine Authentifizierung** — für den Betrieb im eigenen
+  internen Netzwerk gedacht. Soll das Tool über eine Domain erreichbar
+  sein, gehört eine Zugriffskontrolle davor (VPN, oder ein Login via
+  Authelia vor einem Reverse Proxy — siehe [`DEPLOYMENT.md`](./DEPLOYMENT.md)),
+  nie ungeschützt direkt ans Internet exponieren.
 
 Eine vollständige Bedienungsanleitung (alle Tabs im Detail, Adressierungsmodell,
 CSV-Format) ist direkt in der App verfügbar (Tab **Hilfe**) oder hier:

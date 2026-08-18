@@ -1,0 +1,63 @@
+---
+# Authelia configuration for fronting KNXpilot with a login (password + TOTP)
+# when it's reachable beyond your LAN via a domain/reverse proxy (e.g. a
+# Synology DSM reverse proxy). See ../../DEPLOYMENT.md, section "KNXpilot
+# hinter Authelia (Domain/Reverse-Proxy-Zugriff)" for the full setup.
+#
+# EDIT before first start: every "example.com" / "knxpilot.example.com" /
+# "auth.example.com" below must become your real domain/subdomains.
+#
+# This targets Authelia's config schema as of the 4.38 release line. If a
+# newer image version refuses to start, the container logs will name the
+# exact deprecated/renamed key - Authelia's own docs
+# (https://www.authelia.com/configuration/) are the authoritative source,
+# this file is a starting point, not a guarantee across every future
+# Authelia release.
+
+theme: light
+
+server:
+  address: 'tcp://:9091'
+
+log:
+  level: info
+
+totp:
+  issuer: 'knxpilot.example.com'
+
+authentication_backend:
+  file:
+    path: /config/users_database.yml
+
+access_control:
+  default_policy: deny
+  rules:
+    - domain: 'knxpilot.example.com'
+      policy: two_factor
+
+session:
+  name: authelia_session
+  same_site: lax
+  expiration: 1h
+  inactivity: 15m
+  cookies:
+    - domain: 'example.com'
+      authelia_url: 'https://auth.example.com'
+      default_redirection_url: 'https://knxpilot.example.com'
+
+regulation:
+  max_retries: 3
+  find_time: 2m
+  ban_time: 5m
+
+storage:
+  local:
+    path: /config/db.sqlite3
+
+notifier:
+  # No SMTP server needed for a single-user setup: TOTP-enrollment and
+  # password-reset links are written here instead of emailed. Read it with
+  # `docker compose exec authelia cat /config/notification.txt` right after
+  # triggering the action that generates a link.
+  filesystem:
+    filename: /config/notification.txt

@@ -8,6 +8,12 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- New `docker-compose.authelia.yml` - an alternative deployment stack
+  fronting KNXpilot with [Authelia](https://www.authelia.com/) (password +
+  TOTP login) behind an nginx forward-auth proxy, for setups that expose
+  KNXpilot via a domain/reverse proxy (e.g. a Synology DSM reverse proxy)
+  instead of only within the LAN. See `DEPLOYMENT.md`, section "KNXpilot
+  hinter Authelia".
 - New **Geräte je Raum** PDF export (Geräteplanung → PDF herunterladen in
   that section) - every device in the project (room devices, floor
   devices, and Abgangsliste's actor instances) grouped by Geschoss/Raum
