@@ -76,6 +76,9 @@ class ActorTypeIn(BaseModel):
     description: str = ""
     channel_type: str = ""       # only meaningful for group_name == "Aktor"
     channel_count: int | None = None  # only meaningful for group_name == "Aktor"
+    # DIN-rail width in Teilungseinheiten (1 TE = 18mm) - only meaningful for
+    # rail-mounted devices; blank if not applicable.
+    width_te: int | None = None
 
 
 class ActorInstanceIn(BaseModel):

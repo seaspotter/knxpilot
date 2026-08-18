@@ -28,9 +28,11 @@ async function saveActorType() {
   const isAktor = group_name === 'Aktor';
   const channel_type = isAktor ? document.getElementById('actortype-channeltype').value.trim() : '';
   const channel_count = isAktor ? (parseInt(document.getElementById('actortype-count').value) || 1) : null;
+  const teVal = document.getElementById('actortype-te').value.trim();
+  const width_te = teVal ? parseInt(teVal) : null;
   if (!model) return showToast('Modell ist erforderlich', 'warning');
   if (isAktor && !channel_type) return showToast('Type ist für die Gruppe "Aktor" erforderlich', 'warning');
-  const body = JSON.stringify({manufacturer, model, group_name, description, channel_type, channel_count});
+  const body = JSON.stringify({manufacturer, model, group_name, description, channel_type, channel_count, width_te});
   if (EDITING_ACTOR_TYPE_ID) {
     await api('/actor-types/' + EDITING_ACTOR_TYPE_ID, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
   } else {
@@ -61,6 +63,7 @@ function editActorType(id) {
   }
   document.getElementById('actortype-channeltype').value = at.channel_type || '';
   document.getElementById('actortype-count').value = at.channel_count || 8;
+  document.getElementById('actortype-te').value = at.width_te || '';
   onDeviceGroupChange();
   document.getElementById('actortype-save-btn').textContent = 'Änderungen speichern';
   document.getElementById('actortype-cancel-btn').style.display = '';
@@ -73,6 +76,7 @@ function cancelEditActorType() {
   document.getElementById('actortype-model').value = '';
   document.getElementById('actortype-channeltype').value = '';
   document.getElementById('actortype-description').value = '';
+  document.getElementById('actortype-te').value = '';
   document.getElementById('actortype-save-btn').textContent = 'Gerät speichern';
   document.getElementById('actortype-cancel-btn').style.display = 'none';
 }
@@ -108,6 +112,7 @@ function renderActorTypesList() {
             <b>${[at.manufacturer, at.model].filter(Boolean).join(' ')}</b>
             ${at.channel_type ? `<span class="pill">${at.channel_type}</span>` : ''}
             ${at.channel_count ? `<span class="pill">${at.channel_count} Kanäle</span>` : ''}
+            ${at.width_te ? `<span class="pill">${at.width_te} TE</span>` : ''}
             ${at.description ? `<div class="muted" style="margin-top:2px;">${at.description}</div>` : ''}
           </div>
           <div class="row" style="gap:6px;">

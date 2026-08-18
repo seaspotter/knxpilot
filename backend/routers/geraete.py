@@ -23,6 +23,7 @@ def list_actor_types():
                 "id": r["id"], "manufacturer": r["manufacturer"], "model": r["model"],
                 "group_name": r["group_name"], "description": r["description"],
                 "channel_type": r["channel_type"], "channel_count": r["channel_count"],
+                "width_te": r["width_te"],
             }
             for r in rows
         ]
@@ -32,9 +33,9 @@ def list_actor_types():
 def create_actor_type(at: ActorTypeIn):
     with get_db() as db:
         cur = db.execute(
-            "INSERT INTO actor_types (manufacturer, model, group_name, description, channel_type, channel_count) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
-            (at.manufacturer, at.model, at.group_name, at.description, at.channel_type, at.channel_count),
+            "INSERT INTO actor_types (manufacturer, model, group_name, description, channel_type, channel_count, width_te) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (at.manufacturer, at.model, at.group_name, at.description, at.channel_type, at.channel_count, at.width_te),
         )
         return {"id": cur.lastrowid}
 
@@ -44,8 +45,8 @@ def update_actor_type(at_id: int, at: ActorTypeIn):
     with get_db() as db:
         db.execute(
             "UPDATE actor_types SET manufacturer=?, model=?, group_name=?, description=?, "
-            "channel_type=?, channel_count=? WHERE id=?",
-            (at.manufacturer, at.model, at.group_name, at.description, at.channel_type, at.channel_count, at_id),
+            "channel_type=?, channel_count=?, width_te=? WHERE id=?",
+            (at.manufacturer, at.model, at.group_name, at.description, at.channel_type, at.channel_count, at.width_te, at_id),
         )
     return {"ok": True}
 
@@ -86,6 +87,7 @@ def export_actor_types_json():
                     "manufacturer": r["manufacturer"], "model": r["model"],
                     "group_name": r["group_name"], "description": r["description"],
                     "channel_type": r["channel_type"], "channel_count": r["channel_count"],
+                    "width_te": r["width_te"],
                 }
                 for r in rows
             ],
@@ -115,17 +117,17 @@ def import_actor_types_json(payload: dict):
             ).fetchone()
             if existing:
                 db.execute(
-                    "UPDATE actor_types SET group_name=?, description=?, channel_type=?, channel_count=? WHERE id=?",
+                    "UPDATE actor_types SET group_name=?, description=?, channel_type=?, channel_count=?, width_te=? WHERE id=?",
                     (at.get("group_name", "Aktor"), at.get("description", ""),
-                     at.get("channel_type", ""), at.get("channel_count"), existing["id"]),
+                     at.get("channel_type", ""), at.get("channel_count"), at.get("width_te"), existing["id"]),
                 )
                 updated += 1
             else:
                 db.execute(
-                    "INSERT INTO actor_types (manufacturer, model, group_name, description, channel_type, channel_count) "
-                    "VALUES (?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO actor_types (manufacturer, model, group_name, description, channel_type, channel_count, width_te) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)",
                     (manufacturer, model, at.get("group_name", "Aktor"), at.get("description", ""),
-                     at.get("channel_type", ""), at.get("channel_count")),
+                     at.get("channel_type", ""), at.get("channel_count"), at.get("width_te")),
                 )
                 imported += 1
         return {"imported": imported, "updated": updated}

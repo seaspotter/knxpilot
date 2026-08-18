@@ -8,6 +8,15 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- Geräte-Katalog entries can now record a **TE** (Teilungseinheiten, DIN-
+  rail width - 1 TE = 18mm) alongside Type/Kanäle. Optional, blank by
+  default (including on the seeded starter catalog, since real widths
+  need to come from each device's actual datasheet, not guessed) - only
+  meaningful for rail-mounted devices. First piece of the still-unbuilt
+  DIN-Rail/Verteiler layout roadmap item (`ROADMAP.md`): capturing device
+  widths now, independent of the bigger allocation/layout work that
+  builds on it later. New `actor_types.width_te` column, included in
+  export/import JSON.
 - **Projektübersicht** — a status dashboard above the Projekte list,
   summarizing every project at once: total count with clickable
   per-status badges (click sets the search field to that status),

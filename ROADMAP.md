@@ -17,12 +17,17 @@ letting it drift into a wishlist nobody trusts.
   rows, RCD/LS Schalter inventory, and available space, generate the
   physical layout: which fuse/RCD group belongs to which circuit, and which
   actor channel goes where in the Verteiler. Builds on Labels above (once a
-  circuit has a physical position, its label prints at that position) but
-  needs three new pieces: a Verteiler config (rows, module width/TE,
-  RCD/LS Schalter inventory), an allocation step (packing channels +
-  protective devices into the available space, respecting RCD groupings),
-  and a rendered layout diagram. Not yet spec'd in detail — needs its own
-  planning pass before starting.
+  circuit has a physical position, its label prints at that position). User
+  confirmed the RCD/LS-Schalter relationship should be modeled explicitly
+  (an RCD groups several LS-Schalter, each protecting one or more circuits/
+  actor channels), not just tracked as flat inventory - that hierarchy is
+  the real substance of a Verteilerplan, not just bin-packing by width.
+  First piece already landed: Geräte-Katalog entries can record a **TE**
+  width (see `CHANGELOG.md`). Still needed: a Sicherungselement (RCD/LS-
+  Schalter) catalog with its own TE width + the grouping hierarchy above,
+  the per-project Verteiler config (rows, TE per row), the actual
+  allocation/packing step, and a rendered layout diagram. Not yet spec'd
+  in detail beyond this — needs its own planning pass before starting.
 
 ## Good ideas, not yet sequenced
 

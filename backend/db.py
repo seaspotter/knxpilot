@@ -409,6 +409,7 @@ def init_db():
             ("point_types", "channels_needed", "ALTER TABLE point_types ADD COLUMN channels_needed INTEGER NOT NULL DEFAULT 1"),
             ("actor_types", "manufacturer", "ALTER TABLE actor_types ADD COLUMN manufacturer TEXT NOT NULL DEFAULT ''"),
             ("actor_types", "model", "ALTER TABLE actor_types ADD COLUMN model TEXT NOT NULL DEFAULT ''"),
+            ("actor_types", "width_te", "ALTER TABLE actor_types ADD COLUMN width_te INTEGER"),
             ("projects", "location", "ALTER TABLE projects ADD COLUMN location TEXT NOT NULL DEFAULT ''"),
             ("projects", "customer", "ALTER TABLE projects ADD COLUMN customer TEXT NOT NULL DEFAULT ''"),
             ("projects", "status", "ALTER TABLE projects ADD COLUMN status TEXT NOT NULL DEFAULT ''"),
@@ -487,7 +488,8 @@ def init_db():
                     group_name TEXT NOT NULL DEFAULT 'Aktor',
                     description TEXT NOT NULL DEFAULT '',
                     channel_type TEXT NOT NULL DEFAULT '',
-                    channel_count INTEGER
+                    channel_count INTEGER,
+                    width_te INTEGER
                 );
                 INSERT INTO actor_types_new (id, manufacturer, model, channel_type, channel_count)
                     SELECT id, manufacturer, model, channel_type, channel_count FROM actor_types;

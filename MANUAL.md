@@ -330,6 +330,12 @@ auch Sensoren, Wetterstationen, Bedienelemente usw. Jeder Eintrag hat:
   damit das Gerät in der Abgangsliste zuordenbar ist. Bei anderen Gruppen
   bleiben diese Felder leer/ausgeblendet, und nur Aktoren erscheinen als
   Auswahl in der Abgangsliste.
+- **TE** (optional) — Breite auf der Hutschiene in Teilungseinheiten
+  (1 TE = 18 mm), laut Datenblatt des Herstellers. Nur für
+  hutschienenmontierte Geräte relevant (z.B. Aktoren, Netzteile,
+  IP-Interfaces) — bei Tastern/Sensoren/Wetterstationen leer lassen.
+  Grundlage für die künftige Verteiler-Layout-Funktion (siehe
+  `ROADMAP.md`), aktuell nur zur Erfassung, noch ohne eigene Auswertung.
 
 Ein Suchfeld filtert live nach allen Feldern. Jeder Eintrag hat einen
 **Bearbeiten**-Button, der ihn ins Formular oben lädt — Änderungen speichern

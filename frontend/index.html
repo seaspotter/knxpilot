@@ -316,6 +316,9 @@
         <input type="text" id="actortype-group-custom" placeholder="Eigene Gruppe" style="display:none; width:140px;" oninput="onDeviceGroupChange()">
         <label id="actortype-channeltype-label" style="display:flex; align-items:center; gap:4px;">Type <input type="text" id="actortype-channeltype" placeholder="z.B. Schalten" style="width:110px;"></label>
         <label id="actortype-count-label" style="display:flex; align-items:center; gap:4px;">Kanäle <input type="number" id="actortype-count" value="8" min="1" style="width:60px;"></label>
+        <label style="display:flex; align-items:center; gap:4px;">TE <input type="number" id="actortype-te" placeholder="z.B. 4" min="1" style="width:55px;">
+          <span class="info-icon" tabindex="0" data-tip="Breite auf der Hutschiene in Teilungseinheiten (1 TE = 18 mm), laut Datenblatt. Nur für hutschienenmontierte Geräte relevant - bei Tastern/Sensoren/Wetterstationen leer lassen.">i</span>
+        </label>
       </div>
       <div class="row">
         <input type="text" id="actortype-description" placeholder="Beschreibung (optional)" style="min-width:300px; flex:1;">
