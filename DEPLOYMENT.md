@@ -172,15 +172,9 @@ Update ist dann nur über ein neues `docker pull` des Images möglich.
 Das erkennt die App automatisch: fehlt `.git`, blendet sie den
 **Update**-Tab komplett aus, statt eine verwirrende rohe Git-Fehlermeldung
 zu zeigen — keine Einstellung nötig, funktioniert für beide Varianten von
-selbst.
-
-**Bekannte Einschränkung derselben Ursache:** Aus demselben Grund fehlen
-in diesem Betriebsmodus auch `CHANGELOG.md` und `MANUAL.md` im Container
-(ebenfalls nicht ins Image kopiert) — der **Hilfe**-Tab und die
-Änderungsprotokoll-Ansicht im Update-Tab bleiben leer. Für die volle
-In-App-Doku (Hilfe/Changelog) und funktionierendes Ein-Klick-Update bleibt
-der dokumentierte Bind-Mount-Betrieb (siehe oben, bzw. die Proxmox-Anleitung
-unten) die vollständige Variante.
+selbst. **Hilfe** und die Änderungsprotokoll-Ansicht funktionieren in
+beiden Varianten normal — `CHANGELOG.md`/`MANUAL.md` sind fest im Image
+enthalten (`Dockerfile`), unabhängig vom Git-Checkout.
 
 ## Bereitstellung auf Proxmox
 

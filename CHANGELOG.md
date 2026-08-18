@@ -4,6 +4,18 @@ Notable changes to KNXpilot. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this file starts from the
 restructuring below — history before that is available via `git log`.
 
+## [Unreleased]
+
+### Fixed
+
+- `Dockerfile` now also copies `CHANGELOG.md`/`MANUAL.md` into the image -
+  previously only `backend/`/`frontend/` were included, so the **Hilfe**
+  tab and the Update tab's changelog viewer came up empty when running
+  the plain image directly (e.g. Portainer) instead of the documented
+  `docker-compose.yml` bind-mount deployment. Unlike self-update (which
+  genuinely needs a real git checkout), these are just static files, so
+  this fixes it properly rather than hiding the tab.
+
 ## [0.4.1] - 2026-08-18
 
 ### Added
