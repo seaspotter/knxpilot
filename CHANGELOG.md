@@ -8,6 +8,19 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- Geräteplanung's **Stückliste** (project-wide bill of materials, both the
+  in-app total and the Geräteliste PDF's per-room breakdown) now also
+  counts actor instances placed via the Abgangsliste tab - previously
+  those only counted if separately re-entered as a `room_devices` planning
+  entry too, so the "total" undercounted anything only wired via
+  Abgangsliste. The Übersicht dashboard's Geräteplanung card total updates
+  accordingly, since it already reads from the same endpoint. New
+  `_actor_instance_room_rows()` helper factors the merge for the PDF's
+  per-room section, grouped by Standortbezeichnung (Abgangsliste actor
+  instances don't have a `room_id`, only a floor + free-text location).
+- **Übersicht** gets a Verteilerplanung card ("N Verteiler angelegt"),
+  matching the one-card-per-sub-tab pattern already used for the others
+  (Labels still excluded - no natural short summary for it).
 - Abgangsliste: actor instances can now be **edited** (Geschoss,
   Standortbezeichnung, physische Adresse) after being created — e.g. add
   actors first and fill in the physical address later, once known. The

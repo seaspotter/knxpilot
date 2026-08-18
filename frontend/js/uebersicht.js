@@ -4,12 +4,13 @@ function goToSubtab(name) {
 }
 
 async function loadUebersichtForCurrentProject() {
-  const [tree, preview, circuits, deviceSummary, klaerungen] = await Promise.all([
+  const [tree, preview, circuits, deviceSummary, klaerungen, verteiler] = await Promise.all([
     api(`/projects/${CURRENT_PROJECT}/tree`),
     api(`/projects/${CURRENT_PROJECT}/preview`),
     api(`/projects/${CURRENT_PROJECT}/circuits`),
     api(`/projects/${CURRENT_PROJECT}/device-summary`),
     api(`/projects/${CURRENT_PROJECT}/klaerungen`),
+    api(`/projects/${CURRENT_PROJECT}/verteiler`),
   ]);
 
   const floorCount = tree.floors.length;
@@ -51,6 +52,11 @@ async function loadUebersichtForCurrentProject() {
       subtab: 'geraeteplanung',
       title: 'Geräteplanung',
       body: totalDevices ? `${totalDevices} Geräte geplant` : 'Noch keine Geräte geplant',
+    },
+    {
+      subtab: 'verteilerplanung',
+      title: 'Verteilerplanung',
+      body: verteiler.length ? `${verteiler.length} Verteiler angelegt` : 'Noch keine Verteiler angelegt',
     },
     {
       subtab: 'pflichtenheft',

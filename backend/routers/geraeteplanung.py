@@ -57,7 +57,10 @@ def delete_room_device(rd_id: int):
 @router.get("/api/projects/{project_id}/device-summary")
 def device_summary(project_id: int):
     """Project-wide bill of materials: total quantity needed per device type,
-    plus which rooms use it - built from the room_devices planning list."""
+    plus which rooms use it - built from the room_devices planning list AND
+    the actor instances already placed via the Abgangsliste tab (a device
+    shouldn't need re-entering here just to show up in the overall total -
+    see build_actor_instance_bom_rows() for the parallel PDF-side merge)."""
     with get_db() as db:
         device_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM actor_types").fetchall()}
         floors = db.execute("SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall()
@@ -76,6 +79,20 @@ def device_summary(project_id: int):
                         {"floor_name": floor["name"], "room_name": room["name"], "quantity": rd["quantity"]}
                     )
 
+        actor_instances = db.execute(
+            "SELECT ai.*, f.name as floor_name FROM actor_instances ai "
+            "LEFT JOIN floors f ON ai.floor_id = f.id WHERE ai.project_id=?",
+            (project_id,),
+        ).fetchall()
+        for ai in actor_instances:
+            entry = totals.setdefault(ai["actor_type_id"], {"total": 0, "rooms": []})
+            entry["total"] += 1
+            entry["rooms"].append({
+                "floor_name": ai["floor_name"] or "Ohne Geschoss",
+                "room_name": ai["location_label"] or "(kein Standort)",
+                "quantity": 1,
+            })
+
         result = []
         for device_type_id, entry in totals.items():
             dt = device_types.get(device_type_id, {})
@@ -89,6 +106,32 @@ def device_summary(project_id: int):
             )
         result.sort(key=lambda r: (r["group_name"], r["device_name"]))
         return result
+
+
+def _actor_instance_room_rows(db, project_id, floor_id, floor_name):
+    """Actor instances placed via Abgangsliste, grouped by location_label so
+    several devices at the same spot combine into one row - same shape as a
+    room_devices row (dict with manufacturer/model/quantity/note), so they
+    can be appended straight into export_geraeteliste_pdf()'s room_rows
+    without a separate rendering path. quantity is always 1 (one physical
+    device per row); note carries the physical address, if set."""
+    actor_rows = db.execute(
+        "SELECT ai.*, at.manufacturer, at.model, at.group_name FROM actor_instances ai "
+        "JOIN actor_types at ON ai.actor_type_id = at.id "
+        "WHERE ai.project_id=? AND ai.floor_id " + ("IS NULL" if floor_id is None else "=?") + " "
+        "ORDER BY ai.order_idx",
+        (project_id,) if floor_id is None else (project_id, floor_id),
+    ).fetchall()
+    by_label = {}
+    for ai in actor_rows:
+        by_label.setdefault(ai["location_label"] or "Sonstige Aktoren", []).append(ai)
+    return [
+        (floor_name, label, [
+            {"manufacturer": ai["manufacturer"], "model": ai["model"], "quantity": 1, "note": ai["physical_address"]}
+            for ai in group
+        ])
+        for label, group in by_label.items()
+    ]
 
 
 @router.get("/api/projects/{project_id}/export-geraeteliste.pdf")
@@ -113,6 +156,8 @@ def export_geraeteliste_pdf(project_id: int):
                 ).fetchall()
                 if devices:
                     room_rows.append((floor["name"], room["name"], devices))
+            room_rows += _actor_instance_room_rows(db, project_id, floor["id"], floor["name"])
+        room_rows += _actor_instance_room_rows(db, project_id, None, "Ohne Geschoss")
 
         company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
         styles = pdf_styles()

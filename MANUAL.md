@@ -113,9 +113,9 @@ Projekt über **Projekt öffnen** auszuwählen wechselt direkt dorthin, ohne
 das erste vorher schliessen zu müssen. **× Schliessen** (oder das **×**
 an der 📁-Marke im Programmkopf) kehrt zur Projektliste zurück, ohne
 etwas zu löschen — beim nächsten Öffnen startet der Arbeitsbereich wieder
-beim Unterreiter Übersicht, der auf einen Blick zeigt, wie weit jeder der
-übrigen sieben Unterreiter gediehen ist (mit direktem Sprung dorthin per
-Klick).
+beim Unterreiter Übersicht, der auf einen Blick zeigt, wie weit acht der
+übrigen Unterreiter gediehen sind (mit direktem Sprung dorthin per Klick)
+— nur Labels fehlt hier, da es keine sinnvolle Kurzkennzahl dafür gibt.
 
 #### Gebäudestruktur
 
@@ -240,8 +240,8 @@ Unterreiter direkt daneben statt eine Karte darin.
 
 #### Geräteplanung
 
-Getrennt von der Abgangsliste (die nur Aktoren mit physischen Kanälen
-betrifft): hier wird festgelegt, welche Geräte — **jeder Gruppe**, also auch
+Ergänzt die Abgangsliste (die nur Aktoren mit physischen Kanälen betrifft):
+hier wird zusätzlich festgelegt, welche Geräte — **jeder Gruppe**, also auch
 Sensoren, Wetterstationen, Bedienelemente — in welchem Raum verbaut werden,
 unabhängig davon ob dafür eine Gruppenadresse oder ein Aktorkanal existiert.
 
@@ -249,9 +249,13 @@ unabhängig davon ob dafür eine Gruppenadresse oder ein Aktorkanal existiert.
    "2× Bewegungsmelder — Ecken", "1× Touchpanel — Eingang").
 2. Oben erscheint automatisch eine **Stückliste** — die Gesamtanzahl jedes
    benötigten Geräts über das ganze Projekt hinweg, nach Gruppe sortiert.
-   Praktisch für Bestellung oder Angebotskalkulation.
+   Praktisch für Bestellung oder Angebotskalkulation. Zählt sowohl hier
+   geplante Geräte **als auch** die bereits in der Abgangsliste
+   angelegten Aktoren mit — ein Aktor muss also nicht doppelt erfasst
+   werden, um in der Gesamtübersicht zu erscheinen.
 3. **PDF herunterladen** exportiert diese Stückliste als Bestellliste, plus
-   eine Aufschlüsselung je Raum.
+   eine Aufschlüsselung je Raum bzw. — bei Aktoren aus der Abgangsliste —
+   je Standortbezeichnung.
 
 #### Verteilerplanung
 
