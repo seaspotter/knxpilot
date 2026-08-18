@@ -50,15 +50,24 @@ def get_manual():
 def get_version():
     """Local-only (no network fetch), so this is cheap enough to call on every
     page load for a persistent header badge - unlike /system/status below,
-    which does a git fetch and is only meant to run on an explicit click."""
+    which does a git fetch and is only meant to run on an explicit click.
+
+    self_update_available reflects whether /app is actually a git checkout
+    (true for the documented docker-compose.yml bind-mount deployment,
+    false for a plain `docker run`/Portainer-style deployment straight
+    from the image - the Dockerfile only COPYs backend/ and frontend/, no
+    .git). The frontend uses this to hide the Update tab entirely instead
+    of showing a confusing raw git error for a deployment where self-update
+    can never work."""
+    self_update_available = (Path(REPO_DIR) / ".git").exists()
     try:
         result = subprocess.run(
             ["git", "-C", REPO_DIR, "describe", "--tags", "--always", "--dirty"],
             capture_output=True, text=True, timeout=10, check=True,
         )
-        return {"version": result.stdout.strip()}
+        return {"version": result.stdout.strip(), "self_update_available": self_update_available}
     except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
-        return {"version": None}
+        return {"version": None, "self_update_available": self_update_available}
 
 
 @router.get("/api/system/status")

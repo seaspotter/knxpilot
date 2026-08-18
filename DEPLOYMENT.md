@@ -159,6 +159,29 @@ einkommentieren:
 
 </details>
 
+### Betrieb ohne Bind-Mount (z.B. Portainer, reines `docker run`)
+
+Der Selbst-Update-Mechanismus oben setzt zwingend voraus, dass `/app` im
+Container ein echter Git-Checkout ist (`- .:/app` in `docker-compose.yml`).
+Wird das Image stattdessen direkt gestartet — z.B. in Portainer nur mit
+`ghcr.io/seaspotter/knxpilot:latest` und einem Datenvolume, ohne das
+gesamte Repository einzubinden — gibt es kein `.git`-Verzeichnis (das
+`Dockerfile` kopiert nur `backend/` und `frontend/` ins Image), ein
+Update ist dann nur über ein neues `docker pull` des Images möglich.
+
+Das erkennt die App automatisch: fehlt `.git`, blendet sie den
+**Update**-Tab komplett aus, statt eine verwirrende rohe Git-Fehlermeldung
+zu zeigen — keine Einstellung nötig, funktioniert für beide Varianten von
+selbst.
+
+**Bekannte Einschränkung derselben Ursache:** Aus demselben Grund fehlen
+in diesem Betriebsmodus auch `CHANGELOG.md` und `MANUAL.md` im Container
+(ebenfalls nicht ins Image kopiert) — der **Hilfe**-Tab und die
+Änderungsprotokoll-Ansicht im Update-Tab bleiben leer. Für die volle
+In-App-Doku (Hilfe/Changelog) und funktionierendes Ein-Klick-Update bleibt
+der dokumentierte Bind-Mount-Betrieb (siehe oben, bzw. die Proxmox-Anleitung
+unten) die vollständige Variante.
+
 ## Bereitstellung auf Proxmox
 
 Ein schlankes LXC mit Docker ist die einfachste Variante:

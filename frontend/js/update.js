@@ -1,8 +1,14 @@
 // ---------- Version badge ----------
 async function loadAppVersion() {
   try {
-    const { version } = await api('/system/version');
+    const { version, self_update_available } = await api('/system/version');
     document.getElementById('app-version').textContent = version || '';
+    if (!self_update_available) {
+      // No git checkout at /app (e.g. a plain image run outside the
+      // documented bind-mount deployment) - self-update can never work,
+      // so hide the tab instead of showing a raw git error.
+      document.querySelector('nav button[data-tab="update"]')?.style.setProperty('display', 'none');
+    }
   } catch (e) { /* local dev without a git checkout at /app - just show nothing */ }
 }
 

@@ -4,6 +4,20 @@ Notable changes to KNXpilot. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this file starts from the
 restructuring below — history before that is available via `git log`.
 
+## [Unreleased]
+
+### Added
+
+- The **Update** tab now auto-hides when `/app` isn't a real git checkout
+  (e.g. running the plain `ghcr.io/seaspotter/knxpilot` image directly -
+  in Portainer or a bare `docker run` - instead of the documented
+  `docker-compose.yml` bind-mount deployment) - previously it showed a
+  confusing raw git error, since self-update can never work without the
+  repo mounted in. No configuration needed, detected automatically. New
+  `self_update_available` field on `GET /api/system/version`. See
+  `DEPLOYMENT.md`, section "Betrieb ohne Bind-Mount" for the same
+  deployment mode's related Hilfe/Changelog limitation.
+
 ## [0.4.0] - 2026-08-18
 
 ### Added
