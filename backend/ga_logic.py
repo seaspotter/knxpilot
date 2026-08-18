@@ -120,7 +120,8 @@ def get_circuits(db, project_id):
                     circuits.append(
                         {
                             "room_point_id": point["id"], "channel_seq": seq,
-                            "floor_id": floor["id"], "floor_name": floor["name"], "room_name": room["name"],
+                            "floor_id": floor["id"], "floor_name": floor["name"],
+                            "room_id": room["id"], "room_name": room["name"],
                             "function_name": fn_name, "point_type_name": pt["name"],
                             "channel_type": pt["channel_type"], "assignment": assignment_info,
                         }

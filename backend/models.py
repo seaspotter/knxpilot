@@ -88,6 +88,17 @@ class ActorInstanceIn(BaseModel):
     physical_address: str = ""
 
 
+class ActorInstanceEditIn(BaseModel):
+    # Deliberately no actor_type_id here - changing the underlying device model
+    # after channels may already be assigned is a bigger, riskier operation
+    # (channel_type/channel_count could change, orphaning assignments); delete
+    # and re-add for that. This only covers the fields that are always safe to
+    # correct after the fact.
+    floor_id: int | None = None
+    location_label: str = ""
+    physical_address: str = ""
+
+
 class ChannelAssignIn(BaseModel):
     room_point_id: int
     channel_seq: int = 0

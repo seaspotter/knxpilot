@@ -14,7 +14,7 @@ from reportlab.lib.units import mm
 from ..db import get_db
 from ..ga_logic import get_circuits
 from ..labels import LABEL_FORMATS, render_label_sheet
-from ..models import ActorInstanceIn, ChannelAssignIn
+from ..models import ActorInstanceIn, ActorInstanceEditIn, ChannelAssignIn
 from ..pdf_design import pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response, company_header_block, company_footer_line, PDF_MUTED_COLOR
 from ..utils import join_parts, channel_letters
 
@@ -80,6 +80,16 @@ def add_actor_instance(project_id: int, ai: ActorInstanceIn):
             (project_id, ai.actor_type_id, ai.floor_id, ai.location_label, ai.physical_address, count),
         )
         return {"id": cur.lastrowid}
+
+
+@router.put("/api/actor-instances/{ai_id}")
+def update_actor_instance(ai_id: int, ai: ActorInstanceEditIn):
+    with get_db() as db:
+        db.execute(
+            "UPDATE actor_instances SET floor_id=?, location_label=?, physical_address=? WHERE id=?",
+            (ai.floor_id, ai.location_label, ai.physical_address, ai_id),
+        )
+    return {"ok": True}
 
 
 @router.delete("/api/actor-instances/{ai_id}")
@@ -160,7 +170,14 @@ def auto_assign_circuits(project_id: int):
     on an actuator on THE SAME FLOOR as the circuit (never mixes floors automatically -
     e.g. an EG circuit will never be auto-assigned to an OG cabinet, even if EG is full).
     Actuators with no floor set are not used by auto-assign either, since there's no floor
-    to match against; assign those manually instead. Does not touch circuits already assigned."""
+    to match against; assign those manually instead. Does not touch circuits already assigned.
+
+    Rollo/Jalousie circuits get a further preference: when 2+ unassigned circuits from
+    the SAME ROOM land on the same actuator, they're placed on an aligned channel pair
+    (A+B, C+D, E+F, G+H) rather than whatever two channels happen to be next free - many
+    shading actuators wire channels in fixed pairs sharing a common input/reference, so
+    two blinds in one room (e.g. two windows) should share a pair for correct wiring, not
+    just consume the next free letters in document order."""
     with get_db() as db:
         circuits = get_circuits(db, project_id)
         actor_instances = db.execute(
@@ -178,31 +195,78 @@ def auto_assign_circuits(project_id: int):
 
         assigned_count = 0
         unassigned = []
-        for circuit in circuits:
-            if circuit["assignment"]:
-                continue
-            placed = False
-            for ai in actor_instances:
-                if ai["ct"] != circuit["channel_type"]:
-                    continue
-                if ai["floor_id"] != circuit["floor_id"]:
-                    continue  # never auto-assign across floors, even if this actuator has room
-                used = used_by_actor.setdefault(ai["id"], set())
-                for letter in channel_letters(ai["cc"]):
-                    if letter not in used:
-                        db.execute(
-                            "INSERT INTO channel_assignments "
-                            "(project_id, room_point_id, channel_seq, actor_instance_id, channel_letter) "
-                            "VALUES (?, ?, ?, ?, ?)",
-                            (project_id, circuit["room_point_id"], circuit["channel_seq"], ai["id"], letter),
-                        )
-                        used.add(letter)
-                        assigned_count += 1
+
+        def assign(circuit, ai, letter):
+            nonlocal assigned_count
+            db.execute(
+                "INSERT INTO channel_assignments "
+                "(project_id, room_point_id, channel_seq, actor_instance_id, channel_letter) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (project_id, circuit["room_point_id"], circuit["channel_seq"], ai["id"], letter),
+            )
+            used_by_actor.setdefault(ai["id"], set()).add(letter)
+            assigned_count += 1
+
+        def candidates_for(circuit):
+            # never auto-assign across floors, even if a same-type actuator elsewhere has room
+            return [ai for ai in actor_instances if ai["ct"] == circuit["channel_type"] and ai["floor_id"] == circuit["floor_id"]]
+
+        def first_free_channel(ai):
+            used = used_by_actor.setdefault(ai["id"], set())
+            for letter in channel_letters(ai["cc"]):
+                if letter not in used:
+                    return letter
+            return None
+
+        def free_aligned_pair(ai):
+            letters = channel_letters(ai["cc"])
+            used = used_by_actor.setdefault(ai["id"], set())
+            for i in range(0, len(letters) - 1, 2):
+                a, b = letters[i], letters[i + 1]
+                if a not in used and b not in used:
+                    return a, b
+            return None
+
+        def place_single(circuit):
+            for ai in candidates_for(circuit):
+                letter = first_free_channel(ai)
+                if letter:
+                    assign(circuit, ai, letter)
+                    return True
+            return False
+
+        still_unassigned = [c for c in circuits if not c["assignment"]]
+        rollo_circuits = [c for c in still_unassigned if c["channel_type"] == "Rollo"]
+        other_circuits = [c for c in still_unassigned if c["channel_type"] != "Rollo"]
+
+        rooms = {}
+        for c in rollo_circuits:
+            rooms.setdefault((c["floor_id"], c["room_id"]), []).append(c)
+
+        for group in rooms.values():
+            i = 0
+            while i < len(group):
+                circuit = group[i]
+                placed = False
+                if i + 1 < len(group):
+                    next_circuit = group[i + 1]
+                    for ai in candidates_for(circuit):
+                        pair = free_aligned_pair(ai)
+                        if pair:
+                            assign(circuit, ai, pair[0])
+                            assign(next_circuit, ai, pair[1])
+                            placed = True
+                            i += 2
+                            break
+                if not placed:
+                    if place_single(circuit):
                         placed = True
-                        break
-                if placed:
-                    break
-            if not placed:
+                    i += 1
+                if not placed:
+                    unassigned.append(f"{circuit['floor_name']} / {circuit['function_name']} ({circuit['channel_type']})")
+
+        for circuit in other_circuits:
+            if not place_single(circuit):
                 unassigned.append(f"{circuit['floor_name']} / {circuit['function_name']} ({circuit['channel_type']})")
 
         return {"assigned": assigned_count, "unassigned": unassigned}

@@ -44,25 +44,60 @@ async function renderActorInstanceForm() {
     tree.floors.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
 }
 
-async function addActorInstance() {
-  const actor_type_id = parseInt(document.getElementById('ai-actortype').value);
-  if (!actor_type_id) return showToast('Zuerst einen Aktortyp im Aktoren-Tab anlegen', 'warning');
+let EDITING_ACTOR_INSTANCE_ID = null;
+
+async function saveActorInstance() {
   const floorVal = document.getElementById('ai-floor').value;
   const floor_id = floorVal ? parseInt(floorVal) : null;
   const location_label = document.getElementById('ai-location').value.trim();
   const physical_address = document.getElementById('ai-address').value.trim();
-  await api(`/projects/${CURRENT_PROJECT}/actor-instances`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({actor_type_id, floor_id, location_label, physical_address})});
-  document.getElementById('ai-location').value = '';
-  document.getElementById('ai-address').value = '';
+
+  if (EDITING_ACTOR_INSTANCE_ID) {
+    await api(`/actor-instances/${EDITING_ACTOR_INSTANCE_ID}`, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({floor_id, location_label, physical_address})});
+    cancelEditActorInstance();
+  } else {
+    const actor_type_id = parseInt(document.getElementById('ai-actortype').value);
+    if (!actor_type_id) return showToast('Zuerst einen Aktortyp im Aktoren-Tab anlegen', 'warning');
+    await api(`/projects/${CURRENT_PROJECT}/actor-instances`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({actor_type_id, floor_id, location_label, physical_address})});
+    document.getElementById('ai-location').value = '';
+    document.getElementById('ai-address').value = '';
+  }
   await renderActorInstances();
   await renderCircuits();
   await renderChannelSummary();
 }
 
+function editActorInstance(id) {
+  const ai = ACTOR_INSTANCES.find(a => a.id === id);
+  if (!ai) return;
+  EDITING_ACTOR_INSTANCE_ID = id;
+  const actortype = document.getElementById('ai-actortype');
+  actortype.value = ''; // this device's type isn't changeable here - see ActorInstanceEditIn
+  actortype.disabled = true;
+  document.getElementById('ai-floor').value = ai.floor_id || '';
+  document.getElementById('ai-location').value = ai.location_label || '';
+  document.getElementById('ai-address').value = ai.physical_address || '';
+  document.getElementById('ai-save-btn').textContent = 'Änderungen speichern';
+  document.getElementById('ai-cancel-btn').style.display = '';
+  actortype.scrollIntoView({behavior: 'smooth', block: 'center'});
+}
+
+function cancelEditActorInstance() {
+  EDITING_ACTOR_INSTANCE_ID = null;
+  document.getElementById('ai-actortype').disabled = false;
+  document.getElementById('ai-floor').value = '';
+  document.getElementById('ai-location').value = '';
+  document.getElementById('ai-address').value = '';
+  document.getElementById('ai-save-btn').textContent = '+ Aktor hinzufügen';
+  document.getElementById('ai-cancel-btn').style.display = 'none';
+}
+
+let ACTOR_INSTANCES = [];
+
 async function renderActorInstances() {
-  const instances = await api(`/projects/${CURRENT_PROJECT}/actor-instances`);
+  ACTOR_INSTANCES = await api(`/projects/${CURRENT_PROJECT}/actor-instances`);
   const ul = document.getElementById('actor-instances-list');
-  ul.innerHTML = instances.map(ai => {
+  ul.innerHTML = ACTOR_INSTANCES.map(ai => {
     const grid = ai.channel_map.map(ch => {
       const isUsed = !!ch.function;
       const title = isUsed ? ch.function : 'Frei';
@@ -76,7 +111,10 @@ async function renderActorInstances() {
           ${ai.physical_address ? `<span class="pill">${ai.physical_address}</span>` : ''}
           <span class="pill">${ai.channels_used}/${ai.channel_count} belegt</span>
         </div>
-        <button class="btn danger small" onclick="deleteActorInstance(${ai.id})">Löschen</button>
+        <div class="row" style="margin:0; gap:6px;">
+          <button class="btn secondary small" onclick="editActorInstance(${ai.id})">Bearbeiten</button>
+          <button class="btn danger small" onclick="deleteActorInstance(${ai.id})">Löschen</button>
+        </div>
       </div>
       <div class="channel-map">${grid}</div>
     </li>`;
@@ -85,6 +123,7 @@ async function renderActorInstances() {
 
 async function deleteActorInstance(id) {
   if (!(await showConfirm('Diesen Aktor löschen? Zugeordnete Abgänge werden dadurch nicht mehr zugeordnet.', {danger: true}))) return;
+  if (EDITING_ACTOR_INSTANCE_ID === id) cancelEditActorInstance();
   await api('/actor-instances/' + id, {method:'DELETE'});
   await renderActorInstances();
   await renderCircuits();

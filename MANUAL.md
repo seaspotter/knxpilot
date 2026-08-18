@@ -188,7 +188,13 @@ der Busprogrammierung, die andere der Schaltschrank-Verdrahtung.
    welchem Geschoss/welcher UV er sitzt, Standortbezeichnung, physische
    KNX-Adresse wie `1.1.2`). Jeder Aktor zeigt eine kleine visuelle
    Kanalübersicht (grün = belegt mit Funktionsname beim Hovern, grau =
-   frei).
+   frei). Über **Bearbeiten** lassen sich Geschoss, Standortbezeichnung
+   und physische Adresse jederzeit nachträglich korrigieren — z.B. wenn
+   Aktoren zuerst angelegt und die physische Adresse erst später bei der
+   Schaltschrankmontage feststeht. Der Aktortyp selbst lässt sich dabei
+   nicht ändern (dafür den Aktor löschen und neu mit dem richtigen Typ
+   anlegen), um bereits zugeordnete Abgänge nicht durch einen abweichenden
+   Kanaltyp/-anzahl zu verwaisen.
 5. Jeder **Abgang** (eine Zeile je benötigtem physischen Ausgang) erscheint
    darunter mit einer Auswahl aller Kanäle passender Aktoren. Einen manuell
    wählen, oder **Alle automatisch zuordnen** klicken, um jeden noch nicht
@@ -197,7 +203,12 @@ der Busprogrammierung, die andere der Schaltschrank-Verdrahtung.
    wird nur einem Aktor im EG zugeordnet, selbst wenn dessen Kanäle voll
    sind und ein Aktor im OG noch frei wäre. Aktoren ohne zugewiesenes
    Geschoss werden von der Automatik ebenfalls nicht verwendet; solche
-   Fälle bitte manuell zuordnen.
+   Fälle bitte manuell zuordnen. Bei **Rollo/Jalousie**-Abgängen bevorzugt
+   die Automatik zusätzlich ausgerichtete Kanalpaare (A+B, C+D, E+F, G+H):
+   landen zwei Abgänge desselben Raums auf demselben Aktor, werden sie auf
+   ein gemeinsames Paar gelegt statt auf zwei beliebige freie Kanäle — viele
+   Jalousieaktoren teilen sich pro Kanalpaar einen gemeinsamen Eingang
+   (z.B. für die Fahrtzeitmessung).
 6. **CSV herunterladen** exportiert eine Tabelle mit den Spalten
    `Geschoss, Raum/UV, Aktor, Physikalische Adr., Kanal, Funktion` — jeder
    Kanal jedes Aktors wird aufgeführt, unbelegte mit `RESERVE` markiert.

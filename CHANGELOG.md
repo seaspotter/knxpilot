@@ -8,6 +8,12 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- Abgangsliste: actor instances can now be **edited** (Geschoss,
+  Standortbezeichnung, physische Adresse) after being created — e.g. add
+  actors first and fill in the physical address later, once known. The
+  actor type itself isn't editable this way (delete and re-add instead),
+  since a different channel type/count could orphan already-assigned
+  Abgänge. New `PUT /api/actor-instances/{id}`.
 - **Verteilerplanung** — new project sub-tab: a simple visual DIN-rail
   cabinet layout per Geschoss. A Verteiler has a fixed number of 12-TE
   rows; each row holds RCD/LS-Schalter blocks (simple labeled/sized
@@ -61,6 +67,19 @@ restructuring below — history before that is available via `git log`.
   per entry (computed in SQL via `julianday()`, not client-side, to
   avoid timezone-parsing ambiguity). New shared `AGED_KLAERUNG_DAYS`
   constant in `backend/utils.py`.
+
+### Changed
+
+- **Alle automatisch zuordnen** (Abgangsliste) now prefers aligned channel
+  pairs (A+B, C+D, E+F, G+H) for Rollo/Jalousie circuits: when 2+
+  unassigned circuits from the same room land on the same actuator, they
+  get placed on a shared pair instead of whatever two channels happen to
+  be next free — many shading actuators share a common input/reference
+  per channel pair (e.g. for Fahrtzeitmessung), so this now matches real
+  wiring instead of just filling channels in document order. Every other
+  channel type keeps its previous first-free-channel behavior unchanged.
+  `get_circuits()` (`backend/ga_logic.py`) now also returns `room_id` per
+  circuit (additive, used for the grouping).
 
 ## [0.3.1] - 2026-08-16
 

@@ -188,7 +188,8 @@
               <select id="ai-floor"></select>
               <input type="text" id="ai-location" placeholder="Standort, z.B. EG Technik Verteilung" style="width:220px;">
               <input type="text" id="ai-address" placeholder="Physikalische Adresse, z.B. 1.1.2" style="width:140px;">
-              <button class="btn secondary" onclick="addActorInstance()">+ Aktor hinzufügen</button>
+              <button class="btn secondary" id="ai-save-btn" onclick="saveActorInstance()">+ Aktor hinzufügen</button>
+              <button class="btn secondary small" id="ai-cancel-btn" onclick="cancelEditActorInstance()" style="display:none;">Abbrechen</button>
             </div>
             <ul class="list" id="actor-instances-list"></ul>
           </div>
