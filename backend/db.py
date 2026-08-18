@@ -439,6 +439,8 @@ def init_db():
             ("actor_types", "manufacturer", "ALTER TABLE actor_types ADD COLUMN manufacturer TEXT NOT NULL DEFAULT ''"),
             ("actor_types", "model", "ALTER TABLE actor_types ADD COLUMN model TEXT NOT NULL DEFAULT ''"),
             ("actor_types", "width_te", "ALTER TABLE actor_types ADD COLUMN width_te INTEGER"),
+            ("room_devices", "physical_address",
+             "ALTER TABLE room_devices ADD COLUMN physical_address TEXT NOT NULL DEFAULT ''"),
             ("projects", "location", "ALTER TABLE projects ADD COLUMN location TEXT NOT NULL DEFAULT ''"),
             ("projects", "customer", "ALTER TABLE projects ADD COLUMN customer TEXT NOT NULL DEFAULT ''"),
             ("projects", "status", "ALTER TABLE projects ADD COLUMN status TEXT NOT NULL DEFAULT ''"),
@@ -487,6 +489,27 @@ def init_db():
             cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]
             if column not in cols:
                 db.execute(ddl)
+
+        # One-time split: room_devices used to be quantity-aggregated (one row =
+        # "N x DeviceType"); the per-instance rework needs one row per physical
+        # device so each can carry its own physical_address. Expands any row with
+        # quantity>1 into that many quantity=1 rows (same room/device_type/note,
+        # blank address), appended after the room's current max order_idx.
+        # Idempotent - once split, no row ever has quantity>1 again, so this is a
+        # no-op on every later startup. No data lost, just reshaped.
+        for row in db.execute("SELECT * FROM room_devices WHERE quantity > 1").fetchall():
+            db.execute("UPDATE room_devices SET quantity=1 WHERE id=?", (row["id"],))
+            (max_order,) = db.execute(
+                "SELECT COALESCE(MAX(order_idx), -1) FROM room_devices WHERE room_id=?", (row["room_id"],)
+            ).fetchone()
+            next_order = max_order + 1
+            for _ in range(row["quantity"] - 1):
+                db.execute(
+                    "INSERT INTO room_devices (room_id, device_type_id, quantity, note, order_idx) "
+                    "VALUES (?, ?, 1, ?, ?)",
+                    (row["room_id"], row["device_type_id"], row["note"], next_order),
+                )
+                next_order += 1
 
         # One-time backfill: any actor_types created before manufacturer/model existed had
         # everything in the old "name" column - carry that into "model" so nothing is lost.

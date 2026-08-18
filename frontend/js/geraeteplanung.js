@@ -1,4 +1,8 @@
 // ---------- Geräteplanung (project sub-tab) ----------
+let EDITING_ROOM_DEVICE_ID = null;
+let EDITING_ROOM_DEVICE_ROOM_ID = null;
+let GERAETEPLANUNG_DEVICES_BY_ID = {};
+
 async function loadGeraeteplanungForCurrentProject() {
   document.getElementById('geraeteplanung-detail').style.display = 'block';
   await renderDeviceSummary();
@@ -18,46 +22,100 @@ async function renderDeviceSummary() {
 async function renderGeraeteplanungRooms() {
   const tree = await api(`/projects/${CURRENT_PROJECT}/tree`);
   const container = document.getElementById('geraeteplanung-rooms');
+  GERAETEPLANUNG_DEVICES_BY_ID = {};
   const sections = [];
   for (const floor of tree.floors) {
     const roomBlocks = [];
     for (const room of floor.rooms) {
       const devices = await api(`/rooms/${room.id}/devices`);
-      const devicesHtml = devices.map(d => `
-        <span class="pill">${d.quantity}× ${d.device_name}${d.note ? ' — ' + d.note : ''} <a href="#" onclick="deleteRoomDevice(event, ${d.id})" style="color:var(--danger); text-decoration:none;">×</a></span>
-      `).join('') || '<span class="muted">Keine Geräte</span>';
-      roomBlocks.push(`
-        <div class="room-card">
-          <b>${room.name}</b>
-          <div style="margin:6px 0;">${devicesHtml}</div>
-          <div class="quick-add">
-            <select id="rd-device-${room.id}" class="wide">
-              ${ACTOR_TYPES.filter(at => at.group_name !== 'Aktor').map(at => `<option value="${at.id}">${at.group_name} — ${[at.manufacturer, at.model].filter(Boolean).join(' ')}</option>`).join('')}
-            </select>
-            <input type="number" id="rd-qty-${room.id}" value="1" min="1" title="Anzahl">
-            <input type="text" id="rd-note-${room.id}" placeholder="Notiz (optional)" style="width:160px;">
-            <button class="btn secondary small" onclick="addRoomDevice(${room.id})">+ Hinzufügen</button>
-          </div>
-        </div>
-      `);
+      devices.forEach(d => { GERAETEPLANUNG_DEVICES_BY_ID[d.id] = d; });
+      roomBlocks.push(renderRoomDevices(room, devices));
     }
     sections.push(`<div class="floor-card"><b>${floor.name}</b>${roomBlocks.join('') || '<p class="muted">Noch keine Räume</p>'}</div>`);
   }
   container.innerHTML = sections.join('') || '<p class="muted">Noch keine Geschosse in diesem Projekt</p>';
 }
 
-async function addRoomDevice(roomId) {
-  const device_type_id = parseInt(document.getElementById(`rd-device-${roomId}`).value);
-  const quantity = parseInt(document.getElementById(`rd-qty-${roomId}`).value) || 1;
-  const note = document.getElementById(`rd-note-${roomId}`).value.trim();
-  if (!device_type_id) return showToast('Zuerst ein Gerät im Geräte-Katalog-Tab anlegen', 'warning');
-  await api(`/rooms/${roomId}/devices`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({device_type_id, quantity, note})});
+function renderRoomDevices(room, devices) {
+  const devicesHtml = devices.map(d => `
+    <span class="pill">${d.device_name}${d.physical_address ? ' · ' + d.physical_address : ''}${d.note ? ' — ' + d.note : ''} <a href="#" onclick="editRoomDevice(event, ${room.id}, ${d.id})" style="color:var(--accent); text-decoration:none;" title="Bearbeiten">✎</a> <a href="#" onclick="deleteRoomDevice(event, ${d.id})" style="color:var(--danger); text-decoration:none;">×</a></span>
+  `).join('') || '<span class="muted">Keine Geräte</span>';
+  return `
+    <div class="room-card">
+      <b>${room.name}</b>
+      <div style="margin:6px 0;">${devicesHtml}</div>
+      <div class="quick-add">
+        <select id="rd-device-${room.id}" class="wide">
+          ${ACTOR_TYPES.filter(at => at.group_name !== 'Aktor').map(at => `<option value="${at.id}">${at.group_name} — ${[at.manufacturer, at.model].filter(Boolean).join(' ')}</option>`).join('')}
+        </select>
+        <input type="number" id="rd-qty-${room.id}" value="1" min="1" title="Anzahl">
+        <input type="text" id="rd-note-${room.id}" placeholder="Notiz (optional)" style="width:160px;">
+        <input type="text" id="rd-address-${room.id}" placeholder="Physikalische Adresse" style="width:140px; display:none;">
+        <button class="btn secondary small" id="rd-save-btn-${room.id}" onclick="saveRoomDevice(${room.id})">+ Hinzufügen</button>
+        <button class="btn secondary small" id="rd-cancel-btn-${room.id}" onclick="cancelEditRoomDevice(${room.id})" style="display:none;">Abbrechen</button>
+      </div>
+    </div>
+  `;
+}
+
+async function saveRoomDevice(roomId) {
+  if (EDITING_ROOM_DEVICE_ID && EDITING_ROOM_DEVICE_ROOM_ID === roomId) {
+    const note = document.getElementById(`rd-note-${roomId}`).value.trim();
+    const physical_address = document.getElementById(`rd-address-${roomId}`).value.trim();
+    await api('/room-devices/' + EDITING_ROOM_DEVICE_ID, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({note, physical_address})});
+  } else {
+    const device_type_id = parseInt(document.getElementById(`rd-device-${roomId}`).value);
+    const quantity = parseInt(document.getElementById(`rd-qty-${roomId}`).value) || 1;
+    const note = document.getElementById(`rd-note-${roomId}`).value.trim();
+    if (!device_type_id) return showToast('Zuerst ein Gerät im Geräte-Katalog-Tab anlegen', 'warning');
+    await api(`/rooms/${roomId}/devices`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({device_type_id, quantity, note})});
+  }
+  cancelEditRoomDevice(roomId);
   await renderGeraeteplanungRooms();
   await renderDeviceSummary();
 }
 
+function editRoomDevice(ev, roomId, deviceId) {
+  ev.preventDefault();
+  if (EDITING_ROOM_DEVICE_ROOM_ID !== null && EDITING_ROOM_DEVICE_ROOM_ID !== roomId) {
+    cancelEditRoomDevice(EDITING_ROOM_DEVICE_ROOM_ID);
+  }
+  const device = GERAETEPLANUNG_DEVICES_BY_ID[deviceId];
+  if (!device) return;
+  EDITING_ROOM_DEVICE_ID = deviceId;
+  EDITING_ROOM_DEVICE_ROOM_ID = roomId;
+  document.getElementById(`rd-device-${roomId}`).style.display = 'none';
+  document.getElementById(`rd-qty-${roomId}`).style.display = 'none';
+  document.getElementById(`rd-note-${roomId}`).value = device.note || '';
+  document.getElementById(`rd-address-${roomId}`).style.display = '';
+  document.getElementById(`rd-address-${roomId}`).value = device.physical_address || '';
+  document.getElementById(`rd-save-btn-${roomId}`).textContent = 'Änderungen speichern';
+  document.getElementById(`rd-cancel-btn-${roomId}`).style.display = '';
+}
+
+function cancelEditRoomDevice(roomId) {
+  EDITING_ROOM_DEVICE_ID = null;
+  EDITING_ROOM_DEVICE_ROOM_ID = null;
+  const deviceField = document.getElementById(`rd-device-${roomId}`);
+  const qtyField = document.getElementById(`rd-qty-${roomId}`);
+  const noteField = document.getElementById(`rd-note-${roomId}`);
+  const addressField = document.getElementById(`rd-address-${roomId}`);
+  const saveBtn = document.getElementById(`rd-save-btn-${roomId}`);
+  const cancelBtn = document.getElementById(`rd-cancel-btn-${roomId}`);
+  if (!deviceField) return; // room no longer rendered (e.g. after a delete)
+  deviceField.style.display = '';
+  qtyField.style.display = '';
+  qtyField.value = '1';
+  noteField.value = '';
+  addressField.style.display = 'none';
+  addressField.value = '';
+  saveBtn.textContent = '+ Hinzufügen';
+  cancelBtn.style.display = 'none';
+}
+
 async function deleteRoomDevice(ev, id) {
   ev.preventDefault();
+  if (EDITING_ROOM_DEVICE_ID === id) cancelEditRoomDevice(EDITING_ROOM_DEVICE_ROOM_ID);
   await api('/room-devices/' + id, {method:'DELETE'});
   await renderGeraeteplanungRooms();
   await renderDeviceSummary();
@@ -66,4 +124,3 @@ async function deleteRoomDevice(ev, id) {
 function downloadGeraeteliste() {
   window.location.href = `/api/projects/${CURRENT_PROJECT}/export-geraeteliste.pdf`;
 }
-

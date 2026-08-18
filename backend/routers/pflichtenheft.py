@@ -247,7 +247,9 @@ def export_pflichtenheft_pdf(project_id: int):
                     story.append(Spacer(1, 2 * mm))
                 if devices:
                     device_list = ", ".join(
-                        f"{d['quantity']}× {join_parts(d['manufacturer'], d['model'])}" + (f" ({d['note']})" if d["note"] else "")
+                        (f"{d['quantity']}× " if d["quantity"] != 1 else "") + join_parts(d['manufacturer'], d['model'])
+                        + (f" [{d['physical_address']}]" if d["physical_address"] else "")
+                        + (f" ({d['note']})" if d["note"] else "")
                         for d in devices
                     )
                     story.append(Paragraph(f"<b>Geräte:</b> {device_list}", styles["Body"]))

@@ -108,8 +108,19 @@ class ChannelAssignIn(BaseModel):
 
 class RoomDeviceIn(BaseModel):
     device_type_id: int
-    quantity: int = 1
+    quantity: int = 1   # how many blank rows to create at once - each becomes its own row
     note: str = ""
+
+
+class RoomDeviceEditIn(BaseModel):
+    # No device_type_id here, same reasoning as ActorInstanceEditIn - changing
+    # the device type after the fact is a bigger operation, delete+re-add instead.
+    note: str = ""
+    physical_address: str = ""
+
+
+class PhysicalAddressAssignIn(BaseModel):
+    prefix: str = "1.1"   # area.line prefix, e.g. "1.1" -> addresses like "1.1.10"
 
 
 class VerteilerIn(BaseModel):

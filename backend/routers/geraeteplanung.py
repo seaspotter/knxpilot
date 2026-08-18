@@ -8,7 +8,7 @@ from reportlab.platypus import Paragraph, Spacer, Table, PageBreak
 from reportlab.lib.units import mm
 
 from ..db import get_db
-from ..models import RoomDeviceIn
+from ..models import RoomDeviceIn, RoomDeviceEditIn
 from ..pdf_design import pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response, company_header_block, company_footer_line
 from ..utils import join_parts
 
@@ -31,6 +31,7 @@ def list_room_devices(room_id: int):
                     "device_name": join_parts(dt.get("manufacturer", ""), dt.get("model", "")) or "?",
                     "group_name": dt.get("group_name", ""),
                     "quantity": r["quantity"], "note": r["note"],
+                    "physical_address": r["physical_address"],
                 }
             )
         return result
@@ -38,13 +39,30 @@ def list_room_devices(room_id: int):
 
 @router.post("/api/rooms/{room_id}/devices")
 def add_room_device(room_id: int, rd: RoomDeviceIn):
+    """Each call creates `quantity` independent quantity=1 rows (one per physical
+    device, so each can get its own physical_address later) - `quantity` here just
+    means "how many at once", it's never stored as an aggregate count."""
     with get_db() as db:
         (count,) = db.execute("SELECT COUNT(*) FROM room_devices WHERE room_id=?", (room_id,)).fetchone()
-        cur = db.execute(
-            "INSERT INTO room_devices (room_id, device_type_id, quantity, note, order_idx) VALUES (?, ?, ?, ?, ?)",
-            (room_id, rd.device_type_id, max(1, rd.quantity), rd.note, count),
+        first_id = None
+        for i in range(max(1, rd.quantity)):
+            cur = db.execute(
+                "INSERT INTO room_devices (room_id, device_type_id, quantity, note, order_idx) VALUES (?, ?, 1, ?, ?)",
+                (room_id, rd.device_type_id, rd.note, count + i),
+            )
+            if first_id is None:
+                first_id = cur.lastrowid
+        return {"id": first_id}
+
+
+@router.put("/api/room-devices/{rd_id}")
+def update_room_device(rd_id: int, rd: RoomDeviceEditIn):
+    with get_db() as db:
+        db.execute(
+            "UPDATE room_devices SET note=?, physical_address=? WHERE id=?",
+            (rd.note, rd.physical_address, rd_id),
         )
-        return {"id": cur.lastrowid}
+    return {"ok": True}
 
 
 @router.delete("/api/room-devices/{rd_id}")
@@ -60,7 +78,7 @@ def device_summary(project_id: int):
     plus which rooms use it - built from the room_devices planning list AND
     the actor instances already placed via the Abgangsliste tab (a device
     shouldn't need re-entering here just to show up in the overall total -
-    see build_actor_instance_bom_rows() for the parallel PDF-side merge)."""
+    see _actor_instance_room_rows() for the parallel PDF-side merge)."""
     with get_db() as db:
         device_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM actor_types").fetchall()}
         floors = db.execute("SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall()
@@ -76,7 +94,10 @@ def device_summary(project_id: int):
                     entry = totals.setdefault(rd["device_type_id"], {"total": 0, "rooms": []})
                     entry["total"] += rd["quantity"]
                     entry["rooms"].append(
-                        {"floor_name": floor["name"], "room_name": room["name"], "quantity": rd["quantity"]}
+                        {
+                            "floor_name": floor["name"], "room_name": room["name"], "quantity": rd["quantity"],
+                            "physical_address": rd["physical_address"],
+                        }
                     )
 
         actor_instances = db.execute(
@@ -90,7 +111,7 @@ def device_summary(project_id: int):
             entry["rooms"].append({
                 "floor_name": ai["floor_name"] or "Ohne Geschoss",
                 "room_name": ai["location_label"] or "(kein Standort)",
-                "quantity": 1,
+                "quantity": 1, "physical_address": ai["physical_address"],
             })
 
         result = []
@@ -111,10 +132,10 @@ def device_summary(project_id: int):
 def _actor_instance_room_rows(db, project_id, floor_id, floor_name):
     """Actor instances placed via Abgangsliste, grouped by location_label so
     several devices at the same spot combine into one row - same shape as a
-    room_devices row (dict with manufacturer/model/quantity/note), so they
-    can be appended straight into export_geraeteliste_pdf()'s room_rows
-    without a separate rendering path. quantity is always 1 (one physical
-    device per row); note carries the physical address, if set."""
+    room_devices row (dict with manufacturer/model/quantity/note/
+    physical_address), so they can be appended straight into
+    export_geraeteliste_pdf()'s room_rows without a separate rendering path.
+    quantity is always 1 (one physical device per row)."""
     actor_rows = db.execute(
         "SELECT ai.*, at.manufacturer, at.model, at.group_name FROM actor_instances ai "
         "JOIN actor_types at ON ai.actor_type_id = at.id "
@@ -127,7 +148,8 @@ def _actor_instance_room_rows(db, project_id, floor_id, floor_name):
         by_label.setdefault(ai["location_label"] or "Sonstige Aktoren", []).append(ai)
     return [
         (floor_name, label, [
-            {"manufacturer": ai["manufacturer"], "model": ai["model"], "quantity": 1, "note": ai["physical_address"]}
+            {"manufacturer": ai["manufacturer"], "model": ai["model"], "quantity": 1,
+             "note": "", "physical_address": ai["physical_address"]}
             for ai in group
         ])
         for label, group in by_label.items()
@@ -184,7 +206,9 @@ def export_geraeteliste_pdf(project_id: int):
                     story.append(Paragraph(floor_name, styles["RoomHeading"]))
                     current_floor = floor_name
                 device_list = ", ".join(
-                    f"{d['quantity']}× {join_parts(d['manufacturer'], d['model'])}" + (f" ({d['note']})" if d["note"] else "")
+                    (f"{d['quantity']}× " if d["quantity"] != 1 else "") + join_parts(d['manufacturer'], d['model'])
+                    + (f" [{d['physical_address']}]" if d["physical_address"] else "")
+                    + (f" ({d['note']})" if d["note"] else "")
                     for d in devices
                 )
                 story.append(Paragraph(f"<b>{room_name}:</b> {device_list}", styles["Body"]))
