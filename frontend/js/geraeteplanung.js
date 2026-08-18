@@ -32,7 +32,7 @@ async function renderGeraeteplanungRooms() {
           <div style="margin:6px 0;">${devicesHtml}</div>
           <div class="quick-add">
             <select id="rd-device-${room.id}" class="wide">
-              ${ACTOR_TYPES.map(at => `<option value="${at.id}">${at.group_name} — ${[at.manufacturer, at.model].filter(Boolean).join(' ')}</option>`).join('')}
+              ${ACTOR_TYPES.filter(at => at.group_name !== 'Aktor').map(at => `<option value="${at.id}">${at.group_name} — ${[at.manufacturer, at.model].filter(Boolean).join(' ')}</option>`).join('')}
             </select>
             <input type="number" id="rd-qty-${room.id}" value="1" min="1" title="Anzahl">
             <input type="text" id="rd-note-${room.id}" placeholder="Notiz (optional)" style="width:160px;">

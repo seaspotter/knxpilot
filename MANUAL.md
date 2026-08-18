@@ -241,9 +241,13 @@ Unterreiter direkt daneben statt eine Karte darin.
 #### Geräteplanung
 
 Ergänzt die Abgangsliste (die nur Aktoren mit physischen Kanälen betrifft):
-hier wird zusätzlich festgelegt, welche Geräte — **jeder Gruppe**, also auch
-Sensoren, Wetterstationen, Bedienelemente — in welchem Raum verbaut werden,
-unabhängig davon ob dafür eine Gruppenadresse oder ein Aktorkanal existiert.
+hier wird zusätzlich festgelegt, welche übrigen Geräte — Sensoren,
+Wetterstationen, Bedienelemente usw. — in welchem Raum verbaut werden,
+unabhängig davon ob dafür eine Gruppenadresse existiert. Die Gruppe
+**Aktor** steht hier bewusst nicht zur Auswahl — Aktoren gehören in die
+Abgangsliste, wo sie mit Geschoss, Standort, physischer Adresse und
+Kanalzuordnung erfasst werden (und trotzdem mit in der Stückliste unten
+erscheinen, siehe Punkt 2).
 
 1. Für jeden Raum Geräte mit Anzahl und optionaler Notiz hinzufügen (z.B.
    "2× Bewegungsmelder — Ecken", "1× Touchpanel — Eingang").

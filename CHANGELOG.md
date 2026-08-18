@@ -18,6 +18,11 @@ restructuring below — history before that is available via `git log`.
   `_actor_instance_room_rows()` helper factors the merge for the PDF's
   per-room section, grouped by Standortbezeichnung (Abgangsliste actor
   instances don't have a `room_id`, only a floor + free-text location).
+  The **Aktor** group is no longer offered in Geräteplanung's device
+  picker either - now that Abgangsliste actors already count toward the
+  same Stückliste, entering an Aktor here too would just be a second,
+  redundant (and easy to lose track of) way to log the same kind of
+  device, with none of Abgangsliste's floor/address/channel tracking.
 - **Übersicht** gets a Verteilerplanung card ("N Verteiler angelegt"),
   matching the one-card-per-sub-tab pattern already used for the others
   (Labels still excluded - no natural short summary for it).
