@@ -8,6 +8,28 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- Geräteplanung entries are now **per-instance** instead of quantity-
+  aggregated (one row was "N× DeviceType"; now each physical device is its
+  own row) so each can carry its own **physische Adresse**, the way
+  Abgangsliste's actor instances already could - non-Aktor bus devices
+  (Sensoren, Bedienelemente, Wetterstationen) need an individual KNX
+  address too, not just actuators. "Anzahl" in the quick-add form now
+  means "how many independent rows to create at once"; each is editable
+  (note + address) via a new **Bearbeiten** link. One-time, idempotent
+  migration splits any pre-existing aggregated row into that many
+  quantity=1 rows - no data lost. New `PUT /api/room-devices/{id}`.
+- **PA automatisch zuordnen** (Abgangsliste and Geräteplanung, both act
+  project-wide across both tabs) fills in physical KNX addresses for
+  every device without one, following a fixed convention: a Systemgeräte
+  block (0-5), then one Aktoren block per Geschoss, then one Sensoren/
+  Bedienelemente block per Geschoss, then an Aussen block (any Geschoss
+  marked Aussen/unbeheizt, Wetterstation devices first) - each block
+  starts at the next multiple of 10 and reserves as many full decades as
+  its actual device count needs, so later additions don't collide with
+  the next block. Never overwrites an address already set; devices with
+  no Geschoss are skipped and reported. Area.line prefix (default `1.1`)
+  is editable per run. New `backend/pa_assign.py`, new
+  `POST /api/projects/{id}/assign-physical-addresses`.
 - Geräteplanung's **Stückliste** (project-wide bill of materials, both the
   in-app total and the Geräteliste PDF's per-room breakdown) now also
   counts actor instances placed via the Abgangsliste tab - previously
@@ -106,6 +128,16 @@ restructuring below — history before that is available via `git log`.
   channel type keeps its previous first-free-channel behavior unchanged.
   `get_circuits()` (`backend/ga_logic.py`) now also returns `room_id` per
   circuit (additive, used for the grouping).
+
+### Fixed
+
+- `GET /api/projects/{id}/actor-instances` crashed with a 500 if any
+  actor instance's device type had no `channel_count` (i.e. any group
+  other than Aktor) - `dict.get(key, default)` only falls back when the
+  key is *missing*, not when its value is `None`, and `actor_types`
+  always has the column, just `NULL` for non-Aktor groups. Only surfaced
+  once non-Aktor devices could plausibly end up referenced from this
+  table (surfaced while testing PA auto-assign's Systemgeräte bucket).
 
 ## [0.3.1] - 2026-08-16
 

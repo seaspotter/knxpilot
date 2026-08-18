@@ -130,6 +130,23 @@ async function deleteActorInstance(id) {
   await renderChannelSummary();
 }
 
+// Shared by both Abgangsliste and Geräteplanung ("PA automatisch zuordnen"
+// buttons in each) - the assignment itself is project-wide across both
+// actor_instances and room_devices, so it always refreshes both tabs'
+// device lists regardless of which one triggered it.
+async function assignPhysicalAddresses(prefixInputId) {
+  const prefix = document.getElementById(prefixInputId).value.trim() || '1.1';
+  const result = await api(`/projects/${CURRENT_PROJECT}/assign-physical-addresses`, {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({prefix}),
+  });
+  await renderActorInstances();
+  await renderCircuits();
+  await renderGeraeteplanungRooms();
+  await renderDeviceSummary();
+  const skippedText = result.skipped.length ? ` (${result.skipped.length} übersprungen: ${result.skipped.join(', ')})` : '';
+  showToast(`${result.assigned} Adresse(n) vergeben${skippedText}.`, result.skipped.length ? 'warning' : 'success');
+}
+
 // ---------- Abgangsliste: Circuits ----------
 async function renderCircuits() {
   const [circuits, instances] = await Promise.all([

@@ -214,6 +214,21 @@ der Busprogrammierung, die andere der Schaltschrank-Verdrahtung.
    Kanal jedes Aktors wird aufgeführt, unbelegte mit `RESERVE` markiert.
    **PDF herunterladen** exportiert dieselben Daten als formatiertes, nach
    Geschoss und Aktor gegliedertes PDF (ein Geschoss pro Seite).
+7. **PA automatisch zuordnen** (auch im Unterreiter Geräteplanung
+   verfügbar — beide wirken projektweit auf beide Tabs) vergibt
+   physikalische Adressen für alle Geräte ohne eine, nach fester
+   Reihenfolge: Systemgeräte (Netzteile, Linienkoppler — Adressen 0-5),
+   dann je Geschoss ein Block für Aktoren, dann je Geschoss ein Block für
+   Sensoren/Bedienelemente, dann ein Block für Aussen-Geräte (Geschoss als
+   **Aussen/unbeheizt** markiert — Wetterstationen zuerst, danach der
+   Rest). Jeder Block beginnt an der nächsten Zehnerstelle und reserviert
+   so viele Zehnerblöcke wie für die tatsächliche Gerätezahl nötig (z.B.
+   startet ein Geschoss mit 12 Aktoren bei `.10`, das nächste dann bei
+   `.30` statt `.20`, da zwei volle Zehnerblöcke gebraucht wurden) — so
+   bleibt Platz für spätere Ergänzungen, ohne bestehende Adressen zu
+   verschieben. Das Bereich.Linie-Präfix (Standard `1.1`) ist vor dem
+   Klick änderbar. Bereits gesetzte Adressen werden nie verändert;
+   Geräte ohne zugewiesenes Geschoss werden übersprungen und gemeldet.
 
 #### Labels
 
@@ -249,8 +264,12 @@ Abgangsliste, wo sie mit Geschoss, Standort, physischer Adresse und
 Kanalzuordnung erfasst werden (und trotzdem mit in der Stückliste unten
 erscheinen, siehe Punkt 2).
 
-1. Für jeden Raum Geräte mit Anzahl und optionaler Notiz hinzufügen (z.B.
-   "2× Bewegungsmelder — Ecken", "1× Touchpanel — Eingang").
+1. Für jeden Raum Geräte hinzufügen — **Anzahl** legt fest, wie viele
+   Geräte auf einmal angelegt werden, jedes davon als eigener,
+   unabhängiger Eintrag (nicht eine gemeinsame Stückzahl). Jeder Eintrag
+   lässt sich über **Bearbeiten** einzeln mit Notiz und physischer Adresse
+   versehen — praktisch, wenn Geräte zuerst grob geplant und die Adresse
+   erst später (z.B. bei der Verkabelung) feststeht.
 2. Oben erscheint automatisch eine **Stückliste** — die Gesamtanzahl jedes
    benötigten Geräts über das ganze Projekt hinweg, nach Gruppe sortiert.
    Praktisch für Bestellung oder Angebotskalkulation. Zählt sowohl hier
@@ -259,7 +278,11 @@ erscheinen, siehe Punkt 2).
    werden, um in der Gesamtübersicht zu erscheinen.
 3. **PDF herunterladen** exportiert diese Stückliste als Bestellliste, plus
    eine Aufschlüsselung je Raum bzw. — bei Aktoren aus der Abgangsliste —
-   je Standortbezeichnung.
+   je Standortbezeichnung, jeweils mit physischer Adresse, sofern gesetzt.
+4. **PA automatisch zuordnen** vergibt physikalische Adressen für alle
+   Geräte im Projekt ohne eine — siehe Abgangsliste, Punkt 7, für die
+   genaue Reihenfolge/Logik; hier wie dort wirkt der Klick projektweit auf
+   beide Tabs gleichzeitig.
 
 #### Verteilerplanung
 

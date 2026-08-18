@@ -14,7 +14,8 @@ from reportlab.lib.units import mm
 from ..db import get_db
 from ..ga_logic import get_circuits
 from ..labels import LABEL_FORMATS, render_label_sheet
-from ..models import ActorInstanceIn, ActorInstanceEditIn, ChannelAssignIn
+from ..models import ActorInstanceIn, ActorInstanceEditIn, ChannelAssignIn, PhysicalAddressAssignIn
+from ..pa_assign import compute_pa_assignments
 from ..pdf_design import pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response, company_header_block, company_footer_line, PDF_MUTED_COLOR
 from ..utils import join_parts, channel_letters
 
@@ -45,7 +46,10 @@ def list_actor_instances(project_id: int):
         result = []
         for r in rows:
             at = actor_types.get(r["actor_type_id"], {})
-            channel_count = at.get("channel_count", 0)
+            # .get(..., 0) only helps if the key is missing - actor_types always
+            # has a channel_count column, just NULL for non-Aktor groups, so the
+            # default never kicked in and channel_letters(None) below crashed.
+            channel_count = at.get("channel_count") or 0
             used = db.execute(
                 "SELECT channel_letter FROM channel_assignments WHERE actor_instance_id=?", (r["id"],)
             ).fetchall()
@@ -97,6 +101,22 @@ def delete_actor_instance(ai_id: int):
     with get_db() as db:
         db.execute("DELETE FROM actor_instances WHERE id=?", (ai_id,))
     return {"ok": True}
+
+
+@router.post("/api/projects/{project_id}/assign-physical-addresses")
+def assign_physical_addresses(project_id: int, body: PhysicalAddressAssignIn):
+    """Fills in KNX physical addresses for every actor instance (Abgangsliste)
+    and room device (Geräteplanung) in the project that doesn't have one yet -
+    see pa_assign.py for the bucket/spacing convention. Never touches an
+    address already set; devices with no Geschoss are skipped and reported."""
+    prefix = body.prefix.strip() or "1.1"
+    with get_db() as db:
+        assignments, skipped = compute_pa_assignments(db, project_id, prefix)
+        for a in assignments:
+            # a["table"] only ever comes from pa_assign.py's own hardcoded
+            # literals ("actor_instances" / "room_devices"), never user input.
+            db.execute(f"UPDATE {a['table']} SET physical_address=? WHERE id=?", (a["address"], a["id"]))
+    return {"assigned": len(assignments), "skipped": skipped}
 
 
 # --------------------------------------------------------------------------
