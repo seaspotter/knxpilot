@@ -4,6 +4,25 @@ Notable changes to KNXpilot. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this file starts from the
 restructuring below — history before that is available via `git log`.
 
+## [Unreleased]
+
+### Fixed
+
+- The default Geräte-Katalog was empty in a plain-image deployment
+  (Portainer, bare `docker run`, no `docker-compose.yml` bind-mount), and
+  **⟲ Standard-Katalog importieren** silently imported 0 devices instead
+  of fixing it - the `Dockerfile` never copied `docs/templates/`, where
+  both the fresh-install seed and that button's re-import read the
+  bundled `geraete-katalog_*.json` files from. Same root cause as the
+  earlier Hilfe/Changelog fix (v0.4.1) and the version-badge fix (also
+  v0.4.1) - a data directory missing from the image, not a code bug -
+  just not caught for this one at the time since `docs/templates/` is a
+  third, separate directory from `CHANGELOG.md`/`MANUAL.md`. Verified by
+  reproducing it: ran the app from a directory tree matching exactly what
+  the Dockerfile now copies (no `docs/`), confirmed 0 devices seeded and
+  0 imported by the button, added the `COPY`, reran, confirmed 91 devices
+  seeded fresh and 91 re-imported after clearing the catalog.
+
 ## [0.5.0] - 2026-08-18
 
 ### Added
