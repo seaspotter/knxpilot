@@ -61,6 +61,7 @@ backend/
     geraeteplanung.py  — per-room device planning, bill of materials, PDF export (Geräteplanung sub-tab)
     pflichtenheft.py   — Pflichtenheft PDF export (Pflichtenheft sub-tab)
     klaerungsliste.py  — questions/tasks/notes per project (Klärungsliste sub-tab)
+    project_files.py   — a handful of reference files per project, stored as a BLOB (Übersicht sub-tab)
     system.py          — self-update via git, changelog + manual + version endpoints (Update/Hilfe tabs)
 frontend/
   index.html        — page shell: <head>, nav/tab markup, <script src> tags in load order
@@ -73,7 +74,7 @@ frontend/
     projekte.js        — project CRUD/meta, floors/rooms (Gebäudestruktur sub-tab)
     funktionen.js      — assigning functions to rooms, Sonderadressen (Funktionen sub-tab)
     gruppenadressen.js — GA tree preview + CSV export (Gruppenadressen sub-tab)
-    uebersicht.js      — project status dashboard (Übersicht sub-tab)
+    uebersicht.js      — project status dashboard + project files (Übersicht sub-tab)
     abgangsliste.js    — actor instances + circuit assignment
     geraeteplanung.js  — per-room device planning
     pflichtenheft.js   — Pflichtenheft preview

@@ -122,6 +122,15 @@
           <p class="muted">Stand des Projekts auf einen Blick — auf eine Karte klicken, um direkt zum jeweiligen Unterreiter zu springen.</p>
           <div class="stat-grid" id="uebersicht-cards"></div>
         </div>
+        <div class="card">
+          <h3>Dateien</h3>
+          <p class="muted">Ein paar Referenzdateien zu diesem Projekt — z.B. Baupläne, Handbücher, ein ETS-Export. Keine vollständige Dokumentenablage: die Dateien liegen direkt in der Datenbank und sind damit automatisch Teil der Datenbanksicherung (Setup → Backup), erscheinen aber nicht in der JSON-Projektsicherung/-Duplizierung.</p>
+          <div class="row mobile-fields">
+            <input type="file" id="project-file-upload">
+            <button class="btn secondary" onclick="uploadProjectFile()">Hochladen</button>
+          </div>
+          <ul class="list" id="project-files-list"></ul>
+        </div>
       </div>
 
       <div class="subtab" id="subtab-struktur">

@@ -117,6 +117,16 @@ beim Unterreiter Übersicht, der auf einen Blick zeigt, wie weit acht der
 übrigen Unterreiter gediehen sind (mit direktem Sprung dorthin per Klick)
 — nur Labels fehlt hier, da es keine sinnvolle Kurzkennzahl dafür gibt.
 
+Darunter, im Bereich **Dateien**: ein paar Referenzdateien zu diesem
+Projekt hochladen (z.B. Baupläne, Handbücher, ein ETS-Export) — Datei
+auswählen, **Hochladen**, danach mit **Herunterladen**/**Löschen** je
+Zeile verwalten (max. 25 MB je Datei). Bewusst keine vollständige
+Dokumentenablage: die Dateien liegen direkt in der Datenbank und sind
+damit automatisch Teil der Datenbanksicherung (Setup → Backup), erscheinen
+aber **nicht** in der JSON-Projektsicherung (⭳/⭱) oder beim Duplizieren
+(⧉) — die bleiben bewusst ein leichtgewichtiger Export/Kopie nur der
+Gebäudestruktur/Gruppenadressen.
+
 #### Gebäudestruktur
 
 Nur das Gebäude selbst — welche Funktionen wo landen, ist Sache des

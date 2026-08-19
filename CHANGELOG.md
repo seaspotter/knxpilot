@@ -6,6 +6,20 @@ restructuring below — history before that is available via `git log`.
 
 ## [Unreleased]
 
+### Added
+
+- **Dateien** section on the Übersicht sub-tab: upload/download/delete a
+  handful of reference files per project (building drawings, manuals, an
+  ETS export), max. 25 MB each. Stored as a BLOB directly in the SQLite
+  DB, so they're automatically covered by the existing whole-database
+  Backup feature with no separate file-storage/backup path needed -
+  deliberately not included in a project's JSON export or duplication
+  (Sichern/Wiederherstellen/Duplizieren), which stay a lightweight
+  Gebäudestruktur/Gruppenadressen-only copy. New `project_files` table,
+  new `backend/routers/project_files.py`
+  (`GET/POST /api/projects/{id}/files`,
+  `GET /api/project-files/{id}/download`, `DELETE /api/project-files/{id}`).
+
 ### Fixed
 
 - The default Geräte-Katalog was empty in a plain-image deployment

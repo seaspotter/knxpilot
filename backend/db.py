@@ -417,6 +417,24 @@ def init_db():
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
 
+            -- A handful of reference files attached to a project (building drawings,
+            -- manuals, an ETS export) - stored as a BLOB directly in the SQLite DB, so
+            -- they're automatically covered by the existing whole-database Backup
+            -- feature with no separate file-storage/backup path needed. Deliberately
+            -- NOT included in a project's JSON export/duplicate (see routers/projects.py)
+            -- - that payload already excludes several other project sub-features and is
+            -- meant to stay a lightweight GA-structure copy, not a full clone. See
+            -- routers/project_files.py for the per-file size cap enforced on upload.
+            CREATE TABLE IF NOT EXISTS project_files (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                filename TEXT NOT NULL,
+                content_type TEXT NOT NULL DEFAULT '',
+                size_bytes INTEGER NOT NULL,
+                data BLOB NOT NULL,
+                uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
+
             -- Global, tool-wide company identity (singleton, id pinned to 1). Shown in
             -- the app header next to the KNXpilot brand, and optionally as a page-1
             -- letterhead on every PDF export, gated by show_on_pdf.

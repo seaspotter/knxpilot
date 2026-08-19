@@ -77,4 +77,46 @@ async function loadUebersichtForCurrentProject() {
       <p class="${c.warn ? '' : 'muted'}" style="margin:0; ${c.warn ? 'color:var(--warn);' : ''}">${c.body}</p>
     </div>
   `).join('');
+
+  await loadProjectFiles();
+}
+
+// ---------- Dateien (project files) ----------
+async function loadProjectFiles() {
+  const files = await api(`/projects/${CURRENT_PROJECT}/files`);
+  const ul = document.getElementById('project-files-list');
+  ul.innerHTML = files.map(f => `
+    <li>
+      <div><b>${f.filename}</b> <span class="pill">${humanFileSize(f.size_bytes)}</span> <span class="pill">${new Date(f.uploaded_at).toLocaleDateString('de-DE')}</span></div>
+      <div>
+        <button class="btn secondary small" onclick="downloadProjectFile(${f.id})">Herunterladen</button>
+        <button class="btn danger small" onclick="deleteProjectFile(${f.id})">Löschen</button>
+      </div>
+    </li>
+  `).join('') || '<li class="muted">Noch keine Dateien</li>';
+}
+
+function downloadProjectFile(id) {
+  window.location.href = `/api/project-files/${id}/download`;
+}
+
+async function uploadProjectFile() {
+  const input = document.getElementById('project-file-upload');
+  const file = input.files[0];
+  if (!file) return showToast('Zuerst eine Datei auswählen', 'warning');
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    await api(`/projects/${CURRENT_PROJECT}/files`, {method: 'POST', body: formData});
+  } catch (e) {
+    return showToast(e.message, 'error');
+  }
+  input.value = '';
+  await loadProjectFiles();
+}
+
+async function deleteProjectFile(id) {
+  if (!(await showConfirm('Diese Datei löschen?', {danger: true}))) return;
+  await api(`/project-files/${id}`, {method: 'DELETE'});
+  await loadProjectFiles();
 }

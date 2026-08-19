@@ -13,12 +13,6 @@ nobody trusts.
   zip of XML) to pre-populate a KNXpilot project's group addresses, instead
   of always starting from a blank building. High value, but real work
   against ETS's file format.
-- [ ] **File attachments per project** — store a handful of files per
-  project (building drawings, manuals, an ETS export) alongside the rest
-  of the project data. Deliberately scoped to "a few files," not a general
-  document library - see `CHANGELOG.md`/git history for why this was
-  previously deferred; revisit with that scope in mind rather than
-  building a full attachment/versioning system.
 - [ ] **Split Pflichtenheft from a future "Finale Dokumentation"** —
   Pflichtenheft today bundles everything (planned functions, device lists,
   Gruppenadressen, Abgangsliste, Verteilerplanung...) behind toggles and
