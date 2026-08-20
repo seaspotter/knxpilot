@@ -18,6 +18,8 @@ Vorlagen erzeugt.
 <img src="docs/screenshots/funktionen.png" width="800" alt="Räume und Funktionen zuweisen">
 <img src="docs/screenshots/gruppenadressen.png" width="800" alt="Gruppenadressen-Baum">
 <img src="docs/screenshots/abgangsliste.png" width="800" alt="Abgangsliste mit Kanalübersicht">
+<img src="docs/screenshots/funktionscheckliste.png" width="800" alt="Funktionscheckliste zum digitalen Abhaken vor Ort">
+<img src="docs/screenshots/uebergabe-checkliste.png" width="800" alt="Übergabe-Checkliste mit Ja/Nein/Nicht-nötig-Status">
 
 ## Funktionsumfang
 
