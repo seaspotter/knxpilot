@@ -33,12 +33,20 @@ restructuring below — history before that is available via `git log`.
     a blank line, no printing/scanning needed. New `project_signatures`
     table, new endpoints (`GET/PUT/DELETE
     /api/projects/{id}/signatures[/{role}]`,
-    `GET /api/projects/{id}/signatures/{role}/image`).
+    `GET /api/projects/{id}/signatures/{role}/image`). Anlagenübergabe
+    section consolidated - four overlapping "is documentation/software
+    handed over" items collapsed into one clear item each (Bedienungs-
+    anleitungen, Anlagendokumentation, Software/Backups, Passwörter).
   - **Dokumentation** (new): the end-of-project assembly - Pflichtenheft's
     spec content plus both checklists' actual recorded results, plus the
     optional as-built sections (Abgangsliste, Verteilerplanung,
     Gruppenadressen, Klärungsliste, Geräte je Raum) moved here from
     Pflichtenheft's old Setup toggles (now under Setup → Dokumentation).
+
+  The Übersicht sub-tab's summary cards now cover all three new tabs
+  (Funktionscheckliste/Übergabe-Checkliste show a checked/answered count,
+  Dokumentation a static card) and no longer show Pflichtenheft's old
+  "→ Vorschau ansehen" text (stale since that tab's preview was removed).
 
   New `checklist_status` table (shared by both digital checklists), new
   `backend/routers/checkliste.py` (`GET/PUT

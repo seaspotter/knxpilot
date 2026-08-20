@@ -114,7 +114,7 @@ Projekt über **Projekt öffnen** auszuwählen wechselt direkt dorthin, ohne
 das erste vorher schliessen zu müssen. **× Schliessen** (oder das **×**
 an der 📁-Marke im Programmkopf) kehrt zur Projektliste zurück, ohne
 etwas zu löschen — beim nächsten Öffnen startet der Arbeitsbereich wieder
-beim Unterreiter Übersicht, der auf einen Blick zeigt, wie weit acht der
+beim Unterreiter Übersicht, der auf einen Blick zeigt, wie weit elf der
 übrigen Unterreiter gediehen sind (mit direktem Sprung dorthin per Klick)
 — nur Labels fehlt hier, da es keine sinnvolle Kurzkennzahl dafür gibt.
 

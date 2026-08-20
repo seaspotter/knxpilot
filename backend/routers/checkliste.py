@@ -154,9 +154,8 @@ CHECKLIST_SECTIONS = [
     ("Funktionsprüfung", [
         ("funktionen_geprueft", "Licht, Dimmer, Jalousien, Zentral Aus, Szenen usw. auf korrekte Funktion geprüft"),
         ("fensterkontakte_geprueft", "Fensterkontakte geprüft"),
-        ("gegensprechanlage_geprueft", "Gegensprechanlage geprüft"),
-        ("schnittstellen_geprueft", "Schnittstellen zu Fremdsystemen geprüft (Musik, Alarm, Lüftung usw.)"),
-        ("heizung_kalibriert", "Raumbezogene Kalibrierung der Raumtemperaturregler"),
+        ("gegensprechanlage_geprueft", "Sprechanlage geprüft"),
+        ("schnittstellen_geprueft", "Schnittstellen zu Fremdsystemen geprüft (PV-Anlage, Wärmepumpe, Alarm, Lüftung usw.)"),
     ]),
     ("Kundengespräch", [
         ("einfuehrung_installation", "Einführung des Kunden in die technische Installation"),
@@ -170,12 +169,12 @@ CHECKLIST_SECTIONS = [
         ("offene_punkte_aufgenommen", "Offene Punkte aufgenommen"),
     ]),
     ("Anlagenübergabe", [
-        ("beschreibungen_vorhanden", "Anlagen-/Gerätebeschreibungen sowie Bedienungsanleitungen in separatem Ordner vorhanden"),
-        ("revisionsunterlagen_vorhanden", "Revisionsunterlagen, Pläne, Schema, Pflichtenheft in separatem Ordner vorhanden"),
-        ("dokumentation_hinterlegt", "Dokumentation der Anlage hinterlegt"),
-        ("uebergabe_software_doku", "Übergabe der Projekt-Software, Anlagendokumentation und aller Handbücher"),
-        ("kundendienst_hinterlassen", "Kundendienst-Telefonnummer hinterlassen / Wartungsvertrag abgeschlossen"),
-        ("abnahmeprotokoll_unterzeichnet", "Abnahme-Protokoll nach Pflichtenheft bzw. DIN 18015-4 unterzeichnet"),
+        ("bedienungsanleitungen_uebergeben", "Bedienungsanleitungen übergeben"),
+        ("anlagendokumentation_uebergeben", "Anlagendokumentation (Pläne, Checklisten, Finale Dokumentation) übergeben"),
+        ("software_backups_uebergeben", "Software und Backups übergeben (ETS-Software, Visualisierung)"),
+        ("passwoerter_uebergeben", "Passwörter übergeben"),
+        ("kundendienst_hinterlassen", "Kundendienst-Kontaktdaten hinterlassen / Wartungsvertrag angeboten/abgeschlossen"),
+        ("abnahmeprotokoll_unterzeichnet", "Übergabe-Protokoll unterzeichnet"),
     ]),
 ]
 

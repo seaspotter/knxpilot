@@ -4,13 +4,16 @@ function goToSubtab(name) {
 }
 
 async function loadUebersichtForCurrentProject() {
-  const [tree, preview, circuits, deviceSummary, klaerungen, verteiler] = await Promise.all([
+  const [tree, preview, circuits, deviceSummary, klaerungen, verteiler, checklistStatus, uebergabeSections, central] = await Promise.all([
     api(`/projects/${CURRENT_PROJECT}/tree`),
     api(`/projects/${CURRENT_PROJECT}/preview`),
     api(`/projects/${CURRENT_PROJECT}/circuits`),
     api(`/projects/${CURRENT_PROJECT}/device-summary`),
     api(`/projects/${CURRENT_PROJECT}/klaerungen`),
     api(`/projects/${CURRENT_PROJECT}/verteiler`),
+    api(`/projects/${CURRENT_PROJECT}/checklist-status`),
+    api('/uebergabe-checklist-sections'),
+    api(`/projects/${CURRENT_PROJECT}/central-functions-checklist`),
   ]);
 
   const floorCount = tree.floors.length;
@@ -25,6 +28,32 @@ async function loadUebersichtForCurrentProject() {
   const totalDevices = deviceSummary.reduce((sum, d) => sum + d.total, 0);
 
   const openKlaerungen = klaerungen.filter(k => k.status === 'offen').length;
+
+  // Funktionscheckliste totals - same per-room fetch pattern as
+  // funktionscheckliste.js's own loader, just counting instead of rendering.
+  let fcTotal = 0, fcChecked = 0;
+  const roomChecklists = await Promise.all(
+    tree.floors.flatMap(f => f.rooms).map(r => api(`/rooms/${r.id}/function-checklist`))
+  );
+  for (const byCategory of roomChecklists) {
+    for (const items of Object.values(byCategory)) {
+      for (const item of items) {
+        fcTotal++;
+        if (checklistStatus[item.key]?.status === 'ok') fcChecked++;
+      }
+    }
+  }
+  for (const [, items] of central) {
+    for (const item of items) {
+      fcTotal++;
+      if (checklistStatus[item.key]?.status === 'ok') fcChecked++;
+    }
+  }
+
+  const uebergabeTotal = uebergabeSections.reduce((sum, sec) => sum + sec.items.length, 0);
+  const uebergabeAnswered = uebergabeSections.reduce(
+    (sum, sec) => sum + sec.items.filter(it => checklistStatus[it.key]?.status).length, 0
+  );
 
   const cards = [
     {
@@ -61,13 +90,28 @@ async function loadUebersichtForCurrentProject() {
     {
       subtab: 'pflichtenheft',
       title: 'Pflichtenheft',
-      body: '→ Vorschau ansehen',
+      body: 'Frühe Leistungsbeschreibung (PDF)',
+    },
+    {
+      subtab: 'funktionscheckliste',
+      title: 'Funktionscheckliste',
+      body: fcTotal ? `${fcChecked} / ${fcTotal} Funktionen getestet` : 'Noch keine Funktionen geplant',
+    },
+    {
+      subtab: 'uebergabe',
+      title: 'Übergabe-Checkliste',
+      body: `${uebergabeAnswered} / ${uebergabeTotal} Punkte beantwortet`,
     },
     {
       subtab: 'klaerungsliste',
       title: 'Klärungsliste',
       body: openKlaerungen ? `${openKlaerungen} offene Einträge` : 'Keine offenen Einträge',
       warn: openKlaerungen > 0,
+    },
+    {
+      subtab: 'dokumentation',
+      title: 'Dokumentation',
+      body: 'Abschlussdokumentation (PDF)',
     },
   ];
 

@@ -13,6 +13,27 @@ nobody trusts.
   zip of XML) to pre-populate a KNXpilot project's group addresses, instead
   of always starting from a blank building. High value, but real work
   against ETS's file format.
+- [ ] **Auto-fetch device manuals/documentation** — once a project's
+  actual devices are known (Geräteplanung/Abgangsliste), automatically
+  find/attach the manufacturer's manual or datasheet instead of the
+  system integrator tracking them down manually - would back the
+  Übergabe-Checkliste's "Bedienungsanleitungen übergeben" item. Needs a
+  source (manufacturer sites don't have a uniform API/URL scheme) - likely
+  starts as a manually-curated link per `actor_types` entry rather than
+  live fetching.
+- [ ] **Store project credentials (Passwörter)** — a place to record the
+  ETS project password, visualization/app login, router Wi-Fi credentials
+  etc. per project, so handover can include them instead of tracking them
+  separately - would back the Übergabe-Checkliste's "Passwörter übergeben"
+  item. Security-sensitive: needs real thought on encryption at rest before
+  building, not just a plain-text column - this isn't a "just add a field"
+  task.
+- [ ] **Send documentation by email (SMTP)** — send the Dokumentation/
+  Übergabe-Checkliste PDF (and other exports) directly to the customer from
+  inside KNXpilot instead of downloading and attaching it manually. Needs
+  an SMTP config in Setup (mirroring the existing Nextcloud/backup
+  credential pattern) and a "send" action next to the existing PDF
+  downloads.
 
 ## Explicitly deferred
 
