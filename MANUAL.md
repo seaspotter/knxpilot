@@ -447,15 +447,24 @@ Dokumentation-Export.
 
 Die vollständige Abschlussdokumentation, gedacht für das Ende des
 Projekts: **PDF herunterladen** fasst den Pflichtenheft-Inhalt (was
-vereinbart wurde) mit den tatsächlichen Ergebnissen der Funktions- und
-Übergabe-Checkliste zusammen (immer enthalten), sowie optional Abgangsliste,
-Verteilerplanung, Gruppenadressen, Klärungsliste und Geräte je Raum — welche
-Zusatzabschnitte enthalten sind, wird im Setup-Tab unter *Dokumentation*
-gesteuert (siehe unten). Gruppenadressen steht dabei immer als letzter
+vereinbart wurde, als eigener, klar mit "Pflichtenheft" überschriebener
+Abschnitt) mit optional den tatsächlichen Ergebnissen der Funktions- und
+Übergabe-Checkliste sowie optional Abgangsliste, Verteilerplanung,
+Gruppenadressen, Klärungsliste und Geräte je Raum zusammen — welche
+Abschnitte enthalten sind, wird im Setup-Tab unter *Dokumentation*
+gesteuert (siehe unten; Funktionscheckliste und Übergabe-Checkliste sind
+dort standardmässig an). Gruppenadressen steht dabei immer als letzter
 Abschnitt im PDF, auch wenn andere optionale Abschnitte weiter oben
 ausgewählt sind — es ist meist der längste (jede einzelne Adresse als
 Tabellenzeile) und passt daher eher ans Ende als mitten zwischen die eher
 erzählenden Abschnitte.
+
+Die erste Seite zeigt eine kurze Einleitung sowie ein
+**Inhaltsverzeichnis** mit einem Eintrag je enthaltenem Abschnitt — jeder
+Eintrag ist ein echter klickbarer PDF-Link, der beim Anklicken direkt zum
+jeweiligen Abschnitt springt (funktioniert in den meisten PDF-Readern,
+z.B. Acrobat Reader, Firefox, Chrome/Edge — nicht notwendigerweise in
+jeder mobilen PDF-App).
 
 ### Geräte Katalog
 
@@ -580,12 +589,13 @@ nicht alle gleichzeitig sichtbar.
   Vorbemerkungen, Stockwerk-/Raumverzeichnis und Geräteliste (alle
   standardmässig an). Gilt global für alle Projekte, wie der Rest des
   Firmenprofils.
-- **Dokumentation** — fünf Kontrollkästchen, die steuern, welche
-  Zusatzabschnitte im Dokumentation-PDF erscheinen (siehe Abschnitt
-  *Dokumentation* oben): Geräte je Raum, Gruppenadressen, Abgangsliste,
-  Verteilerplanung und Klärungsliste (alle standardmässig aus, da sie ein
-  Projekt schnell sehr lang machen können — gezielt für den Einzelfall
-  dazuschalten). Gilt ebenfalls global für alle Projekte.
+- **Dokumentation** — sieben Kontrollkästchen, die steuern, welche
+  Abschnitte im Dokumentation-PDF erscheinen (siehe Abschnitt
+  *Dokumentation* oben): Funktionscheckliste und Übergabe-Checkliste
+  (beide standardmässig an), sowie Geräte je Raum, Gruppenadressen,
+  Abgangsliste, Verteilerplanung und Klärungsliste (alle standardmässig
+  aus, da sie ein Projekt schnell sehr lang machen können — gezielt für
+  den Einzelfall dazuschalten). Gilt ebenfalls global für alle Projekte.
 - **Backup** — automatische und/oder manuelle (**Jetzt sichern**) Sicherung
   der kompletten Datenbank (alle Projekte, Geräte-Katalog, restliches
   Setup — nicht nur ein einzelnes Projekt) auf ein NAS/gemountetes

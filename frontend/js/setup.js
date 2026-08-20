@@ -18,6 +18,8 @@ async function loadCompanyProfile() {
   document.getElementById('pht-include-abgangsliste').checked = !!c.pflichtenheft_include_abgangsliste;
   document.getElementById('pht-include-verteilerplanung').checked = !!c.pflichtenheft_include_verteilerplanung;
   document.getElementById('pht-include-klaerungsliste').checked = !!c.pflichtenheft_include_klaerungsliste;
+  document.getElementById('doku-include-funktionscheckliste').checked = !!c.dokumentation_include_funktionscheckliste;
+  document.getElementById('doku-include-uebergabe').checked = !!c.dokumentation_include_uebergabe;
   document.getElementById('backup-enabled').checked = !!c.backup_enabled;
   document.getElementById('backup-interval-hours').value = c.backup_interval_hours || 24;
   document.getElementById('backup-retention-count').value = c.backup_retention_count || 14;
@@ -241,6 +243,8 @@ async function saveCompanyProfile() {
     pflichtenheft_include_abgangsliste: document.getElementById('pht-include-abgangsliste').checked,
     pflichtenheft_include_verteilerplanung: document.getElementById('pht-include-verteilerplanung').checked,
     pflichtenheft_include_klaerungsliste: document.getElementById('pht-include-klaerungsliste').checked,
+    dokumentation_include_funktionscheckliste: document.getElementById('doku-include-funktionscheckliste').checked,
+    dokumentation_include_uebergabe: document.getElementById('doku-include-uebergabe').checked,
     backup_enabled: document.getElementById('backup-enabled').checked,
     backup_interval_hours: parseInt(document.getElementById('backup-interval-hours').value) || 24,
     backup_retention_count: parseInt(document.getElementById('backup-retention-count').value) || 14,

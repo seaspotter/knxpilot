@@ -34,6 +34,7 @@ def pdf_styles():
     styles.add(ParagraphStyle("BodyBullet", fontName="Helvetica", fontSize=9.5, textColor=colors.HexColor("#0f172a"), leading=13, leftIndent=4 * mm, spaceAfter=2))
     styles.add(ParagraphStyle("BodyMuted", fontName="Helvetica-Oblique", fontSize=9, textColor=PDF_MUTED_COLOR, leading=12))
     styles.add(ParagraphStyle("CompanyName", fontName="Helvetica-Bold", fontSize=13, textColor=PDF_BANNER_COLOR, leading=16))
+    styles.add(ParagraphStyle("TOCLink", fontName="Helvetica", fontSize=11, textColor=PDF_ACCENT_COLOR, leading=18))
     return styles
 
 
@@ -187,12 +188,24 @@ def signature_block(label, styles, image_bytes=None, signed_at_text=None):
     return [line, Paragraph(f"Datum, Unterschrift {label}", styles["BodyMuted"])]
 
 
-def make_numbered_canvas(footer_left_text, footer_center_text=""):
+def make_numbered_canvas(footer_left_text, footer_center_text="", page_count=None):
     """Canvas factory adding 'Seite X von Y' + a left-hand footer label to every
     page, plus an optional centered company address/contact line above it (see
     company_footer_line()). Needs a factory (not a plain class) because the
-    total page count is only known once the whole document has been laid out -
-    this defers drawing until save()."""
+    total page count is normally only known once the whole document has been
+    laid out - by default (page_count=None) this defers drawing until save().
+
+    That single-pass deferred trick breaks internal PDF links/bookmarks
+    (<a name="x"/>/<a href="#x">, used by Dokumentation's Inhaltsverzeichnis):
+    ReportLab's canvas.bookmarkPage() binds an anchor to
+    canvas._doc.thisPageRef(), which only ever advances when
+    canvas._doc.addPage() actually runs - and the deferred trick postpones
+    that until save(), so every anchor drawn during the (only) pass ends up
+    bound to page 1 regardless of which page it's really on. Passing an
+    already-known page_count switches to an immediate, non-deferred
+    showPage() (draw the footer now, commit the page now) - see
+    build_pdf_response_two_pass() for the caller side that measures the
+    count first in a throwaway pass."""
 
     class _NumberedCanvas(pdfcanvas.Canvas):
         def __init__(self, *args, **kwargs):
@@ -200,18 +213,23 @@ def make_numbered_canvas(footer_left_text, footer_center_text=""):
             self._saved_page_states = []
 
         def showPage(self):
-            self._saved_page_states.append(dict(self.__dict__))
-            self._startPage()
-
-        def save(self):
-            page_count = len(self._saved_page_states)
-            for state in self._saved_page_states:
-                self.__dict__.update(state)
+            if page_count is not None:
                 self._draw_footer(page_count)
                 pdfcanvas.Canvas.showPage(self)
+            else:
+                self._saved_page_states.append(dict(self.__dict__))
+                self._startPage()
+
+        def save(self):
+            if page_count is None:
+                total = len(self._saved_page_states)
+                for state in self._saved_page_states:
+                    self.__dict__.update(state)
+                    self._draw_footer(total)
+                    pdfcanvas.Canvas.showPage(self)
             pdfcanvas.Canvas.save(self)
 
-        def _draw_footer(self, page_count):
+        def _draw_footer(self, total):
             width, _ = A4
             y_rule = 16 * mm
             self.setStrokeColor(PDF_BORDER_COLOR)
@@ -219,7 +237,7 @@ def make_numbered_canvas(footer_left_text, footer_center_text=""):
             self.setFont("Helvetica", 8)
             self.setFillColor(PDF_MUTED_COLOR)
             self.drawString(15 * mm, y_rule - 5 * mm, footer_left_text)
-            self.drawRightString(width - 15 * mm, y_rule - 5 * mm, f"Seite {self._pageNumber} von {page_count}")
+            self.drawRightString(width - 15 * mm, y_rule - 5 * mm, f"Seite {self._pageNumber} von {total}")
             if footer_center_text:
                 # Drawn below the project/page-number row, as its own separated
                 # block, rather than crowding the same line.
@@ -230,17 +248,49 @@ def make_numbered_canvas(footer_left_text, footer_center_text=""):
     return _NumberedCanvas
 
 
-def build_pdf_response(story, footer_left_text, filename, doc_title, footer_center_text=""):
-    buf = io.BytesIO()
+def _pdf_doc_template(buf, doc_title, footer_center_text):
     # A centered company line needs its own row above the page-number rule -
     # give it a bit more bottom margin so it never crowds the last line of content.
     bottom_margin = 26 * mm if footer_center_text else 20 * mm
-    doc = SimpleDocTemplate(
+    return SimpleDocTemplate(
         buf, pagesize=A4,
         topMargin=15 * mm, bottomMargin=bottom_margin, leftMargin=15 * mm, rightMargin=15 * mm,
         title=doc_title,
     )
+
+
+def build_pdf_response(story, footer_left_text, filename, doc_title, footer_center_text=""):
+    buf = io.BytesIO()
+    doc = _pdf_doc_template(buf, doc_title, footer_center_text)
     doc.build(story, canvasmaker=make_numbered_canvas(footer_left_text, footer_center_text))
+    buf.seek(0)
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+def build_pdf_response_two_pass(build_story, footer_left_text, filename, doc_title, footer_center_text=""):
+    """Like build_pdf_response(), for documents that use internal PDF links/
+    bookmarks (currently just Dokumentation's Inhaltsverzeichnis) - see
+    make_numbered_canvas() for why the normal single-pass footer trick
+    breaks those. `build_story` is a zero-arg callable returning a *fresh*
+    flowable list each call: ReportLab flowables carry render state and
+    reusing the same list across two build() calls produces a corrupt
+    (effectively empty) PDF, so this genuinely rebuilds the content twice -
+    once (thrown away) just to measure the page count, once for real with
+    that count baked in as a plain constant."""
+    count_doc = _pdf_doc_template(io.BytesIO(), doc_title, footer_center_text)
+    count_doc.build(build_story())
+    page_count = count_doc.page
+
+    buf = io.BytesIO()
+    doc = _pdf_doc_template(buf, doc_title, footer_center_text)
+    doc.build(
+        build_story(),
+        canvasmaker=make_numbered_canvas(footer_left_text, footer_center_text, page_count=page_count),
+    )
     buf.seek(0)
     return StreamingResponse(
         iter([buf.getvalue()]),

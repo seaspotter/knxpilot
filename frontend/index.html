@@ -579,8 +579,10 @@
     <div class="subtab" id="setup-subtab-dokumentation">
     <div class="card">
       <h3>Dokumentation</h3>
-      <p class="muted">Steuert, welche Zusatzabschnitte im Dokumentation-PDF-Export erscheinen (siehe Projekt-Tab Dokumentation) — neben dem Pflichtenheft-Inhalt und den Ergebnissen der Funktions- und Übergabe-Checkliste, die immer enthalten sind.</p>
+      <p class="muted">Steuert, welche Abschnitte im Dokumentation-PDF-Export erscheinen (siehe Projekt-Tab Dokumentation) — neben dem Pflichtenheft-Inhalt, das immer enthalten ist.</p>
       <div class="row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="doku-include-funktionscheckliste"> Funktionscheckliste (Testergebnisse)</label>
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="doku-include-uebergabe"> Übergabe-Checkliste (Ergebnisse)</label>
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-geraete-je-raum"> Geräte je Raum</label>
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-gruppenadressen"> Gruppenadressen<span class="info-icon" tabindex="0" data-tip="Kann bei grösseren Projekten sehr lang werden (eine Zeile je Adresse).">i</span></label>
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-abgangsliste"> Abgangsliste</label>

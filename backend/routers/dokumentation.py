@@ -1,14 +1,27 @@
 """
 Dokumentation tab: the end-of-project assembly - "everything, generated at
 the end." Combines what Pflichtenheft covers (the agreed spec, reused
-verbatim via build_pflichtenheft_spec_story()) with the two digital
-checklists' actual recorded results (Funktionscheckliste, Übergabe-
-Checkliste, both with real checked state) plus whichever optional as-built
-sections (Abgangsliste, Verteilerplanung, Gruppenadressen, Klärungsliste,
-Geräte je Raum) are toggled on in Setup -> Dokumentation. Reuses the
-existing pflichtenheft_include_* company_profile columns as-is - moved
-*usage* only, not renamed, since renaming would need a DB migration for a
-purely internal wiring change.
+verbatim via build_pflichtenheft_spec_story(), explicitly labeled as its
+own "Pflichtenheft" chapter so it doesn't read as if it were written for
+this document) with the two digital checklists' actual recorded results
+(Funktionscheckliste, Übergabe-Checkliste, both with real checked state)
+plus whichever optional as-built sections (Abgangsliste, Verteilerplanung,
+Gruppenadressen, Klärungsliste, Geräte je Raum) are toggled on in
+Setup -> Dokumentation. The two checklist chapters are themselves
+toggleable via dokumentation_include_funktionscheckliste/_uebergabe
+(default on); the five as-built sections reuse the existing
+pflichtenheft_include_* company_profile columns as-is - moved *usage*
+only, not renamed, since renaming would need a DB migration for a purely
+internal wiring change.
+
+The export opens with an Inhaltsverzeichnis whose entries are real
+clickable internal PDF links (ReportLab's `<a href="#anchor">`/
+`<a name="anchor"/>` mini-XML tags inside Paragraph text) built from the
+same `chapters` list that drives the body, so the two can never drift out
+of sync. Uses build_pdf_response_two_pass() rather than the usual
+build_pdf_response() - see pdf_design.py's make_numbered_canvas() for why
+plain single-pass "Seite X von Y" numbering silently breaks those internal
+links.
 """
 from fastapi import APIRouter, HTTPException
 from reportlab.platypus import Paragraph, Spacer, Table, PageBreak, KeepTogether
@@ -17,7 +30,7 @@ from reportlab.lib.units import mm
 from ..db import get_db
 from ..ga_logic import build_ga_tree, get_room_functions_by_category, get_central_functions_overview
 from ..pdf_design import (
-    pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response,
+    pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response_two_pass,
     company_header_block, company_footer_line,
 )
 from .abgangsliste import build_abgangsliste_story
@@ -148,6 +161,92 @@ def _uebergabe_story(db, project_id, styles, status_map):
     return story
 
 
+def _build_dokumentation_chapters(db, project_id, company, styles):
+    """Built as (anchor, title, content) chapters, in the order they'll
+    appear, so the Inhaltsverzeichnis (built from this same list, see
+    _assemble_dokumentation_story()) can never drift out of sync with the
+    actual section titles/order - one source of truth instead of two
+    parallel lists."""
+    status_map = get_status_map(db, project_id)
+
+    chapters = [(
+        "pflichtenheft", "Pflichtenheft",
+        build_pflichtenheft_spec_story(db, project_id, company, styles),
+    )]
+
+    if company.get("dokumentation_include_funktionscheckliste", True):
+        chapters.append((
+            "funktionscheckliste", "Funktionscheckliste — Testergebnisse",
+            _funktionscheckliste_story(db, project_id, styles, status_map),
+        ))
+
+    if company.get("dokumentation_include_uebergabe", True):
+        chapters.append((
+            "uebergabe", "Übergabe-Checkliste — Ergebnisse",
+            _uebergabe_story(db, project_id, styles, status_map),
+        ))
+
+    if company.get("pflichtenheft_include_abgangsliste", False):
+        abgangsliste_story = build_abgangsliste_story(db, project_id, styles, page_break_between_floors=False)
+        if abgangsliste_story:
+            chapters.append(("abgangsliste", "Abgangsliste", abgangsliste_story))
+
+    if company.get("pflichtenheft_include_verteilerplanung", False):
+        verteilerplanung_story = build_verteilerplanung_story(db, project_id, styles)
+        if verteilerplanung_story:
+            chapters.append(("verteilerplanung", "Verteilerplanung", verteilerplanung_story))
+
+    if company.get("pflichtenheft_include_geraete_je_raum", False):
+        geraete_je_raum_story = build_geraete_je_raum_story(db, project_id, styles)
+        if geraete_je_raum_story:
+            chapters.append(("geraete-je-raum", "Geräte je Raum", geraete_je_raum_story))
+
+    if company.get("pflichtenheft_include_klaerungsliste", False):
+        chapters.append(("klaerungsliste", "Klärungsliste", _klaerungsliste_story(db, project_id, styles)))
+
+    # Gruppenadressen last, deliberately - it's the longest/most
+    # reference-table-like section on a larger project (every GA in a
+    # dense table), so it goes at the very back rather than breaking up
+    # the more narrative sections above it.
+    if company.get("pflichtenheft_include_gruppenadressen", False):
+        ga_story = _gruppenadressen_story(project_id, styles)
+        if ga_story:
+            chapters.append(("gruppenadressen", "Gruppenadressen", ga_story))
+
+    return chapters
+
+
+def _assemble_dokumentation_story(chapters, company, project, styles):
+    """Banner + intro + a clickable Inhaltsverzeichnis + the chapters
+    themselves, each starting on its own page with a named anchor matching
+    its Inhaltsverzeichnis entry."""
+    story = company_header_block(company) + pdf_title_banner(
+        f"Dokumentation — {project['name']}",
+        "Vollständige Abschlussdokumentation",
+    )
+    story.append(Paragraph(
+        "Dieses Dokument fasst die gesamte Projektdokumentation zusammen: den vereinbarten "
+        "Funktionsumfang (Pflichtenheft), die tatsächlichen Testergebnisse der Funktions- und "
+        "Übergabe-Checkliste sowie die unten aufgeführten Zusatzabschnitte.",
+        styles["Body"],
+    ))
+    story.append(Spacer(1, 4 * mm))
+
+    story.append(Paragraph("Inhaltsverzeichnis", styles["SectionHeading"]))
+    for anchor, title, _ in chapters:
+        story.append(Paragraph(f'<a href="#{anchor}">{title}</a>', styles["TOCLink"]))
+    story.append(PageBreak())
+
+    for i, (anchor, title, content) in enumerate(chapters):
+        if i > 0:
+            story.append(PageBreak())
+        story.append(Paragraph(f'<a name="{anchor}"/>{title}', styles["SectionHeading"]))
+        story.append(Spacer(1, 2 * mm))
+        story += content
+
+    return story
+
+
 @router.get("/api/projects/{project_id}/export-dokumentation.pdf")
 def export_dokumentation_pdf(project_id: int):
     with get_db() as db:
@@ -156,77 +255,18 @@ def export_dokumentation_pdf(project_id: int):
             raise HTTPException(404, "Project not found")
 
         company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
-        status_map = get_status_map(db, project_id)
-        styles = pdf_styles()
 
-        story = company_header_block(company) + pdf_title_banner(
-            f"Dokumentation — {project['name']}",
-            "Vollständige Abschlussdokumentation",
-        )
-        story.append(Paragraph(
-            "Dieses Dokument fasst die gesamte Projektdokumentation zusammen: den vereinbarten "
-            "Funktionsumfang, die tatsächlichen Testergebnisse der Funktions- und Übergabe-Checkliste "
-            "sowie die ausgewählten Zusatzabschnitte.",
-            styles["Body"],
-        ))
-        story.append(Spacer(1, 4 * mm))
+        def build_story():
+            # Called twice (see build_pdf_response_two_pass) - each call
+            # must produce genuinely fresh flowables, not reuse any from a
+            # previous call, so this re-queries and rebuilds from scratch
+            # every time rather than caching anything from the outer scope.
+            styles = pdf_styles()
+            chapters = _build_dokumentation_chapters(db, project_id, company, styles)
+            return _assemble_dokumentation_story(chapters, company, project, styles)
 
-        story += build_pflichtenheft_spec_story(db, project_id, company, styles)
-
-        story.append(PageBreak())
-        story.append(Paragraph("Funktionscheckliste — Testergebnisse", styles["SectionHeading"]))
-        story.append(Spacer(1, 2 * mm))
-        story += _funktionscheckliste_story(db, project_id, styles, status_map)
-
-        story.append(PageBreak())
-        story.append(Paragraph("Übergabe-Checkliste — Ergebnisse", styles["SectionHeading"]))
-        story.append(Spacer(1, 2 * mm))
-        story += _uebergabe_story(db, project_id, styles, status_map)
-
-        if company.get("pflichtenheft_include_abgangsliste", False):
-            abgangsliste_story = build_abgangsliste_story(db, project_id, styles, page_break_between_floors=False)
-            if abgangsliste_story:
-                story.append(PageBreak())
-                story.append(Paragraph("Abgangsliste", styles["SectionHeading"]))
-                story.append(Spacer(1, 2 * mm))
-                story += abgangsliste_story
-
-        if company.get("pflichtenheft_include_verteilerplanung", False):
-            verteilerplanung_story = build_verteilerplanung_story(db, project_id, styles)
-            if verteilerplanung_story:
-                story.append(PageBreak())
-                story.append(Paragraph("Verteilerplanung", styles["SectionHeading"]))
-                story.append(Spacer(1, 2 * mm))
-                story += verteilerplanung_story
-
-        if company.get("pflichtenheft_include_geraete_je_raum", False):
-            geraete_je_raum_story = build_geraete_je_raum_story(db, project_id, styles)
-            if geraete_je_raum_story:
-                story.append(PageBreak())
-                story.append(Paragraph("Geräte je Raum", styles["SectionHeading"]))
-                story.append(Spacer(1, 2 * mm))
-                story += geraete_je_raum_story
-
-        if company.get("pflichtenheft_include_klaerungsliste", False):
-            story.append(PageBreak())
-            story.append(Paragraph("Klärungsliste", styles["SectionHeading"]))
-            story.append(Spacer(1, 2 * mm))
-            story += _klaerungsliste_story(db, project_id, styles)
-
-        # Gruppenadressen last, deliberately - it's the longest/most
-        # reference-table-like section on a larger project (every GA in a
-        # dense table), so it goes at the very back rather than breaking up
-        # the more narrative sections above it.
-        if company.get("pflichtenheft_include_gruppenadressen", False):
-            ga_story = _gruppenadressen_story(project_id, styles)
-            if ga_story:
-                story.append(PageBreak())
-                story.append(Paragraph("Gruppenadressen", styles["SectionHeading"]))
-                story.append(Spacer(1, 2 * mm))
-                story += ga_story
-
-        return build_pdf_response(
-            story,
+        return build_pdf_response_two_pass(
+            build_story,
             footer_left_text=f"Dokumentation · {project['name']}",
             filename=f"{project['name'].replace(' ', '_')}_dokumentation.pdf",
             doc_title=f"Dokumentation {project['name']}",

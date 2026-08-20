@@ -38,10 +38,24 @@ restructuring below — history before that is available via `git log`.
     handed over" items collapsed into one clear item each (Bedienungs-
     anleitungen, Anlagendokumentation, Software/Backups, Passwörter).
   - **Dokumentation** (new): the end-of-project assembly - Pflichtenheft's
-    spec content plus both checklists' actual recorded results, plus the
-    optional as-built sections (Abgangsliste, Verteilerplanung,
-    Gruppenadressen, Klärungsliste, Geräte je Raum) moved here from
-    Pflichtenheft's old Setup toggles (now under Setup → Dokumentation).
+    spec content (now explicitly labeled "Pflichtenheft" as its own
+    chapter, so it doesn't read as if written for this document) plus
+    both checklists' actual recorded results, plus the optional as-built
+    sections (Abgangsliste, Verteilerplanung, Gruppenadressen,
+    Klärungsliste, Geräte je Raum) moved here from Pflichtenheft's old
+    Setup toggles (now under Setup → Dokumentation, which also gained two
+    new toggles - Funktionscheckliste/Übergabe-Checkliste were previously
+    always included, now optional like the rest, default on). The PDF
+    opens with a short intro plus a clickable **Inhaltsverzeichnis** -
+    real internal PDF links that jump straight to each included chapter.
+
+  Fixed along the way: the standard "Seite X von Y" footer trick
+  (deferring page-number drawing to the very end) silently broke
+  ReportLab's internal-link anchors, since it postpones the API call that
+  actually registers which page a bookmark is on - every Inhaltsverzeichnis
+  entry was landing on page 1 regardless of its real target. Dokumentation
+  now does a genuine two-pass PDF build (`build_pdf_response_two_pass()`)
+  instead; every other export is unaffected.
 
   The Übersicht sub-tab's summary cards now cover all three new tabs
   (Funktionscheckliste/Übergabe-Checkliste show a checked/answered count,

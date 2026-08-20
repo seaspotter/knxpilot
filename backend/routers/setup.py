@@ -39,6 +39,8 @@ def get_company_profile():
             "pflichtenheft_include_abgangsliste": bool(r["pflichtenheft_include_abgangsliste"]),
             "pflichtenheft_include_verteilerplanung": bool(r["pflichtenheft_include_verteilerplanung"]),
             "pflichtenheft_include_klaerungsliste": bool(r["pflichtenheft_include_klaerungsliste"]),
+            "dokumentation_include_funktionscheckliste": bool(r["dokumentation_include_funktionscheckliste"]),
+            "dokumentation_include_uebergabe": bool(r["dokumentation_include_uebergabe"]),
             "backup_enabled": bool(r["backup_enabled"]),
             "backup_interval_hours": r["backup_interval_hours"],
             "backup_retention_count": r["backup_retention_count"],
@@ -64,6 +66,7 @@ def update_company_profile(cp: CompanyProfileIn):
             "pflichtenheft_include_geraete_je_raum=?, "
             "pflichtenheft_include_gruppenadressen=?, pflichtenheft_include_abgangsliste=?, "
             "pflichtenheft_include_verteilerplanung=?, pflichtenheft_include_klaerungsliste=?, "
+            "dokumentation_include_funktionscheckliste=?, dokumentation_include_uebergabe=?, "
             "backup_enabled=?, backup_interval_hours=?, backup_retention_count=?, "
             "backup_local_enabled=?, backup_local_path=?, "
             "backup_nextcloud_enabled=?, backup_nextcloud_url=?, "
@@ -75,6 +78,7 @@ def update_company_profile(cp: CompanyProfileIn):
              int(cp.pflichtenheft_include_geraete_je_raum),
              int(cp.pflichtenheft_include_gruppenadressen), int(cp.pflichtenheft_include_abgangsliste),
              int(cp.pflichtenheft_include_verteilerplanung), int(cp.pflichtenheft_include_klaerungsliste),
+             int(cp.dokumentation_include_funktionscheckliste), int(cp.dokumentation_include_uebergabe),
              int(cp.backup_enabled), cp.backup_interval_hours, cp.backup_retention_count,
              int(cp.backup_local_enabled), cp.backup_local_path,
              int(cp.backup_nextcloud_enabled), cp.backup_nextcloud_url,
