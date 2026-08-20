@@ -50,7 +50,7 @@ backend/
   main.py           — creates the app, wires up routers, mounts frontend/ as static files
   db.py             — sqlite connection, schema, migrations, seed data
   models.py         — Pydantic request-body schemas
-  ga_logic.py       — group-address tree generation, circuits, Pflichtenheft helpers
+  ga_logic.py       — group-address tree generation, circuits, per-room/central function listings (used by Pflichtenheft and the checklists)
   pdf_design.py     — shared PDF look (banner, table style, page numbers, letterhead)
   utils.py          — small dependency-free helpers
   routers/
@@ -59,7 +59,9 @@ backend/
     projects.py        — projects, floors/rooms/points, backup/restore (Projekte tab: Gebäudestruktur sub-tab + project CRUD)
     abgangsliste.py    — actor instances, circuit assignment, CSV/PDF export (Abgangsliste sub-tab)
     geraeteplanung.py  — per-room device planning, bill of materials, PDF export (Geräteplanung sub-tab)
-    pflichtenheft.py   — Pflichtenheft PDF export (Pflichtenheft sub-tab)
+    pflichtenheft.py   — early-stage spec PDF export (Pflichtenheft sub-tab); also home to function_checklist_table(), shared with checkliste.py
+    checkliste.py      — digital on-site checklists: checklist_status upsert, Funktionscheckliste + Übergabe-Checkliste JSON/PDF (their sub-tabs)
+    dokumentation.py   — end-of-project assembly PDF, combining Pflichtenheft content + both checklists' results + optional as-built sections (Dokumentation sub-tab)
     klaerungsliste.py  — questions/tasks/notes per project (Klärungsliste sub-tab)
     project_files.py   — a handful of reference files per project, stored as a BLOB (Übersicht sub-tab)
     system.py          — self-update via git, changelog + manual + version endpoints (Update/Hilfe tabs)
@@ -77,8 +79,11 @@ frontend/
     uebersicht.js      — project status dashboard + project files (Übersicht sub-tab)
     abgangsliste.js    — actor instances + circuit assignment
     geraeteplanung.js  — per-room device planning
-    pflichtenheft.js   — Pflichtenheft preview
+    pflichtenheft.js   — Pflichtenheft PDF download button (static content)
+    funktionscheckliste.js — digital on-site function testing checklist
+    uebergabe_checkliste.js — digital handover checklist
     klaerungsliste.js  — questions/tasks/notes
+    dokumentation.js   — Dokumentation PDF download button (static content)
     update.js          — self-update tab + changelog viewer + version badge
     hilfe.js           — in-app manual (renders MANUAL.md)
     init.js            — page-load bootstrap, must load last (calls functions from the files above)

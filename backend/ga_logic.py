@@ -14,7 +14,10 @@ from .utils import join_parts
 
 
 def get_room_functions_by_category(db, room_id):
-    """Human-readable GA functions in a room, grouped by category name - for the Pflichtenheft."""
+    """Human-readable GA functions in a room, grouped by category name - for the
+    Pflichtenheft and the Funktionscheckliste. Each item carries a stable "key"
+    (room_points.id, namespaced) so a checked/tested state can be persisted
+    against it (see checklist_status in db.py, routers/checkliste.py)."""
     categories = {r["id"]: r["name"] for r in db.execute("SELECT * FROM categories").fetchall()}
     point_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM point_types").fetchall()}
     points = db.execute("SELECT * FROM room_points WHERE room_id=? ORDER BY order_idx", (room_id,)).fetchall()
@@ -28,7 +31,7 @@ def get_room_functions_by_category(db, room_id):
         desc = f"{label} ({pt['name']})" if label else pt["name"]
         if p["has_bwm"]:
             desc += " +BWM"
-        by_category.setdefault(cat_name, []).append(desc)
+        by_category.setdefault(cat_name, []).append({"key": f"room_point:{p['id']}", "text": desc})
     return by_category
 
 
@@ -41,7 +44,9 @@ CENTRAL_SCOPE_LABELS = {
 
 def get_central_functions_overview(db, project_id):
     """Human-readable summary of which central/general function templates apply,
-    for categories actually used in this project - for the Pflichtenheft."""
+    for categories actually used in this project - for the Pflichtenheft and the
+    Funktionscheckliste. Each item carries a stable "key" (central_templates.id,
+    namespaced) so a checked/tested state can be persisted against it."""
     categories = db.execute("SELECT * FROM categories ORDER BY order_idx").fetchall()
     point_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM point_types").fetchall()}
 
@@ -70,7 +75,7 @@ def get_central_functions_overview(db, project_id):
             fallback = suffixes[0]["suffix"] if suffixes and suffixes[0]["suffix"] else "Funktion"
             label = t["name"] or fallback
             scope_label = CENTRAL_SCOPE_LABELS.get(t["scope"], t["scope"])
-            items.append(f"{label} ({scope_label})")
+            items.append({"key": f"central:{t['id']}", "text": f"{label} ({scope_label})"})
         overview.append((cat["name"], items))
     return overview
 

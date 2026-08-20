@@ -113,7 +113,10 @@
         <button data-subtab="geraeteplanung">Geräteplanung</button>
         <button data-subtab="verteilerplanung">Verteilerplanung</button>
         <button data-subtab="pflichtenheft">Pflichtenheft</button>
+        <button data-subtab="funktionscheckliste">Funktionscheckliste</button>
+        <button data-subtab="uebergabe">Übergabe-Checkliste</button>
         <button data-subtab="klaerungsliste">Klärungsliste</button>
+        <button data-subtab="dokumentation">Dokumentation</button>
       </div>
 
       <div class="subtab active" id="subtab-uebersicht">
@@ -294,17 +297,34 @@
       </div>
 
       <div class="subtab" id="subtab-pflichtenheft">
-        <div id="pflichtenheft-detail" style="display:none;">
-          <div class="card">
-            <div class="row" style="justify-content:space-between;">
-              <h4 style="margin:0;">Vorschau</h4>
-              <div class="row" style="margin:0;">
-                <button class="btn secondary" onclick="downloadUebergabeChecklist()">Übergabe-Checkliste herunterladen</button>
-                <button class="btn" onclick="downloadPflichtenheft()">PDF herunterladen</button>
-              </div>
-            </div>
-            <div id="pflichtenheft-preview" class="tree"></div>
+        <div class="card">
+          <div class="row" style="justify-content:space-between;">
+            <h4 style="margin:0;">Pflichtenheft</h4>
+            <button class="btn" onclick="downloadPflichtenheft()">PDF herunterladen</button>
           </div>
+          <p class="muted">Die frühe, kundenseitige Leistungsbeschreibung: was wurde vereinbart? Vorbemerkungen, Stockwerk-/Raumverzeichnis, geplante Funktionen/Geräte je Raum sowie die Stückliste — bewusst ohne Testergebnisse oder Ausführungsdetails (dafür: Funktionscheckliste, Übergabe-Checkliste, Dokumentation). Inhalt/Abschnitte anpassen: Setup → Pflichtenheft.</p>
+        </div>
+      </div>
+
+      <div class="subtab" id="subtab-funktionscheckliste">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;">
+            <h4 style="margin:0;">Funktionscheckliste</h4>
+            <button class="btn secondary small" onclick="downloadFunktionscheckliste()">PDF exportieren</button>
+          </div>
+          <p class="muted">Jede geplante Funktion vor Ort digital abhaken, sobald sie getestet ist — direkt hier auf dem Handy, kein Ausdrucken/Abhaken auf Papier nötig. Der PDF-Export ist nur eine Momentaufnahme zum Weitergeben, nicht die primäre Arbeitsweise.</p>
+          <div id="funktionscheckliste-content"></div>
+        </div>
+      </div>
+
+      <div class="subtab" id="subtab-uebergabe">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;">
+            <h4 style="margin:0;">Übergabe-Checkliste</h4>
+            <button class="btn secondary small" onclick="downloadUebergabeChecklist()">PDF exportieren</button>
+          </div>
+          <p class="muted">Checkliste für das Übergabegespräch vor Ort — digital ausfüllen (Ja/Nein/Nicht nötig + Bemerkungen), kein Papierformular nötig. Der PDF-Export ist nur eine Momentaufnahme zum Weitergeben/Unterschreiben.</p>
+          <div id="uebergabe-content"></div>
         </div>
       </div>
 
@@ -332,6 +352,16 @@
         </div>
         <div id="klaerungsliste-digest"></div>
         <div id="klaerungsliste-groups"></div>
+      </div>
+
+      <div class="subtab" id="subtab-dokumentation">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;">
+            <h4 style="margin:0;">Dokumentation</h4>
+            <button class="btn" onclick="downloadDokumentation()">PDF herunterladen</button>
+          </div>
+          <p class="muted">Die vollständige Abschlussdokumentation, am Ende des Projekts erzeugt: Pflichtenheft-Inhalt plus die tatsächlichen Ergebnisse der Funktions- und Übergabe-Checkliste, plus optional Abgangsliste/Verteilerplanung/Gruppenadressen/Klärungsliste/Geräte je Raum. Welche Zusatzabschnitte enthalten sind: Setup → Dokumentation.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -389,6 +419,7 @@
       <button data-subtab="punkttypen">Funktionstypen</button>
       <button data-subtab="zentralvorlagen">Zentral-/Allgemeinfunktions-Vorlagen</button>
       <button data-subtab="pflichtenheft">Pflichtenheft</button>
+      <button data-subtab="dokumentation">Dokumentation</button>
       <button data-subtab="backup">Backup</button>
     </div>
 
@@ -540,6 +571,16 @@
       <div class="row" style="flex-direction:column; align-items:flex-start; gap:8px;">
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-struktur"> Stockwerk- und Raumverzeichnis</label>
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-geraeteliste"> Geräteliste (Stückliste)</label>
+      </div>
+      <div style="margin-top:10px;"><button class="btn" onclick="saveCompanyProfile()">Speichern</button></div>
+    </div>
+    </div>
+
+    <div class="subtab" id="setup-subtab-dokumentation">
+    <div class="card">
+      <h3>Dokumentation</h3>
+      <p class="muted">Steuert, welche Zusatzabschnitte im Dokumentation-PDF-Export erscheinen (siehe Projekt-Tab Dokumentation) — neben dem Pflichtenheft-Inhalt und den Ergebnissen der Funktions- und Übergabe-Checkliste, die immer enthalten sind.</p>
+      <div class="row" style="flex-direction:column; align-items:flex-start; gap:8px;">
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-geraete-je-raum"> Geräte je Raum</label>
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-gruppenadressen"> Gruppenadressen<span class="info-icon" tabindex="0" data-tip="Kann bei grösseren Projekten sehr lang werden (eine Zeile je Adresse).">i</span></label>
         <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-abgangsliste"> Abgangsliste</label>
@@ -648,7 +689,10 @@
 <script src="/js/geraeteplanung.js"></script>
 <script src="/js/verteiler.js"></script>
 <script src="/js/pflichtenheft.js"></script>
+<script src="/js/funktionscheckliste.js"></script>
+<script src="/js/uebergabe_checkliste.js"></script>
 <script src="/js/klaerungsliste.js"></script>
+<script src="/js/dokumentation.js"></script>
 <script src="/js/update.js"></script>
 <script src="/js/hilfe.js"></script>
 <script src="/js/init.js"></script>

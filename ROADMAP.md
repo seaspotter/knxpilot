@@ -13,17 +13,6 @@ nobody trusts.
   zip of XML) to pre-populate a KNXpilot project's group addresses, instead
   of always starting from a blank building. High value, but real work
   against ETS's file format.
-- [ ] **Split Pflichtenheft from a future "Finale Dokumentation"** —
-  Pflichtenheft today bundles everything (planned functions, device lists,
-  Gruppenadressen, Abgangsliste, Verteilerplanung...) behind toggles and
-  is used at both ends of a project: as the pre-project spec/scope
-  document agreed with the customer, and again informally as an as-built
-  record once everything is finished. Those are conceptually different
-  moments - "what we agreed to build" vs. "what we actually built" - and
-  may want to become two separate documents/exports instead of one
-  toggle-everything PDF. Not scoped yet; raised while building the
-  Geräte-je-Raum export, which currently lives as just another
-  Pflichtenheft toggle.
 
 ## Explicitly deferred
 

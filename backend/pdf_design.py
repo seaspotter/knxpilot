@@ -153,13 +153,18 @@ def pdf_table_style(extra_commands=None):
     return TableStyle(commands)
 
 
-def checkbox_cell(box_size=3.2 * mm):
-    """An empty bordered box for paper-style tick lists (to be hand-checked
-    after on-site testing/handover) - drawn rather than a Unicode glyph
-    (e.g. "☐"), since the base Helvetica fonts used throughout this design
-    system (WinAnsi encoding) don't reliably render box-drawing characters."""
+def checkbox_cell(checked=False, box_size=3.2 * mm):
+    """A bordered box, filled with the accent color when checked - drawn
+    rather than a Unicode glyph (e.g. "☐"/"☑"), since the base Helvetica
+    fonts used throughout this design system (WinAnsi encoding) don't
+    reliably render box-drawing characters. Used both for the old-style
+    always-blank paper checkbox (checked=False, the default) and for
+    reflecting real persisted checklist state (see routers/checkliste.py)."""
     t = Table([[""]], colWidths=[box_size], rowHeights=[box_size])
-    t.setStyle(TableStyle([("BOX", (0, 0), (-1, -1), 0.8, PDF_BORDER_COLOR)]))
+    style = [("BOX", (0, 0), (-1, -1), 0.8, PDF_BORDER_COLOR)]
+    if checked:
+        style.append(("BACKGROUND", (0, 0), (-1, -1), PDF_ACCENT_COLOR))
+    t.setStyle(TableStyle(style))
     return t
 
 

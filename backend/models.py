@@ -130,6 +130,11 @@ class DeviceOrderFlagIn(BaseModel):
     not_ordering: bool = True
 
 
+class ChecklistStatusIn(BaseModel):
+    status: str = ""
+    note: str = ""
+
+
 class VerteilerIn(BaseModel):
     floor_id: int | None = None
     name: str = ""

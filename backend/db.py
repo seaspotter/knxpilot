@@ -435,6 +435,29 @@ def init_db():
                 uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
 
+            -- Shared status store for the two digital on-site checklists
+            -- (Funktionscheckliste, Übergabe-Checkliste - see routers/checkliste.py).
+            -- item_key is a polymorphic string key, same "no enforced FK" precedent
+            -- as special_items.location: "room_point:<room_points.id>" (a planned
+            -- function), "central:<central_templates.id>" (a central/Allgemein
+            -- function), or "uebergabe:<slug>" (a static handover-checklist item,
+            -- see CHECKLIST_SECTIONS in routers/pflichtenheft.py). status is
+            -- ''/'ok' for function-checklist items, ''/'ja'/'nein'/'nicht_noetig'
+            -- for Übergabe items (mirrors klaerungen.status's German-literal
+            -- convention). note (Bemerkungen) is only ever written for Übergabe
+            -- items. A deleted room_point/central_template just leaves an
+            -- orphaned, harmless, never-again-read row - ids are never reused
+            -- (AUTOINCREMENT), so no stale-reattachment risk.
+            CREATE TABLE IF NOT EXISTS checklist_status (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                item_key TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT '',
+                note TEXT NOT NULL DEFAULT '',
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(project_id, item_key)
+            );
+
             -- Global, tool-wide company identity (singleton, id pinned to 1). Shown in
             -- the app header next to the KNXpilot brand, and optionally as a page-1
             -- letterhead on every PDF export, gated by show_on_pdf.

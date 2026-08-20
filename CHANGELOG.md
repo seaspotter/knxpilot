@@ -8,6 +8,35 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- Split the old Pflichtenheft tab (which conflated the pre-project spec, a
+  never-persisted "Getestet" paper checkbox, and a grab-bag of optional
+  as-built sections) into four focused sub-tabs:
+  - **Pflichtenheft** narrowed to just the early-stage spec (Vorbemerkungen,
+    Stockwerk-/Raumverzeichnis, geplante Funktionen/Geräte je Raum,
+    Geräteliste) - no more checkbox column, nothing has been tested yet at
+    this stage.
+  - **Funktionscheckliste** (new): every planned function, tap-to-check
+    digitally on-site (persisted, not printed/hand-ticked), plus a PDF
+    export snapshot.
+  - **Übergabe-Checkliste** (new): the handover checklist, now filled in
+    digitally on-site (Ja/Nein/Nicht nötig + Bemerkungen per item,
+    persisted) instead of only existing as a paper PDF; PDF export still
+    available for signing.
+  - **Dokumentation** (new): the end-of-project assembly - Pflichtenheft's
+    spec content plus both checklists' actual recorded results, plus the
+    optional as-built sections (Abgangsliste, Verteilerplanung,
+    Gruppenadressen, Klärungsliste, Geräte je Raum) moved here from
+    Pflichtenheft's old Setup toggles (now under Setup → Dokumentation).
+
+  New `checklist_status` table (shared by both digital checklists), new
+  `backend/routers/checkliste.py` (`GET/PUT
+  /api/projects/{id}/checklist-status[/{item_key}]`,
+  `GET /api/rooms/{id}/function-checklist`,
+  `GET /api/projects/{id}/central-functions-checklist`,
+  `GET /api/uebergabe-checklist-sections`, plus both PDF exports), new
+  `backend/routers/dokumentation.py`
+  (`GET /api/projects/{id}/export-dokumentation.pdf`).
+
 - **Dateien** section on the Übersicht sub-tab: upload/download/delete a
   handful of reference files per project (building drawings, manuals, an
   ETS export), max. 25 MB each. Stored as a BLOB directly in the SQLite

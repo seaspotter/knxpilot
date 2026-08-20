@@ -4,8 +4,8 @@ Planungswerkzeug für KNX-Installationen, entwickelt anhand echter ETS6-Projekte
 Für Elektriker/Systemintegratoren, die mehrere Projekte parallel planen und dabei
 durchgängige Adressierungs- und Namenskonventionen einhalten wollen. Deckt den
 Weg von der ersten Raumplanung bis zur fertigen ETS6-Gruppenadressen-CSV, der
-Aktoren-Verdrahtungsliste (Abgangsliste) und der Kundendokumentation
-(Pflichtenheft) ab.
+Aktoren-Verdrahtungsliste (Abgangsliste), dem digitalen Funktions-/
+Übergabe-Check vor Ort und der fertigen Kundendokumentation ab.
 
 **Kernablauf:** Geschosse → Räume → Punkte (Licht / Steckdosen / Fenster /
 Heizung) → fertig. Zentral- und Allgemeinfunktionen (Datum/Uhrzeit,
@@ -28,8 +28,10 @@ Vorlagen erzeugt.
   ETS6-Exporte geprüft.
 - **Abgangsliste** — automatische Kanalzuordnung Aktor ↔ Funktion je
   Geschoss, plus CSV-/PDF-Export für die Schaltschrank-Verdrahtung.
-- **Geräteplanung, Pflichtenheft und Klärungsliste** — Stückliste,
-  Kunden-PDF und interne Rückfragenliste, alle aus denselben Projektdaten.
+- **Geräteplanung, Pflichtenheft, digitale Checklisten und Klärungsliste**
+  — Stückliste, Leistungsbeschreibung, digitaler Funktions-/Übergabe-Check
+  vor Ort (kein Papier), interne Rückfragenliste sowie eine
+  Abschlussdokumentation am Ende, alle aus denselben Projektdaten.
 - **Globaler Gerätekatalog**, mit Startkatalog gängiger KNX-Hersteller
   vorbelegt.
 - Einzelbenutzer, **keine Authentifizierung** — für den Betrieb im eigenen

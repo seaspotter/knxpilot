@@ -59,9 +59,10 @@ in `backend/routers/projects.py` isoliert.
   Programmkopf (neben der Versionsnummer) jederzeit, welches — ein Klick
   darauf springt dorthin, das **×** daneben schliesst es direkt von
   überall aus, ohne erst zum Projekte-Tab wechseln zu müssen. Ein
-  geöffnetes Projekt zeigt einen Arbeitsbereich mit zehn Unterreitern
+  geöffnetes Projekt zeigt einen Arbeitsbereich mit dreizehn Unterreitern
   (Übersicht, Gebäudestruktur, Funktionen, Gruppenadressen, Abgangsliste,
-  Labels, Geräteplanung, Verteilerplanung, Pflichtenheft, Klärungsliste),
+  Labels, Geräteplanung, Verteilerplanung, Pflichtenheft,
+  Funktionscheckliste, Übergabe-Checkliste, Klärungsliste, Dokumentation),
   die alle am selben Projekt arbeiten.
 - **Geräte Katalog** — globaler Gerätekatalog (Aktoren, Sensoren,
   Bedienelemente usw.), gemeinsam für alle Projekte genutzt.
@@ -310,7 +311,7 @@ erscheinen, siehe Punkt 2).
    gruppiert nach Geschoss/Raum, mit Gruppe, Hersteller, Typ und
    physischer Adresse — als Installationsreferenz für die Ausführung vor
    Ort, getrennt von der Bestellliste oben. Lässt sich zusätzlich optional
-   ins Pflichtenheft-PDF aufnehmen (siehe unten, Setup → Pflichtenheft).
+   ins Dokumentation-PDF aufnehmen (siehe unten, Setup → Dokumentation).
 5. **PA automatisch zuordnen** vergibt physikalische Adressen für alle
    Geräte im Projekt ohne eine — siehe Abgangsliste, Punkt 7, für die
    genaue Reihenfolge/Logik; hier wie dort wirkt der Klick projektweit auf
@@ -349,60 +350,63 @@ Ein **Verteiler** gehört zu einem Geschoss und hat eine feste Anzahl Reihen
 - **PDF herunterladen** exportiert alle Verteiler des Projekts als
   formatiertes PDF — je Verteiler eine Reihenübersicht, optisch analog
   zur Bildschirmansicht. Lässt sich zusätzlich optional ins
-  Pflichtenheft-PDF aufnehmen (siehe unten, Setup → Pflichtenheft).
+  Dokumentation-PDF aufnehmen (siehe unten, Setup → Dokumentation).
 
 #### Pflichtenheft
 
-Dokumentiert, was für das Projekt tatsächlich vereinbart/umgesetzt wurde —
-gedacht als Referenz für Kunde und Elektriker, getrennt von den technischen
-GA-/Verdrahtungsdetails. Eine Textvorschau zeigt sofort, was im PDF stehen
-wird; **PDF herunterladen** erzeugt ein mehrseitiges Dokument mit:
+Die frühe, kundenseitige Leistungsbeschreibung: was wurde vereinbart? Rein
+auf die Planungsphase fokussiert — bewusst ohne Testergebnisse oder
+Ausführungsdetails (dafür: Funktionscheckliste, Übergabe-Checkliste,
+Dokumentation, siehe unten). **PDF herunterladen** erzeugt ein
+mehrseitiges Dokument mit:
 
 - einem **Vorbemerkungen**-Abschnitt (Begriffserklärungen, allgemeine
   Bedienphilosophie, Funktionsübersicht je Gewerk, Prioritäts-/
   Sicherheitsfunktionen — mit sinnvollem Standardtext vorbelegt, siehe
   unten),
-- den geplanten Funktionen und Geräten je Geschoss/Raum — jede einzelne
-  Funktion mit einer leeren **Getestet**-Checkbox zum Abhaken vor Ort nach
-  der Inbetriebnahme (rein papierbasiert — es wird nichts im Tool
-  gespeichert, da KNXpilot nicht nachhält, welcher Taster welche Funktion
-  auslöst; das ist Sache der ETS-Programmierung),
-  sowie einer Übersicht der Zentral-/Allgemeinfunktionen (ebenfalls mit
-  Getestet-Checkbox) — diese beiden sind immer enthalten.
+- den geplanten Funktionen und Geräten je Geschoss/Raum sowie einer
+  Übersicht der Zentral-/Allgemeinfunktionen (immer enthalten, ohne
+  Checkbox-Spalte — was tatsächlich getestet wurde, hält stattdessen die
+  Funktionscheckliste digital fest).
 
 Zusätzlich lassen sich im Setup-Tab unter *Pflichtenheft* (siehe unten)
-weitere Abschnitte optional dazuschalten: **Stockwerk- und
-Raumverzeichnis** sowie **Geräteliste** (Stückliste, standardmässig an),
-und **Geräte je Raum**, **Abgangsliste**, **Verteilerplanung**,
-**Klärungsliste** sowie **Gruppenadressen**
-(standardmässig aus, da sie ein Projekt schnell sehr lang machen können —
-gezielt für den Einzelfall dazuschalten). Gruppenadressen steht dabei
-immer als letzter Abschnitt im PDF, auch wenn die anderen optionalen
-Abschnitte weiter oben ausgewählt sind — es ist meist der längste (jede
-einzelne Adresse als Tabellenzeile) und passt daher eher ans Ende als
-mitten zwischen die eher erzählenden Abschnitte. Dort lässt sich auch der
-Vorbemerkungen-Text anpassen und über ein eigenes Kontrollkästchen
-ein-/ausblenden, ohne den Text dabei zu verlieren — eine einfache
-Formatierung ist möglich: eine Leerzeile trennt Absätze, `##` oder `###`
-für eine Überschrift, eine Zeile die nur aus `**Text**` besteht für eine
-kleinere Unterüberschrift, eine Zeile die nur aus `*Text*` besteht für
-einen kursiven Hinweis/Fussnote, `---` für eine Trennlinie, `- ` am
-Zeilenanfang für Aufzählungspunkte, und `**Text**` mitten im Satz für
-Fettdruck.
+das **Stockwerk- und Raumverzeichnis** sowie die **Geräteliste**
+(Stückliste) optional dazuschalten (beide standardmässig an). Dort lässt
+sich auch der Vorbemerkungen-Text anpassen und über ein eigenes
+Kontrollkästchen ein-/ausblenden, ohne den Text dabei zu verlieren — eine
+einfache Formatierung ist möglich: eine Leerzeile trennt Absätze, `##`
+oder `###` für eine Überschrift, eine Zeile die nur aus `**Text**` besteht
+für eine kleinere Unterüberschrift, eine Zeile die nur aus `*Text*`
+besteht für einen kursiven Hinweis/Fussnote, `---` für eine Trennlinie,
+`- ` am Zeilenanfang für Aufzählungspunkte, und `**Text**` mitten im Satz
+für Fettdruck.
 
-Daneben steht **Übergabe-Checkliste herunterladen** — ein zweites,
-weitgehend allgemeines PDF (Sichtprüfung, Funktionsprüfung,
-Kundengespräch, Anlagenübergabe, je mit Ja/Nein/Nicht-nötig-Checkboxen und
-Bemerkungsspalte, plus Unterschriftenzeilen für Errichter und
-Kunde/Betreiber) für das Übergabegespräch vor Ort — nur Projektname
-wird automatisch eingesetzt, der Rest ist ein fester, wiederverwendbarer
-Fragenkatalog.
+#### Funktionscheckliste
+
+Der digitale Testfortschritt vor Ort: jede geplante Funktion (je
+Geschoss/Raum sowie die Zentral-/Allgemeinfunktionen) lässt sich hier
+direkt auf dem Handy antippen, sobald sie getestet ist — kein Ausdrucken
+und Abhaken auf Papier nötig, der Haken wird sofort im Projekt
+gespeichert. **PDF exportieren** erzeugt daraus eine Momentaufnahme zum
+Weitergeben, ist aber nicht die primäre Arbeitsweise.
+
+#### Übergabe-Checkliste
+
+Ein zweites, weitgehend allgemeines digitales Formular für das
+Übergabegespräch vor Ort (Sichtprüfung, Funktionsprüfung, Kundengespräch,
+Anlagenübergabe) — je Punkt ein Ja/Nein/Nicht-nötig-Status plus ein
+Bemerkungsfeld, direkt hier ausgefüllt und gespeichert; nur der
+Projektname ist projektspezifisch, der restliche Fragenkatalog ist fest
+und wiederverwendbar. **PDF exportieren** erzeugt daraus eine
+Momentaufnahme mit Unterschriftenzeilen für Errichter und Kunde/Betreiber
+zum Ausdrucken/Unterschreiben.
 
 #### Klärungsliste
 
 Interne Arbeitsliste für Fragen, Aufgaben und Notizen, die z.B. bei einem
 Kundentermin anfallen (etwa "Tasterfarbe schwarz oder weiss?") — erscheint
-**nicht** im Pflichtenheft-Export, rein zur eigenen Nachverfolgung.
+**nicht** im Pflichtenheft-Export, sondern optional (siehe unten) im
+Dokumentation-Export.
 
 - Jeder Eintrag hat einen **Typ** (Frage / Aufgabe / Notiz) und optional
   einen **Raum**, darin wiederum optional einen bestimmten **Punkt**; ohne
@@ -424,6 +428,20 @@ Kundentermin anfallen (etwa "Tasterfarbe schwarz oder weiss?") — erscheint
   ein Hinweis ("⚠ N Einträge sind seit mehr als 7 Tagen unbeantwortet").
   Dieselbe Kennzahl fliesst auch in die Projektübersicht auf der
   Projektliste ein (siehe oben).
+
+#### Dokumentation
+
+Die vollständige Abschlussdokumentation, gedacht für das Ende des
+Projekts: **PDF herunterladen** fasst den Pflichtenheft-Inhalt (was
+vereinbart wurde) mit den tatsächlichen Ergebnissen der Funktions- und
+Übergabe-Checkliste zusammen (immer enthalten), sowie optional Abgangsliste,
+Verteilerplanung, Gruppenadressen, Klärungsliste und Geräte je Raum — welche
+Zusatzabschnitte enthalten sind, wird im Setup-Tab unter *Dokumentation*
+gesteuert (siehe unten). Gruppenadressen steht dabei immer als letzter
+Abschnitt im PDF, auch wenn andere optionale Abschnitte weiter oben
+ausgewählt sind — es ist meist der längste (jede einzelne Adresse als
+Tabellenzeile) und passt daher eher ans Ende als mitten zwischen die eher
+erzählenden Abschnitte.
 
 ### Geräte Katalog
 
@@ -543,12 +561,17 @@ nicht alle gleichzeitig sichtbar.
   tatsächlich verwendet wird** — z.B. erscheint keine Hauptgruppe
   Steckdosen samt Zentralfunktion, wenn nie eine Steckdose hinzugefügt wird.
 - **Pflichtenheft** — der Vorbemerkungen-Text (mit einem sinnvollen
-  Standardtext vorbelegt, siehe Abschnitt *Pflichtenheft* oben) sowie
-  acht Kontrollkästchen, die steuern, was im Pflichtenheft-PDF erscheint:
-  Vorbemerkungen, Stockwerk-/Raumverzeichnis, Geräteliste (alle drei
-  standardmässig an), Geräte je Raum, Gruppenadressen, Abgangsliste,
-  Verteilerplanung und Klärungsliste (standardmässig aus). Gilt global für
-  alle Projekte, wie der Rest des Firmenprofils.
+  Standardtext vorbelegt, siehe Abschnitt *Pflichtenheft* oben) sowie drei
+  Kontrollkästchen, die steuern, was im Pflichtenheft-PDF erscheint:
+  Vorbemerkungen, Stockwerk-/Raumverzeichnis und Geräteliste (alle
+  standardmässig an). Gilt global für alle Projekte, wie der Rest des
+  Firmenprofils.
+- **Dokumentation** — fünf Kontrollkästchen, die steuern, welche
+  Zusatzabschnitte im Dokumentation-PDF erscheinen (siehe Abschnitt
+  *Dokumentation* oben): Geräte je Raum, Gruppenadressen, Abgangsliste,
+  Verteilerplanung und Klärungsliste (alle standardmässig aus, da sie ein
+  Projekt schnell sehr lang machen können — gezielt für den Einzelfall
+  dazuschalten). Gilt ebenfalls global für alle Projekte.
 - **Backup** — automatische und/oder manuelle (**Jetzt sichern**) Sicherung
   der kompletten Datenbank (alle Projekte, Geräte-Katalog, restliches
   Setup — nicht nur ein einzelnes Projekt) auf ein NAS/gemountetes
@@ -591,7 +614,8 @@ Installation geändert hat, ohne extra auf GitHub nachsehen zu müssen.
 ## PDF-Exporte
 
 Alle PDF-Exporte (Abgangsliste, Geräteliste, Pflichtenheft,
-Übergabe-Checkliste) nutzen dieselbe Gestaltung: ein dunkler
+Funktionscheckliste, Übergabe-Checkliste, Dokumentation) nutzen dieselbe
+Gestaltung: ein dunkler
 Banner-Titelkopf, eine einheitliche Tabellenoptik, und eine Fusszeile mit
 Projektname sowie **Seite X von Y** auf jeder Seite. Der gemeinsame Code
 dafür liegt in `backend/pdf_design.py` (`pdf_styles()`,
