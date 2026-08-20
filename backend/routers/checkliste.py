@@ -135,27 +135,17 @@ def export_funktionscheckliste_pdf(project_id: int):
 # ---------- Übergabe-Checkliste ----------
 # Generic, mostly project-independent handover checklist - its own sub-tab,
 # checked digitally on-site (PDF is an export/snapshot only, not the
-# primary interface). Modeled after common KNX-installation handover
-# checklists, in KNXpilot's own wording rather than copied from any
-# specific vendor's template. Each item has a hand-assigned stable slug
-# (not derived from its text) so its checklist_status key survives a
-# future wording tweak without silently resetting anyone's saved answer -
-# only reordering/removing an item invalidates its key.
+# primary interface). Scoped deliberately to the system integrator's own
+# work (programming/commissioning/troubleshooting, customer walkthrough,
+# handover) - NOT physical installation work (mounting devices, wiring,
+# labeling boxes/distribution boards, E-Check etc.), which is the
+# electrician's responsibility and out of scope for this tool's user.
+# Each item has a hand-assigned stable slug (not derived from its text) so
+# its checklist_status key survives a future wording tweak without
+# silently resetting anyone's saved answer - only reordering/removing an
+# item invalidates its key.
 CHECKLIST_SECTIONS = [
-    ("Sichtprüfung", [
-        ("dosen_geschlossen", "Alle Abzweig- und Anschlussdosen geschlossen"),
-        ("leuchten_isoliert", "Anschlüsse für bauseitige Leuchten isoliert bzw. mit provisorischer Fassung versehen"),
-        ("taster_beschriftet", "Alle Taster nach Kundenwunsch beschriftet sowie sauber und fest montiert"),
-        ("verteilungen_beschriftet", "Elektro-Verteilungen vollständig beschriftet und gereinigt"),
-        ("verteilungsplaene", "Verteilungspläne in den Verteilungen hinterlegt"),
-        ("bus_adressen_beschriftet", "Buskomponenten inkl. Taster mit physikalischer Adresse beschriftet"),
-        ("netzwerkdosen_beschriftet", "Netzwerkdosen beschriftet"),
-        ("beschreibungen_vorhanden", "Anlagen-/Gerätebeschreibungen sowie Bedienungsanleitungen in separatem Ordner vorhanden"),
-        ("revisionsunterlagen_vorhanden", "Revisionsunterlagen, Pläne, Schema, Pflichtenheft in separatem Ordner vorhanden"),
-        ("dokumentation_hinterlegt", "Dokumentation der Anlage hinterlegt"),
-    ]),
     ("Funktionsprüfung", [
-        ("messungen_durchgefuehrt", "Installation geprüft, alle Messungen durchgeführt (E-Check, Netzwerk usw.)"),
         ("funktionen_geprueft", "Licht, Dimmer, Jalousien, Zentral Aus, Szenen usw. auf korrekte Funktion geprüft"),
         ("fensterkontakte_geprueft", "Fensterkontakte geprüft"),
         ("gegensprechanlage_geprueft", "Gegensprechanlage geprüft"),
@@ -171,9 +161,12 @@ CHECKLIST_SECTIONS = [
         ("einweisung_schaltuhren", "Einweisung in Schaltuhren und weitere kundenrelevante Funktionen (z.B. Szenen abrufen/speichern)"),
         ("einweisung_raumbediengeraete", "Einweisung in die Bedienung der Raumtemperaturregler und weiterer Raumbediengeräte"),
         ("verhalten_ausfall_besprochen", "Verhalten bei Bus-/Netzspannungsausfall und -wiederkehr besprochen"),
-        ("offene_punkte_aufgenommen", "Offene Punkte der Installation aufgenommen"),
+        ("offene_punkte_aufgenommen", "Offene Punkte aufgenommen"),
     ]),
     ("Anlagenübergabe", [
+        ("beschreibungen_vorhanden", "Anlagen-/Gerätebeschreibungen sowie Bedienungsanleitungen in separatem Ordner vorhanden"),
+        ("revisionsunterlagen_vorhanden", "Revisionsunterlagen, Pläne, Schema, Pflichtenheft in separatem Ordner vorhanden"),
+        ("dokumentation_hinterlegt", "Dokumentation der Anlage hinterlegt"),
         ("uebergabe_software_doku", "Übergabe der Projekt-Software, Anlagendokumentation und aller Handbücher"),
         ("kundendienst_hinterlassen", "Kundendienst-Telefonnummer hinterlassen / Wartungsvertrag abgeschlossen"),
         ("abnahmeprotokoll_unterzeichnet", "Abnahme-Protokoll nach Pflichtenheft bzw. DIN 18015-4 unterzeichnet"),
@@ -240,7 +233,7 @@ def export_uebergabe_checkliste_pdf(project_id: int):
 
     story.append(Spacer(1, 8 * mm))
     sig_row = Table([[
-        signature_block("Datum, Unterschrift Errichter", styles),
+        signature_block("Datum, Unterschrift Systemintegrator", styles),
         signature_block("Datum, Unterschrift Kunde/Betreiber", styles),
     ]], colWidths=[90 * mm, 90 * mm])
     sig_row.setStyle(TableStyle([

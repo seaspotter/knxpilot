@@ -145,7 +145,7 @@ def _uebergabe_story(styles, status_map):
         ]))
     story.append(Spacer(1, 8 * mm))
     sig_row = Table([[
-        signature_block("Datum, Unterschrift Errichter", styles),
+        signature_block("Datum, Unterschrift Systemintegrator", styles),
         signature_block("Datum, Unterschrift Kunde/Betreiber", styles),
     ]], colWidths=[90 * mm, 90 * mm])
     sig_row.setStyle(TableStyle([

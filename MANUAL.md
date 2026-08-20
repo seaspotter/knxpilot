@@ -393,13 +393,17 @@ Weitergeben, ist aber nicht die primäre Arbeitsweise.
 #### Übergabe-Checkliste
 
 Ein zweites, weitgehend allgemeines digitales Formular für das
-Übergabegespräch vor Ort (Sichtprüfung, Funktionsprüfung, Kundengespräch,
-Anlagenübergabe) — je Punkt ein Ja/Nein/Nicht-nötig-Status plus ein
+Übergabegespräch vor Ort (Funktionsprüfung, Kundengespräch,
+Anlagenübergabe) — bewusst auf die Arbeit des Systemintegrators
+beschränkt (Programmierung/Inbetriebnahme, Kundengespräch, Übergabe),
+ohne Punkte zur physischen Elektroinstallation (Verdrahtung, Montage,
+E-Check usw.), die Sache des Elektrikers ist. Je Punkt ein
+Ja/Nein/Nicht-nötig-Status plus ein
 Bemerkungsfeld, direkt hier ausgefüllt und gespeichert; nur der
 Projektname ist projektspezifisch, der restliche Fragenkatalog ist fest
 und wiederverwendbar. **PDF exportieren** erzeugt daraus eine
-Momentaufnahme mit Unterschriftenzeilen für Errichter und Kunde/Betreiber
-zum Ausdrucken/Unterschreiben.
+Momentaufnahme mit Unterschriftenzeilen für Systemintegrator und
+Kunde/Betreiber zum Ausdrucken/Unterschreiben.
 
 #### Klärungsliste
 

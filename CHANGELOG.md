@@ -21,7 +21,12 @@ restructuring below — history before that is available via `git log`.
   - **Übergabe-Checkliste** (new): the handover checklist, now filled in
     digitally on-site (Ja/Nein/Nicht nötig + Bemerkungen per item,
     persisted) instead of only existing as a paper PDF; PDF export still
-    available for signing.
+    available for signing. Scoped to the system integrator's own work
+    (programming/commissioning, customer walkthrough, handover) - dropped
+    the items about physical electrical installation (wiring, mounting,
+    labeling, E-Check), which is the electrician's job, not this tool's
+    user's; the PDF's signature line now reads "Systemintegrator" instead
+    of "Errichter".
   - **Dokumentation** (new): the end-of-project assembly - Pflichtenheft's
     spec content plus both checklists' actual recorded results, plus the
     optional as-built sections (Abgangsliste, Verteilerplanung,
