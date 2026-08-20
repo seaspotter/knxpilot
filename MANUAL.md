@@ -387,7 +387,7 @@ Der digitale Testfortschritt vor Ort: jede geplante Funktion (je
 Geschoss/Raum sowie die Zentral-/Allgemeinfunktionen) lässt sich hier
 direkt auf dem Handy antippen, sobald sie getestet ist — kein Ausdrucken
 und Abhaken auf Papier nötig, der Haken wird sofort im Projekt
-gespeichert. **PDF exportieren** erzeugt daraus eine Momentaufnahme zum
+gespeichert. **PDF herunterladen** erzeugt daraus eine Momentaufnahme zum
 Weitergeben, ist aber nicht die primäre Arbeitsweise.
 
 #### Übergabe-Checkliste
@@ -401,7 +401,7 @@ E-Check usw.), die Sache des Elektrikers ist. Je Punkt ein
 Ja/Nein/Nicht-nötig-Status plus ein
 Bemerkungsfeld, direkt hier ausgefüllt und gespeichert; nur der
 Projektname ist projektspezifisch, der restliche Fragenkatalog ist fest
-und wiederverwendbar. **PDF exportieren** erzeugt daraus eine
+und wiederverwendbar. **PDF herunterladen** erzeugt daraus eine
 Momentaufnahme mit Unterschriftenzeilen für Systemintegrator und
 Kunde/Betreiber zum Ausdrucken/Unterschreiben.
 
