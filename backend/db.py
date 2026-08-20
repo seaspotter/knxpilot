@@ -441,7 +441,7 @@ def init_db():
             -- as special_items.location: "room_point:<room_points.id>" (a planned
             -- function), "central:<central_templates.id>" (a central/Allgemein
             -- function), or "uebergabe:<slug>" (a static handover-checklist item,
-            -- see CHECKLIST_SECTIONS in routers/pflichtenheft.py). status is
+            -- see CHECKLIST_SECTIONS in routers/checkliste.py). status is
             -- ''/'ok' for function-checklist items, ''/'ja'/'nein'/'nicht_noetig'
             -- for Übergabe items (mirrors klaerungen.status's German-literal
             -- convention). note (Bemerkungen) is only ever written for Übergabe
@@ -456,6 +456,22 @@ def init_db():
                 note TEXT NOT NULL DEFAULT '',
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(project_id, item_key)
+            );
+
+            -- Digital signatures captured on-site for the Übergabe-Checkliste (see
+            -- routers/checkliste.py) - role is 'systemintegrator' or 'kunde', image
+            -- is a PNG captured via an HTML canvas signature pad, signed_at is set
+            -- server-side on every (re-)save. Editable/re-signable and deletable at
+            -- any time (UNIQUE(project_id, role) makes re-signing a plain upsert) -
+            -- this isn't a tamper-evident legal signature, just a "we did this
+            -- digitally instead of on paper" record embedded in the PDF export.
+            CREATE TABLE IF NOT EXISTS project_signatures (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                role TEXT NOT NULL,
+                image BLOB NOT NULL,
+                signed_at TEXT NOT NULL,
+                UNIQUE(project_id, role)
             );
 
             -- Global, tool-wide company identity (singleton, id pinned to 1). Shown in

@@ -7,14 +7,17 @@
 // every room × every function) - no scroll-jump concern.
 let UEBERGABE_SECTIONS = [];
 let UEBERGABE_STATUS = {};
+let UEBERGABE_SIGNATURES = {};
 
 async function loadUebergabeForCurrentProject() {
-  const [sections, statusMap] = await Promise.all([
+  const [sections, statusMap, signatures] = await Promise.all([
     api('/uebergabe-checklist-sections'),
     api(`/projects/${CURRENT_PROJECT}/checklist-status`),
+    api(`/projects/${CURRENT_PROJECT}/signatures`),
   ]);
   UEBERGABE_SECTIONS = sections;
   UEBERGABE_STATUS = statusMap;
+  UEBERGABE_SIGNATURES = signatures;
   renderUebergabe();
 }
 
@@ -25,7 +28,7 @@ function renderUebergabe() {
       <b>${sec.section}</b>
       ${sec.items.map(item => renderUebergabeItem(item)).join('')}
     </div>
-  `).join('');
+  `).join('') + renderSignatures();
 }
 
 const UEB_STATUS_LABEL = {ja: 'Ja', nein: 'Nein', nicht_noetig: 'Nicht nötig'};
@@ -75,4 +78,130 @@ async function saveUebergabeNote(key, note) {
 
 function downloadUebergabeChecklist() {
   window.location.href = `/api/projects/${CURRENT_PROJECT}/export-uebergabe-checkliste.pdf`;
+}
+
+// ---------- Digital signatures ----------
+// Captured via an HTML canvas signature pad instead of printing the PDF
+// and signing on paper - editable/re-signable and deletable at any time.
+// Embedded into both this PDF export and the Dokumentation export
+// (backend/routers/checkliste.py's build_signature_row()).
+const UEB_SIGNATURE_ROLES = [['systemintegrator', 'Systemintegrator'], ['kunde', 'Kunde/Betreiber']];
+
+function renderSignatures() {
+  return `
+    <div class="floor-card">
+      <b>Unterschriften</b>
+      <div class="row" style="gap:20px; flex-wrap:wrap; margin-top:8px; align-items:flex-start;">
+        ${UEB_SIGNATURE_ROLES.map(([role, label]) => renderSignatureBlock(role, label)).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderSignatureBlock(role, label) {
+  const entry = UEBERGABE_SIGNATURES[role];
+  if (!entry) {
+    return `
+      <div style="min-width:200px;">
+        <div class="muted" style="margin-bottom:4px;">${label}</div>
+        <button class="btn secondary small" onclick="openSignatureModal('${role}', '${label}')">Unterschreiben</button>
+      </div>
+    `;
+  }
+  const when = new Date(entry.signed_at).toLocaleString('de-DE');
+  const imgUrl = `/api/projects/${CURRENT_PROJECT}/signatures/${role}/image?t=${encodeURIComponent(entry.signed_at)}`;
+  return `
+    <div style="min-width:200px;">
+      <div class="muted" style="margin-bottom:4px;">${label}</div>
+      <img src="${imgUrl}" alt="Unterschrift ${label}"
+        style="max-width:220px; max-height:80px; background:#fff; border:1px solid var(--border); border-radius:6px; display:block;">
+      <div class="muted" style="font-size:12px; margin-top:4px;">Unterschrieben am ${when}</div>
+      <div class="row" style="gap:6px; margin-top:6px;">
+        <button class="btn secondary small" onclick="openSignatureModal('${role}', '${label}')">Neu unterschreiben</button>
+        <button class="btn danger small" onclick="deleteUebergabeSignature('${role}', '${label}')">Löschen</button>
+      </div>
+    </div>
+  `;
+}
+
+function openSignatureModal(role, label) {
+  const modal = openModal(`
+    <h3>Unterschrift — ${label}</h3>
+    <canvas id="sig-canvas" style="width:100%; height:200px; border:1px solid var(--border); border-radius:6px; touch-action:none; background:#fff; display:block;"></canvas>
+    <div class="row modal-actions">
+      <button class="btn secondary" data-action="clear">Löschen</button>
+      <button class="btn secondary" data-action="cancel">Abbrechen</button>
+      <button class="btn" data-action="save">Speichern</button>
+    </div>
+  `, { wide: true });
+
+  const canvas = modal.overlay.querySelector('#sig-canvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  let cssWidth = 0, cssHeight = 0;
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    cssWidth = rect.width;
+    cssHeight = rect.height;
+    canvas.width = cssWidth * dpr;
+    canvas.height = cssHeight * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#0f172a';
+  }
+  resizeCanvas();
+
+  let drawing = false, lastX = 0, lastY = 0, hasDrawn = false;
+  function pos(ev) {
+    const rect = canvas.getBoundingClientRect();
+    return [ev.clientX - rect.left, ev.clientY - rect.top];
+  }
+  canvas.addEventListener('pointerdown', (ev) => {
+    drawing = true;
+    hasDrawn = true;
+    [lastX, lastY] = pos(ev);
+    canvas.setPointerCapture(ev.pointerId);
+  });
+  canvas.addEventListener('pointermove', (ev) => {
+    if (!drawing) return;
+    const [x, y] = pos(ev);
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    [lastX, lastY] = [x, y];
+  });
+  const stopDrawing = () => { drawing = false; };
+  canvas.addEventListener('pointerup', stopDrawing);
+  canvas.addEventListener('pointerleave', stopDrawing);
+
+  modal.overlay.addEventListener('click', async (ev) => {
+    const action = ev.target.dataset && ev.target.dataset.action;
+    if (action === 'clear') {
+      ctx.clearRect(0, 0, cssWidth, cssHeight);
+      hasDrawn = false;
+    }
+    if (action === 'cancel') modal.close();
+    if (action === 'save') {
+      if (!hasDrawn) { showToast('Bitte zuerst unterschreiben.', 'warning'); return; }
+      const dataUrl = canvas.toDataURL('image/png');
+      const r = await api(`/projects/${CURRENT_PROJECT}/signatures/${role}`, {
+        method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({image: dataUrl}),
+      });
+      UEBERGABE_SIGNATURES[role] = {signed_at: r.signed_at};
+      modal.close();
+      renderUebergabe();
+    }
+  });
+}
+
+async function deleteUebergabeSignature(role, label) {
+  const ok = await showConfirm(`Unterschrift von ${label} wirklich löschen?`, {danger: true});
+  if (!ok) return;
+  await api(`/projects/${CURRENT_PROJECT}/signatures/${role}`, {method: 'DELETE'});
+  delete UEBERGABE_SIGNATURES[role];
+  renderUebergabe();
 }

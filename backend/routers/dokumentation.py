@@ -11,20 +11,20 @@ existing pflichtenheft_include_* company_profile columns as-is - moved
 purely internal wiring change.
 """
 from fastapi import APIRouter, HTTPException
-from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, PageBreak, KeepTogether
+from reportlab.platypus import Paragraph, Spacer, Table, PageBreak, KeepTogether
 from reportlab.lib.units import mm
 
 from ..db import get_db
 from ..ga_logic import build_ga_tree, get_room_functions_by_category, get_central_functions_overview
 from ..pdf_design import (
     pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response,
-    company_header_block, company_footer_line, signature_block,
+    company_header_block, company_footer_line,
 )
 from .abgangsliste import build_abgangsliste_story
 from .verteiler import build_verteilerplanung_story
 from .geraeteplanung import build_geraete_je_raum_story
 from .pflichtenheft import build_pflichtenheft_spec_story, function_checklist_table
-from .checkliste import get_status_map, CHECKLIST_SECTIONS, checklist_section_table
+from .checkliste import get_status_map, CHECKLIST_SECTIONS, checklist_section_table, build_signature_row
 
 router = APIRouter(tags=["dokumentation"])
 
@@ -131,10 +131,10 @@ def _funktionscheckliste_story(db, project_id, styles, status_map):
     return story
 
 
-def _uebergabe_story(styles, status_map):
+def _uebergabe_story(db, project_id, styles, status_map):
     """Same section grouping as the standalone Übergabe-Checkliste export
     (routers/checkliste.py), with the real Ja/Nein/Nicht-nötig answers and
-    Bemerkungen text, plus the signature row."""
+    Bemerkungen text, plus the real captured signatures (if any)."""
     story = []
     for i, (section_title, items) in enumerate(CHECKLIST_SECTIONS):
         if i > 0:
@@ -144,16 +144,7 @@ def _uebergabe_story(styles, status_map):
             checklist_section_table(styles, items, status_map),
         ]))
     story.append(Spacer(1, 8 * mm))
-    sig_row = Table([[
-        signature_block("Datum, Unterschrift Systemintegrator", styles),
-        signature_block("Datum, Unterschrift Kunde/Betreiber", styles),
-    ]], colWidths=[90 * mm, 90 * mm])
-    sig_row.setStyle(TableStyle([
-        ("VALIGN", (0, 0), (-1, -1), "BOTTOM"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 0),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 10),
-    ]))
-    story.append(sig_row)
+    story.append(build_signature_row(db, project_id, styles))
     return story
 
 
@@ -190,7 +181,7 @@ def export_dokumentation_pdf(project_id: int):
         story.append(PageBreak())
         story.append(Paragraph("Übergabe-Checkliste — Ergebnisse", styles["SectionHeading"]))
         story.append(Spacer(1, 2 * mm))
-        story += _uebergabe_story(styles, status_map)
+        story += _uebergabe_story(db, project_id, styles, status_map)
 
         if company.get("pflichtenheft_include_abgangsliste", False):
             abgangsliste_story = build_abgangsliste_story(db, project_id, styles, page_break_between_floors=False)

@@ -135,6 +135,10 @@ class ChecklistStatusIn(BaseModel):
     note: str = ""
 
 
+class SignatureIn(BaseModel):
+    image: str  # data: URL or raw base64-encoded PNG
+
+
 class VerteilerIn(BaseModel):
     floor_id: int | None = None
     name: str = ""

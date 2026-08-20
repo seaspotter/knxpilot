@@ -54,11 +54,12 @@ def pdf_title_banner(title, subtitle=""):
     return [t, Spacer(1, 6 * mm)]
 
 
-def _fit_logo_image(img_bytes, max_width, max_height):
-    """Scales a logo to fit within max_width x max_height while preserving its
-    real aspect ratio. A fixed square box would squish a wide horizontal logo
-    lockup down to a sliver-thin strip - this sizes by the image's actual
-    proportions instead, capped by whichever dimension is the tighter fit."""
+def fit_image_to_box(img_bytes, max_width, max_height):
+    """Scales an image to fit within max_width x max_height while preserving
+    its real aspect ratio. A fixed square box would squish a wide horizontal
+    logo lockup (or a signature capture, see signature_block()) down to a
+    sliver-thin strip - this sizes by the image's actual proportions
+    instead, capped by whichever dimension is the tighter fit."""
     pil_img = PILImage.open(io.BytesIO(img_bytes))
     orig_w, orig_h = pil_img.size
     scale = min(max_width / orig_w, max_height / orig_h)
@@ -78,7 +79,7 @@ def _decode_logo(company, max_width, max_height):
         _, b64data = data_url.split(";base64,", 1)
         img_bytes = base64.b64decode(b64data)
         PILImage.open(io.BytesIO(img_bytes)).load()
-        return _fit_logo_image(img_bytes, max_width, max_height)
+        return fit_image_to_box(img_bytes, max_width, max_height)
     except Exception:
         return ""
 
@@ -168,11 +169,22 @@ def checkbox_cell(checked=False, box_size=3.2 * mm):
     return t
 
 
-def signature_block(label, styles):
-    """A blank underline + caption, e.g. for 'Datum, Unterschrift Kunde'."""
+def signature_block(label, styles, image_bytes=None, signed_at_text=None):
+    """A signature area for the bottom of a handover-style PDF (Übergabe-
+    Checkliste, Dokumentation). `label` is the plain role name (e.g.
+    "Systemintegrator"). If a real digitally-captured signature exists (see
+    routers/checkliste.py's project_signatures / signature pad), pass its
+    decoded PNG bytes and a pre-formatted signed_at_text - renders the actual
+    signature image with a "signiert am ..." caption. Otherwise falls back
+    to a blank underline for signing by hand, captioned "Datum, Unterschrift
+    <label>"."""
+    if image_bytes:
+        img = fit_image_to_box(image_bytes, max_width=70 * mm, max_height=20 * mm)
+        caption = f"{label} — signiert am {signed_at_text}" if signed_at_text else label
+        return [img, Paragraph(caption, styles["BodyMuted"])]
     line = Table([[""]], colWidths=[80 * mm], rowHeights=[10 * mm])
     line.setStyle(TableStyle([("LINEBELOW", (0, 0), (-1, -1), 0.8, PDF_BORDER_COLOR)]))
-    return [line, Paragraph(label, styles["BodyMuted"])]
+    return [line, Paragraph(f"Datum, Unterschrift {label}", styles["BodyMuted"])]
 
 
 def make_numbered_canvas(footer_left_text, footer_center_text=""):

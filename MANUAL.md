@@ -401,9 +401,19 @@ E-Check usw.), die Sache des Elektrikers ist. Je Punkt ein
 Ja/Nein/Nicht-nötig-Status plus ein
 Bemerkungsfeld, direkt hier ausgefüllt und gespeichert; nur der
 Projektname ist projektspezifisch, der restliche Fragenkatalog ist fest
-und wiederverwendbar. **PDF herunterladen** erzeugt daraus eine
-Momentaufnahme mit Unterschriftenzeilen für Systemintegrator und
-Kunde/Betreiber zum Ausdrucken/Unterschreiben.
+und wiederverwendbar.
+
+Ganz unten lässt sich für **Systemintegrator** und **Kunde/Betreiber** je
+eine **digitale Unterschrift** erfassen — **Unterschreiben** öffnet ein
+Unterschriftenfeld, das sich direkt mit dem Finger (oder der Maus)
+beschreiben lässt; **Speichern** legt sie im Projekt ab, mit Zeitstempel
+("Unterschrieben am ..."). **Neu unterschreiben** überschreibt eine
+vorhandene Unterschrift jederzeit, **Löschen** entfernt sie wieder — kein
+Ausdrucken und Scannen nötig. **PDF herunterladen** erzeugt daraus eine
+Momentaufnahme: mit bereits erfassten digitalen Unterschriften erscheint
+dort die echte Unterschrift samt Zeitstempel, für noch fehlende bleibt
+eine leere Unterschriftenzeile zum Ausdrucken/handschriftlichen
+Unterschreiben.
 
 #### Klärungsliste
 

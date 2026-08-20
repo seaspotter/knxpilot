@@ -26,7 +26,14 @@ restructuring below — history before that is available via `git log`.
     the items about physical electrical installation (wiring, mounting,
     labeling, E-Check), which is the electrician's job, not this tool's
     user's; the PDF's signature line now reads "Systemintegrator" instead
-    of "Errichter".
+    of "Errichter". Also supports capturing a real **digital signature**
+    on-site (Systemintegrator and Kunde/Betreiber, drawn on an HTML canvas
+    with a finger/mouse, editable/re-signable/deletable at any time) -
+    embedded into the PDF export with a "signiert am" timestamp instead of
+    a blank line, no printing/scanning needed. New `project_signatures`
+    table, new endpoints (`GET/PUT/DELETE
+    /api/projects/{id}/signatures[/{role}]`,
+    `GET /api/projects/{id}/signatures/{role}/image`).
   - **Dokumentation** (new): the end-of-project assembly - Pflichtenheft's
     spec content plus both checklists' actual recorded results, plus the
     optional as-built sections (Abgangsliste, Verteilerplanung,

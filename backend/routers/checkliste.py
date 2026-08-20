@@ -10,15 +10,21 @@ already written for the JSON endpoints, and the two tabs otherwise share no
 router. See routers/pflichtenheft.py for the early-stage spec document
 these checklists' results eventually feed into (via routers/
 dokumentation.py) and its function_checklist_table(), reused here for the
-Funktionscheckliste PDF export.
+Funktionscheckliste PDF export. Also home to the Übergabe-Checkliste's
+digital signature capture (project_signatures table, see db.py) - captured
+via an HTML canvas signature pad in the frontend, embedded into both the
+Übergabe-Checkliste and Dokumentation PDF exports via build_signature_row().
 """
-from fastapi import APIRouter, HTTPException
+import base64
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, HTTPException, Response
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, KeepTogether
 from reportlab.lib.units import mm
 
 from ..db import get_db
 from ..ga_logic import get_room_functions_by_category, get_central_functions_overview
-from ..models import ChecklistStatusIn
+from ..models import ChecklistStatusIn, SignatureIn
 from ..pdf_design import (
     pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response,
     company_header_block, company_footer_line, checkbox_cell, signature_block,
@@ -208,16 +214,103 @@ def checklist_section_table(styles, items, status_map):
     return table
 
 
+# ---------- Digital signatures ----------
+# Captured on-site via an HTML canvas signature pad (frontend/js/
+# uebergabe_checkliste.js) instead of printing the PDF and signing on
+# paper. Editable/re-signable at any time (UNIQUE(project_id, role) makes
+# re-signing a plain upsert, same idiom as checklist_status/
+# device_order_flags) and independently deletable per role.
+SIGNATURE_ROLES = {"systemintegrator", "kunde"}
+
+
+@router.get("/api/projects/{project_id}/signatures")
+def get_signatures(project_id: int):
+    with get_db() as db:
+        rows = db.execute(
+            "SELECT role, signed_at FROM project_signatures WHERE project_id=?", (project_id,)
+        ).fetchall()
+        return {r["role"]: {"signed_at": r["signed_at"]} for r in rows}
+
+
+@router.get("/api/projects/{project_id}/signatures/{role}/image")
+def get_signature_image(project_id: int, role: str):
+    with get_db() as db:
+        row = db.execute(
+            "SELECT image FROM project_signatures WHERE project_id=? AND role=?", (project_id, role)
+        ).fetchone()
+    if not row:
+        raise HTTPException(404, "No signature")
+    return Response(content=row["image"], media_type="image/png")
+
+
+@router.put("/api/projects/{project_id}/signatures/{role}")
+def set_signature(project_id: int, role: str, body: SignatureIn):
+    if role not in SIGNATURE_ROLES:
+        raise HTTPException(400, "Unknown signature role")
+    b64data = body.image.split(";base64,", 1)[-1]
+    try:
+        image_bytes = base64.b64decode(b64data)
+    except Exception:
+        raise HTTPException(400, "Invalid image data")
+    signed_at = datetime.now(timezone.utc).isoformat()
+    with get_db() as db:
+        db.execute(
+            "INSERT INTO project_signatures (project_id, role, image, signed_at) VALUES (?, ?, ?, ?) "
+            "ON CONFLICT(project_id, role) DO UPDATE SET image=excluded.image, signed_at=excluded.signed_at",
+            (project_id, role, image_bytes, signed_at),
+        )
+    return {"signed_at": signed_at}
+
+
+@router.delete("/api/projects/{project_id}/signatures/{role}")
+def delete_signature(project_id: int, role: str):
+    with get_db() as db:
+        db.execute("DELETE FROM project_signatures WHERE project_id=? AND role=?", (project_id, role))
+    return {"ok": True}
+
+
+def build_signature_row(db, project_id, styles):
+    """The Systemintegrator/Kunde signature row at the end of the Übergabe-
+    Checkliste (and, via routers/dokumentation.py, the Dokumentation) PDF -
+    renders the real captured signature + "signiert am" timestamp for
+    whichever roles have one, and a blank paper-style line for the rest."""
+    rows = {
+        r["role"]: r
+        for r in db.execute(
+            "SELECT role, image, signed_at FROM project_signatures WHERE project_id=?", (project_id,)
+        ).fetchall()
+    }
+
+    def block(role, label):
+        row = rows.get(role)
+        if not row:
+            return signature_block(label, styles)
+        signed_dt = datetime.fromisoformat(row["signed_at"]).strftime("%d.%m.%Y %H:%M")
+        return signature_block(label, styles, image_bytes=row["image"], signed_at_text=signed_dt)
+
+    sig_row = Table([[
+        block("systemintegrator", "Systemintegrator"),
+        block("kunde", "Kunde/Betreiber"),
+    ]], colWidths=[90 * mm, 90 * mm])
+    sig_row.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "BOTTOM"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+    ]))
+    return sig_row
+
+
 @router.get("/api/projects/{project_id}/export-uebergabe-checkliste.pdf")
 def export_uebergabe_checkliste_pdf(project_id: int):
+    styles = pdf_styles()
     with get_db() as db:
         project = db.execute("SELECT * FROM projects WHERE id=?", (project_id,)).fetchone()
         if not project:
             raise HTTPException(404, "Project not found")
         company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
         status_map = get_status_map(db, project_id)
+        sig_row = build_signature_row(db, project_id, styles)
 
-    styles = pdf_styles()
     story = company_header_block(company) + pdf_title_banner(
         f"Übergabe-Checkliste — {project['name']}",
         "Checkliste zur Übergabe einer Elektroinstallation mit KNX",
@@ -232,15 +325,6 @@ def export_uebergabe_checkliste_pdf(project_id: int):
         ]))
 
     story.append(Spacer(1, 8 * mm))
-    sig_row = Table([[
-        signature_block("Datum, Unterschrift Systemintegrator", styles),
-        signature_block("Datum, Unterschrift Kunde/Betreiber", styles),
-    ]], colWidths=[90 * mm, 90 * mm])
-    sig_row.setStyle(TableStyle([
-        ("VALIGN", (0, 0), (-1, -1), "BOTTOM"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 0),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 10),
-    ]))
     story.append(sig_row)
 
     return build_pdf_response(
