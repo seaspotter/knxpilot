@@ -208,6 +208,7 @@ class CompanyProfileIn(BaseModel):
     pflichtenheft_include_klaerungsliste: bool = False
     dokumentation_include_funktionscheckliste: bool = True
     dokumentation_include_uebergabe: bool = True
+    dokumentation_include_handbuecher: bool = True
     backup_enabled: bool = False
     backup_interval_hours: int = 24
     backup_retention_count: int = 14

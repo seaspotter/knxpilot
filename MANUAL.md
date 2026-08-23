@@ -473,21 +473,32 @@ erscheinen hier gar nicht erst. Je Gerät:
 - **Alle herunterladen** oben lädt alle noch fehlenden auf einmal;
   bereits vorhandene werden dabei übersprungen, keine Duplikate.
 
+Der Dokumentation-Export (siehe unten) kann optional einen kurzen
+Handbücher-Nachweis enthalten (welches Gerät hat einen Link, welches ist
+bereits heruntergeladen) — die PDFs selbst bleiben aber immer hier im
+Unterreiter, nicht im Dokumentation-PDF eingebettet.
+
 #### Dokumentation
 
 Die vollständige Abschlussdokumentation, gedacht für das Ende des
 Projekts: **PDF herunterladen** fasst den Pflichtenheft-Inhalt (was
 vereinbart wurde, als eigener, klar mit "Pflichtenheft" überschriebener
 Abschnitt) mit optional den tatsächlichen Ergebnissen der Funktions- und
-Übergabe-Checkliste sowie optional Abgangsliste, Verteilerplanung,
-Gruppenadressen, Klärungsliste und Geräte je Raum zusammen — welche
-Abschnitte enthalten sind, wird im Setup-Tab unter *Dokumentation*
-gesteuert (siehe unten; Funktionscheckliste und Übergabe-Checkliste sind
-dort standardmässig an). Gruppenadressen steht dabei immer als letzter
-Abschnitt im PDF, auch wenn andere optionale Abschnitte weiter oben
-ausgewählt sind — es ist meist der längste (jede einzelne Adresse als
-Tabellenzeile) und passt daher eher ans Ende als mitten zwischen die eher
-erzählenden Abschnitte.
+Übergabe-Checkliste, optional einem Handbücher-Nachweis sowie optional
+Abgangsliste, Verteilerplanung, Gruppenadressen, Klärungsliste und Geräte
+je Raum zusammen — welche Abschnitte enthalten sind, wird im Setup-Tab
+unter *Dokumentation* gesteuert (siehe unten; Funktionscheckliste,
+Übergabe-Checkliste und Handbücher sind dort standardmässig an).
+Gruppenadressen steht dabei immer als letzter Abschnitt im PDF, auch wenn
+andere optionale Abschnitte weiter oben ausgewählt sind — es ist meist
+der längste (jede einzelne Adresse als Tabellenzeile) und passt daher
+eher ans Ende als mitten zwischen die eher erzählenden Abschnitte.
+
+Der Handbücher-Abschnitt listet nur, für welche im Projekt verwendeten
+Geräte ein Handbuch-Link hinterlegt ist und ob es bereits in den
+Unterreiter Handbücher heruntergeladen wurde (✓/leere Box je Gerät) — die
+PDFs selbst werden **nicht** in dieses Dokument eingebettet, sie bleiben
+im projekteigenen Unterreiter Handbücher zum Ansehen/Herunterladen.
 
 Die erste Seite zeigt eine kurze Einleitung sowie ein
 **Inhaltsverzeichnis** mit einem Eintrag je enthaltenem Abschnitt — jeder
@@ -638,13 +649,14 @@ innerhalb des Setup-Tabs, nicht alle gleichzeitig sichtbar.
   Vorbemerkungen, Stockwerk-/Raumverzeichnis und Geräteliste (alle
   standardmässig an). Gilt global für alle Projekte, wie der Rest des
   Firmenprofils.
-- **Dokumentation** — sieben Kontrollkästchen, die steuern, welche
+- **Dokumentation** — acht Kontrollkästchen, die steuern, welche
   Abschnitte im Dokumentation-PDF erscheinen (siehe Abschnitt
-  *Dokumentation* oben): Funktionscheckliste und Übergabe-Checkliste
-  (beide standardmässig an), sowie Geräte je Raum, Gruppenadressen,
-  Abgangsliste, Verteilerplanung und Klärungsliste (alle standardmässig
-  aus, da sie ein Projekt schnell sehr lang machen können — gezielt für
-  den Einzelfall dazuschalten). Gilt ebenfalls global für alle Projekte.
+  *Dokumentation* oben): Funktionscheckliste, Übergabe-Checkliste und
+  Handbücher (alle drei standardmässig an), sowie Geräte je Raum,
+  Gruppenadressen, Abgangsliste, Verteilerplanung und Klärungsliste (alle
+  standardmässig aus, da sie ein Projekt schnell sehr lang machen können
+  — gezielt für den Einzelfall dazuschalten). Gilt ebenfalls global für
+  alle Projekte.
 - **E-Mail** — SMTP-Zugangsdaten (Server, Port, Verschlüsselung
   STARTTLS/SSL/keine, Benutzername/Passwort, Absenderadresse) für den
   **Per E-Mail senden**-Button bei Pflichtenheft, Funktionscheckliste,

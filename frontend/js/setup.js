@@ -20,6 +20,7 @@ async function loadCompanyProfile() {
   document.getElementById('pht-include-klaerungsliste').checked = !!c.pflichtenheft_include_klaerungsliste;
   document.getElementById('doku-include-funktionscheckliste').checked = !!c.dokumentation_include_funktionscheckliste;
   document.getElementById('doku-include-uebergabe').checked = !!c.dokumentation_include_uebergabe;
+  document.getElementById('doku-include-handbuecher').checked = !!c.dokumentation_include_handbuecher;
   document.getElementById('smtp-enabled').checked = !!c.smtp_enabled;
   document.getElementById('smtp-host').value = c.smtp_host || '';
   document.getElementById('smtp-port').value = c.smtp_port || 587;
@@ -253,6 +254,7 @@ async function saveCompanyProfile() {
     pflichtenheft_include_klaerungsliste: document.getElementById('pht-include-klaerungsliste').checked,
     dokumentation_include_funktionscheckliste: document.getElementById('doku-include-funktionscheckliste').checked,
     dokumentation_include_uebergabe: document.getElementById('doku-include-uebergabe').checked,
+    dokumentation_include_handbuecher: document.getElementById('doku-include-handbuecher').checked,
     smtp_enabled: document.getElementById('smtp-enabled').checked,
     smtp_host: document.getElementById('smtp-host').value.trim(),
     smtp_port: parseInt(document.getElementById('smtp-port').value, 10) || 587,

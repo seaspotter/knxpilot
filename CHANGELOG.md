@@ -26,7 +26,12 @@ restructuring below — history before that is available via `git log`.
   GET (no new dependency, no scraping/search), capped at 25 MB per file
   (same cap as Dateien). Re-importing the device catalog (manual JSON
   import or "Standard-Katalog importieren") never overwrites a curated
-  manual_url that isn't present in the imported data.
+  manual_url that isn't present in the imported data. The Dokumentation
+  export gets a matching optional **Handbücher** chapter (Setup →
+  Dokumentation, on by default) - a checklist-style list of which used
+  devices have a manual on file and whether it's already been fetched;
+  the PDFs themselves are deliberately not merged into the export, they
+  stay in the project's own Handbücher tab.
 
 - **Send PDF exports by email** — a "Per E-Mail senden" button next to
   "PDF herunterladen" on Pflichtenheft, Funktionscheckliste,

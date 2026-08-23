@@ -4,11 +4,15 @@ the end." Combines what Pflichtenheft covers (the agreed spec, reused
 verbatim via build_pflichtenheft_spec_story(), explicitly labeled as its
 own "Pflichtenheft" chapter so it doesn't read as if it were written for
 this document) with the two digital checklists' actual recorded results
-(Funktionscheckliste, Übergabe-Checkliste, both with real checked state)
-plus whichever optional as-built sections (Abgangsliste, Verteilerplanung,
-Gruppenadressen, Klärungsliste, Geräte je Raum) are toggled on in
-Setup -> Dokumentation. The two checklist chapters are themselves
-toggleable via dokumentation_include_funktionscheckliste/_uebergabe
+(Funktionscheckliste, Übergabe-Checkliste, both with real checked state),
+a "Handbücher" chapter listing which used devices have a manual on file
+(a checklist-style record only - the manual PDFs themselves stay in the
+project's own Handbücher tab/project_manuals store, never merged into
+this document), plus whichever optional as-built sections (Abgangsliste,
+Verteilerplanung, Gruppenadressen, Klärungsliste, Geräte je Raum) are
+toggled on in Setup -> Dokumentation. The three checklist-style chapters
+are themselves toggleable via
+dokumentation_include_funktionscheckliste/_uebergabe/_handbuecher
 (default on); the five as-built sections reuse the existing
 pflichtenheft_include_* company_profile columns as-is - moved *usage*
 only, not renamed, since renaming would need a DB migration for a purely
@@ -30,12 +34,12 @@ from reportlab.lib.units import mm
 from ..db import get_db
 from ..ga_logic import build_ga_tree, get_room_functions_by_category, get_central_functions_overview
 from ..pdf_design import (
-    pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_bytes_two_pass, pdf_response,
+    pdf_styles, pdf_title_banner, pdf_table_style, checkbox_cell, build_pdf_bytes_two_pass, pdf_response,
     company_header_block, company_footer_line,
 )
 from .abgangsliste import build_abgangsliste_story
 from .verteiler import build_verteilerplanung_story
-from .geraeteplanung import build_geraete_je_raum_story
+from .geraeteplanung import build_geraete_je_raum_story, device_summary
 from .pflichtenheft import build_pflichtenheft_spec_story, function_checklist_table
 from .checkliste import get_status_map, CHECKLIST_SECTIONS, checklist_section_table, build_signature_row
 
@@ -104,6 +108,44 @@ def _klaerungsliste_story(db, project_id, styles):
     table = Table(table_data, colWidths=[28 * mm, 20 * mm, 55 * mm, 20 * mm, 57 * mm], repeatRows=1)
     table.setStyle(pdf_table_style([("VALIGN", (0, 0), (-1, -1), "MIDDLE")]))
     return [table]
+
+
+def _handbuecher_story(db, project_id, styles):
+    """List-only rendering of the project's Handbücher tab: which used
+    devices have a manufacturer manual curated in the catalog, and whether
+    it's already been fetched into this project (routers/manuals.py). The
+    PDFs themselves are deliberately NOT merged in here - they stay in
+    their own project_manuals store, viewed/downloaded from the
+    Handbücher tab - this is just a checklist-style record of what's on
+    file, keeping the Dokumentation export itself lean."""
+    devices = [d for d in device_summary(project_id) if d["manual_url"]]
+    if not devices:
+        return [Paragraph("Keine Handbuch-Links für verwendete Geräte hinterlegt.", styles["BodyMuted"])]
+
+    fetched_ids = {
+        r["device_type_id"]
+        for r in db.execute(
+            "SELECT device_type_id FROM project_manuals WHERE project_id=?", (project_id,)
+        ).fetchall()
+    }
+    data = [["Gerät", "Vorhanden"]]
+    for d in devices:
+        data.append([Paragraph(d["device_name"], styles["Body"]), checkbox_cell(checked=d["device_type_id"] in fetched_ids)])
+    table = Table(data, colWidths=[145 * mm, 35 * mm], repeatRows=1)
+    table.setStyle(pdf_table_style([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("ALIGN", (1, 0), (1, -1), "CENTER"),
+    ]))
+    return [
+        Paragraph(
+            "Die Handbücher selbst liegen im Unterreiter Handbücher des Projekts, nicht in diesem "
+            "Dokument - hier nur ein Nachweis, für welche Geräte ein Handbuch hinterlegt bzw. "
+            "bereits heruntergeladen ist.",
+            styles["BodyMuted"],
+        ),
+        Spacer(1, 3 * mm),
+        table,
+    ]
 
 
 def _funktionscheckliste_story(db, project_id, styles, status_map):
@@ -185,6 +227,9 @@ def _build_dokumentation_chapters(db, project_id, company, styles):
             "uebergabe", "Übergabe-Checkliste — Ergebnisse",
             _uebergabe_story(db, project_id, styles, status_map),
         ))
+
+    if company.get("dokumentation_include_handbuecher", True):
+        chapters.append(("handbuecher", "Handbücher", _handbuecher_story(db, project_id, styles)))
 
     if company.get("pflichtenheft_include_abgangsliste", False):
         abgangsliste_story = build_abgangsliste_story(db, project_id, styles, page_break_between_floors=False)
