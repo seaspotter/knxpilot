@@ -96,6 +96,10 @@
             <input type="text" id="pm-order-number" placeholder="Bestellnummer">
           </div>
           <div class="row mobile-fields">
+            <input type="text" id="pm-email" placeholder="E-Mail (Kunde)">
+            <input type="text" id="pm-additional-recipients" class="flex-input-wide" placeholder="Weitere Empfänger (optional, z.B. Generalunternehmer, mehrere mit Komma getrennt)">
+          </div>
+          <div class="row mobile-fields">
             <input type="text" id="pm-comment" class="flex-input-wide" placeholder="Kommentar (optional)">
             <button class="btn" onclick="saveProjectMeta()">Änderungen speichern</button>
             <button class="btn secondary small" onclick="cancelEditProjectMeta()">Abbrechen</button>
@@ -300,7 +304,10 @@
         <div class="card">
           <div class="row" style="justify-content:space-between;">
             <h4 style="margin:0;">Pflichtenheft</h4>
-            <button class="btn" onclick="downloadPflichtenheft()">PDF herunterladen</button>
+            <div class="row" style="margin:0; gap:6px;">
+              <button class="btn secondary small" onclick="openSendEmailModal('pflichtenheft', 'Pflichtenheft')">Per E-Mail senden</button>
+              <button class="btn" onclick="downloadPflichtenheft()">PDF herunterladen</button>
+            </div>
           </div>
           <p class="muted">Die frühe, kundenseitige Leistungsbeschreibung: was wurde vereinbart? Vorbemerkungen, Stockwerk-/Raumverzeichnis, geplante Funktionen/Geräte je Raum sowie die Stückliste — bewusst ohne Testergebnisse oder Ausführungsdetails (dafür: Funktionscheckliste, Übergabe-Checkliste, Dokumentation). Inhalt/Abschnitte anpassen: Setup → Pflichtenheft.</p>
         </div>
@@ -310,7 +317,10 @@
         <div class="card">
           <div class="row" style="justify-content:space-between;">
             <h4 style="margin:0;">Funktionscheckliste</h4>
-            <button class="btn" onclick="downloadFunktionscheckliste()">PDF herunterladen</button>
+            <div class="row" style="margin:0; gap:6px;">
+              <button class="btn secondary small" onclick="openSendEmailModal('funktionscheckliste', 'Funktionscheckliste')">Per E-Mail senden</button>
+              <button class="btn" onclick="downloadFunktionscheckliste()">PDF herunterladen</button>
+            </div>
           </div>
           <p class="muted">Jede geplante Funktion vor Ort digital abhaken, sobald sie getestet ist — direkt hier auf dem Handy, kein Ausdrucken/Abhaken auf Papier nötig. Der PDF-Export ist nur eine Momentaufnahme zum Weitergeben, nicht die primäre Arbeitsweise.</p>
           <div id="funktionscheckliste-content"></div>
@@ -321,7 +331,10 @@
         <div class="card">
           <div class="row" style="justify-content:space-between;">
             <h4 style="margin:0;">Übergabe-Checkliste</h4>
-            <button class="btn" onclick="downloadUebergabeChecklist()">PDF herunterladen</button>
+            <div class="row" style="margin:0; gap:6px;">
+              <button class="btn secondary small" onclick="openSendEmailModal('uebergabe', 'Übergabe-Checkliste')">Per E-Mail senden</button>
+              <button class="btn" onclick="downloadUebergabeChecklist()">PDF herunterladen</button>
+            </div>
           </div>
           <p class="muted">Checkliste für das Übergabegespräch vor Ort — digital ausfüllen (Ja/Nein/Nicht nötig + Bemerkungen), kein Papierformular nötig. Der PDF-Export ist nur eine Momentaufnahme zum Weitergeben/Unterschreiben.</p>
           <div id="uebergabe-content"></div>
@@ -358,7 +371,10 @@
         <div class="card">
           <div class="row" style="justify-content:space-between;">
             <h4 style="margin:0;">Dokumentation</h4>
-            <button class="btn" onclick="downloadDokumentation()">PDF herunterladen</button>
+            <div class="row" style="margin:0; gap:6px;">
+              <button class="btn secondary small" onclick="openSendEmailModal('dokumentation', 'Dokumentation')">Per E-Mail senden</button>
+              <button class="btn" onclick="downloadDokumentation()">PDF herunterladen</button>
+            </div>
           </div>
           <p class="muted">Die vollständige Abschlussdokumentation, am Ende des Projekts erzeugt: Pflichtenheft-Inhalt plus die tatsächlichen Ergebnisse der Funktions- und Übergabe-Checkliste, plus optional Abgangsliste/Verteilerplanung/Gruppenadressen/Klärungsliste/Geräte je Raum. Welche Zusatzabschnitte enthalten sind: Setup → Dokumentation.</p>
         </div>
@@ -420,6 +436,7 @@
       <button data-subtab="zentralvorlagen">Zentral-/Allgemeinfunktions-Vorlagen</button>
       <button data-subtab="pflichtenheft">Pflichtenheft</button>
       <button data-subtab="dokumentation">Dokumentation</button>
+      <button data-subtab="email">E-Mail</button>
       <button data-subtab="backup">Backup</button>
     </div>
 
@@ -593,6 +610,40 @@
     </div>
     </div>
 
+    <div class="subtab" id="setup-subtab-email">
+    <div class="card">
+      <h3>E-Mail <span class="info-icon" tabindex="0" data-tip="SMTP-Zugangsdaten für den Versand von PDF-Exporten direkt aus KNXpilot (Button 'Per E-Mail senden' bei Pflichtenheft, Funktionscheckliste, Übergabe-Checkliste und Dokumentation). Rein manuell ausgelöst, nie automatisch.">i</span></h3>
+      <p class="muted">Ein beliebiger SMTP-Account (z.B. der Firmen-Mailaccount oder ein Transaktions-E-Mail-Dienst) - wird nur zum Versenden von PDF-Exporten auf Knopfdruck verwendet.</p>
+
+      <div class="row mobile-fields">
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="smtp-enabled"> Aktiv</label>
+        <input type="text" id="smtp-host" placeholder="SMTP-Server, z.B. smtp.example.com">
+        <input type="number" id="smtp-port" min="1" style="width:80px;" placeholder="Port">
+        <select id="smtp-encryption">
+          <option value="starttls">STARTTLS (587)</option>
+          <option value="ssl">SSL/TLS (465)</option>
+          <option value="none">Keine Verschlüsselung</option>
+        </select>
+      </div>
+      <div class="row mobile-fields">
+        <input type="text" id="smtp-username" placeholder="Benutzername">
+        <input type="password" id="smtp-password" placeholder="Passwort">
+        <input type="text" id="smtp-from-email" class="flex-input" placeholder="Absenderadresse (From), z.B. info@example.com">
+      </div>
+      <div class="row mobile-fields">
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="smtp-cc-self-default"> "Kopie an mich" im Sendedialog standardmässig aktiv
+          <span class="info-icon" tabindex="0" data-tip="Verwendet die oben unter Firma hinterlegte E-Mail-Adresse als Kopie-Empfänger.">i</span>
+        </label>
+      </div>
+
+      <div class="row mobile-fields" style="margin-top:10px;">
+        <button class="btn" onclick="saveCompanyProfile()">Speichern</button>
+        <input type="text" id="smtp-test-recipient" placeholder="Test-Empfänger">
+        <button class="btn secondary" onclick="sendTestEmail()">Test-E-Mail senden</button>
+      </div>
+    </div>
+    </div>
+
     <div class="subtab" id="setup-subtab-backup">
     <div class="card">
       <h3>Backup <span class="info-icon" tabindex="0" data-tip="Sichert die komplette Datenbank (alle Projekte, Geräte-Katalog, Setup) als eine Datei - anders als 'Sichern (JSON)' im Projektkopf, das nur ein einzelnes Projekt exportiert. Wiederherstellen weiter unten auf dieser Seite, direkt in der App.">i</span></h3>
@@ -680,6 +731,7 @@
 
 <script src="/js/api.js"></script>
 <script src="/js/ui.js"></script>
+<script src="/js/send_email.js"></script>
 <script src="/js/setup.js"></script>
 <script src="/js/geraete.js"></script>
 <script src="/js/projekte.js"></script>

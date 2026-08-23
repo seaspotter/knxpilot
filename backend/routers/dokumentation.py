@@ -18,8 +18,8 @@ The export opens with an Inhaltsverzeichnis whose entries are real
 clickable internal PDF links (ReportLab's `<a href="#anchor">`/
 `<a name="anchor"/>` mini-XML tags inside Paragraph text) built from the
 same `chapters` list that drives the body, so the two can never drift out
-of sync. Uses build_pdf_response_two_pass() rather than the usual
-build_pdf_response() - see pdf_design.py's make_numbered_canvas() for why
+of sync. Uses build_pdf_bytes_two_pass() rather than the usual
+build_pdf_bytes() - see pdf_design.py's make_numbered_canvas() for why
 plain single-pass "Seite X von Y" numbering silently breaks those internal
 links.
 """
@@ -30,7 +30,7 @@ from reportlab.lib.units import mm
 from ..db import get_db
 from ..ga_logic import build_ga_tree, get_room_functions_by_category, get_central_functions_overview
 from ..pdf_design import (
-    pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response_two_pass,
+    pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_bytes_two_pass, pdf_response,
     company_header_block, company_footer_line,
 )
 from .abgangsliste import build_abgangsliste_story
@@ -247,8 +247,9 @@ def _assemble_dokumentation_story(chapters, company, project, styles):
     return story
 
 
-@router.get("/api/projects/{project_id}/export-dokumentation.pdf")
-def export_dokumentation_pdf(project_id: int):
+def build_dokumentation_pdf_bytes(project_id: int):
+    """Shared by the HTTP download endpoint below and routers/email.py's
+    send-by-mail action."""
     with get_db() as db:
         project = db.execute("SELECT * FROM projects WHERE id=?", (project_id,)).fetchone()
         if not project:
@@ -257,18 +258,24 @@ def export_dokumentation_pdf(project_id: int):
         company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
 
         def build_story():
-            # Called twice (see build_pdf_response_two_pass) - each call
-            # must produce genuinely fresh flowables, not reuse any from a
+            # Called twice (see build_pdf_bytes_two_pass) - each call must
+            # produce genuinely fresh flowables, not reuse any from a
             # previous call, so this re-queries and rebuilds from scratch
             # every time rather than caching anything from the outer scope.
             styles = pdf_styles()
             chapters = _build_dokumentation_chapters(db, project_id, company, styles)
             return _assemble_dokumentation_story(chapters, company, project, styles)
 
-        return build_pdf_response_two_pass(
+        data = build_pdf_bytes_two_pass(
             build_story,
             footer_left_text=f"Dokumentation · {project['name']}",
-            filename=f"{project['name'].replace(' ', '_')}_dokumentation.pdf",
             doc_title=f"Dokumentation {project['name']}",
             footer_center_text=company_footer_line(company),
         )
+        return data, f"{project['name'].replace(' ', '_')}_dokumentation.pdf"
+
+
+@router.get("/api/projects/{project_id}/export-dokumentation.pdf")
+def export_dokumentation_pdf(project_id: int):
+    data, filename = build_dokumentation_pdf_bytes(project_id)
+    return pdf_response(data, filename)

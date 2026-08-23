@@ -82,9 +82,10 @@ def create_project(p: ProjectIn):
     with get_db() as db:
         try:
             cur = db.execute(
-                "INSERT INTO projects (name, location, customer, status, comment, order_number) "
-                "VALUES (?, ?, ?, ?, ?, ?)",
-                (p.name, p.location, p.customer, p.status, p.comment, p.order_number),
+                "INSERT INTO projects (name, location, customer, status, comment, order_number, "
+                "email, additional_recipients) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (p.name, p.location, p.customer, p.status, p.comment, p.order_number,
+                 p.email, p.additional_recipients),
             )
         except sqlite3.IntegrityError:
             raise HTTPException(400, "A project with that name already exists")
@@ -96,8 +97,10 @@ def update_project(project_id: int, p: ProjectIn):
     with get_db() as db:
         try:
             db.execute(
-                "UPDATE projects SET name=?, location=?, customer=?, status=?, comment=?, order_number=? WHERE id=?",
-                (p.name, p.location, p.customer, p.status, p.comment, p.order_number, project_id),
+                "UPDATE projects SET name=?, location=?, customer=?, status=?, comment=?, order_number=?, "
+                "email=?, additional_recipients=? WHERE id=?",
+                (p.name, p.location, p.customer, p.status, p.comment, p.order_number,
+                 p.email, p.additional_recipients, project_id),
             )
         except sqlite3.IntegrityError:
             raise HTTPException(400, "A project with that name already exists")
@@ -344,6 +347,8 @@ def _build_project_payload(db, project_id):
         "status": project["status"],
         "comment": project["comment"],
         "order_number": project["order_number"],
+        "email": project["email"],
+        "additional_recipients": project["additional_recipients"],
         "floors": floors_out,
         "specials": specials_out,
     }
@@ -386,8 +391,8 @@ def _insert_project_from_payload(db, payload, forced_name=None):
     }
 
     cur = db.execute(
-        "INSERT INTO projects (name, location, customer, status, comment, order_number) "
-        "VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO projects (name, location, customer, status, comment, order_number, "
+        "email, additional_recipients) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         (
             name,
             payload.get("location", ""),
@@ -395,6 +400,8 @@ def _insert_project_from_payload(db, payload, forced_name=None):
             payload.get("status", ""),
             payload.get("comment", ""),
             payload.get("order_number", ""),
+            payload.get("email", ""),
+            payload.get("additional_recipients", ""),
         ),
     )
     project_id = cur.lastrowid

@@ -34,6 +34,8 @@ class ProjectIn(BaseModel):
     status: str = ""
     comment: str = ""
     order_number: str = ""
+    email: str = ""
+    additional_recipients: str = ""
 
 
 class FloorIn(BaseModel):
@@ -139,6 +141,17 @@ class SignatureIn(BaseModel):
     image: str  # data: URL or raw base64-encoded PNG
 
 
+class SendEmailIn(BaseModel):
+    document: str  # "pflichtenheft" | "funktionscheckliste" | "uebergabe" | "dokumentation"
+    to: str = ""              # comma/semicolon-separated addresses
+    cc: str = ""              # comma/semicolon-separated addresses
+    note: str = ""            # optional extra line appended to the message body
+
+
+class TestEmailIn(BaseModel):
+    to: str
+
+
 class VerteilerIn(BaseModel):
     floor_id: int | None = None
     name: str = ""
@@ -199,3 +212,11 @@ class CompanyProfileIn(BaseModel):
     backup_nextcloud_url: str = ""
     backup_nextcloud_username: str = ""
     backup_nextcloud_password: str = ""
+    smtp_enabled: bool = False
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_encryption: str = "starttls"
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = ""
+    smtp_cc_self_default: bool = True

@@ -51,10 +51,11 @@ backend/
   db.py             — sqlite connection, schema, migrations, seed data
   models.py         — Pydantic request-body schemas
   ga_logic.py       — group-address tree generation, circuits, per-room/central function listings (used by Pflichtenheft and the checklists)
-  pdf_design.py     — shared PDF look (banner, table style, page numbers, letterhead)
+  pdf_design.py     — shared PDF look (banner, table style, page numbers, letterhead); build_pdf_bytes()/build_pdf_bytes_two_pass() are the raw-bytes builders every export (and email.py's send action) go through
+  email_sender.py   — SMTP mechanics (stdlib smtplib) behind routers/email.py's send-by-mail action
   utils.py          — small dependency-free helpers
   routers/
-    setup.py          — company profile, categories, point types, central templates (Setup tab)
+    setup.py          — company profile (incl. SMTP credentials), categories, point types, central templates (Setup tab)
     geraete.py         — global device catalog (Geräte Katalog tab)
     projects.py        — projects, floors/rooms/points, backup/restore (Projekte tab: Gebäudestruktur sub-tab + project CRUD)
     abgangsliste.py    — actor instances, circuit assignment, CSV/PDF export (Abgangsliste sub-tab)
@@ -62,6 +63,7 @@ backend/
     pflichtenheft.py   — early-stage spec PDF export (Pflichtenheft sub-tab); also home to function_checklist_table(), shared with checkliste.py
     checkliste.py      — digital on-site checklists: checklist_status upsert, Funktionscheckliste + Übergabe-Checkliste JSON/PDF (their sub-tabs)
     dokumentation.py   — end-of-project assembly PDF, combining Pflichtenheft content + both checklists' results + optional as-built sections (Dokumentation sub-tab)
+    email.py           — "Per E-Mail senden" endpoints, reusing each export's build_*_pdf_bytes() function (Setup → E-Mail + every export tab)
     klaerungsliste.py  — questions/tasks/notes per project (Klärungsliste sub-tab)
     project_files.py   — a handful of reference files per project, stored as a BLOB (Übersicht sub-tab)
     system.py          — self-update via git, changelog + manual + version endpoints (Update/Hilfe tabs)
@@ -71,7 +73,8 @@ frontend/
   js/
     api.js            — shared api() fetch wrapper, global state vars, theme toggle, tab-switch wiring
     ui.js              — toasts, modals, shared Markdown renderer (used by Update + Hilfe)
-    setup.js           — company profile + categories + point types + central templates
+    send_email.js      — shared "Per E-Mail senden" modal, called from Pflichtenheft/Funktionscheckliste/Übergabe-Checkliste/Dokumentation
+    setup.js           — company profile (incl. SMTP settings) + categories + point types + central templates
     geraete.js         — actor types catalog
     projekte.js        — project CRUD/meta, floors/rooms (Gebäudestruktur sub-tab)
     funktionen.js      — assigning functions to rooms, Sonderadressen (Funktionen sub-tab)

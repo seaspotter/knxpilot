@@ -107,7 +107,10 @@ Datei.
 **Projekt öffnen** im ▾-Menü) zeigt dessen Arbeitsbereich (die
 Projektliste wird dabei ausgeblendet, nicht darunter weiter angezeigt):
 oben die Projekt-Metadaten mit **Bearbeiten**-Button (ändert
-Name/Kunde/Standort/Status/Bestellnummer/Kommentar nachträglich),
+Name/Kunde/Standort/Status/Bestellnummer/Kommentar nachträglich, sowie
+**E-Mail** und **Weitere Empfänger** — die Adresse(n), die beim
+E-Mail-Versand von PDF-Exporten als "An" vorausgefüllt werden, siehe
+weiter unten die einzelnen Unterreiter),
 daneben zwei Symbole — **⭳** (als JSON sichern) und **⧉** (duplizieren,
 wechselt direkt in die neue Kopie) — sowie **× Schliessen**. Ein zweites
 Projekt über **Projekt öffnen** auszuwählen wechselt direkt dorthin, ohne
@@ -381,6 +384,10 @@ besteht für einen kursiven Hinweis/Fussnote, `---` für eine Trennlinie,
 `- ` am Zeilenanfang für Aufzählungspunkte, und `**Text**` mitten im Satz
 für Fettdruck.
 
+Neben **PDF herunterladen** steht **Per E-Mail senden**, um das PDF direkt
+aus KNXpilot zu verschicken statt es herunterzuladen und manuell
+anzuhängen — siehe Setup → E-Mail weiter unten.
+
 #### Funktionscheckliste
 
 Der digitale Testfortschritt vor Ort: jede geplante Funktion (je
@@ -388,7 +395,8 @@ Geschoss/Raum sowie die Zentral-/Allgemeinfunktionen) lässt sich hier
 direkt auf dem Handy antippen, sobald sie getestet ist — kein Ausdrucken
 und Abhaken auf Papier nötig, der Haken wird sofort im Projekt
 gespeichert. **PDF herunterladen** erzeugt daraus eine Momentaufnahme zum
-Weitergeben, ist aber nicht die primäre Arbeitsweise.
+Weitergeben, ist aber nicht die primäre Arbeitsweise. **Per E-Mail
+senden** verschickt dieselbe Momentaufnahme direkt (siehe Setup → E-Mail).
 
 #### Übergabe-Checkliste
 
@@ -413,7 +421,9 @@ Ausdrucken und Scannen nötig. **PDF herunterladen** erzeugt daraus eine
 Momentaufnahme: mit bereits erfassten digitalen Unterschriften erscheint
 dort die echte Unterschrift samt Zeitstempel, für noch fehlende bleibt
 eine leere Unterschriftenzeile zum Ausdrucken/handschriftlichen
-Unterschreiben.
+Unterschreiben. **Per E-Mail senden** verschickt diese Momentaufnahme
+direkt, z.B. um das unterschriebene Protokoll gegenzeichnen zu lassen
+(siehe Setup → E-Mail).
 
 #### Klärungsliste
 
@@ -465,6 +475,9 @@ Eintrag ist ein echter klickbarer PDF-Link, der beim Anklicken direkt zum
 jeweiligen Abschnitt springt (funktioniert in den meisten PDF-Readern,
 z.B. Acrobat Reader, Firefox, Chrome/Edge — nicht notwendigerweise in
 jeder mobilen PDF-App).
+
+**Per E-Mail senden** verschickt die vollständige Abschlussdokumentation
+direkt aus KNXpilot (siehe Setup → E-Mail).
 
 ### Geräte Katalog
 
@@ -528,8 +541,8 @@ diesen expliziten Klick hin.
 ### Setup
 
 Firma, Kategorien, Funktionstypen, Zentral-/Allgemeinfunktions-Vorlagen,
-Pflichtenheft und Backup sind eigene Unterreiter innerhalb des Setup-Tabs,
-nicht alle gleichzeitig sichtbar.
+Pflichtenheft, Dokumentation, E-Mail und Backup sind eigene Unterreiter
+innerhalb des Setup-Tabs, nicht alle gleichzeitig sichtbar.
 
 - **Firma** — Name, Adresse, Telefon, E-Mail, Website und ein Logo,
   einmalig hinterlegt. Erscheint als Badge im Programmkopf neben dem
@@ -596,6 +609,22 @@ nicht alle gleichzeitig sichtbar.
   Abgangsliste, Verteilerplanung und Klärungsliste (alle standardmässig
   aus, da sie ein Projekt schnell sehr lang machen können — gezielt für
   den Einzelfall dazuschalten). Gilt ebenfalls global für alle Projekte.
+- **E-Mail** — SMTP-Zugangsdaten (Server, Port, Verschlüsselung
+  STARTTLS/SSL/keine, Benutzername/Passwort, Absenderadresse) für den
+  **Per E-Mail senden**-Button bei Pflichtenheft, Funktionscheckliste,
+  Übergabe-Checkliste und Dokumentation — rein manuell ausgelöst, nie
+  automatisch (z.B. nicht beim Signieren der Übergabe-Checkliste). Ein
+  beliebiger SMTP-Account funktioniert (Firmen-Mailaccount, Transaktions-
+  E-Mail-Dienst usw.). "Kopie an mich" steuert, ob der Sendedialog
+  standardmässig eine Kopie an die oben unter *Firma* hinterlegte
+  E-Mail-Adresse vorschlägt. **Test-E-Mail senden** verschickt eine
+  Test-Nachricht an eine beliebige Adresse, um die Einstellungen zu
+  prüfen, bevor man sich beim eigentlichen Versand darauf verlässt. Beim
+  Klick auf **Per E-Mail senden** öffnet sich ein Dialog mit den
+  vorausgefüllten Empfängern (aus dem Projekt, siehe *Gruppenadressen*
+  oben — **E-Mail** und **Weitere Empfänger** im Projekt-Bearbeiten-
+  Formular) sowie einem CC-Feld und optionalem Freitext — erst nach
+  **Senden** geht die E-Mail tatsächlich raus, mit dem PDF als Anhang.
 - **Backup** — automatische und/oder manuelle (**Jetzt sichern**) Sicherung
   der kompletten Datenbank (alle Projekte, Geräte-Katalog, restliches
   Setup — nicht nur ein einzelnes Projekt) auf ein NAS/gemountetes

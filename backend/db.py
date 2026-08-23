@@ -257,6 +257,16 @@ def init_db():
                 status TEXT NOT NULL DEFAULT '',
                 comment TEXT NOT NULL DEFAULT '',
                 order_number TEXT NOT NULL DEFAULT '',
+                -- email: the customer's address, pre-filled as the "An"
+                -- recipient when sending a PDF export by mail (see
+                -- routers/email.py). additional_recipients: a free-text,
+                -- comma/semicolon-separated list of other stakeholders to
+                -- pre-fill (e.g. Generalunternehmer) - deliberately a plain
+                -- string, not a separate contacts table, since it's just a
+                -- send-time convenience default, editable in the send
+                -- dialog either way.
+                email TEXT NOT NULL DEFAULT '',
+                additional_recipients TEXT NOT NULL DEFAULT '',
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
 
@@ -507,7 +517,23 @@ def init_db():
                 backup_nextcloud_username TEXT NOT NULL DEFAULT '',
                 backup_nextcloud_password TEXT NOT NULL DEFAULT '',
                 backup_last_run_at TEXT NOT NULL DEFAULT '',
-                backup_last_run_status TEXT NOT NULL DEFAULT ''
+                backup_last_run_status TEXT NOT NULL DEFAULT '',
+                -- SMTP config for sending PDF exports by email (see
+                -- routers/email.py) - same enable-flag/credentials shape as
+                -- the Nextcloud backup fields above. smtp_encryption is one
+                -- of 'starttls' (default, port 587), 'ssl' (implicit TLS,
+                -- port 465) or 'none'. smtp_from_email is the message's
+                -- From address (also used as the reply-to); smtp_cc_self_default
+                -- pre-checks "Kopie an mich" (using company_profile.email)
+                -- in the send dialog.
+                smtp_enabled INTEGER NOT NULL DEFAULT 0,
+                smtp_host TEXT NOT NULL DEFAULT '',
+                smtp_port INTEGER NOT NULL DEFAULT 587,
+                smtp_encryption TEXT NOT NULL DEFAULT 'starttls',
+                smtp_username TEXT NOT NULL DEFAULT '',
+                smtp_password TEXT NOT NULL DEFAULT '',
+                smtp_from_email TEXT NOT NULL DEFAULT '',
+                smtp_cc_self_default INTEGER NOT NULL DEFAULT 1
             );
             """
         )
@@ -532,6 +558,9 @@ def init_db():
             ("projects", "status", "ALTER TABLE projects ADD COLUMN status TEXT NOT NULL DEFAULT ''"),
             ("projects", "comment", "ALTER TABLE projects ADD COLUMN comment TEXT NOT NULL DEFAULT ''"),
             ("projects", "order_number", "ALTER TABLE projects ADD COLUMN order_number TEXT NOT NULL DEFAULT ''"),
+            ("projects", "email", "ALTER TABLE projects ADD COLUMN email TEXT NOT NULL DEFAULT ''"),
+            ("projects", "additional_recipients",
+             "ALTER TABLE projects ADD COLUMN additional_recipients TEXT NOT NULL DEFAULT ''"),
             ("klaerungen", "antwort", "ALTER TABLE klaerungen ADD COLUMN antwort TEXT NOT NULL DEFAULT ''"),
             ("company_profile", "pflichtenheft_preamble",
              "ALTER TABLE company_profile ADD COLUMN pflichtenheft_preamble TEXT NOT NULL DEFAULT ''"),
@@ -577,6 +606,22 @@ def init_db():
              "ALTER TABLE company_profile ADD COLUMN backup_last_run_at TEXT NOT NULL DEFAULT ''"),
             ("company_profile", "backup_last_run_status",
              "ALTER TABLE company_profile ADD COLUMN backup_last_run_status TEXT NOT NULL DEFAULT ''"),
+            ("company_profile", "smtp_enabled",
+             "ALTER TABLE company_profile ADD COLUMN smtp_enabled INTEGER NOT NULL DEFAULT 0"),
+            ("company_profile", "smtp_host",
+             "ALTER TABLE company_profile ADD COLUMN smtp_host TEXT NOT NULL DEFAULT ''"),
+            ("company_profile", "smtp_port",
+             "ALTER TABLE company_profile ADD COLUMN smtp_port INTEGER NOT NULL DEFAULT 587"),
+            ("company_profile", "smtp_encryption",
+             "ALTER TABLE company_profile ADD COLUMN smtp_encryption TEXT NOT NULL DEFAULT 'starttls'"),
+            ("company_profile", "smtp_username",
+             "ALTER TABLE company_profile ADD COLUMN smtp_username TEXT NOT NULL DEFAULT ''"),
+            ("company_profile", "smtp_password",
+             "ALTER TABLE company_profile ADD COLUMN smtp_password TEXT NOT NULL DEFAULT ''"),
+            ("company_profile", "smtp_from_email",
+             "ALTER TABLE company_profile ADD COLUMN smtp_from_email TEXT NOT NULL DEFAULT ''"),
+            ("company_profile", "smtp_cc_self_default",
+             "ALTER TABLE company_profile ADD COLUMN smtp_cc_self_default INTEGER NOT NULL DEFAULT 1"),
         ]:
             cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]
             if column not in cols:

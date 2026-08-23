@@ -20,6 +20,14 @@ async function loadCompanyProfile() {
   document.getElementById('pht-include-klaerungsliste').checked = !!c.pflichtenheft_include_klaerungsliste;
   document.getElementById('doku-include-funktionscheckliste').checked = !!c.dokumentation_include_funktionscheckliste;
   document.getElementById('doku-include-uebergabe').checked = !!c.dokumentation_include_uebergabe;
+  document.getElementById('smtp-enabled').checked = !!c.smtp_enabled;
+  document.getElementById('smtp-host').value = c.smtp_host || '';
+  document.getElementById('smtp-port').value = c.smtp_port || 587;
+  document.getElementById('smtp-encryption').value = c.smtp_encryption || 'starttls';
+  document.getElementById('smtp-username').value = c.smtp_username || '';
+  document.getElementById('smtp-password').value = c.smtp_password || '';
+  document.getElementById('smtp-from-email').value = c.smtp_from_email || '';
+  document.getElementById('smtp-cc-self-default').checked = !!c.smtp_cc_self_default;
   document.getElementById('backup-enabled').checked = !!c.backup_enabled;
   document.getElementById('backup-interval-hours').value = c.backup_interval_hours || 24;
   document.getElementById('backup-retention-count').value = c.backup_retention_count || 14;
@@ -245,6 +253,14 @@ async function saveCompanyProfile() {
     pflichtenheft_include_klaerungsliste: document.getElementById('pht-include-klaerungsliste').checked,
     dokumentation_include_funktionscheckliste: document.getElementById('doku-include-funktionscheckliste').checked,
     dokumentation_include_uebergabe: document.getElementById('doku-include-uebergabe').checked,
+    smtp_enabled: document.getElementById('smtp-enabled').checked,
+    smtp_host: document.getElementById('smtp-host').value.trim(),
+    smtp_port: parseInt(document.getElementById('smtp-port').value, 10) || 587,
+    smtp_encryption: document.getElementById('smtp-encryption').value,
+    smtp_username: document.getElementById('smtp-username').value.trim(),
+    smtp_password: document.getElementById('smtp-password').value,
+    smtp_from_email: document.getElementById('smtp-from-email').value.trim(),
+    smtp_cc_self_default: document.getElementById('smtp-cc-self-default').checked,
     backup_enabled: document.getElementById('backup-enabled').checked,
     backup_interval_hours: parseInt(document.getElementById('backup-interval-hours').value) || 24,
     backup_retention_count: parseInt(document.getElementById('backup-retention-count').value) || 14,

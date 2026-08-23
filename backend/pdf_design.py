@@ -259,20 +259,20 @@ def _pdf_doc_template(buf, doc_title, footer_center_text):
     )
 
 
-def build_pdf_response(story, footer_left_text, filename, doc_title, footer_center_text=""):
+def build_pdf_bytes(story, footer_left_text, doc_title, footer_center_text=""):
+    """The raw PDF bytes for `story` - the single-pass path (see
+    build_pdf_bytes_two_pass() for the internal-links-safe variant). Used
+    both by build_pdf_response() (HTTP download) and routers/email.py
+    (mail attachment), so the two never drift into rendering the document
+    differently."""
     buf = io.BytesIO()
     doc = _pdf_doc_template(buf, doc_title, footer_center_text)
     doc.build(story, canvasmaker=make_numbered_canvas(footer_left_text, footer_center_text))
-    buf.seek(0)
-    return StreamingResponse(
-        iter([buf.getvalue()]),
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    return buf.getvalue()
 
 
-def build_pdf_response_two_pass(build_story, footer_left_text, filename, doc_title, footer_center_text=""):
-    """Like build_pdf_response(), for documents that use internal PDF links/
+def build_pdf_bytes_two_pass(build_story, footer_left_text, doc_title, footer_center_text=""):
+    """Like build_pdf_bytes(), for documents that use internal PDF links/
     bookmarks (currently just Dokumentation's Inhaltsverzeichnis) - see
     make_numbered_canvas() for why the normal single-pass footer trick
     breaks those. `build_story` is a zero-arg callable returning a *fresh*
@@ -291,9 +291,24 @@ def build_pdf_response_two_pass(build_story, footer_left_text, filename, doc_tit
         build_story(),
         canvasmaker=make_numbered_canvas(footer_left_text, footer_center_text, page_count=page_count),
     )
-    buf.seek(0)
+    return buf.getvalue()
+
+
+def pdf_response(data, filename):
     return StreamingResponse(
-        iter([buf.getvalue()]),
+        iter([data]),
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+def build_pdf_response(story, footer_left_text, filename, doc_title, footer_center_text=""):
+    return pdf_response(build_pdf_bytes(story, footer_left_text, doc_title, footer_center_text), filename)
+
+
+def build_pdf_response_two_pass(build_story, footer_left_text, filename, doc_title, footer_center_text=""):
+    """See build_pdf_bytes_two_pass() - this just wraps it as a downloadable
+    HTTP response, same relationship build_pdf_response() has to
+    build_pdf_bytes()."""
+    data = build_pdf_bytes_two_pass(build_story, footer_left_text, doc_title, footer_center_text)
+    return pdf_response(data, filename)

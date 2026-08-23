@@ -52,6 +52,14 @@ def get_company_profile():
             "backup_nextcloud_password": r["backup_nextcloud_password"],
             "backup_last_run_at": r["backup_last_run_at"],
             "backup_last_run_status": r["backup_last_run_status"],
+            "smtp_enabled": bool(r["smtp_enabled"]),
+            "smtp_host": r["smtp_host"],
+            "smtp_port": r["smtp_port"],
+            "smtp_encryption": r["smtp_encryption"],
+            "smtp_username": r["smtp_username"],
+            "smtp_password": r["smtp_password"],
+            "smtp_from_email": r["smtp_from_email"],
+            "smtp_cc_self_default": bool(r["smtp_cc_self_default"]),
         }
 
 
@@ -70,7 +78,9 @@ def update_company_profile(cp: CompanyProfileIn):
             "backup_enabled=?, backup_interval_hours=?, backup_retention_count=?, "
             "backup_local_enabled=?, backup_local_path=?, "
             "backup_nextcloud_enabled=?, backup_nextcloud_url=?, "
-            "backup_nextcloud_username=?, backup_nextcloud_password=? WHERE id=1",
+            "backup_nextcloud_username=?, backup_nextcloud_password=?, "
+            "smtp_enabled=?, smtp_host=?, smtp_port=?, smtp_encryption=?, "
+            "smtp_username=?, smtp_password=?, smtp_from_email=?, smtp_cc_self_default=? WHERE id=1",
             (cp.name, cp.address, cp.email, cp.website, cp.phone, cp.logo_data_url,
              int(cp.show_on_pdf), cp.pflichtenheft_preamble,
              int(cp.pflichtenheft_include_vorbemerkungen),
@@ -82,7 +92,9 @@ def update_company_profile(cp: CompanyProfileIn):
              int(cp.backup_enabled), cp.backup_interval_hours, cp.backup_retention_count,
              int(cp.backup_local_enabled), cp.backup_local_path,
              int(cp.backup_nextcloud_enabled), cp.backup_nextcloud_url,
-             cp.backup_nextcloud_username, cp.backup_nextcloud_password),
+             cp.backup_nextcloud_username, cp.backup_nextcloud_password,
+             int(cp.smtp_enabled), cp.smtp_host, cp.smtp_port, cp.smtp_encryption,
+             cp.smtp_username, cp.smtp_password, cp.smtp_from_email, int(cp.smtp_cc_self_default)),
         )
     return {"ok": True}
 

@@ -21,7 +21,7 @@ from reportlab.lib.units import mm
 from ..db import get_db
 from ..ga_logic import get_room_functions_by_category, get_central_functions_overview
 from ..pdf_design import (
-    pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response,
+    pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_bytes, pdf_response,
     company_header_block, company_footer_line, checkbox_cell,
 )
 from ..utils import join_parts
@@ -261,8 +261,10 @@ def build_pflichtenheft_spec_story(db, project_id, company, styles):
     return story
 
 
-@router.get("/api/projects/{project_id}/export-pflichtenheft.pdf")
-def export_pflichtenheft_pdf(project_id: int):
+def build_pflichtenheft_pdf_bytes(project_id: int):
+    """The raw PDF bytes + suggested filename - shared by the HTTP download
+    endpoint below and routers/email.py's send-by-mail action, so both
+    always produce the exact same document."""
     with get_db() as db:
         project = db.execute("SELECT * FROM projects WHERE id=?", (project_id,)).fetchone()
         if not project:
@@ -283,10 +285,16 @@ def export_pflichtenheft_pdf(project_id: int):
         story.append(Spacer(1, 4 * mm))
         story += build_pflichtenheft_spec_story(db, project_id, company, styles)
 
-        return build_pdf_response(
+        data = build_pdf_bytes(
             story,
             footer_left_text=f"Pflichtenheft · {project['name']}",
-            filename=f"{project['name'].replace(' ', '_')}_pflichtenheft.pdf",
             doc_title=f"Pflichtenheft {project['name']}",
             footer_center_text=company_footer_line(company),
         )
+        return data, f"{project['name'].replace(' ', '_')}_pflichtenheft.pdf"
+
+
+@router.get("/api/projects/{project_id}/export-pflichtenheft.pdf")
+def export_pflichtenheft_pdf(project_id: int):
+    data, filename = build_pflichtenheft_pdf_bytes(project_id)
+    return pdf_response(data, filename)

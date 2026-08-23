@@ -4,6 +4,29 @@ Notable changes to KNXpilot. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this file starts from the
 restructuring below — history before that is available via `git log`.
 
+## [Unreleased]
+
+### Added
+
+- **Send PDF exports by email** — a "Per E-Mail senden" button next to
+  "PDF herunterladen" on Pflichtenheft, Funktionscheckliste,
+  Übergabe-Checkliste and Dokumentation. Always manual/one-click - never
+  triggered automatically (e.g. right after a signature is captured) - and
+  always shows a confirmation dialog (pre-filled recipients, editable)
+  before anything is sent. New per-project **E-Mail** (customer) and
+  **Weitere Empfänger** (free-text, e.g. Generalunternehmer) fields in the
+  project edit form pre-fill the "An" field; a new Setup → **E-Mail** tab
+  holds the SMTP credentials (same enable-flag/credentials shape as the
+  existing Nextcloud backup fields) plus a "Kopie an mich" default and a
+  "Test-E-Mail senden" button to verify the setup works before relying on
+  it. New `backend/email_sender.py` (stdlib `smtplib`, no new dependency)
+  and `backend/routers/email.py` (`GET /api/projects/{id}/email-defaults`,
+  `POST /api/projects/{id}/send-email`, `POST /api/send-test-email`); each
+  PDF export's story-building logic was factored out into a reusable
+  `build_*_pdf_bytes()` function shared by the download endpoint and the
+  new send-by-mail action, so the emailed PDF is always identical to the
+  downloaded one.
+
 ## [0.6.0] - 2026-08-20
 
 ### Added

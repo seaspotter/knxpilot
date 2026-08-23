@@ -26,7 +26,7 @@ from ..db import get_db
 from ..ga_logic import get_room_functions_by_category, get_central_functions_overview
 from ..models import ChecklistStatusIn, SignatureIn
 from ..pdf_design import (
-    pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response,
+    pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_bytes, pdf_response,
     company_header_block, company_footer_line, checkbox_cell, signature_block,
 )
 from .pflichtenheft import function_checklist_table
@@ -77,12 +77,12 @@ def central_functions_checklist(project_id: int):
         return get_central_functions_overview(db, project_id)
 
 
-@router.get("/api/projects/{project_id}/export-funktionscheckliste.pdf")
-def export_funktionscheckliste_pdf(project_id: int):
+def build_funktionscheckliste_pdf_bytes(project_id: int):
     """The on-site testing record: every planned function, grouped by
     Geschoss/Raum, with its real checked state - counterpart to
     Pflichtenheft's own "what's planned" listing, which deliberately has no
-    checkbox column at all."""
+    checkbox column at all. Shared by the HTTP download endpoint below and
+    routers/email.py's send-by-mail action."""
     with get_db() as db:
         project = db.execute("SELECT * FROM projects WHERE id=?", (project_id,)).fetchone()
         if not project:
@@ -129,13 +129,19 @@ def export_funktionscheckliste_pdf(project_id: int):
                 story.append(Spacer(1, 2 * mm))
                 story.append(central_table)
 
-        return build_pdf_response(
+        data = build_pdf_bytes(
             story,
             footer_left_text=f"Funktionscheckliste · {project['name']}",
-            filename=f"{project['name'].replace(' ', '_')}_funktionscheckliste.pdf",
             doc_title=f"Funktionscheckliste {project['name']}",
             footer_center_text=company_footer_line(company),
         )
+        return data, f"{project['name'].replace(' ', '_')}_funktionscheckliste.pdf"
+
+
+@router.get("/api/projects/{project_id}/export-funktionscheckliste.pdf")
+def export_funktionscheckliste_pdf(project_id: int):
+    data, filename = build_funktionscheckliste_pdf_bytes(project_id)
+    return pdf_response(data, filename)
 
 
 # ---------- Übergabe-Checkliste ----------
@@ -299,8 +305,9 @@ def build_signature_row(db, project_id, styles):
     return sig_row
 
 
-@router.get("/api/projects/{project_id}/export-uebergabe-checkliste.pdf")
-def export_uebergabe_checkliste_pdf(project_id: int):
+def build_uebergabe_checkliste_pdf_bytes(project_id: int):
+    """Shared by the HTTP download endpoint below and routers/email.py's
+    send-by-mail action."""
     styles = pdf_styles()
     with get_db() as db:
         project = db.execute("SELECT * FROM projects WHERE id=?", (project_id,)).fetchone()
@@ -326,10 +333,16 @@ def export_uebergabe_checkliste_pdf(project_id: int):
     story.append(Spacer(1, 8 * mm))
     story.append(sig_row)
 
-    return build_pdf_response(
+    data = build_pdf_bytes(
         story,
         footer_left_text=f"Übergabe-Checkliste · {project['name']}",
-        filename=f"{project['name'].replace(' ', '_')}_uebergabe_checkliste.pdf",
         doc_title=f"Übergabe-Checkliste {project['name']}",
         footer_center_text=company_footer_line(company),
     )
+    return data, f"{project['name'].replace(' ', '_')}_uebergabe_checkliste.pdf"
+
+
+@router.get("/api/projects/{project_id}/export-uebergabe-checkliste.pdf")
+def export_uebergabe_checkliste_pdf(project_id: int):
+    data, filename = build_uebergabe_checkliste_pdf_bytes(project_id)
+    return pdf_response(data, filename)

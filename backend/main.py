@@ -22,10 +22,12 @@ CSV export format (verified against real ETS6 exports):
 This file just wires everything together - see backend/routers/ for the
 actual endpoints, grouped by tab (setup, geraete, projects, abgangsliste,
 geraeteplanung, verteiler, klaerungsliste, pflichtenheft, system,
-project_files, checkliste, dokumentation), backend/db.py for the
-schema/migrations/seed data, backend/ga_logic.py for GA-tree generation, and
-backend/pdf_design.py for the shared PDF look-and-feel. The frontend (plain
-HTML/CSS/JS, no build step) lives in ../frontend/, mounted below.
+project_files, checkliste, dokumentation, email), backend/db.py for the
+schema/migrations/seed data, backend/ga_logic.py for GA-tree generation,
+backend/pdf_design.py for the shared PDF look-and-feel, and
+backend/email_sender.py for the SMTP mechanics behind routers/email.py.
+The frontend (plain HTML/CSS/JS, no build step) lives in ../frontend/,
+mounted below.
 
 Run with: uvicorn backend.main:app --host 0.0.0.0 --port 8000
 """
@@ -42,7 +44,7 @@ from .backup import run_backup_now
 from .db import get_db, init_db
 from .routers import (
     setup, geraete, projects, abgangsliste, geraeteplanung, klaerungsliste, pflichtenheft, system, verteiler,
-    project_files, checkliste, dokumentation,
+    project_files, checkliste, dokumentation, email,
 )
 
 logger = logging.getLogger("knxpilot.backup")
@@ -101,6 +103,7 @@ app.include_router(system.router)
 app.include_router(project_files.router)
 app.include_router(checkliste.router)
 app.include_router(dokumentation.router)
+app.include_router(email.router)
 
 class NoCacheStaticFiles(StaticFiles):
     """Serves frontend/ with Cache-Control: no-cache instead of Starlette's

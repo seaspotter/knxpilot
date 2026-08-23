@@ -28,12 +28,6 @@ nobody trusts.
   item. Security-sensitive: needs real thought on encryption at rest before
   building, not just a plain-text column - this isn't a "just add a field"
   task.
-- [ ] **Send documentation by email (SMTP)** — send the Dokumentation/
-  Übergabe-Checkliste PDF (and other exports) directly to the customer from
-  inside KNXpilot instead of downloading and attaching it manually. Needs
-  an SMTP config in Setup (mirroring the existing Nextcloud/backup
-  credential pattern) and a "send" action next to the existing PDF
-  downloads.
 
 ## Explicitly deferred
 

@@ -267,6 +267,8 @@ function editProjectMeta() {
   document.getElementById('pm-location').value = p.location || '';
   document.getElementById('pm-status').value = p.status || '';
   document.getElementById('pm-order-number').value = p.order_number || '';
+  document.getElementById('pm-email').value = p.email || '';
+  document.getElementById('pm-additional-recipients').value = p.additional_recipients || '';
   document.getElementById('pm-comment').value = p.comment || '';
   document.getElementById('project-meta-view').style.display = 'none';
   document.getElementById('project-meta-edit').style.display = '';
@@ -286,6 +288,8 @@ async function saveProjectMeta() {
     location: document.getElementById('pm-location').value.trim(),
     status: document.getElementById('pm-status').value,
     order_number: document.getElementById('pm-order-number').value.trim(),
+    email: document.getElementById('pm-email').value.trim(),
+    additional_recipients: document.getElementById('pm-additional-recipients').value.trim(),
     comment: document.getElementById('pm-comment').value.trim(),
   });
   await api('/projects/' + CURRENT_PROJECT, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
