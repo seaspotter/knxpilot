@@ -12,16 +12,19 @@ restructuring below — history before that is available via `git log`.
   Geräte Katalog gets a new **Handbücher** sub-tab (next to the existing
   Katalog sub-tab) for hinterlegen a manufacturer PDF URL per device;
   leaving it blank simply means it's unused, no per-device tracking
-  needed. In a project's Übersicht, a new **Handbücher** card lists every
-  device actually used in the project that has a curated URL, with a
-  **Herunterladen** button per device (fetches the PDF server-side and
-  saves it as a project file, see Dateien) plus **Alle herunterladen** for
-  the rest; already-fetched devices show **✓ Gespeichert** and re-clicking
-  is a no-op rather than a duplicate download. Only ever runs on this
+  needed. Every project gets its own new **Handbücher** sub-tab, kept
+  deliberately separate from Dateien (Dateien is what you upload
+  yourself; Handbücher is what KNXpilot fetches on your behalf, stored in
+  its own `project_manuals` table) - lists every device actually used in
+  the project that has a curated URL, with a **Herunterladen** button per
+  device (fetches the PDF server-side) plus **Alle herunterladen** for
+  the rest; already-fetched devices show **Ansehen** (opens the PDF in a
+  new browser tab) and **Löschen** instead, and re-fetching a still-saved
+  one is a no-op rather than a duplicate download. Only ever runs on this
   explicit click, never automatically - same "manual, confirm first"
   principle as the email-sending feature. Plain stdlib `urllib` http(s)
-  GET (no new dependency, no scraping/search), capped at the existing
-  25 MB project-file limit. Re-importing the device catalog (manual JSON
+  GET (no new dependency, no scraping/search), capped at 25 MB per file
+  (same cap as Dateien). Re-importing the device catalog (manual JSON
   import or "Standard-Katalog importieren") never overwrites a curated
   manual_url that isn't present in the imported data.
 

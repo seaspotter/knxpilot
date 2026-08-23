@@ -428,7 +428,8 @@ def init_db():
             );
 
             -- A handful of reference files attached to a project (building drawings,
-            -- manuals, an ETS export) - stored as a BLOB directly in the SQLite DB, so
+            -- an ETS export, etc. - deliberately NOT device manuals, see
+            -- project_manuals below) - stored as a BLOB directly in the SQLite DB, so
             -- they're automatically covered by the existing whole-database Backup
             -- feature with no separate file-storage/backup path needed. Deliberately
             -- NOT included in a project's JSON export/duplicate (see routers/projects.py)
@@ -443,6 +444,31 @@ def init_db():
                 size_bytes INTEGER NOT NULL,
                 data BLOB NOT NULL,
                 uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
+
+            -- Device manuals fetched from a catalog-curated actor_types.manual_url
+            -- (see routers/geraete.py) for a device actually used in this project
+            -- (see routers/manuals.py) - kept in its own table rather than
+            -- project_files so the Dateien list (things the user themselves
+            -- uploaded) never gets mixed with manuals the app fetched on the
+            -- user's behalf. UNIQUE(project_id, device_type_id) makes "already
+            -- fetched?" and re-fetch-after-delete both a plain lookup, no
+            -- filename-matching needed. No FK on device_type_id (same
+            -- "polymorphic reference, no enforced FK" precedent as
+            -- special_items.location/checklist_status.item_key) - if the catalog
+            -- entry is later deleted, the fetched manual and its device name (kept
+            -- in `device_name` since actor_types could theoretically be re-used
+            -- for a different device later) still stay valid and viewable.
+            CREATE TABLE IF NOT EXISTS project_manuals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                device_type_id INTEGER NOT NULL,
+                device_name TEXT NOT NULL,
+                content_type TEXT NOT NULL DEFAULT '',
+                size_bytes INTEGER NOT NULL,
+                data BLOB NOT NULL,
+                fetched_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(project_id, device_type_id)
             );
 
             -- Shared status store for the two digital on-site checklists
@@ -554,10 +580,10 @@ def init_db():
             # Manufacturer-provided manual/datasheet URL, curated once per
             # catalog entry (Geräte Katalog -> Handbücher sub-tab) - blank
             # means "no manual on file", not an error. Used by
-            # routers/project_files.py's manual fetch-and-attach action to
-            # download it into a project's Dateien on request (never
-            # automatically) - see routers/project_files.py for why a
-            # direct http(s) fetch, not a search/scrape.
+            # routers/manuals.py's fetch action to download it into a
+            # project's own Handbücher tab (project_manuals table) on
+            # request (never automatically) - see routers/manuals.py for
+            # why a direct http(s) fetch, not a search/scrape.
             ("actor_types", "manual_url", "ALTER TABLE actor_types ADD COLUMN manual_url TEXT NOT NULL DEFAULT ''"),
             ("room_devices", "physical_address",
              "ALTER TABLE room_devices ADD COLUMN physical_address TEXT NOT NULL DEFAULT ''"),

@@ -120,6 +120,7 @@
         <button data-subtab="funktionscheckliste">Funktionscheckliste</button>
         <button data-subtab="uebergabe">Übergabe-Checkliste</button>
         <button data-subtab="klaerungsliste">Klärungsliste</button>
+        <button data-subtab="handbuecher">Handbücher</button>
         <button data-subtab="dokumentation">Dokumentation</button>
       </div>
 
@@ -131,19 +132,22 @@
         </div>
         <div class="card">
           <h3>Dateien</h3>
-          <p class="muted">Ein paar Referenzdateien zu diesem Projekt — z.B. Baupläne, Handbücher, ein ETS-Export. Keine vollständige Dokumentenablage: die Dateien liegen direkt in der Datenbank und sind damit automatisch Teil der Datenbanksicherung (Setup → Backup), erscheinen aber nicht in der JSON-Projektsicherung/-Duplizierung.</p>
+          <p class="muted">Ein paar Referenzdateien zu diesem Projekt — z.B. Baupläne, ein ETS-Export. Keine vollständige Dokumentenablage: die Dateien liegen direkt in der Datenbank und sind damit automatisch Teil der Datenbanksicherung (Setup → Backup), erscheinen aber nicht in der JSON-Projektsicherung/-Duplizierung.</p>
           <div class="row mobile-fields">
             <input type="file" id="project-file-upload">
             <button class="btn secondary" onclick="uploadProjectFile()">Hochladen</button>
           </div>
           <ul class="list" id="project-files-list"></ul>
         </div>
+      </div>
+
+      <div class="subtab" id="subtab-handbuecher">
         <div class="card">
           <div class="row" style="justify-content:space-between;">
             <h3 style="margin:0;">Handbücher</h3>
             <button class="btn secondary small" onclick="fetchAllProjectManuals()">Alle herunterladen</button>
           </div>
-          <p class="muted">Hersteller-Handbücher für die im Projekt verwendeten Geräte — Links werden im Geräte-Katalog unter "Handbücher" hinterlegt. Herunterladen speichert das PDF als Projektdatei (siehe oben).</p>
+          <p class="muted">Hersteller-Handbücher für die im Projekt tatsächlich verwendeten Geräte — Links werden im Geräte-Katalog unter "Handbücher" hinterlegt. Herunterladen speichert eine eigene Kopie in diesem Projekt (getrennt von den Dateien im Unterreiter Übersicht); zum Ansehen öffnet sich das PDF in einem neuen Browser-Tab.</p>
           <ul class="list" id="project-manuals-list"></ul>
         </div>
       </div>
@@ -772,6 +776,7 @@
 <script src="/js/funktionscheckliste.js"></script>
 <script src="/js/uebergabe_checkliste.js"></script>
 <script src="/js/klaerungsliste.js"></script>
+<script src="/js/manuals.js"></script>
 <script src="/js/dokumentation.js"></script>
 <script src="/js/update.js"></script>
 <script src="/js/hilfe.js"></script>

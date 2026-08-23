@@ -117,26 +117,20 @@ Projekt über **Projekt öffnen** auszuwählen wechselt direkt dorthin, ohne
 das erste vorher schliessen zu müssen. **× Schliessen** (oder das **×**
 an der 📁-Marke im Programmkopf) kehrt zur Projektliste zurück, ohne
 etwas zu löschen — beim nächsten Öffnen startet der Arbeitsbereich wieder
-beim Unterreiter Übersicht, der auf einen Blick zeigt, wie weit elf der
+beim Unterreiter Übersicht, der auf einen Blick zeigt, wie weit zwölf der
 übrigen Unterreiter gediehen sind (mit direktem Sprung dorthin per Klick)
 — nur Labels fehlt hier, da es keine sinnvolle Kurzkennzahl dafür gibt.
 
 Darunter, im Bereich **Dateien**: ein paar Referenzdateien zu diesem
-Projekt hochladen (z.B. Baupläne, Handbücher, ein ETS-Export) — Datei
-auswählen, **Hochladen**, danach mit **Herunterladen**/**Löschen** je
-Zeile verwalten (max. 25 MB je Datei). Bewusst keine vollständige
+Projekt hochladen (z.B. Baupläne, ein ETS-Export) — Datei auswählen,
+**Hochladen**, danach mit **Herunterladen**/**Löschen** je Zeile
+verwalten (max. 25 MB je Datei). Bewusst keine vollständige
 Dokumentenablage: die Dateien liegen direkt in der Datenbank und sind
 damit automatisch Teil der Datenbanksicherung (Setup → Backup), erscheinen
 aber **nicht** in der JSON-Projektsicherung (⭳/⭱) oder beim Duplizieren
 (⧉) — die bleiben bewusst ein leichtgewichtiger Export/Kopie nur der
-Gebäudestruktur/Gruppenadressen.
-
-Darunter, im Bereich **Handbücher**: jedes im Projekt tatsächlich
-verwendete Gerät mit im Geräte-Katalog hinterlegtem Handbuch-Link (siehe
-Geräte Katalog → Handbücher) — **Herunterladen** je Gerät lädt das PDF
-und legt es als Projektdatei ab (siehe Dateien oben), **Alle
-herunterladen** erledigt alle noch fehlenden auf einmal. Bereits
-gespeicherte Handbücher zeigen **✓ Gespeichert** statt des Buttons.
+Gebäudestruktur/Gruppenadressen. Gerätehandbücher gehören bewusst **nicht**
+hierher — die haben ihren eigenen Unterreiter Handbücher (siehe unten).
 
 #### Gebäudestruktur
 
@@ -460,6 +454,25 @@ Dokumentation-Export.
   Dieselbe Kennzahl fliesst auch in die Projektübersicht auf der
   Projektliste ein (siehe oben).
 
+#### Handbücher
+
+Hersteller-Handbücher für die im Projekt tatsächlich verwendeten Geräte —
+eigener Unterreiter, bewusst getrennt vom Bereich Dateien im Unterreiter
+Übersicht: Dateien sind, was Sie selbst hochladen, Handbücher sind, was
+KNXpilot für Sie herunterlädt.
+
+Die Liste zeigt jedes verwendete Gerät, das im Geräte-Katalog unter
+**Handbücher** einen Link hat (siehe dort) — Geräte ohne hinterlegten Link
+erscheinen hier gar nicht erst. Je Gerät:
+
+- **Herunterladen** lädt das PDF von der hinterlegten URL und speichert es
+  als eigene Kopie in diesem Projekt — nur auf diesen Klick hin, nie
+  automatisch.
+- Nach dem Herunterladen ersetzen **Ansehen** (öffnet das PDF direkt in
+  einem neuen Browser-Tab) und **Löschen** den Button.
+- **Alle herunterladen** oben lädt alle noch fehlenden auf einmal;
+  bereits vorhandene werden dabei übersprungen, keine Duplikate.
+
 #### Dokumentation
 
 Die vollständige Abschlussdokumentation, gedacht für das Ende des
@@ -557,15 +570,9 @@ Geräte-Zeile) und speichert bei jedem Feld einzeln beim Verlassen
 (kein separater Speichern-Button nötig). Ein Suchfeld filtert wie im
 Katalog live nach Hersteller/Modell/Gruppe.
 
-Diese Links sind die Grundlage für die **Handbücher**-Karte in der
-Projektübersicht (Übersicht-Unterreiter jedes Projekts): dort erscheint
-jedes im Projekt tatsächlich verwendete Gerät mit hinterlegtem
-Handbuch-Link, mit einem **Herunterladen**-Button je Gerät (lädt das PDF
-von der hinterlegten URL und speichert es als Projektdatei, siehe
-"Dateien" oben) sowie **Alle herunterladen** für alle noch fehlenden auf
-einmal. Bereits heruntergeladene Handbücher zeigen **✓ Gespeichert** statt
-des Buttons — ein erneuter Klick lädt nicht doppelt herunter. Der Download
-läuft nur auf diesen expliziten Klick hin, nie automatisch.
+Diese Links sind die Grundlage für den eigenen **Handbücher**-Unterreiter
+in jedem Projekt-Arbeitsbereich (siehe dort) — nur Geräte mit hinterlegtem
+Link erscheinen dort zum Herunterladen.
 
 ### Setup
 
