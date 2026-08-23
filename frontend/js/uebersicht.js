@@ -123,6 +123,7 @@ async function loadUebersichtForCurrentProject() {
   `).join('');
 
   await loadProjectFiles();
+  await loadProjectManuals();
 }
 
 // ---------- Dateien (project files) ----------
@@ -163,4 +164,43 @@ async function deleteProjectFile(id) {
   if (!(await showConfirm('Diese Datei löschen?', {danger: true}))) return;
   await api(`/project-files/${id}`, {method: 'DELETE'});
   await loadProjectFiles();
+}
+
+// ---------- Handbücher (fetch-on-click into project files) ----------
+async function loadProjectManuals() {
+  const manuals = await api(`/projects/${CURRENT_PROJECT}/manuals`);
+  const ul = document.getElementById('project-manuals-list');
+  ul.innerHTML = manuals.map(m => `
+    <li>
+      <div><b>${m.device_name}</b></div>
+      <div>
+        ${m.already_downloaded
+          ? '<span class="pill">✓ Gespeichert</span>'
+          : `<button class="btn secondary small" onclick="fetchProjectManual(${m.device_type_id})">Herunterladen</button>`}
+      </div>
+    </li>
+  `).join('') || '<li class="muted">Keine Handbuch-Links für verwendete Geräte hinterlegt</li>';
+}
+
+async function fetchProjectManual(deviceTypeId) {
+  try {
+    await api(`/projects/${CURRENT_PROJECT}/fetch-manual/${deviceTypeId}`, {method: 'POST'});
+  } catch (e) {
+    return showToast(e.message, 'error');
+  }
+  await loadProjectManuals();
+  await loadProjectFiles();
+}
+
+async function fetchAllProjectManuals() {
+  const result = await api(`/projects/${CURRENT_PROJECT}/fetch-manuals`, {method: 'POST'});
+  await loadProjectManuals();
+  await loadProjectFiles();
+  if (result.failed.length) {
+    showToast(`${result.fetched.length} heruntergeladen, ${result.failed.length} fehlgeschlagen: ${result.failed.map(f => f.device_name).join(', ')}`, 'warning');
+  } else if (result.fetched.length) {
+    showToast(`${result.fetched.length} Handbücher heruntergeladen.`, 'success');
+  } else {
+    showToast('Alle Handbücher bereits gespeichert.', 'success');
+  }
 }

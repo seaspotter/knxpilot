@@ -131,6 +131,13 @@ aber **nicht** in der JSON-Projektsicherung (⭳/⭱) oder beim Duplizieren
 (⧉) — die bleiben bewusst ein leichtgewichtiger Export/Kopie nur der
 Gebäudestruktur/Gruppenadressen.
 
+Darunter, im Bereich **Handbücher**: jedes im Projekt tatsächlich
+verwendete Gerät mit im Geräte-Katalog hinterlegtem Handbuch-Link (siehe
+Geräte Katalog → Handbücher) — **Herunterladen** je Gerät lädt das PDF
+und legt es als Projektdatei ab (siehe Dateien oben), **Alle
+herunterladen** erledigt alle noch fehlenden auf einmal. Bereits
+gespeicherte Handbücher zeigen **✓ Gespeichert** statt des Buttons.
+
 #### Gebäudestruktur
 
 Nur das Gebäude selbst — welche Funktionen wo landen, ist Sache des
@@ -481,6 +488,9 @@ direkt aus KNXpilot (siehe Setup → E-Mail).
 
 ### Geräte Katalog
 
+Zwei Unterreiter: **Katalog** (Geräte anlegen/bearbeiten, siehe unten) und
+**Handbücher** (Hersteller-PDF-Links je Gerät, siehe weiter unten).
+
 Globaler Gerätekatalog — **gemeinsam für alle Projekte**, unabhängig davon
 welches Projekt gerade bearbeitet wird. Deckt nicht nur Aktoren ab, sondern
 auch Sensoren, Wetterstationen, Bedienelemente usw. Jeder Eintrag hat:
@@ -537,6 +547,25 @@ importieren zu müssen. Gleicht wie jeder andere Import nach (Hersteller,
 Modell) ab (vorhandene werden aktualisiert, fehlende ergänzt) — bewusst
 gelöschte Geräte kommen dadurch **nicht von allein zurück**, nur auf
 diesen expliziten Klick hin.
+
+#### Handbücher
+
+Je Gerät ein optionales Feld für die URL des Hersteller-PDF-Handbuchs —
+bleibt es leer, wird es einfach nicht genutzt. Läuft komplett getrennt vom
+Katalog-Formular (kein zusätzliches Feld in der ohnehin dichten
+Geräte-Zeile) und speichert bei jedem Feld einzeln beim Verlassen
+(kein separater Speichern-Button nötig). Ein Suchfeld filtert wie im
+Katalog live nach Hersteller/Modell/Gruppe.
+
+Diese Links sind die Grundlage für die **Handbücher**-Karte in der
+Projektübersicht (Übersicht-Unterreiter jedes Projekts): dort erscheint
+jedes im Projekt tatsächlich verwendete Gerät mit hinterlegtem
+Handbuch-Link, mit einem **Herunterladen**-Button je Gerät (lädt das PDF
+von der hinterlegten URL und speichert es als Projektdatei, siehe
+"Dateien" oben) sowie **Alle herunterladen** für alle noch fehlenden auf
+einmal. Bereits heruntergeladene Handbücher zeigen **✓ Gespeichert** statt
+des Buttons — ein erneuter Klick lädt nicht doppelt herunter. Der Download
+läuft nur auf diesen expliziten Klick hin, nie automatisch.
 
 ### Setup
 

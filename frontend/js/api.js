@@ -66,3 +66,13 @@ document.querySelectorAll('#setup-subnav button').forEach(btn => {
   };
 });
 
+document.querySelectorAll('#aktoren-subnav button').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('#aktoren-subnav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#tab-aktoren .subtab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('aktoren-subtab-' + btn.dataset.subtab).classList.add('active');
+    if (btn.dataset.subtab === 'handbuecher') renderHandbuecherList();
+  };
+});
+

@@ -229,6 +229,7 @@ def device_summary(project_id: int):
                     "group_name": dt.get("group_name", ""),
                     "total": entry["total"], "rooms": entry["rooms"],
                     "not_ordering": order_flags.get(device_type_id, False),
+                    "manual_url": dt.get("manual_url", ""),
                 }
             )
         result.sort(key=lambda r: (r["group_name"], r["device_name"]))

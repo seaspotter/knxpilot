@@ -138,6 +138,14 @@
           </div>
           <ul class="list" id="project-files-list"></ul>
         </div>
+        <div class="card">
+          <div class="row" style="justify-content:space-between;">
+            <h3 style="margin:0;">Handbücher</h3>
+            <button class="btn secondary small" onclick="fetchAllProjectManuals()">Alle herunterladen</button>
+          </div>
+          <p class="muted">Hersteller-Handbücher für die im Projekt verwendeten Geräte — Links werden im Geräte-Katalog unter "Handbücher" hinterlegt. Herunterladen speichert das PDF als Projektdatei (siehe oben).</p>
+          <ul class="list" id="project-manuals-list"></ul>
+        </div>
       </div>
 
       <div class="subtab" id="subtab-struktur">
@@ -384,6 +392,12 @@
 
   <!-- AKTOREN/GERÄTE TAB -->
   <div class="tab" id="tab-aktoren">
+    <div class="subnav" id="aktoren-subnav">
+      <button data-subtab="katalog" class="active">Katalog</button>
+      <button data-subtab="handbuecher">Handbücher</button>
+    </div>
+
+    <div class="subtab active" id="aktoren-subtab-katalog">
     <div class="card">
       <div class="card-header">
         <h3>Geräte-Katalog</h3>
@@ -424,6 +438,18 @@
         <span class="muted" id="actortype-filter-count"></span>
       </div>
       <div id="actor-types-groups"></div>
+    </div>
+    </div>
+
+    <div class="subtab" id="aktoren-subtab-handbuecher">
+      <div class="card">
+        <h3>Handbücher</h3>
+        <p class="muted">Link zum Hersteller-PDF je Gerät hinterlegen — bleibt ein Feld leer, wird es einfach nicht genutzt. In der Projektübersicht lässt sich das Handbuch dann für jedes im Projekt verwendete Gerät per Klick herunterladen und als Projektdatei speichern.</p>
+        <div class="row">
+          <input type="text" id="handbuch-filter" class="flex-input-wide" placeholder="🔍 Suchen (Hersteller, Modell, Gruppe)..." oninput="renderHandbuecherList()">
+        </div>
+        <div id="handbuecher-groups"></div>
+      </div>
     </div>
   </div>
 

@@ -81,6 +81,11 @@ class ActorTypeIn(BaseModel):
     # DIN-rail width in Teilungseinheiten (1 TE = 18mm) - only meaningful for
     # rail-mounted devices; blank if not applicable.
     width_te: int | None = None
+    manual_url: str = ""  # curated link to the manufacturer's PDF manual, or "" for none
+
+
+class ManualUrlIn(BaseModel):
+    manual_url: str = ""
 
 
 class ActorInstanceIn(BaseModel):

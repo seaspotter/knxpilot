@@ -56,7 +56,7 @@ backend/
   utils.py          — small dependency-free helpers
   routers/
     setup.py          — company profile (incl. SMTP credentials), categories, point types, central templates (Setup tab)
-    geraete.py         — global device catalog (Geräte Katalog tab)
+    geraete.py         — global device catalog + curated manual_url per device (Geräte Katalog tab: Katalog + Handbücher sub-tabs)
     projects.py        — projects, floors/rooms/points, backup/restore (Projekte tab: Gebäudestruktur sub-tab + project CRUD)
     abgangsliste.py    — actor instances, circuit assignment, CSV/PDF export (Abgangsliste sub-tab)
     geraeteplanung.py  — per-room device planning, bill of materials, PDF export (Geräteplanung sub-tab)
@@ -65,7 +65,7 @@ backend/
     dokumentation.py   — end-of-project assembly PDF, combining Pflichtenheft content + both checklists' results + optional as-built sections (Dokumentation sub-tab)
     email.py           — "Per E-Mail senden" endpoints, reusing each export's build_*_pdf_bytes() function (Setup → E-Mail + every export tab)
     klaerungsliste.py  — questions/tasks/notes per project (Klärungsliste sub-tab)
-    project_files.py   — a handful of reference files per project, stored as a BLOB (Übersicht sub-tab)
+    project_files.py   — a handful of reference files per project, stored as a BLOB; also the device-manual fetch-and-attach action (Übersicht sub-tab)
     system.py          — self-update via git, changelog + manual + version endpoints (Update/Hilfe tabs)
 frontend/
   index.html        — page shell: <head>, nav/tab markup, <script src> tags in load order
@@ -75,11 +75,11 @@ frontend/
     ui.js              — toasts, modals, shared Markdown renderer (used by Update + Hilfe)
     send_email.js      — shared "Per E-Mail senden" modal, called from Pflichtenheft/Funktionscheckliste/Übergabe-Checkliste/Dokumentation
     setup.js           — company profile (incl. SMTP settings) + categories + point types + central templates
-    geraete.js         — actor types catalog
+    geraete.js         — actor types catalog + Handbücher sub-tab (per-device manual URL)
     projekte.js        — project CRUD/meta, floors/rooms (Gebäudestruktur sub-tab)
     funktionen.js      — assigning functions to rooms, Sonderadressen (Funktionen sub-tab)
     gruppenadressen.js — GA tree preview + CSV export (Gruppenadressen sub-tab)
-    uebersicht.js      — project status dashboard + project files (Übersicht sub-tab)
+    uebersicht.js      — project status dashboard + project files + device-manuals fetch (Übersicht sub-tab)
     abgangsliste.js    — actor instances + circuit assignment
     geraeteplanung.js  — per-room device planning
     pflichtenheft.js   — Pflichtenheft PDF download button (static content)

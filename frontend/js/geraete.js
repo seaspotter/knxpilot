@@ -32,7 +32,11 @@ async function saveActorType() {
   const width_te = teVal ? parseInt(teVal) : null;
   if (!model) return showToast('Modell ist erforderlich', 'warning');
   if (isAktor && !channel_type) return showToast('Type ist für die Gruppe "Aktor" erforderlich', 'warning');
-  const body = JSON.stringify({manufacturer, model, group_name, description, channel_type, channel_count, width_te});
+  // manual_url is curated separately on the Handbücher sub-tab - preserve
+  // the existing value on edit so this form doesn't blank it out.
+  const existing = EDITING_ACTOR_TYPE_ID ? ACTOR_TYPES.find(a => a.id === EDITING_ACTOR_TYPE_ID) : null;
+  const manual_url = existing ? existing.manual_url || '' : '';
+  const body = JSON.stringify({manufacturer, model, group_name, description, channel_type, channel_count, width_te, manual_url});
   if (EDITING_ACTOR_TYPE_ID) {
     await api('/actor-types/' + EDITING_ACTOR_TYPE_ID, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
   } else {
@@ -159,6 +163,47 @@ async function importDefaultActorTypes() {
   const result = await api('/actor-types/import-defaults', {method:'POST'});
   await loadActorTypes();
   showToast(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert.`, 'success');
+}
+
+// ---------- Aktoren: Handbücher (manual_url per device) ----------
+function renderHandbuecherList() {
+  const container = document.getElementById('handbuecher-groups');
+  const query = document.getElementById('handbuch-filter').value.trim().toLowerCase();
+  const filtered = !query ? ACTOR_TYPES : ACTOR_TYPES.filter(at =>
+    [at.manufacturer, at.model, at.group_name].some(field => (field || '').toLowerCase().includes(query))
+  );
+
+  const groups = {};
+  filtered.forEach(at => {
+    const g = at.group_name || 'Sonstiges';
+    groups[g] = groups[g] || [];
+    groups[g].push(at);
+  });
+  const groupNames = Object.keys(groups).sort();
+  container.innerHTML = groupNames.map(g => `
+    <h4 style="margin:14px 0 6px;">${g}</h4>
+    <ul class="list">
+      ${groups[g].map(at => `
+        <li>
+          <div style="flex:1;">
+            <b>${[at.manufacturer, at.model].filter(Boolean).join(' ')}</b>
+          </div>
+          <input type="text" class="flex-input-wide" data-id="${at.id}" value="${escapeAttr(at.manual_url || '')}" placeholder="URL zum PDF-Handbuch (optional)" onblur="saveManualUrl(this)" onkeydown="if(event.key==='Enter'){this.blur();}">
+        </li>`).join('')}
+    </ul>
+  `).join('') || (query
+    ? '<p class="muted">Keine Geräte gefunden</p>'
+    : '<p class="muted">Noch keine Geräte</p>');
+}
+
+async function saveManualUrl(input) {
+  const id = parseInt(input.dataset.id);
+  const at = ACTOR_TYPES.find(a => a.id === id);
+  if (!at) return;
+  const manual_url = input.value.trim();
+  if (manual_url === (at.manual_url || '')) return;
+  await api('/actor-types/' + id + '/manual-url', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({manual_url})});
+  at.manual_url = manual_url;
 }
 
 async function clearActorTypeCatalog() {

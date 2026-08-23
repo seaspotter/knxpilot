@@ -551,6 +551,14 @@ def init_db():
             ("actor_types", "manufacturer", "ALTER TABLE actor_types ADD COLUMN manufacturer TEXT NOT NULL DEFAULT ''"),
             ("actor_types", "model", "ALTER TABLE actor_types ADD COLUMN model TEXT NOT NULL DEFAULT ''"),
             ("actor_types", "width_te", "ALTER TABLE actor_types ADD COLUMN width_te INTEGER"),
+            # Manufacturer-provided manual/datasheet URL, curated once per
+            # catalog entry (Geräte Katalog -> Handbücher sub-tab) - blank
+            # means "no manual on file", not an error. Used by
+            # routers/project_files.py's manual fetch-and-attach action to
+            # download it into a project's Dateien on request (never
+            # automatically) - see routers/project_files.py for why a
+            # direct http(s) fetch, not a search/scrape.
+            ("actor_types", "manual_url", "ALTER TABLE actor_types ADD COLUMN manual_url TEXT NOT NULL DEFAULT ''"),
             ("room_devices", "physical_address",
              "ALTER TABLE room_devices ADD COLUMN physical_address TEXT NOT NULL DEFAULT ''"),
             ("projects", "location", "ALTER TABLE projects ADD COLUMN location TEXT NOT NULL DEFAULT ''"),
