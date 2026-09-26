@@ -6,6 +6,20 @@ restructuring below — history before that is available via `git log`.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-26
+
+A big planning and handover release. The Gebäudestruktur is now an
+ETS-like tree with drag & drop (Geschoss → Raum → Verteiler), projects can
+be split into several KNX lines with physical addresses assigned per line,
+and the Funktions- and Übergabe-Checkliste got a clearer table layout with
+test dates and signatures. Pflichtenheft and Dokumentation show what their
+PDF contains - the Dokumentation doubles as a readiness check before
+handover - and the per-project JSON backup now holds the complete project.
+Also: automated tests in CI, all dependencies updated (fixes the open
+security alerts), and a `:dev` Docker image. After updating, run
+`docker compose pull && docker compose up -d` once - the Python packages
+changed.
+
 ### Added
 
 - **Complete per-project JSON backup** — "Sichern (JSON)" used to contain
