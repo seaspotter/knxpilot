@@ -1,10 +1,10 @@
-// ---------- Setup: settings pages (company, specification, documentation, email, time tracking, backup) ----------
+// ---------- Setup: all sub-tabs are rendered server-side with htmx ----------
 // Rendered server-side with htmx (backend/templates/setup/, /hx/setup/...):
 // each page is a form saving only its own fields. What stays here: loading a
 // page when its sub-tab opens, the header branding/timer settings that
 // depend on the company profile, the logo auto-crop (canvas, browser only)
 // and restoring a backup (the app restarts, see update.js).
-const SETUP_HX_SECTIONS = ['company', 'specification', 'documentation', 'email', 'time-tracking', 'backup'];
+const SETUP_HX_SECTIONS = ['company', 'categories', 'function-types', 'central-templates', 'specification', 'documentation', 'email', 'time-tracking', 'backup'];
 
 function loadSetupSection(name) {
   if (!SETUP_HX_SECTIONS.includes(name)) return;
@@ -154,300 +154,52 @@ async function performRestore(triggerFn) {
   }
 }
 
-// ---------- Setup: Categories ----------
-async function loadCategories() {
-  CATEGORIES = await api('/categories');
-  const ul = document.getElementById('categories-list');
-  ul.innerHTML = CATEGORIES.map(c => `
-    <li>
-      <span><b>${c.main_label ?? ''}</b> ${c.order_idx}. ${c.name} ${c.is_allgemein ? '<span class="pill">Allgemein-Vorlage</span>' : ''}</span>
-      <button class="btn secondary small" onclick="renameCategory(${c.id}, '${c.name.replace(/'/g,"\\'")}')">Bearbeiten</button>
-    </li>
-  `).join('');
-  const catSelects = ['pt-category', 'ct-category', 'special-category'];
-  catSelects.forEach(id => {
-    document.getElementById(id).innerHTML = CATEGORIES.map(c => `<option value="${c.id}">${c.order_idx}. ${c.name}</option>`).join('');
-  });
+// ---------- Setup: list editors (categories, function types, central templates) ----------
+// Rendered server-side with htmx too (backend/templates/setup/). The
+// functions tab still reads categories/function types from these caches
+// (funktionen.js), refreshed on load and after every change in Setup
+// (HX-Trigger "setup-lists-changed").
+async function loadSetupCaches() {
+  [CATEGORIES, POINT_TYPES] = await Promise.all([api('/categories'), api('/point-types')]);
+  const special = document.getElementById('special-category');
+  if (special) special.innerHTML = CATEGORIES.map(c => `<option value="${c.id}">${c.order_idx}. ${escapeHtml(c.name)}</option>`).join('');
 }
+document.addEventListener('setup-lists-changed', () => { loadSetupCaches().catch(() => {}); });
 
-async function renameCategory(id, currentName) {
-  const newName = await openRenameModal(currentName, {title: 'Kategorie umbenennen'});
-  if (newName === null) return;
-  try {
-    await api('/categories/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: newName})});
-    await loadCategories();
-  } catch (e) {
-    showToast(e.message, 'error');
-  }
-}
-
-function exportCategoriesJson() {
-  window.location.href = `/api/categories/export-json`;
-}
-
-async function importCategoriesJson() {
-  const file = await openImportModal('Kategorien-Namen importieren', 'Nur die Namen werden abgeglichen (nach Hauptgruppennummer) - fügt nie eine Kategorie hinzu oder entfernt eine, benennt nur die 6 bestehenden um.');
+// JSON import: pick a file (browser), post it to the import endpoint, then
+// re-render the sub-tab.
+async function importSetupJson(title, hint, endpoint, subtab, summary) {
+  const file = await openImportModal(title, hint);
   if (!file) return;
-  const text = await file.text();
   let payload;
   try {
-    payload = JSON.parse(text);
+    payload = JSON.parse(await file.text());
   } catch (e) {
     return showToast('Diese Datei ist kein gültiges JSON', 'error');
   }
-  const result = await api('/categories/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-  await loadCategories();
-  showToast(`${result.updated} umbenannt${result.skipped ? `, ${result.skipped} übersprungen` : ''}.`, 'success');
+  const result = await api(endpoint, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)});
+  await loadSetupSection(subtab);
+  await loadSetupCaches();
+  showToast(summary(result), 'success');
 }
 
-// ---------- Setup: Point Types ----------
-function addPtSuffixRow(suffix='', dpt='') {
-  const div = document.createElement('div');
-  div.className = 'row mobile-fields';
-  div.innerHTML = `
-    <input type="text" placeholder="Suffix z.B. Schalten" class="pt-suf-name" value="${suffix}">
-    <input type="text" placeholder="DPT z.B. DPST-1-1" class="pt-suf-dpt" value="${dpt}">
-    <button class="btn danger small" onclick="this.parentElement.remove()">x</button>`;
-  document.getElementById('pt-suffixes').appendChild(div);
+function importCategoriesJson() {
+  return importSetupJson('Kategorien-Namen importieren',
+    'Nur die Namen werden abgeglichen (nach Hauptgruppennummer) - fügt nie eine Kategorie hinzu oder entfernt eine, benennt nur die 6 bestehenden um.',
+    '/categories/import-json', 'categories',
+    r => `${r.updated} umbenannt${r.skipped ? `, ${r.skipped} übersprungen` : ''}.`);
 }
 
-let EDITING_POINT_TYPE_ID = null;
-
-async function savePointType() {
-  const category_id = parseInt(document.getElementById('pt-category').value);
-  const name = document.getElementById('pt-name').value.trim();
-  const block_size = parseInt(document.getElementById('pt-blocksize').value) || 5;
-  const channel_type = document.getElementById('pt-channeltype').value.trim();
-  const channels_needed = parseInt(document.getElementById('pt-channelsneeded').value) || 1;
-  const suffixes = [...document.querySelectorAll('#pt-suffixes .row')].map(r => ({
-    suffix: r.querySelector('.pt-suf-name').value.trim(),
-    dpt: r.querySelector('.pt-suf-dpt').value.trim()
-  })).filter(s => s.suffix);
-  if (!name || suffixes.length === 0) return showToast('Name und mindestens ein Datenpunkt erforderlich', 'warning');
-  const body = JSON.stringify({category_id, name, suffixes, block_size, channel_type, channels_needed});
-  if (EDITING_POINT_TYPE_ID) {
-    await api('/point-types/' + EDITING_POINT_TYPE_ID, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
-  } else {
-    await api('/point-types', {method:'POST', headers:{'Content-Type':'application/json'}, body});
-  }
-  cancelEditPointType();
-  await loadPointTypes();
+function importPointTypesJson() {
+  return importSetupJson('Funktionstypen importieren',
+    'Der Import gleicht nach Kategorie+Name ab (bereits vorhandene werden aktualisiert, neue ergänzt).',
+    '/point-types/import-json', 'function-types',
+    r => `Importiert: ${r.imported} neu, ${r.updated} aktualisiert${r.skipped ? `, ${r.skipped} übersprungen` : ''}.`);
 }
 
-function editPointType(id) {
-  const pt = POINT_TYPES.find(p => p.id === id);
-  if (!pt) return;
-  EDITING_POINT_TYPE_ID = id;
-  document.getElementById('pt-category').value = pt.category_id;
-  document.getElementById('pt-name').value = pt.name;
-  document.getElementById('pt-blocksize').value = pt.block_size;
-  document.getElementById('pt-channeltype').value = pt.channel_type || '';
-  document.getElementById('pt-channelsneeded').value = pt.channels_needed || 1;
-  document.getElementById('pt-suffixes').innerHTML = '';
-  pt.suffixes.forEach(s => addPtSuffixRow(s.suffix, s.dpt));
-  document.getElementById('pt-save-btn').textContent = 'Änderungen speichern';
-  document.getElementById('pt-cancel-btn').style.display = '';
-  document.getElementById('pt-name').scrollIntoView({behavior: 'smooth', block: 'center'});
+function importCentralTemplatesJson() {
+  return importSetupJson('Zentral-/Allgemeinfunktions-Vorlagen importieren',
+    'Der Import gleicht nach Kategorie+Name+Geltungsbereich ab (bereits vorhandene werden aktualisiert, neue ergänzt).',
+    '/central-templates/import-json', 'central-templates',
+    r => `Importiert: ${r.imported} neu, ${r.updated} aktualisiert${r.skipped ? `, ${r.skipped} übersprungen` : ''}.`);
 }
-
-function cancelEditPointType() {
-  EDITING_POINT_TYPE_ID = null;
-  document.getElementById('pt-name').value = '';
-  document.getElementById('pt-channeltype').value = '';
-  document.getElementById('pt-channelsneeded').value = '1';
-  document.getElementById('pt-suffixes').innerHTML = '';
-  document.getElementById('pt-save-btn').textContent = 'Funktionstyp speichern';
-  document.getElementById('pt-cancel-btn').style.display = 'none';
-}
-
-async function loadPointTypes() {
-  POINT_TYPES = await api('/point-types');
-  const ul = document.getElementById('point-types-list');
-  ul.innerHTML = POINT_TYPES.map(pt => {
-    const cat = CATEGORIES.find(c => c.id === pt.category_id);
-    return `<li>
-      <div><b>${pt.name}</b> <span class="pill">${cat?.name||'?'}</span> <span class="pill">Block ${pt.block_size}</span>
-        ${pt.channel_type ? `<span class="pill">Kanal: ${pt.channel_type} ×${pt.channels_needed}</span>` : ''}
-        ${pt.suffixes.map(s=>`<span class="pill">${s.suffix} · ${s.dpt}</span>`).join('')}
-      </div>
-      <div class="row" style="gap:6px;">
-        <button class="btn secondary small" onclick="editPointType(${pt.id})">Bearbeiten</button>
-        <button class="btn danger small" onclick="deletePointType(${pt.id})">Löschen</button>
-      </div>
-    </li>`;
-  }).join('') || '<li class="muted">Noch keine Funktionstypen</li>';
-}
-
-async function deletePointType(id) {
-  if (!(await showConfirm('Diesen Funktionstyp löschen?', {danger: true}))) return;
-  if (EDITING_POINT_TYPE_ID === id) cancelEditPointType();
-  await api('/point-types/' + id, {method:'DELETE'});
-  await loadPointTypes();
-}
-
-async function clearPointTypes() {
-  if (!(await showConfirm(
-    'Alle Funktionstypen löschen?\n\nFunktionstypen, die bereits einem Raum in einem Projekt zugewiesen sind, bleiben erhalten. Die restlichen werden entfernt, um eigene Funktionstypen von Grund auf neu anzulegen.',
-    {danger: true}
-  ))) return;
-  cancelEditPointType();
-  const result = await api('/point-types', {method:'DELETE'});
-  await loadPointTypes();
-  showToast(`${result.deleted} gelöscht${result.skipped_in_use ? `, ${result.skipped_in_use} in Verwendung übersprungen` : ''}.`, 'success');
-}
-
-function exportPointTypesJson() {
-  window.location.href = `/api/point-types/export-json`;
-}
-
-async function importPointTypesJson() {
-  const file = await openImportModal('Funktionstypen importieren', 'Der Import gleicht nach Kategorie+Name ab (bereits vorhandene werden aktualisiert, neue ergänzt).');
-  if (!file) return;
-  const text = await file.text();
-  let payload;
-  try {
-    payload = JSON.parse(text);
-  } catch (e) {
-    return showToast('Diese Datei ist kein gültiges JSON', 'error');
-  }
-  const result = await api('/point-types/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-  await loadPointTypes();
-  showToast(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert${result.skipped ? `, ${result.skipped} übersprungen` : ''}.`, 'success');
-}
-
-
-// ---------- Setup: Central Templates ----------
-function addCtSuffixRow(suffix='', dpt='') {
-  const div = document.createElement('div');
-  div.className = 'row mobile-fields';
-  div.innerHTML = `
-    <input type="text" placeholder="Suffix z.B. Ein/Aus" class="ct-suf-name" value="${suffix}">
-    <input type="text" placeholder="DPT z.B. DPST-1-1" class="ct-suf-dpt" value="${dpt}">
-    <button class="btn danger small" onclick="this.parentElement.remove()">x</button>`;
-  document.getElementById('ct-suffixes').appendChild(div);
-}
-
-function onCtScopeChange() {
-  const scope = document.getElementById('ct-scope').value;
-  document.getElementById('ct-skip-outdoor-label').style.display = scope === 'floor' ? 'flex' : 'none';
-  document.getElementById('ct-blocksize-label').style.display = scope === 'room_multi' ? 'flex' : 'none';
-  document.getElementById('ct-trigger-label').style.display = scope === 'room_multi' ? 'flex' : 'none';
-}
-
-let EDITING_CENTRAL_TEMPLATE_ID = null;
-
-async function saveCentralTemplate() {
-  const category_id = parseInt(document.getElementById('ct-category').value);
-  const scope = document.getElementById('ct-scope').value;
-  const name = document.getElementById('ct-name').value.trim();
-  const skip_outdoor_floors = document.getElementById('ct-skip-outdoor').checked;
-  const blockSizeVal = document.getElementById('ct-blocksize').value.trim();
-  const triggerVal = document.getElementById('ct-trigger').value.trim();
-  const block_size = scope === 'room_multi' && blockSizeVal ? parseInt(blockSizeVal) : null;
-  const trigger_count = scope === 'room_multi' && triggerVal ? parseInt(triggerVal) : null;
-  const suffixes = [...document.querySelectorAll('#ct-suffixes .row')].map(r => ({
-    suffix: r.querySelector('.ct-suf-name').value.trim(),
-    dpt: r.querySelector('.ct-suf-dpt').value.trim()
-  })).filter(s => s.suffix);
-  if (suffixes.length === 0) return showToast('Mindestens ein Datenpunkt erforderlich', 'warning');
-  if (EDITING_CENTRAL_TEMPLATE_ID) {
-    const existing = CENTRAL_TEMPLATES.find(c => c.id === EDITING_CENTRAL_TEMPLATE_ID);
-    const body = JSON.stringify({category_id, name, scope, suffixes, skip_outdoor_floors, block_size, trigger_count, order_idx: existing ? existing.order_idx : 0});
-    await api('/central-templates/' + EDITING_CENTRAL_TEMPLATE_ID, {method:'PUT', headers:{'Content-Type':'application/json'}, body});
-  } else {
-    const body = JSON.stringify({category_id, name, scope, suffixes, skip_outdoor_floors, block_size, trigger_count});
-    await api('/central-templates', {method:'POST', headers:{'Content-Type':'application/json'}, body});
-  }
-  cancelEditCentralTemplate();
-  await loadCentralTemplates();
-}
-
-function editCentralTemplate(id) {
-  const ct = CENTRAL_TEMPLATES.find(c => c.id === id);
-  if (!ct) return;
-  EDITING_CENTRAL_TEMPLATE_ID = id;
-  document.getElementById('ct-category').value = ct.category_id;
-  document.getElementById('ct-scope').value = ct.scope;
-  onCtScopeChange();
-  document.getElementById('ct-name').value = ct.name || '';
-  document.getElementById('ct-skip-outdoor').checked = ct.skip_outdoor_floors;
-  document.getElementById('ct-blocksize').value = ct.block_size || '';
-  document.getElementById('ct-trigger').value = ct.trigger_count || 2;
-  document.getElementById('ct-suffixes').innerHTML = '';
-  ct.suffixes.forEach(s => addCtSuffixRow(s.suffix, s.dpt));
-  document.getElementById('ct-save-btn').textContent = 'Änderungen speichern';
-  document.getElementById('ct-cancel-btn').style.display = '';
-  document.getElementById('ct-category').scrollIntoView({behavior: 'smooth', block: 'center'});
-}
-
-function cancelEditCentralTemplate() {
-  EDITING_CENTRAL_TEMPLATE_ID = null;
-  document.getElementById('ct-name').value = '';
-  document.getElementById('ct-skip-outdoor').checked = false;
-  document.getElementById('ct-blocksize').value = '';
-  document.getElementById('ct-trigger').value = '2';
-  document.getElementById('ct-suffixes').innerHTML = '';
-  document.getElementById('ct-save-btn').textContent = 'Vorlage speichern';
-  document.getElementById('ct-cancel-btn').style.display = 'none';
-}
-
-async function loadCentralTemplates() {
-  CENTRAL_TEMPLATES = await api('/central-templates');
-  const ul = document.getElementById('central-templates-list');
-  ul.innerHTML = CENTRAL_TEMPLATES.map(ct => {
-    const cat = CATEGORIES.find(c => c.id === ct.category_id);
-    const extra = [];
-    if (ct.skip_outdoor_floors) extra.push('<span class="pill">ohne Aussen</span>');
-    if (ct.scope === 'room_multi') {
-      extra.push(`<span class="pill">ab ${ct.trigger_count || 2} Punkten</span>`);
-      if (ct.block_size) extra.push(`<span class="pill">Block ${ct.block_size}</span>`);
-    }
-    return `<li>
-      <div><b>${ct.name || '(kein Präfix)'}</b> <span class="pill">${cat?.name||'?'}</span> <span class="pill">${ct.scope}</span> ${extra.join(' ')}
-        ${ct.suffixes.map(s=>`<span class="pill">${s.suffix || '(keiner)'} · ${s.dpt}</span>`).join('')}
-      </div>
-      <div class="row" style="gap:6px;">
-        <button class="btn secondary small" onclick="editCentralTemplate(${ct.id})">Bearbeiten</button>
-        <button class="btn danger small" onclick="deleteCentralTemplate(${ct.id})">Löschen</button>
-      </div>
-    </li>`;
-  }).join('') || '<li class="muted">Noch keine Vorlagen</li>';
-}
-
-async function deleteCentralTemplate(id) {
-  if (!(await showConfirm('Diese Vorlage löschen?', {danger: true}))) return;
-  if (EDITING_CENTRAL_TEMPLATE_ID === id) cancelEditCentralTemplate();
-  await api('/central-templates/' + id, {method:'DELETE'});
-  await loadCentralTemplates();
-}
-
-async function clearCentralTemplates() {
-  if (!(await showConfirm(
-    'Alle Zentral-/Allgemeinfunktions-Vorlagen löschen (über alle Kategorien hinweg)?\n\nBetrifft nur zukünftige Gruppenadressen-Vorschauen/-Exporte - bereits heruntergeladene CSVs ändern sich dadurch nicht. Gedacht, um eigene Vorlagen von Grund auf neu anzulegen.',
-    {danger: true}
-  ))) return;
-  cancelEditCentralTemplate();
-  const result = await api('/central-templates', {method:'DELETE'});
-  await loadCentralTemplates();
-  showToast(`${result.deleted} gelöscht.`, 'success');
-}
-
-function exportCentralTemplatesJson() {
-  window.location.href = `/api/central-templates/export-json`;
-}
-
-async function importCentralTemplatesJson() {
-  const file = await openImportModal('Zentral-/Allgemeinfunktions-Vorlagen importieren', 'Der Import gleicht nach Kategorie+Name+Geltungsbereich ab (bereits vorhandene werden aktualisiert, neue ergänzt).');
-  if (!file) return;
-  const text = await file.text();
-  let payload;
-  try {
-    payload = JSON.parse(text);
-  } catch (e) {
-    return showToast('Diese Datei ist kein gültiges JSON', 'error');
-  }
-  const result = await api('/central-templates/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-  await loadCentralTemplates();
-  showToast(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert${result.skipped ? `, ${result.skipped} übersprungen` : ''}.`, 'success');
-}
-

@@ -1,0 +1,69 @@
+{# Central/general function templates. Which extra fields show depends on the scope - done in CSS
+   via the form's data-scope attribute (see .ct-form in style.css), no script needed. #}
+{% set e = editing %}
+{% set scope = e.scope if e else "building" %}
+<div class="card">
+  <div class="card-header">
+    <h3>Zentral-/Allgemeinfunktions-Vorlagen</h3>
+    <div class="icon-btn-group">
+      <button class="icon-btn" onclick="window.location.href='/api/central-templates/export-json'" data-tip="Vorlagen als JSON exportieren" tabindex="0">⭳</button>
+      <button class="icon-btn" onclick="importCentralTemplatesJson()" data-tip="Vorlagen aus JSON importieren - gleicht nach Kategorie+Name+Geltungsbereich ab (vorhandene werden aktualisiert, neue ergänzt)." tabindex="0">⭱</button>
+      <button class="icon-btn danger" hx-delete="/hx/setup/central-templates" hx-target="#setup-subtab-central-templates" hx-swap="innerHTML"
+              hx-confirm="Alle Zentral-/Allgemeinfunktions-Vorlagen löschen (über alle Kategorien hinweg)?&#10;&#10;Betrifft nur zukünftige Gruppenadressen-Vorschauen/-Exporte - bereits heruntergeladene CSVs ändern sich dadurch nicht. Gedacht, um eigene Vorlagen von Grund auf neu anzulegen."
+              data-tip="Alle Vorlagen löschen" tabindex="0">🗑</button>
+    </div>
+  </div>
+  <p class="muted">
+    Werden in jedem Projekt automatisch erzeugt, ohne dass Sie sie pro Projekt anlegen müssen — je Kategorie
+    entstehen daraus die "Zentralfunktionen"-Mittelgruppe(n) bzw., bei der Kategorie Allgemein, eigene
+    Mittelgruppen (z.B. Datum/Uhrzeit, Klima). Geltungsbereich "building" = ein Block für das ganze Projekt.
+    "floor" = ein Block je Geschoss (z.B. "Zentral EG", "Zentral OG").
+    "room_multi" = ein Block PRO RAUM, nur für Räume mit mehreren Punkten dieser
+    Kategorie (z.B. erhält ein Raum mit 2+ Jalousien eine eigene kombinierte "Zentral"-Steuerung).
+    Wie bei Funktionstypen sind auch dies nur Vorschläge — frei anpassen oder unten den kompletten
+    Satz löschen, um eigene Sammel-/Zentralfunktionen von Grund auf zu definieren.
+  </p>
+  <form id="ct-form" class="ct-form" data-scope="{{ scope }}"
+        {% if e %}hx-put="/hx/setup/central-templates/{{ e.id }}"{% else %}hx-post="/hx/setup/central-templates"{% endif %}
+        hx-target="#setup-subtab-central-templates" hx-swap="innerHTML">
+    {% if e %}<h4 style="margin:4px 0 8px;">Vorlage bearbeiten</h4>{% endif %}
+    <div class="row mobile-fields">
+      <select name="category_id">
+        {% for c in categories %}<option value="{{ c.id }}"{% if e and e.category_id == c.id %} selected{% endif %}>{{ c.order_idx }}. {{ c.name }}</option>{% endfor %}
+      </select>
+      <select name="scope" onchange="this.form.dataset.scope = this.value">
+        {% for value, label in scopes %}<option value="{{ value }}"{% if scope == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+      <input type="text" name="name" placeholder="Name, z.B. Zentral (leer = kein Präfix)" value="{{ e.name if e else '' }}">
+      <label class="ct-only-floor" style="align-items:center; gap:4px;"><input type="checkbox" name="skip_outdoor_floors"{% if e and e.skip_outdoor_floors %} checked{% endif %}> Aussen-/unbeheizte Geschosse überspringen<span class="info-icon" tabindex="0" data-tip="Gilt nur für diese eine Vorlage, nicht global - andere Vorlagen (z.B. Beleuchtung Zentral je Geschoss) können ein als &quot;Aussen&quot; markiertes Geschoss weiterhin einbeziehen, solange dieses Häkchen dort nicht auch gesetzt wird.">i</span></label>
+      <label class="ct-only-room" style="align-items:center; gap:4px;">Blockgrösse <input type="number" name="block_size" placeholder="z.B. 5" style="width:60px;" value="{{ e.block_size if e and e.block_size else '' }}"></label>
+      <label class="ct-only-room" style="align-items:center; gap:4px;">Auslösen ab <input type="number" name="trigger_count" value="{{ e.trigger_count if e and e.trigger_count else 2 }}" style="width:60px;"> Punkten</label>
+    </div>
+    <div id="ct-suffixes">
+      {% for s in (e.suffixes if e else []) %}{% with placeholder="Suffix z.B. Ein/Aus" %}{% include "setup/_suffix_row.html" %}{% endwith %}{% endfor %}
+    </div>
+    <button type="button" class="btn secondary small" hx-get="/hx/setup/suffix-row?placeholder=Suffix%20z.B.%20Ein%2FAus" hx-target="#ct-suffixes" hx-swap="beforeend">+ Datenpunkt hinzufügen</button>
+    <div style="margin-top:8px;">
+      <button type="submit" class="btn">{{ "Änderungen speichern" if e else "Vorlage speichern" }}</button>
+      {% if e %}<button type="button" class="btn secondary small" hx-get="/hx/setup/central-templates" hx-target="#setup-subtab-central-templates" hx-swap="innerHTML">Abbrechen</button>{% endif %}
+    </div>
+  </form>
+  <hr class="sep">
+  <ul class="list" id="central-templates-list">
+    {% for ct in central_templates %}
+      <li>
+        <div><b>{{ ct.name or "(kein Präfix)" }}</b> <span class="pill">{{ cat_name.get(ct.category_id, "?") }}</span> <span class="pill">{{ ct.scope }}</span>
+          {% if ct.skip_outdoor_floors %}<span class="pill">ohne Aussen</span>{% endif %}
+          {% if ct.scope == "room_multi" %}<span class="pill">ab {{ ct.trigger_count or 2 }} Punkten</span>{% if ct.block_size %}<span class="pill">Block {{ ct.block_size }}</span>{% endif %}{% endif %}
+          {% for s in ct.suffixes %}<span class="pill">{{ s.suffix or "(keiner)" }} · {{ s.dpt }}</span>{% endfor %}
+        </div>
+        <div class="row" style="gap:6px;">
+          <button class="btn secondary small" hx-get="/hx/setup/central-templates/{{ ct.id }}/edit" hx-target="#setup-subtab-central-templates" hx-swap="innerHTML">Bearbeiten</button>
+          <button class="btn danger small" hx-delete="/hx/setup/central-templates/{{ ct.id }}" hx-target="#setup-subtab-central-templates" hx-swap="innerHTML" hx-confirm="Diese Vorlage löschen?">Löschen</button>
+        </div>
+      </li>
+    {% else %}
+      <li class="muted">Noch keine Vorlagen</li>
+    {% endfor %}
+  </ul>
+</div>

@@ -2,9 +2,7 @@
 (async function init() {
   await loadAppVersion();
   await loadCompanyProfile();
-  await loadCategories();
-  await loadPointTypes();
-  await loadCentralTemplates();
+  await loadSetupCaches();
   await loadActorTypes();
   await loadProjects();
   await loadRunningTimer();

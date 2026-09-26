@@ -104,7 +104,7 @@ backend/
   email_sender.py   — SMTP mechanics (stdlib smtplib) behind routers/email.py's send-by-mail action
   utils.py          — small dependency-free helpers
   routers/
-    setup.py          — Setup tab: settings pages on the company profile (htmx: /hx/setup/<page>, SETTINGS_SECTIONS), categories, point types, central templates
+    setup.py          — Setup tab (htmx, /hx/setup/...): settings pages on the company profile (SETTINGS_SECTIONS) and the categories/function types/central templates editors, plus their JSON APIs
     geraete.py         — global device catalog + curated manual_url per device (Geräte Katalog tab: Katalog + Handbücher sub-tabs)
     projects.py        — projects, floors/rooms/points (incl. tree moves with GA-impact dry run), backup/restore (Projekte tab: Gebäudestruktur sub-tab + project CRUD)
     linien.py          — optional KNX lines (Bereich.Linie) + floor/room/actuator line assignment, per-line device counts/warnings (Gebäudestruktur sub-tab)
@@ -127,7 +127,7 @@ frontend/
     api.js            — shared api() fetch wrapper, global state vars, theme toggle, tab-switch wiring
     ui.js              — toasts, modals, shared Markdown renderer (used by Update + Hilfe)
     send_email.js      — shared "Per E-Mail senden" modal, called from Pflichtenheft/Funktionscheckliste/Übergabe-Checkliste/Dokumentation
-    setup.js           — loads the htmx settings pages, header branding, logo auto-crop, backup restore; categories + point types + central templates (classic JS, next migration step)
+    setup.js           — loads the htmx Setup sub-tabs, header branding, logo auto-crop, backup restore, JSON import (file picker), categories/function types cache for the functions tab
     geraete.js         — actor types catalog + Handbücher sub-tab (per-device manual URL)
     projekte.js        — project CRUD/meta, Geschoss/Raum/Verteiler tree with drag & drop (Gebäudestruktur sub-tab)
     linien.js          — optional KNX lines card + the line <select>s used by projekte.js/abgangsliste.js (Gebäudestruktur sub-tab)
@@ -225,8 +225,7 @@ rarely need to touch anything else.
 - **htmx migration** (agreed with the user 2026-09-26): one tab per change,
   each renamed to English in the same change, with pytest coverage for its
   `/hx/` endpoints and a browser pass; confirm each next tab with the
-  user. Order: ~~clarification list~~, ~~time tracking~~, Setup sub-tabs
-  (~~settings pages~~, categories/function types/central templates),
+  user. Order: ~~clarification list~~, ~~time tracking~~, ~~Setup~~,
   device catalog + manuals, overview/specification/documentation,
   function + handover checklists, functions + group addresses, device
   planning + distribution board planning + labels, circuit list, building

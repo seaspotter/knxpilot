@@ -18,7 +18,7 @@ from fastapi.responses import StreamingResponse
 from ..backup import list_local_backups, list_nextcloud_backups, run_backup_now
 from ..db import get_db
 from ..templating import client_zone, templates
-from ..models import PointTypeIn, CentralTemplateIn, CompanyProfileIn, CategoryRenameIn
+from ..models import PointTypeIn, CentralTemplateIn, CompanyProfileIn, CategoryRenameIn, Suffix
 from ..utils import content_disposition
 
 router = APIRouter(tags=["setup"])
@@ -428,6 +428,186 @@ def import_central_templates_json(payload: dict):
                 )
                 imported += 1
         return {"imported": imported, "updated": updated, "skipped": skipped}
+
+
+# ---------- htmx: list editors (categories, function types, central templates) ----------
+# Registered before the generic /hx/setup/{section} routes below, which would
+# otherwise swallow these paths. Every change answers with the whole
+# sub-tab (form reset + list) and HX-Trigger "setup-lists-changed", so the
+# functions tab's cached dropdowns (setup.js loadSetupCaches) refresh too.
+SCOPES = [("building", "building (einmal je Projekt)"), ("floor", "floor (einmal je Geschoss)"),
+          ("room_multi", "room_multi (einmal je Raum, wenn genug Punkte)")]
+
+
+def _lists_context(db):
+    categories = [dict(r) for r in db.execute("SELECT * FROM categories ORDER BY order_idx").fetchall()]
+    return {"categories": categories, "cat_name": {c["id"]: c["name"] for c in categories}}
+
+
+def _render_list_tab(request, name, context=None, toast=None):
+    with get_db() as db:
+        base = _lists_context(db)
+    response = templates.TemplateResponse(request, f"setup/{name}.html", {
+        **base, "point_types": list_point_types(), "central_templates": list_central_templates(),
+        "scopes": SCOPES, "editing": None, **(context or {})})
+    events = {"setup-lists-changed": True}
+    if toast:
+        events["show-toast"] = {"message": toast, "level": "success"}
+    response.headers["HX-Trigger"] = json.dumps(events)
+    return response
+
+
+def _suffixes(form):
+    """The repeated suffix/dpt field pairs of the form; empty suffix rows are dropped."""
+    return [Suffix(suffix=s.strip(), dpt=d.strip()) for s, d in zip(form.getlist("suffix"), form.getlist("dpt")) if s.strip()]
+
+
+def _int(value, default=None):
+    try:
+        return int(value) if value not in (None, "") else default
+    except ValueError:
+        raise HTTPException(400, "Bitte eine ganze Zahl eingeben")
+
+
+def _category_id(form):
+    category_id = _int(form.get("category_id"))
+    if category_id is None:
+        raise HTTPException(400, "Kategorie ist erforderlich")
+    return category_id
+
+
+@router.get("/hx/setup/suffix-row")
+def hx_suffix_row(request: Request, placeholder: str = "Suffix"):
+    """One more empty data point row for the function type/template form."""
+    return templates.TemplateResponse(request, "setup/_suffix_row.html", {"s": {"suffix": "", "dpt": ""}, "placeholder": placeholder})
+
+
+@router.get("/hx/setup/categories")
+def hx_categories(request: Request):
+    return _render_list_tab(request, "categories")
+
+
+@router.get("/hx/setup/categories/{category_id}/edit")
+def hx_category_edit(request: Request, category_id: int):
+    return _render_list_tab(request, "categories", {"editing": category_id})
+
+
+@router.put("/hx/setup/categories/{category_id}")
+async def hx_category_rename(request: Request, category_id: int):
+    name = ((await request.form()).get("name") or "").strip()
+    if not name:
+        raise HTTPException(400, "Name ist erforderlich")
+    try:
+        rename_category(category_id, CategoryRenameIn(name=name))
+    except HTTPException:
+        raise HTTPException(400, "Eine Kategorie mit diesem Namen gibt es schon")
+    return _render_list_tab(request, "categories", toast="Umbenannt.")
+
+
+@router.get("/hx/setup/function-types")
+def hx_function_types(request: Request):
+    return _render_list_tab(request, "function_types")
+
+
+@router.get("/hx/setup/function-types/{pt_id}/edit")
+def hx_function_type_edit(request: Request, pt_id: int):
+    editing = next((pt for pt in list_point_types() if pt["id"] == pt_id), None)
+    if not editing:
+        raise HTTPException(404, "Funktionstyp nicht gefunden")
+    return _render_list_tab(request, "function_types", {"editing": editing})
+
+
+async def _point_type_from_form(request):
+    form = await request.form()
+    pt = PointTypeIn(
+        category_id=_category_id(form), name=(form.get("name") or "").strip(), suffixes=_suffixes(form),
+        block_size=_int(form.get("block_size"), 5), channel_type=(form.get("channel_type") or "").strip(),
+        channels_needed=_int(form.get("channels_needed"), 1))
+    if not pt.name or not pt.suffixes:
+        raise HTTPException(400, "Name und mindestens ein Datenpunkt erforderlich")
+    return pt
+
+
+@router.post("/hx/setup/function-types")
+async def hx_function_type_create(request: Request):
+    create_point_type(await _point_type_from_form(request))
+    return _render_list_tab(request, "function_types", toast="Funktionstyp gespeichert.")
+
+
+@router.put("/hx/setup/function-types/{pt_id}")
+async def hx_function_type_update(request: Request, pt_id: int):
+    update_point_type(pt_id, await _point_type_from_form(request))
+    return _render_list_tab(request, "function_types", toast="Funktionstyp gespeichert.")
+
+
+@router.delete("/hx/setup/function-types/{pt_id}")
+def hx_function_type_delete(request: Request, pt_id: int):
+    delete_point_type(pt_id)
+    return _render_list_tab(request, "function_types")
+
+
+@router.delete("/hx/setup/function-types")
+def hx_function_types_clear(request: Request):
+    result = clear_point_types()
+    skipped = f", {result['skipped_in_use']} in Verwendung übersprungen" if result["skipped_in_use"] else ""
+    return _render_list_tab(request, "function_types", toast=f"{result['deleted']} gelöscht{skipped}.")
+
+
+@router.get("/hx/setup/central-templates")
+def hx_central_templates(request: Request):
+    return _render_list_tab(request, "central_templates")
+
+
+@router.get("/hx/setup/central-templates/{ct_id}/edit")
+def hx_central_template_edit(request: Request, ct_id: int):
+    editing = next((ct for ct in list_central_templates() if ct["id"] == ct_id), None)
+    if not editing:
+        raise HTTPException(404, "Vorlage nicht gefunden")
+    return _render_list_tab(request, "central_templates", {"editing": editing})
+
+
+async def _central_template_from_form(request, order_idx=0):
+    form = await request.form()
+    scope = form.get("scope") or "building"
+    if scope not in dict(SCOPES):
+        raise HTTPException(400, "Unbekannter Geltungsbereich")
+    room_multi = scope == "room_multi"
+    ct = CentralTemplateIn(
+        category_id=_category_id(form), name=(form.get("name") or "").strip(), scope=scope,
+        suffixes=_suffixes(form), order_idx=order_idx,
+        skip_outdoor_floors=scope == "floor" and form.get("skip_outdoor_floors") is not None,
+        block_size=_int(form.get("block_size")) if room_multi else None,
+        trigger_count=_int(form.get("trigger_count")) if room_multi else None)
+    if not ct.suffixes:
+        raise HTTPException(400, "Mindestens ein Datenpunkt erforderlich")
+    return ct
+
+
+@router.post("/hx/setup/central-templates")
+async def hx_central_template_create(request: Request):
+    create_central_template(await _central_template_from_form(request))
+    return _render_list_tab(request, "central_templates", toast="Vorlage gespeichert.")
+
+
+@router.put("/hx/setup/central-templates/{ct_id}")
+async def hx_central_template_update(request: Request, ct_id: int):
+    existing = next((ct for ct in list_central_templates() if ct["id"] == ct_id), None)
+    if not existing:
+        raise HTTPException(404, "Vorlage nicht gefunden")
+    update_central_template(ct_id, await _central_template_from_form(request, existing["order_idx"]))
+    return _render_list_tab(request, "central_templates", toast="Vorlage gespeichert.")
+
+
+@router.delete("/hx/setup/central-templates/{ct_id}")
+def hx_central_template_delete(request: Request, ct_id: int):
+    delete_central_template(ct_id)
+    return _render_list_tab(request, "central_templates")
+
+
+@router.delete("/hx/setup/central-templates")
+def hx_central_templates_clear(request: Request):
+    result = clear_central_templates()
+    return _render_list_tab(request, "central_templates", toast=f"{result['deleted']} gelöscht.")
 
 
 # ---------- htmx: settings pages on the company_profile row ----------

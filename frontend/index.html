@@ -480,94 +480,14 @@
     <!-- Rendered server-side with htmx (backend/templates/setup/company.html) -->
     <div class="subtab active" id="setup-subtab-company"></div>
 
-    <div class="subtab" id="setup-subtab-categories">
-    <div class="card">
-      <div class="card-header">
-        <h3>Kategorien (Hauptgruppen)</h3>
-        <div class="icon-btn-group">
-          <button class="icon-btn" onclick="exportCategoriesJson()" data-tip="Namen als JSON exportieren" tabindex="0">⭳</button>
-          <button class="icon-btn" onclick="importCategoriesJson()" data-tip="Namen aus JSON importieren - nur die Namen werden abgeglichen (nach Hauptgruppennummer), fügt nie eine Kategorie hinzu oder entfernt eine." tabindex="0">⭱</button>
-        </div>
-      </div>
-      <p class="muted">Ihre Standard-Funktionskategorien. Reihenfolge = Hauptgruppennummer. Normalerweise einmalig festgelegt und danach unverändert. Das Adressierungsschema selbst (Hauptgruppe = Kategorie, Mittelgruppe = Geschoss, Untergruppe = Punkt) ist fest im Tool verankert, nicht nur hier in der Reihenfolge — ein anderes Schema (z.B. Geschoss als Hauptgruppe) würde eine andere Tool-Variante erfordern, siehe Hilfe-Tab. Deshalb gibt es hier bewusst kein Hinzufügen/Löschen, nur Umbenennen: es sind immer genau 6, jede an einer festen Hauptgruppennummer.</p>
-      <hr class="sep">
-      <ul class="list" id="categories-list"></ul>
-    </div>
-    </div>
+    <!-- Rendered server-side with htmx (backend/templates/setup/categories.html) -->
+    <div class="subtab" id="setup-subtab-categories"></div>
 
-    <div class="subtab" id="setup-subtab-function-types">
-    <div class="card">
-      <div class="card-header">
-        <h3>Funktionstypen</h3>
-        <div class="icon-btn-group">
-          <button class="icon-btn" onclick="exportPointTypesJson()" data-tip="Funktionstypen als JSON exportieren" tabindex="0">⭳</button>
-          <button class="icon-btn" onclick="importPointTypesJson()" data-tip="Funktionstypen aus JSON importieren - gleicht nach Kategorie+Name ab (vorhandene werden aktualisiert, neue ergänzt)." tabindex="0">⭱</button>
-          <button class="icon-btn danger" onclick="clearPointTypes()" data-tip="Alle Funktionstypen löschen" tabindex="0">🗑</button>
-        </div>
-      </div>
-      <p class="muted">Wiederverwendbare Bausteine (ein Licht, eine Jalousie, eine Steckdose...) mit ihren Datenpunkten und reserviertem Blockumfang. Ein Funktionstyp bestimmt, welche Untergruppen entstehen, wenn er im Funktionen-Unterreiter einem Raum zugewiesen wird (z.B. erzeugt "Licht (Dimmen)" die Datenpunkte Schalten/Status/Dimmen unter einer eigenen Adresse je Raum/Label). Der "Kanaltyp" verknüpft einen Punkt mit passenden Aktortypen weiter unten, damit er in der Abgangsliste eines Projekts einem physischen Aktorkanal zugeordnet werden kann. Die vorbelegten Funktionstypen sind ein Vorschlag, kein festes Schema — Datenpunkte/Suffixe/DPTs frei anpassen, oder unten den kompletten Satz löschen und eigene anlegen.</p>
-      <div class="row mobile-fields">
-        <select id="pt-category"></select>
-        <input type="text" id="pt-name" placeholder="Name, z.B. Licht (Dimmen)">
-        <input type="number" id="pt-blocksize" value="5" title="Blockgrösse (reservierte Adressen)">
-      </div>
-      <div class="row mobile-fields">
-        <input type="text" id="pt-channeltype" placeholder="Kanaltyp, z.B. Schalten, Dimmen, Rollo, Heizung, Tor (leer = kein physischer Kanal)">
-        <label style="display:flex; align-items:center; gap:4px;">Benötigte Kanäle <input type="number" id="pt-channelsneeded" value="1" min="1" style="width:60px;"></label>
-      </div>
-      <div id="pt-suffixes"></div>
-      <button class="btn secondary small" onclick="addPtSuffixRow()">+ Datenpunkt hinzufügen</button>
-      <div style="margin-top:8px;">
-        <button class="btn" id="pt-save-btn" onclick="savePointType()">Funktionstyp speichern</button>
-        <button class="btn secondary small" id="pt-cancel-btn" onclick="cancelEditPointType()" style="display:none;">Abbrechen</button>
-      </div>
-      <hr class="sep">
-      <ul class="list" id="point-types-list"></ul>
-    </div>
-    </div>
+    <!-- Rendered server-side with htmx (backend/templates/setup/function_types.html) -->
+    <div class="subtab" id="setup-subtab-function-types"></div>
 
-    <div class="subtab" id="setup-subtab-central-templates">
-    <div class="card">
-      <div class="card-header">
-        <h3>Zentral-/Allgemeinfunktions-Vorlagen</h3>
-        <div class="icon-btn-group">
-          <button class="icon-btn" onclick="exportCentralTemplatesJson()" data-tip="Vorlagen als JSON exportieren" tabindex="0">⭳</button>
-          <button class="icon-btn" onclick="importCentralTemplatesJson()" data-tip="Vorlagen aus JSON importieren - gleicht nach Kategorie+Name+Geltungsbereich ab (vorhandene werden aktualisiert, neue ergänzt)." tabindex="0">⭱</button>
-          <button class="icon-btn danger" onclick="clearCentralTemplates()" data-tip="Alle Vorlagen löschen" tabindex="0">🗑</button>
-        </div>
-      </div>
-      <p class="muted">
-        Werden in jedem Projekt automatisch erzeugt, ohne dass Sie sie pro Projekt anlegen müssen — je Kategorie
-        entstehen daraus die "Zentralfunktionen"-Mittelgruppe(n) bzw., bei der Kategorie Allgemein, eigene
-        Mittelgruppen (z.B. Datum/Uhrzeit, Klima). Geltungsbereich "building" = ein Block für das ganze Projekt.
-        "floor" = ein Block je Geschoss (z.B. "Zentral EG", "Zentral OG").
-        "room_multi" = ein Block PRO RAUM, nur für Räume mit mehreren Punkten dieser
-        Kategorie (z.B. erhält ein Raum mit 2+ Jalousien eine eigene kombinierte "Zentral"-Steuerung).
-        Wie bei Funktionstypen sind auch dies nur Vorschläge — frei anpassen oder unten den kompletten
-        Satz löschen, um eigene Sammel-/Zentralfunktionen von Grund auf zu definieren.
-      </p>
-      <div class="row mobile-fields">
-        <select id="ct-category"></select>
-        <select id="ct-scope" onchange="onCtScopeChange()">
-          <option value="building">building (einmal je Projekt)</option>
-          <option value="floor">floor (einmal je Geschoss)</option>
-          <option value="room_multi">room_multi (einmal je Raum, wenn genug Punkte)</option>
-        </select>
-        <input type="text" id="ct-name" placeholder="Name, z.B. Zentral (leer = kein Präfix)">
-        <label id="ct-skip-outdoor-label" style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="ct-skip-outdoor"> Aussen-/unbeheizte Geschosse überspringen<span class="info-icon" tabindex="0" data-tip="Gilt nur für diese eine Vorlage, nicht global - andere Vorlagen (z.B. Beleuchtung Zentral je Geschoss) können ein als &quot;Aussen&quot; markiertes Geschoss weiterhin einbeziehen, solange dieses Häkchen dort nicht auch gesetzt wird.">i</span></label>
-        <label id="ct-blocksize-label" style="display:none; align-items:center; gap:4px;">Blockgrösse <input type="number" id="ct-blocksize" placeholder="z.B. 5" style="width:60px;"></label>
-        <label id="ct-trigger-label" style="display:none; align-items:center; gap:4px;">Auslösen ab <input type="number" id="ct-trigger" value="2" style="width:60px;"> Punkten</label>
-      </div>
-      <div id="ct-suffixes"></div>
-      <button class="btn secondary small" onclick="addCtSuffixRow()">+ Datenpunkt hinzufügen</button>
-      <div style="margin-top:8px;">
-        <button class="btn" id="ct-save-btn" onclick="saveCentralTemplate()">Vorlage speichern</button>
-        <button class="btn secondary small" id="ct-cancel-btn" onclick="cancelEditCentralTemplate()" style="display:none;">Abbrechen</button>
-      </div>
-      <hr class="sep">
-      <ul class="list" id="central-templates-list"></ul>
-    </div>
-    </div>
+    <!-- Rendered server-side with htmx (backend/templates/setup/central_templates.html) -->
+    <div class="subtab" id="setup-subtab-central-templates"></div>
 
     <!-- Rendered server-side with htmx (backend/templates/setup/specification.html) -->
     <div class="subtab" id="setup-subtab-specification"></div>

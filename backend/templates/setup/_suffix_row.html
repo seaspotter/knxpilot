@@ -1,0 +1,6 @@
+{# One data point (suffix + DPT) row of the function type / central template form. #}
+<div class="row mobile-fields">
+  <input type="text" name="suffix" placeholder="{{ placeholder or 'Suffix' }}" value="{{ s.suffix }}">
+  <input type="text" name="dpt" placeholder="DPT z.B. DPST-1-1" value="{{ s.dpt }}">
+  <button type="button" class="btn danger small" onclick="this.closest('.row').remove()" title="Datenpunkt entfernen">x</button>
+</div>

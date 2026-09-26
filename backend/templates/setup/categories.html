@@ -1,0 +1,29 @@
+{# Categories = the 6 fixed KNX main groups: rename only (inline), plus names export/import (setup.js). #}
+<div class="card">
+  <div class="card-header">
+    <h3>Kategorien (Hauptgruppen)</h3>
+    <div class="icon-btn-group">
+      <button class="icon-btn" onclick="window.location.href='/api/categories/export-json'" data-tip="Namen als JSON exportieren" tabindex="0">⭳</button>
+      <button class="icon-btn" onclick="importCategoriesJson()" data-tip="Namen aus JSON importieren - nur die Namen werden abgeglichen (nach Hauptgruppennummer), fügt nie eine Kategorie hinzu oder entfernt eine." tabindex="0">⭱</button>
+    </div>
+  </div>
+  <p class="muted">Ihre Standard-Funktionskategorien. Reihenfolge = Hauptgruppennummer. Normalerweise einmalig festgelegt und danach unverändert. Das Adressierungsschema selbst (Hauptgruppe = Kategorie, Mittelgruppe = Geschoss, Untergruppe = Punkt) ist fest im Tool verankert, nicht nur hier in der Reihenfolge — ein anderes Schema (z.B. Geschoss als Hauptgruppe) würde eine andere Tool-Variante erfordern, siehe Hilfe-Tab. Deshalb gibt es hier bewusst kein Hinzufügen/Löschen, nur Umbenennen: es sind immer genau 6, jede an einer festen Hauptgruppennummer.</p>
+  <hr class="sep">
+  <ul class="list" id="categories-list">
+    {% for c in categories %}
+      <li>
+        {% if editing == c.id %}
+          <form class="row" style="margin:0; flex:1; gap:6px;" hx-put="/hx/setup/categories/{{ c.id }}" hx-target="#setup-subtab-categories" hx-swap="innerHTML">
+            <span>{{ c.order_idx }}.</span>
+            <input type="text" name="name" value="{{ c.name }}" required autofocus class="flex-input">
+            <button type="submit" class="btn small">Speichern</button>
+            <button type="button" class="btn secondary small" hx-get="/hx/setup/categories" hx-target="#setup-subtab-categories" hx-swap="innerHTML">Abbrechen</button>
+          </form>
+        {% else %}
+          <span>{{ c.order_idx }}. {{ c.name }} {% if c.is_allgemein %}<span class="pill">Allgemein-Vorlage</span>{% endif %}</span>
+          <button class="btn secondary small" hx-get="/hx/setup/categories/{{ c.id }}/edit" hx-target="#setup-subtab-categories" hx-swap="innerHTML">Bearbeiten</button>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</div>

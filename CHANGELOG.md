@@ -43,8 +43,14 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
   `company_profile` columns are renamed to English
   (`specification_preamble`, `specification_include_*`,
   `documentation_include_*` - renamed automatically on startup, values
-  kept), and Setup's sub-tab IDs are English. The categories, function
-  types and central templates editors follow in the next step.
+  kept), and Setup's sub-tab IDs are English.
+- **Setup's categories, function types and central templates editors
+  rendered server-side with htmx** — completes the Setup tab. Categories
+  are renamed inline instead of in a popup; the data point rows of the
+  function type/template forms and the scope-dependent template fields
+  work without custom JavaScript; deleting and clearing ask via the app's
+  dialog and report back with a toast. JSON export/import work as before.
+  The functions tab picks up changes made here immediately.
 - **Time tracking rendered server-side with htmx** — the second tab after
   the clarification list: list, filters, totals, the invoiced checkboxes
   and the add/edit dialog now come from Jinja templates

@@ -15,7 +15,7 @@ const api = (path, opts) => fetch('/api' + path, opts).then(async r => {
   return r.headers.get('content-type')?.includes('json') ? r.json() : r;
 });
 
-let CATEGORIES = [], POINT_TYPES = [], CENTRAL_TEMPLATES = [], ACTOR_TYPES = [], PROJECTS_LIST = [];
+let CATEGORIES = [], POINT_TYPES = [], ACTOR_TYPES = [], PROJECTS_LIST = [];
 let CURRENT_PROJECT = null;
 
 document.querySelectorAll('nav button[data-tab]').forEach(btn => {
