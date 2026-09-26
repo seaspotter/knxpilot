@@ -70,6 +70,10 @@ restructuring below — history before that is available via `git log`.
 
 ### Changed
 
+- **Abgangsliste: actuators sorted by Geschoss** — "Aktoren in diesem
+  Projekt" (and every actuator picker built from it: Abgänge, Labels,
+  Verteilerplanung) now follows the Gebäudestruktur's floor order, like
+  the Abgänge list already did; actuators without a Geschoss come last.
 - **Deleting a floor or room now asks first and says what goes with it** —
   previously "Geschoss löschen" and "Raum löschen" deleted immediately,
   without any confirmation, even though a floor takes all its rooms,

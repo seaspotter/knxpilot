@@ -265,7 +265,10 @@ der Busprogrammierung, die andere der Schaltschrank-Verdrahtung.
    angelegt wird.
 4. Die tatsächlich verbauten **Aktoren** hinzufügen (Aktortyp wählen, in
    welchem Geschoss/welcher UV er sitzt, Standortbezeichnung, physische
-   KNX-Adresse wie `1.1.2`). Jeder Aktor zeigt eine kleine visuelle
+   KNX-Adresse wie `1.1.2`). Die Liste ist nach Geschossen in der
+   Reihenfolge der Gebäudestruktur sortiert (innerhalb eines Geschosses
+   in der Reihenfolge des Anlegens, Aktoren ohne Geschoss zuletzt), wie die
+   Abgänge darunter. Jeder Aktor zeigt eine kleine visuelle
    Kanalübersicht (grün = belegt mit Funktionsname beim Hovern, grau =
    frei). Über **Bearbeiten** lassen sich Geschoss, Standortbezeichnung
    und physische Adresse jederzeit nachträglich korrigieren — z.B. wenn

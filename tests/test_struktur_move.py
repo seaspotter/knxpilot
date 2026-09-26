@@ -100,3 +100,19 @@ def test_verteilerplanung_pdf_with_room(client):
     ok(client.post(f"/api/projects/{pid}/verteiler", json={"room_id": room["id"], "name": "UV <Technik> & Co"}))
     r = client.get(f"/api/projects/{pid}/export-verteilerplanung.pdf")
     assert r.status_code == 200 and r.content.startswith(b"%PDF")
+
+
+def test_actor_list_follows_floor_order(client):
+    pid = seed_musterhaus(client)
+    eg, og = tree(client, pid)["floors"]
+    at = ok(client.get("/api/actor-types"))[0]["id"]
+    # added last, on the EG, and one without a Geschoss
+    ok(client.post(f"/api/projects/{pid}/actor-instances", json={"actor_type_id": at, "floor_id": eg["id"]}))
+    ok(client.post(f"/api/projects/{pid}/actor-instances", json={"actor_type_id": at}))
+    floors = [a["floor_id"] for a in ok(client.get(f"/api/projects/{pid}/actor-instances"))]
+    n_eg = floors.count(eg["id"])
+    assert floors == [eg["id"]] * n_eg + [og["id"]] * floors.count(og["id"]) + [None]
+
+    ok(client.post(f"/api/floors/{og['id']}/move", json={"index": 0}))
+    floors = [a["floor_id"] for a in ok(client.get(f"/api/projects/{pid}/actor-instances"))]
+    assert floors[0] == og["id"] and floors[-1] is None

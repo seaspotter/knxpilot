@@ -30,8 +30,12 @@ def list_actor_instances(project_id: int):
     with get_db() as db:
         actor_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM actor_types").fetchall()}
         floors = {r["id"]: r["name"] for r in db.execute("SELECT * FROM floors WHERE project_id=?", (project_id,)).fetchall()}
+        # Same order as the Gebäudestruktur: by Geschoss (tree order), then
+        # the order the actuators were added; actuators without a Geschoss last.
         rows = db.execute(
-            "SELECT * FROM actor_instances WHERE project_id=? ORDER BY order_idx", (project_id,)
+            "SELECT ai.* FROM actor_instances ai LEFT JOIN floors f ON ai.floor_id = f.id "
+            "WHERE ai.project_id=? ORDER BY f.order_idx IS NULL, f.order_idx, ai.order_idx, ai.id",
+            (project_id,),
         ).fetchall()
 
         # Build (actor_instance_id, channel_letter) -> function name, reusing the same
