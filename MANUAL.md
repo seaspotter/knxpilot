@@ -173,9 +173,8 @@ Unterreiters Funktionen weiter unten.
 
 - Beim Öffnen des Unterreiters erscheinen die aus Gebäudestruktur und
   Funktionen erzeugten Gruppenadressen sofort als aufklappbarer Baum
-  (Hauptgruppe → Mittelgruppe → Adresse) — **Vorschau** lädt ihn bei
-  Bedarf manuell neu, **Alle aufklappen**/**Alle einklappen** klappen ihn
-  komplett auf bzw. zu.
+  (Hauptgruppe → Mittelgruppe → Adresse), jedes Mal frisch erzeugt —
+  **Alle aufklappen**/**Alle einklappen** klappen ihn komplett auf bzw. zu.
 - **CSV für ETS6 herunterladen** exportiert dieselben Adressen als
   ETS6-kompatible CSV-Datei.
 - **Änderungen seit dem letzten ETS-Export** (oben im Unterreiter): Jeder

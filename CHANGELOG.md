@@ -64,6 +64,11 @@ restructuring below — history before that is available via `git log`.
   the actual result. New preview endpoints (`.../circuits/auto-assign?dry_run=true`,
   `.../assign-physical-addresses/preview`, `/api/actor-types/import-*/preview`).
 
+- **Gruppenadressen: removed the "Vorschau" button** — the GA tree (and
+  now the ETS-changes card) is regenerated every time the sub-tab is
+  opened, so the manual refresh button was redundant (and was also the
+  only oversized button in that row).
+
 ### Fixed
 
 - **Downloads no longer fail for names with special characters** — every
