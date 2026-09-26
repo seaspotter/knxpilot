@@ -88,6 +88,17 @@ class ManualUrlIn(BaseModel):
     manual_url: str = ""
 
 
+class TimerStartIn(BaseModel):
+    project_id: int
+
+
+class TimeEntryIn(BaseModel):
+    project_id: int
+    started_at: str          # ISO 8601 (UTC, with offset or "Z")
+    ended_at: str
+    note: str = ""
+
+
 class ActorInstanceIn(BaseModel):
     actor_type_id: int
     floor_id: int | None = None

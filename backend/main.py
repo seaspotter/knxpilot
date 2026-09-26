@@ -22,7 +22,8 @@ CSV export format (verified against real ETS6 exports):
 This file just wires everything together - see backend/routers/ for the
 actual endpoints, grouped by tab (setup, geraete, projects, abgangsliste,
 geraeteplanung, verteiler, klaerungsliste, pflichtenheft, system,
-project_files, manuals, checkliste, dokumentation, email), backend/db.py for
+project_files, manuals, checkliste, dokumentation, email, zeiterfassung),
+backend/db.py for
 the schema/migrations/seed data, backend/ga_logic.py for GA-tree generation,
 backend/pdf_design.py for the shared PDF look-and-feel, and
 backend/email_sender.py for the SMTP mechanics behind routers/email.py.
@@ -44,7 +45,7 @@ from .backup import run_backup_now
 from .db import get_db, init_db
 from .routers import (
     setup, geraete, projects, abgangsliste, geraeteplanung, klaerungsliste, pflichtenheft, system, verteiler,
-    project_files, manuals, checkliste, dokumentation, email,
+    project_files, manuals, checkliste, dokumentation, email, zeiterfassung,
 )
 
 logger = logging.getLogger("knxpilot.backup")
@@ -105,6 +106,7 @@ app.include_router(manuals.router)
 app.include_router(checkliste.router)
 app.include_router(dokumentation.router)
 app.include_router(email.router)
+app.include_router(zeiterfassung.router)
 
 class NoCacheStaticFiles(StaticFiles):
     """Serves frontend/ with Cache-Control: no-cache instead of Starlette's

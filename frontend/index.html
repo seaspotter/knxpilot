@@ -22,6 +22,7 @@
       📁 <span id="header-current-project-name"></span>
       <a href="#" onclick="event.preventDefault(); closeProject();" style="margin-left:4px; color:var(--danger); text-decoration:none;" title="Projekt schliessen">×</a>
     </span>
+    <span id="zeit-timer" class="zeit-timer" style="display:none;"></span>
     <div id="header-company-brand" class="row" style="margin:0; align-items:center; gap:8px; display:none;"></div>
     <button id="theme-toggle" onclick="toggleTheme()">☀️ Hell</button>
   </div>
@@ -36,6 +37,7 @@
     </div>
   </div>
   <button data-tab="aktoren">Geräte Katalog</button>
+  <button data-tab="zeiterfassung">Zeiterfassung</button>
   <button data-tab="setup">Setup</button>
   <button data-tab="update">Update</button>
   <button data-tab="hilfe">Hilfe</button>
@@ -751,6 +753,26 @@
     </div>
   </div>
 
+  <!-- ZEITERFASSUNG TAB (internal only - not part of any export/documentation) -->
+  <div class="tab" id="tab-zeiterfassung">
+    <div class="card">
+      <div class="card-header">
+        <h3>Zeiterfassung</h3>
+        <div class="row" style="margin:0; gap:6px;">
+          <button class="btn secondary" onclick="openTimeEntryModal()">+ Eintrag nachtragen</button>
+          <button class="btn" onclick="exportTimeEntriesCsv()">CSV exportieren</button>
+        </div>
+      </div>
+      <p class="muted">Arbeitszeit je Projekt — Start/Stopp oben in der Kopfzeile, sobald ein Projekt geöffnet ist. Jeder Eintrag wird auf volle 15 Minuten aufgerundet. Nur intern: erscheint in keinem Export und keiner Dokumentation.</p>
+      <div class="row">
+        <select id="zeit-project-filter" class="wide" onchange="loadTimeEntries()"></select>
+        <span class="muted" id="zeit-filter-total"></span>
+      </div>
+      <div id="zeit-totals" style="overflow-x:auto;"></div>
+      <div id="zeit-entries" style="overflow-x:auto;"></div>
+    </div>
+  </div>
+
   <!-- HILFE TAB -->
   <div class="tab" id="tab-hilfe">
     <div class="card">
@@ -778,6 +800,7 @@
 <script src="/js/uebergabe_checkliste.js"></script>
 <script src="/js/klaerungsliste.js"></script>
 <script src="/js/manuals.js"></script>
+<script src="/js/zeiterfassung.js"></script>
 <script src="/js/dokumentation.js"></script>
 <script src="/js/update.js"></script>
 <script src="/js/hilfe.js"></script>

@@ -8,6 +8,7 @@
   await loadCentralTemplates();
   await loadActorTypes();
   await loadProjects();
+  await loadRunningTimer();
   await loadChangelog();
   await loadManual();
 })();

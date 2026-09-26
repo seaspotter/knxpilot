@@ -108,6 +108,7 @@ function updateHeaderProjectChip() {
   } else {
     chip.style.display = 'none';
   }
+  renderTimerWidget();
 }
 
 async function loadProjects() {

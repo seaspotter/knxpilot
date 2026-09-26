@@ -175,6 +175,13 @@
   .modal-card h3 { margin:0 0 14px; font-size:15px; }
   .modal-card .modal-actions { justify-content:flex-end; margin:14px 0 0; }
 
+  .zeit-timer { display:inline-flex; align-items:center; gap:6px; }
+  .zeit-clock { font-variant-numeric:tabular-nums; font-weight:600; color:var(--accent); }
+  .zeit-table { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:14px; }
+  .zeit-table th, .zeit-table td { text-align:left; padding:5px 8px; border-bottom:1px solid var(--border); }
+  .zeit-table th { color:var(--muted); font-weight:600; }
+  .zeit-table .num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .zeit-table .zeit-actions { text-align:right; white-space:nowrap; }
   .label-grid { display:grid; grid-template-columns: repeat(7, 1fr); gap:2px; max-width:280px; margin-top:8px; }
   .label-cell { aspect-ratio: 2.54 / 1; border:1px solid var(--border); border-radius:2px; background:var(--panel2); cursor:pointer; }
   .label-cell:hover { border-color:var(--accent); }

@@ -24,6 +24,7 @@ document.querySelectorAll('nav button[data-tab]').forEach(btn => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'zeiterfassung') await loadTimeEntries();
   };
 });
 

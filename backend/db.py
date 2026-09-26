@@ -510,6 +510,23 @@ def init_db():
                 UNIQUE(project_id, role)
             );
 
+            -- Personal time tracking (see routers/zeiterfassung.py) - deliberately
+            -- global, not part of a project's data: no FK/ON DELETE CASCADE on
+            -- project_id, so deleting a project keeps its logged hours
+            -- (project_name is a snapshot for exactly that case), and it's never
+            -- included in the JSON project backup/duplicate or any PDF export.
+            -- Timestamps are UTC ISO strings; ended_at IS NULL marks the one
+            -- currently running timer. Rounding up to 15 min happens on read,
+            -- the raw times are kept as-is.
+            CREATE TABLE IF NOT EXISTS time_entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER,
+                project_name TEXT NOT NULL DEFAULT '',
+                started_at TEXT NOT NULL,
+                ended_at TEXT,
+                note TEXT NOT NULL DEFAULT ''
+            );
+
             -- Global, tool-wide company identity (singleton, id pinned to 1). Shown in
             -- the app header next to the KNXpilot brand, and optionally as a page-1
             -- letterhead on every PDF export, gated by show_on_pdf.
