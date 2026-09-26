@@ -3,11 +3,10 @@
   {{ form_open("time-tracking") }}
   <h3>Zeiterfassung</h3>
   <p class="muted">Einfache Arbeitszeiterfassung je Projekt (Start/Stopp in der Kopfzeile, Reiter Zeiterfassung). Rein intern — erscheint in keinem Projekt-Export und keiner Dokumentation.</p>
-  <div class="row mobile-fields">
+  {# Switch and grid side by side. #}
+  <div class="row" style="align-items:center; gap:28px;">
     {{ checkbox(c, "time_tracking_enabled", "Aktiv", "Deaktiviert blendet den Reiter Zeiterfassung und den Start/Stopp-Knopf aus. Bereits erfasste Zeiten bleiben gespeichert und sind nach dem Wiedereinschalten wieder da.") }}
-  </div>
-  <div class="row mobile-fields">
-    <label class="muted" style="display:flex; align-items:center; gap:6px;">Rundung
+    <label style="display:flex; align-items:center; gap:8px;">Rundung
       <select name="time_tracking_rounding_minutes">
         {% for value, label in [(1, "Minutengenau"), (15, "15 Minuten"), (30, "30 Minuten")] %}
           <option value="{{ value }}"{% if c.time_tracking_rounding_minutes == value %} selected{% endif %}>{{ label }}</option>
@@ -16,6 +15,6 @@
       <span class="info-icon" tabindex="0" data-tip="Start und Stopp werden auf die nächste Marke gerundet (bei 15 Min.: 12:04 → 12:00, 12:55 → 13:00); ein Eintrag zählt mindestens eine Rundungseinheit. Gilt für neue bzw. neu gespeicherte Einträge - bereits erfasste Zeiten werden nicht nachträglich umgerechnet.">i</span>
     </label>
   </div>
-  <div class="row mobile-fields" style="margin-top:10px;"><button type="submit" class="btn">Speichern</button></div>
+  <div style="margin-top:10px;"><button type="submit" class="btn">Speichern</button></div>
   </form>
 </div>

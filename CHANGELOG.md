@@ -57,6 +57,7 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
   Absender, Kopie) in a fixed left column with the fields aligned next to
   them, and the test email in its own block below; a reusable
   `.form-grid` layout for settings forms.
+- **Setup → time tracking: switch and rounding side by side** in one row.
 - **Time tracking rendered server-side with htmx** — the second tab after
   the clarification list: list, filters, totals, the invoiced checkboxes
   and the add/edit dialog now come from Jinja templates
