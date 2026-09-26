@@ -4,7 +4,7 @@ Notable changes to KNXpilot. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this file starts from the
 restructuring below — history before that is available via `git log`.
 
-## [Unreleased]
+## [0.7.0] - 2026-09-26
 
 ### Added
 
