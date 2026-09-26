@@ -108,6 +108,12 @@
   .rc-note { color:var(--muted); font-size:12px; }
   .line-select { font-size:12px; padding:3px 6px; }
   .update-command { background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:6px 10px; font-size:12.5px; word-break:break-all; flex:1; }
+  /* Labeled settings form: label column + aligned fields (templates/setup/email.html) */
+  .form-grid { display:grid; grid-template-columns:120px 1fr; gap:10px 14px; align-items:center; margin-top:10px; }
+  .form-label { font-size:13px; color:var(--muted); }
+  .form-fields { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .form-fields .grow { flex:1; min-width:160px; }
+  .form-fields .w-port { width:90px; }
   /* Setup definition lists (function types, central templates): name + meta left, data points aligned */
   ul.list.def-list li { display:grid; grid-template-columns:230px 1fr auto; gap:6px 14px; align-items:start; }
   .def-name b { display:block; }
@@ -319,6 +325,9 @@
 
   @media (max-width: 700px) {
     .st-meta { display:none; }
+    .form-grid { grid-template-columns:1fr; gap:4px; }
+    .form-grid > span:empty { display:none; }
+    .form-label { margin-top:8px; }
     ul.list.def-list li { grid-template-columns:1fr auto; }
     ul.list.def-list .def-pills { grid-column:1 / -1; grid-row:2; }
     .ub-row { grid-template-columns:1fr; }

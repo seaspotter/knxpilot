@@ -53,6 +53,10 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
   The functions tab picks up changes made here immediately. Both lists
   now use aligned columns: name with category/block/channel (or scope) as
   a small line below on the left, the data points lined up next to it.
+- **Setup → email as a tidy form** — labels (Versand, Server, Anmeldung,
+  Absender, Kopie) in a fixed left column with the fields aligned next to
+  them, and the test email in its own block below; a reusable
+  `.form-grid` layout for settings forms.
 - **Time tracking rendered server-side with htmx** — the second tab after
   the clarification list: list, filters, totals, the invoiced checkboxes
   and the add/edit dialog now come from Jinja templates
