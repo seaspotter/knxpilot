@@ -71,9 +71,9 @@ restructuring below — history before that is available via `git log`.
 
 ### Security
 
-- **All dependencies updated to their latest releases** - fixes the 27
+- **All dependencies updated to their latest releases** - fixes the 25
   known vulnerabilities Dependabot reported right after being enabled:
-  Pillow 10.4.0 → 12.3.0 (19 advisories, incl. out-of-bounds writes and
+  Pillow 10.4.0 → 12.3.0 (17 advisories, incl. out-of-bounds writes and
   decompression bombs - relevant since logos/signatures are uploaded
   images) and python-multipart 0.0.12 → 0.0.32 (8 advisories, incl.
   denial of service via crafted uploads). Also FastAPI 0.115 → 0.141
