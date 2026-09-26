@@ -524,7 +524,8 @@ def init_db():
                 project_name TEXT NOT NULL DEFAULT '',
                 started_at TEXT NOT NULL,
                 ended_at TEXT,
-                note TEXT NOT NULL DEFAULT ''
+                note TEXT NOT NULL DEFAULT '',
+                invoiced INTEGER NOT NULL DEFAULT 0  -- "abgerechnet" flag
             );
 
             -- Global, tool-wide company identity (singleton, id pinned to 1). Shown in
@@ -676,6 +677,7 @@ def init_db():
              "ALTER TABLE company_profile ADD COLUMN smtp_from_email TEXT NOT NULL DEFAULT ''"),
             ("company_profile", "smtp_cc_self_default",
              "ALTER TABLE company_profile ADD COLUMN smtp_cc_self_default INTEGER NOT NULL DEFAULT 1"),
+            ("time_entries", "invoiced", "ALTER TABLE time_entries ADD COLUMN invoiced INTEGER NOT NULL DEFAULT 0"),
         ]:
             cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]
             if column not in cols:

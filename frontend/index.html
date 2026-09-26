@@ -766,7 +766,13 @@
       <p class="muted">Arbeitszeit je Projekt — Start/Stopp oben in der Kopfzeile, sobald ein Projekt geöffnet ist. Start und Stopp werden auf die nächste Viertelstunde gerundet (z.B. 12:04 → 12:00, 12:55 → 13:00), mindestens 15 Minuten je Eintrag. Nur intern: erscheint in keinem Projekt-Export und keiner Dokumentation. <b>PDF herunterladen</b> erzeugt einen Stundennachweis für die aktuelle Auswahl.</p>
       <div class="row">
         <select id="zeit-project-filter" class="wide" onchange="loadTimeEntries()"></select>
+        <select id="zeit-invoiced-filter" onchange="renderTimeEntries()">
+          <option value="">Alle Einträge</option>
+          <option value="0">Nicht abgerechnet</option>
+          <option value="1">Abgerechnet</option>
+        </select>
         <span class="muted" id="zeit-filter-total"></span>
+        <button class="btn secondary small" id="zeit-mark-invoiced-btn" onclick="markShownTimeEntriesInvoiced()" style="display:none;">Alle angezeigten als abgerechnet markieren</button>
       </div>
       <div id="zeit-totals" style="overflow-x:auto;"></div>
       <div id="zeit-entries" style="overflow-x:auto;"></div>

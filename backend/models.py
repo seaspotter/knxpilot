@@ -92,6 +92,11 @@ class TimerStartIn(BaseModel):
     project_id: int
 
 
+class TimeEntriesInvoicedIn(BaseModel):
+    ids: list[int]
+    invoiced: bool
+
+
 class TimeEntryIn(BaseModel):
     project_id: int
     started_at: str          # ISO 8601 (UTC, with offset or "Z")

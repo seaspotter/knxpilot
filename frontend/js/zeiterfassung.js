@@ -92,13 +92,28 @@ async function loadTimeEntries() {
 
 function filteredTimeEntries() {
   const pid = document.getElementById('zeit-project-filter').value;
-  return pid ? TIME_ENTRIES.filter(e => String(e.project_id) === pid) : TIME_ENTRIES;
+  const inv = document.getElementById('zeit-invoiced-filter').value;
+  return TIME_ENTRIES.filter(e =>
+    (!pid || String(e.project_id) === pid) && (inv === '' || e.invoiced === (inv === '1')));
+}
+
+async function setTimeEntriesInvoiced(ids, invoiced) {
+  await api('/time-entries/invoiced', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ids, invoiced})});
+  await loadTimeEntries();
+}
+
+async function markShownTimeEntriesInvoiced() {
+  const ids = filteredTimeEntries().filter(e => e.ended_at && !e.invoiced).map(e => e.id);
+  if (!ids.length) return;
+  if (!(await showConfirm(`${ids.length} Einträge als abgerechnet markieren?`))) return;
+  await setTimeEntriesInvoiced(ids, true);
 }
 
 function renderTimeEntries() {
   const entries = filteredTimeEntries();
   const done = entries.filter(e => e.ended_at);
   const total = done.reduce((sum, e) => sum + e.billed_minutes, 0);
+  document.getElementById('zeit-mark-invoiced-btn').style.display = done.some(e => !e.invoiced) ? '' : 'none';
   document.getElementById('zeit-filter-total').textContent = done.length ? `Summe: ${formatHours(total)}` : '';
 
   // Per-project totals (only when showing all projects).
@@ -121,14 +136,14 @@ function renderTimeEntries() {
 
   const listEl = document.getElementById('zeit-entries');
   if (!entries.length) {
-    listEl.innerHTML = '<p class="muted">Noch keine Zeiten erfasst.</p>';
+    listEl.innerHTML = `<p class="muted">${TIME_ENTRIES.length ? 'Keine Einträge für diese Auswahl.' : 'Noch keine Zeiten erfasst.'}</p>`;
     return;
   }
   const fmtDate = iso => new Date(iso).toLocaleDateString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit', year:'numeric'});
   const fmtTime = iso => new Date(iso).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
   listEl.innerHTML = `<h4>Einträge</h4>
     <table class="zeit-table"><thead><tr>
-      <th>Datum</th><th>Projekt</th><th>Von</th><th>Bis</th><th class="num">Dauer</th><th>Notiz</th><th></th>
+      <th>Datum</th><th>Projekt</th><th>Von</th><th>Bis</th><th class="num">Dauer</th><th>Notiz</th><th>Abgerechnet</th><th></th>
     </tr></thead><tbody>
     ${entries.map(e => `<tr>
       <td>${fmtDate(e.started_at)}</td>
@@ -137,6 +152,7 @@ function renderTimeEntries() {
       <td>${e.ended_at ? fmtTime(e.ended_at) : '<span class="pill">läuft</span>'}</td>
       <td class="num" title="${e.ended_at ? `tatsächlich ${Math.round(e.raw_minutes)} Min.` : ''}">${e.ended_at ? formatHours(e.billed_minutes) : '—'}</td>
       <td>${escapeHtml(e.note || '')}</td>
+      <td>${e.ended_at ? `<input type="checkbox" ${e.invoiced ? 'checked' : ''} onchange="setTimeEntriesInvoiced([${e.id}], this.checked)" title="Abgerechnet">` : ''}</td>
       <td class="zeit-actions">${e.ended_at ? `
         <button class="btn secondary small" onclick="openTimeEntryModal(${e.id})">Bearbeiten</button>
         <button class="btn danger small" onclick="deleteTimeEntry(${e.id})">Löschen</button>` : ''}</td>
@@ -230,5 +246,7 @@ function exportTimeEntriesPdf() {
   });
   const pid = document.getElementById('zeit-project-filter').value;
   if (pid) params.set('project_id', pid);
+  const inv = document.getElementById('zeit-invoiced-filter').value;
+  if (inv !== '') params.set('invoiced', inv === '1' ? 'true' : 'false');
   window.location.href = '/api/time-entries/export.pdf?' + params;
 }

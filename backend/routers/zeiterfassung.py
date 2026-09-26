@@ -25,7 +25,7 @@ from reportlab.lib.units import mm
 from reportlab.platypus import KeepTogether, Paragraph, Spacer, Table
 
 from ..db import get_db
-from ..models import TimeEntryIn, TimerStartIn
+from ..models import TimeEntriesInvoicedIn, TimeEntryIn, TimerStartIn
 from ..pdf_design import (
     build_pdf_response, company_footer_line, company_header_block, pdf_styles, pdf_table_style,
     pdf_title_banner,
@@ -80,6 +80,7 @@ def _entry_dict(r):
         # Current project name if the project still exists, else the snapshot.
         "project_name": r["current_name"] or r["project_name"],
         "started_at": r["started_at"], "ended_at": r["ended_at"], "note": r["note"],
+        "invoiced": bool(r["invoiced"]),
         "raw_minutes": round(raw_minutes, 1),
         "billed_minutes": _billed_minutes(raw_minutes),
     }
@@ -104,15 +105,29 @@ def _validate_range(started_at, ended_at):
 
 
 @router.get("/api/time-entries")
-def list_time_entries(project_id: int | None = None):
+def list_time_entries(project_id: int | None = None, invoiced: bool | None = None):
+    where, params = [], []
+    if project_id is not None:
+        where.append("te.project_id=?")
+        params.append(project_id)
+    if invoiced is not None:
+        where.append("te.invoiced=?")
+        params.append(int(invoiced))
+    clause = f" WHERE {' AND '.join(where)}" if where else ""
     with get_db() as db:
-        if project_id is None:
-            rows = db.execute(f"{_SELECT} ORDER BY te.started_at DESC").fetchall()
-        else:
-            rows = db.execute(
-                f"{_SELECT} WHERE te.project_id=? ORDER BY te.started_at DESC", (project_id,)
-            ).fetchall()
+        rows = db.execute(f"{_SELECT}{clause} ORDER BY te.started_at DESC", params).fetchall()
         return [_entry_dict(r) for r in rows]
+
+
+@router.put("/api/time-entries/invoiced")
+def set_time_entries_invoiced(body: TimeEntriesInvoicedIn):
+    """Set/clear the "abgerechnet" flag on one or several entries at once
+    (single checkbox, or "Alle angezeigten als abgerechnet markieren")."""
+    with get_db() as db:
+        db.executemany(
+            "UPDATE time_entries SET invoiced=? WHERE id=?", [(int(body.invoiced), i) for i in body.ids]
+        )
+    return {"ok": True}
 
 
 @router.get("/api/time-entries/running")
@@ -195,12 +210,15 @@ def _fmt_hours(minutes):
 
 
 @router.get("/api/time-entries/export.pdf")
-def export_time_entries_pdf(project_id: int | None = None, tz: str = "", offset: int = 0):
+def export_time_entries_pdf(
+    project_id: int | None = None, invoiced: bool | None = None, tz: str = "", offset: int = 0
+):
     """Stundennachweis: one table per project (Datum/Von/Bis/Dauer/Notiz, each
     entry rounded up to 15 min) with a per-project sum, plus a grand total when
-    several projects are included. Running timers are left out."""
+    several projects are included. Running timers are left out. Follows the
+    tab's filters (project, abgerechnet yes/no)."""
     zone = _client_tz(tz, offset)
-    entries = [e for e in list_time_entries(project_id) if e["ended_at"]]
+    entries = [e for e in list_time_entries(project_id, invoiced) if e["ended_at"]]
     entries.sort(key=lambda e: e["started_at"])
     if not entries:
         raise HTTPException(404, "Keine abgeschlossenen Zeiteinträge vorhanden")
