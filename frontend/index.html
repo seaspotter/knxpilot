@@ -163,6 +163,19 @@
           </div>
           <div id="floors-container"></div>
         </div>
+        <details class="card" id="knx-lines-card">
+          <summary><h3 style="display:inline; margin:0;">KNX-Linien (optional)</h3> <span class="muted">— nur bei Aufteilung in mehrere Linien, z.B. je Wohnung</span></summary>
+          <div style="margin-top:10px;">
+            <div id="knx-lines"></div>
+            <div class="row mobile-fields" style="margin-top:10px;">
+              <input type="number" id="kl-new-area" min="0" max="15" value="1" title="Bereich" style="width:70px;">
+              <input type="number" id="kl-new-line" min="0" max="15" placeholder="Linie" title="Linie" style="width:70px;">
+              <input type="text" id="kl-new-name" class="flex-input" placeholder="Name, z.B. Wohnung EG, Aussen">
+              <button class="btn secondary" onclick="addKnxLine()">+ Linie hinzufügen</button>
+            </div>
+            <p class="muted" style="margin:4px 0 0;">Danach je Geschoss (oder abweichend je Raum / je Aktor in der Abgangsliste) die Linie wählen. Gruppenadressen bleiben davon unberührt — sie gelten in KNX projektweit.</p>
+          </div>
+        </details>
       </div>
 
       <div class="subtab" id="subtab-funktionen">
@@ -837,6 +850,7 @@
 <script src="/js/setup.js"></script>
 <script src="/js/geraete.js"></script>
 <script src="/js/projekte.js"></script>
+<script src="/js/linien.js"></script>
 <script src="/js/funktionen.js"></script>
 <script src="/js/gruppenadressen.js"></script>
 <script src="/js/uebersicht.js"></script>

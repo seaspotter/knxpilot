@@ -8,6 +8,16 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- **KNX-Linien (optional)** — projects split into several TP lines via
+  line couplers (e.g. one line per apartment plus an outdoor line) can
+  define their lines under Gebäudestruktur and assign each floor, and
+  optionally a single room or actuator, to a line. "PA automatisch
+  zuordnen" then numbers each line on its own (`1.1.10…`, `1.2.10…`), with
+  the line coupler getting the line's `.0`. The lines table shows device
+  counts per line and warns about more than 64 devices or a missing line
+  coupler/bus power supply. Projects without lines behave exactly as
+  before. Lines are included in JSON backups and when duplicating a
+  project.
 - **Automated tests** — a `pytest` suite (`tests/`, dev dependencies in
   `requirements-dev.txt`) covering schema migrations on fresh and old
   databases, the ETS group-address CSV against a golden file, every

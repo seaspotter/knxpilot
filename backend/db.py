@@ -509,6 +509,21 @@ def init_db():
             -- the Gruppenadressen tab's "Änderungen seit dem letzten ETS-Export"
             -- (see routers/projects.py). data = JSON list of
             -- {address, name, dpt} incl. main/middle group rows ("1/2/-").
+            -- Optional KNX TP lines (Bereich.Linie) - only for projects split into
+            -- several lines, e.g. one per apartment plus an outdoor line (see
+            -- routers/linien.py). Without any row here a project is one line
+            -- and PA auto-assign uses the prefix typed in (default 1.1), as
+            -- before. floors/rooms/actor_instances.line_id point here (a room's
+            -- or actuator's own line overrides its floor's; ON DELETE SET NULL).
+            CREATE TABLE IF NOT EXISTS knx_lines (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                area INTEGER NOT NULL,
+                line INTEGER NOT NULL,
+                name TEXT NOT NULL DEFAULT '',
+                UNIQUE(project_id, area, line)
+            );
+
             CREATE TABLE IF NOT EXISTS ga_export_snapshots (
                 project_id INTEGER PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
                 exported_at TEXT NOT NULL,
@@ -699,6 +714,10 @@ def init_db():
              "ALTER TABLE company_profile ADD COLUMN zeiterfassung_enabled INTEGER NOT NULL DEFAULT 1"),
             ("company_profile", "zeiterfassung_rounding_minutes",
              "ALTER TABLE company_profile ADD COLUMN zeiterfassung_rounding_minutes INTEGER NOT NULL DEFAULT 15"),
+            ("floors", "line_id", "ALTER TABLE floors ADD COLUMN line_id INTEGER REFERENCES knx_lines(id) ON DELETE SET NULL"),
+            ("rooms", "line_id", "ALTER TABLE rooms ADD COLUMN line_id INTEGER REFERENCES knx_lines(id) ON DELETE SET NULL"),
+            ("actor_instances", "line_id",
+             "ALTER TABLE actor_instances ADD COLUMN line_id INTEGER REFERENCES knx_lines(id) ON DELETE SET NULL"),
             ("time_entries", "invoiced", "ALTER TABLE time_entries ADD COLUMN invoiced INTEGER NOT NULL DEFAULT 0"),
         ]:
             cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]

@@ -244,3 +244,13 @@ class CompanyProfileIn(BaseModel):
     smtp_cc_self_default: bool = True
     zeiterfassung_enabled: bool = True
     zeiterfassung_rounding_minutes: int = 15   # 1 (minutengenau) | 15 | 30
+
+
+class KnxLineIn(BaseModel):
+    area: int                # Bereich, 0-15
+    line: int                # Linie, 0-15
+    name: str = ""           # e.g. "Wohnung EG", "Aussen"
+
+
+class LineAssignIn(BaseModel):
+    line_id: int | None = None   # None = inherit (room/actuator: from floor; floor: project default)

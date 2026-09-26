@@ -63,7 +63,7 @@ def list_actor_instances(project_id: int):
                     "id": r["id"], "actor_type_id": r["actor_type_id"],
                     "actor_type_name": join_parts(at.get("manufacturer", ""), at.get("model", "")) or "?",
                     "channel_type": at.get("channel_type", ""), "channel_count": channel_count,
-                    "floor_id": r["floor_id"], "floor_name": floors.get(r["floor_id"], ""),
+                    "floor_id": r["floor_id"], "floor_name": floors.get(r["floor_id"], ""), "line_id": r["line_id"],
                     "location_label": r["location_label"], "physical_address": r["physical_address"],
                     "channels_used": len(used_letters), "channels_free": channel_count - len(used_letters),
                     "channel_map": channel_map,

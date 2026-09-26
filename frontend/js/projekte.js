@@ -356,6 +356,7 @@ async function deleteFloor(id) {
 }
 
 async function renderFloors() {
+  await loadKnxLines();
   const tree = await api(`/projects/${CURRENT_PROJECT}/tree`);
   const container = document.getElementById('floors-container');
   container.innerHTML = tree.floors.map(floor => `
@@ -366,6 +367,7 @@ async function renderFloors() {
           ${floor.is_outdoor ? '<span class="pill">Aussen/unbeheizt</span>' : ''}
         </div>
         <div class="row">
+          ${lineSelectHtml(floor.line_id, 'Standardlinie', `setLine('floors', ${floor.id}, this.value)`)}
           <input type="text" placeholder="Raumname" id="room-name-${floor.id}" style="width:140px;">
           <button class="btn secondary small" onclick="addRoom(${floor.id})">+ Raum hinzufügen</button>
           <button class="btn secondary small" onclick="toggleBulkRoomInput(${floor.id})">Mehrere...</button>
@@ -388,6 +390,7 @@ function renderRoom(room) {
       <div class="rc-room-title">
         <span>${room.name}</span>
         <div class="row">
+          ${lineSelectHtml(room.line_id, 'Linie wie Geschoss', `setLine('rooms', ${room.id}, this.value)`)}
           <button class="btn secondary small" onclick="renameRoom(${room.id}, '${room.name.replace(/'/g,"\\'")}')">Bearbeiten</button>
           <button class="btn danger small" onclick="deleteRoom(${room.id})">Raum löschen</button>
         </div>

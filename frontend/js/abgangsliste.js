@@ -112,6 +112,7 @@ async function renderActorInstances() {
           <span class="pill">${ai.channels_used}/${ai.channel_count} belegt</span>
         </div>
         <div class="row" style="margin:0; gap:6px;">
+          ${lineSelectHtml(ai.line_id, 'Linie wie Geschoss', `setLine('actor-instances', ${ai.id}, this.value)`)}
           <button class="btn secondary small" onclick="editActorInstance(${ai.id})">Bearbeiten</button>
           <button class="btn danger small" onclick="deleteActorInstance(${ai.id})">Löschen</button>
         </div>

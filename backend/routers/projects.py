@@ -288,7 +288,7 @@ def get_project_tree(project_id: int):
                 ).fetchall()
                 room_list.append(
                     {
-                        "id": r["id"], "name": r["name"],
+                        "id": r["id"], "name": r["name"], "line_id": r["line_id"],
                         "points": [
                             {
                                 "id": p["id"], "point_type_id": p["point_type_id"], "label": p["label"],
@@ -299,7 +299,7 @@ def get_project_tree(project_id: int):
                     }
                 )
             result["floors"].append(
-                {"id": f["id"], "name": f["name"], "is_outdoor": bool(f["is_outdoor"]), "rooms": room_list}
+                {"id": f["id"], "name": f["name"], "is_outdoor": bool(f["is_outdoor"]), "line_id": f["line_id"], "rooms": room_list}
             )
         return result
 
@@ -356,6 +356,9 @@ def _build_project_payload(db, project_id):
 
     categories = {r["id"]: r["name"] for r in db.execute("SELECT * FROM categories").fetchall()}
     point_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM point_types").fetchall()}
+    # KNX lines are referenced by their "Bereich.Linie" address, not by id.
+    line_rows = db.execute("SELECT * FROM knx_lines WHERE project_id=? ORDER BY area, line", (project_id,)).fetchall()
+    line_addr = {r["id"]: f"{r['area']}.{r['line']}" for r in line_rows}
 
     floors_out = []
     for floor in db.execute(
@@ -380,8 +383,9 @@ def _build_project_payload(db, project_id):
                         "has_bwm": bool(point["has_bwm"]),
                     }
                 )
-            rooms_out.append({"name": room["name"], "points": points_out})
-        floors_out.append({"name": floor["name"], "is_outdoor": bool(floor["is_outdoor"]), "rooms": rooms_out})
+            rooms_out.append({"name": room["name"], "line": line_addr.get(room["line_id"]), "points": points_out})
+        floors_out.append({"name": floor["name"], "is_outdoor": bool(floor["is_outdoor"]),
+                           "line": line_addr.get(floor["line_id"]), "rooms": rooms_out})
 
     floor_order_by_id = {}
     for floor in db.execute(
@@ -415,6 +419,7 @@ def _build_project_payload(db, project_id):
         "order_number": project["order_number"],
         "email": project["email"],
         "additional_recipients": project["additional_recipients"],
+        "lines": [{"area": r["area"], "line": r["line"], "name": r["name"]} for r in line_rows],
         "floors": floors_out,
         "specials": specials_out,
     }
@@ -473,18 +478,24 @@ def _insert_project_from_payload(db, payload, forced_name=None):
     project_id = cur.lastrowid
     skipped = []
 
+    line_ids = {}  # "Bereich.Linie" -> new knx_lines id
+    for line in payload.get("lines", []):
+        lcur = db.execute("INSERT INTO knx_lines (project_id, area, line, name) VALUES (?, ?, ?, ?)",
+                          (project_id, int(line["area"]), int(line["line"]), line.get("name", "")))
+        line_ids[f"{int(line['area'])}.{int(line['line'])}"] = lcur.lastrowid
+
     floor_id_map = {}  # index in payload -> new floor id, for resolving special locations
     for f_idx, floor in enumerate(payload.get("floors", [])):
         fcur = db.execute(
-            "INSERT INTO floors (project_id, name, order_idx, is_outdoor) VALUES (?, ?, ?, ?)",
-            (project_id, floor["name"], f_idx, int(floor.get("is_outdoor", False))),
+            "INSERT INTO floors (project_id, name, order_idx, is_outdoor, line_id) VALUES (?, ?, ?, ?, ?)",
+            (project_id, floor["name"], f_idx, int(floor.get("is_outdoor", False)), line_ids.get(floor.get("line"))),
         )
         floor_id = fcur.lastrowid
         floor_id_map[f_idx] = floor_id
         for r_idx, room in enumerate(floor.get("rooms", [])):
             rcur = db.execute(
-                "INSERT INTO rooms (floor_id, name, order_idx) VALUES (?, ?, ?)",
-                (floor_id, room["name"], r_idx),
+                "INSERT INTO rooms (floor_id, name, order_idx, line_id) VALUES (?, ?, ?, ?)",
+                (floor_id, room["name"], r_idx, line_ids.get(room.get("line"))),
             )
             room_id = rcur.lastrowid
             for p_idx, point in enumerate(room.get("points", [])):

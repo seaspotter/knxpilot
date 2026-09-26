@@ -106,6 +106,8 @@
   .rc-row-3 .rc-type { padding-top:0; }
   .rc-row-3 select { width:100%; }
   .rc-note { color:var(--muted); font-size:12px; }
+  .line-select { font-size:12px; padding:3px 6px; }
+  details#knx-lines-card > summary { cursor:pointer; list-style-position:outside; }
   select.wide { min-width: 180px; }
   .w-60 { width: 60px; }
   .w-110 { width: 110px; }

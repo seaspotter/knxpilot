@@ -153,6 +153,22 @@ Unterreiters Funktionen weiter unten.
   Sonderadressen, Klärungslisten-Einträge) und was nur seine
   Geschoss-Zuordnung verliert (Aktoren, Verteiler). Dasselbe gilt beim
   Löschen eines ganzen Projekts.
+- **KNX-Linien (optional)** — nur nötig, wenn die Anlage über
+  Linienkoppler in mehrere TP-Linien geteilt wird, z.B. eine Linie je
+  Wohnung plus eine Aussenlinie. Im aufklappbaren Bereich unter den
+  Geschossen Bereich, Linie und einen Namen eintragen (**+ Linie
+  hinzufügen**); danach erscheint an jedem Geschoss eine Linienauswahl,
+  und abweichend davon an jedem Raum ("Linie wie Geschoss") sowie an
+  jedem Aktor in der Abgangsliste. Was nirgends zugeordnet ist, gehört zur
+  ersten Linie (**Standard**). Die Tabelle zeigt je Linie die Anzahl
+  Geräte und Hinweise: mehr als 64 Geräte (bzw. kaum Reserve ab 55),
+  kein Linienkoppler oder keine Busspannungsversorgung geplant — erkannt
+  an der Katalog-Beschreibung ("Koppler"/"Coupler",
+  "Spannungsversorgung"/"KNX PowerSupply"). Gruppenadressen bleiben davon
+  unberührt, sie gelten in KNX projektweit. Löschen einer Linie lässt alle
+  darauf zugeordneten Geschosse/Räume/Aktoren auf die Standardlinie
+  zurückfallen; bereits vergebene physikalische Adressen bleiben stehen.
+  Ohne eigene Linien ist das Projekt eine einzige Linie wie bisher.
 
 #### Funktionen
 
@@ -275,6 +291,13 @@ der Busprogrammierung, die andere der Schaltschrank-Verdrahtung.
    verschieben. Das Bereich.Linie-Präfix (Standard `1.1`) ist vor dem
    Klick änderbar. Bereits gesetzte Adressen werden nie verändert;
    Geräte ohne zugewiesenes Geschoss werden übersprungen und gemeldet.
+   Hat das Projekt eigene **KNX-Linien** (siehe Gebäudestruktur), wird
+   jede Linie für sich nach diesem Schema nummeriert, mit ihrer eigenen
+   Bereich.Linie-Adresse statt des Präfix-Felds (dort steht dann "je
+   Linie"): z.B. EG-Wohnung `1.1.10`…, OG-Wohnung `1.2.10`…. Nur Geschosse
+   mit Geräten auf der jeweiligen Linie belegen dort einen Block. Ein
+   Linienkoppler kommt unter den Systemgeräten zuerst und erhält so die
+   `.0` seiner Linie.
 
 #### Labels
 
