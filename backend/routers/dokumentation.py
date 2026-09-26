@@ -27,6 +27,8 @@ build_pdf_bytes() - see pdf_design.py's make_numbered_canvas() for why
 plain single-pass "Seite X von Y" numbering silently breaks those internal
 links.
 """
+from xml.sax.saxutils import escape
+
 from fastapi import APIRouter, HTTPException
 from reportlab.platypus import Paragraph, Spacer, Table, PageBreak, KeepTogether
 from reportlab.lib.units import mm
@@ -130,7 +132,7 @@ def _handbuecher_story(db, project_id, styles):
     }
     data = [["Gerät", "Vorhanden"]]
     for d in devices:
-        data.append([Paragraph(d["device_name"], styles["Body"]), checkbox_cell(checked=d["device_type_id"] in fetched_ids)])
+        data.append([Paragraph(escape(d["device_name"]), styles["Body"]), checkbox_cell(checked=d["device_type_id"] in fetched_ids)])
     table = Table(data, colWidths=[145 * mm, 35 * mm], repeatRows=1)
     table.setStyle(pdf_table_style([
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),

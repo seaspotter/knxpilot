@@ -12,6 +12,7 @@ own catalog - not a search/scrape - and only ever runs when the user
 clicks the button, never automatically (matches the same "manual, confirm
 first" choice made for routers/email.py's send action).
 """
+import http.client
 import urllib.error
 import urllib.request
 from urllib.parse import urlparse
@@ -34,14 +35,20 @@ def _fetch_manual_bytes(url):
     rejecting other schemes is a cheap, free guard against e.g. a pasted
     local file:// path). Raises ValueError with a ready-to-show German
     message on any failure, so the caller doesn't need to translate
-    exception types itself."""
+    exception types itself.
+
+    Only real PDFs are accepted (checked by the file's %PDF magic bytes,
+    not the server's claimed Content-Type): a link that's gone stale often
+    lands on an HTML page instead, which would otherwise be stored and later
+    served from KNXpilot's own origin, and counted as "Vorhanden" in the
+    Dokumentation's Handbücher chapter."""
     parsed = urlparse(url)
     if parsed.scheme not in ("http", "https"):
         raise ValueError("Nur http(s)-URLs werden unterstützt.")
     req = urllib.request.Request(url, headers={"User-Agent": "KNXpilot/1.0"})
     try:
         with urllib.request.urlopen(req, timeout=20) as resp:
-            content_type = (resp.headers.get("Content-Type") or "application/pdf").split(";")[0].strip()
+            expected = resp.headers.get("Content-Length")
             chunks = []
             total = 0
             while True:
@@ -52,11 +59,22 @@ def _fetch_manual_bytes(url):
                 if total > MAX_FILE_SIZE:
                     raise ValueError(f"Datei zu gross (max. {MAX_FILE_SIZE // (1024 * 1024)} MB).")
                 chunks.append(chunk)
-            return b"".join(chunks), content_type
+            # read(n) just returns b"" when the connection drops early - it
+            # doesn't raise - so a truncated body has to be caught here.
+            if expected and expected.isdigit() and total < int(expected):
+                raise ValueError(f"Download unvollständig ({total} von {expected} Bytes).")
     except urllib.error.HTTPError as e:
         raise ValueError(f"Server antwortete mit Fehler {e.code}.") from e
     except urllib.error.URLError as e:
         raise ValueError(f"Nicht erreichbar: {e.reason}") from e
+    except (OSError, http.client.HTTPException) as e:
+        # Timeout or dropped connection mid-download - URLError only covers
+        # failures while connecting.
+        raise ValueError(f"Download abgebrochen: {e or type(e).__name__}") from e
+    data = b"".join(chunks)
+    if not data.lstrip()[:5].startswith(b"%PDF"):
+        raise ValueError("Kein PDF - der Link führt vermutlich auf eine Webseite statt direkt auf das Handbuch.")
+    return data, "application/pdf"
 
 
 @router.get("/api/projects/{project_id}/manuals")
@@ -99,10 +117,17 @@ def view_project_manual(file_id: int):
         ).fetchone()
         if not row:
             raise HTTPException(404, "Manual not found")
+        # Always served as a PDF with nosniff - never with a stored,
+        # remote-claimed type (see _fetch_manual_bytes), so nothing fetched
+        # can ever render as HTML on KNXpilot's own origin.
+        safe_name = "".join(c for c in row["device_name"] if c.isalnum() or c in " ._-") or "Geraet"
         return Response(
             content=row["data"],
-            media_type=row["content_type"] or "application/pdf",
-            headers={"Content-Disposition": f'inline; filename="{row["device_name"]} Handbuch.pdf"'},
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'inline; filename="{safe_name} Handbuch.pdf"',
+                "X-Content-Type-Options": "nosniff",
+            },
         )
 
 

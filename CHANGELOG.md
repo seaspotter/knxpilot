@@ -44,7 +44,10 @@ restructuring below — history before that is available via `git log`.
   explicit click, never automatically - same "manual, confirm first"
   principle as the email-sending feature. Plain stdlib `urllib` http(s)
   GET (no new dependency, no scraping/search), capped at 25 MB per file
-  (same cap as Dateien). Re-importing the device catalog (manual JSON
+  (same cap as Dateien). Only real PDFs are accepted - a link that lands on
+  a web page instead, or a download that breaks off midway, is reported as
+  a clear error (and skipped by "Alle herunterladen" without stopping the
+  rest) instead of being saved. Re-importing the device catalog (manual JSON
   import or "Standard-Katalog importieren") never overwrites a curated
   manual_url that isn't present in the imported data. The Dokumentation
   export gets a matching optional **Handbücher** chapter (Setup →

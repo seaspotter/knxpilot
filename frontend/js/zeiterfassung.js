@@ -180,20 +180,24 @@ function renderTimeEntries() {
 
 // ISO (UTC) -> {date: 'YYYY-MM-DD', time: 'HH:MM'} in browser local time,
 // time rounded to the nearest grid mark (same rule as the backend).
-function isoToGridParts(iso) {
-  const step = ZEIT_ROUNDING * 60000;
+// snap=false keeps the exact time (editing an existing entry: show what's
+// actually stored, even if it's off the current grid).
+function isoToGridParts(iso, snap = true) {
+  const step = (snap ? ZEIT_ROUNDING : 1) * 60000;
   const d = new Date(Math.round(new Date(iso).getTime() / step) * step);
   const pad = n => String(n).padStart(2, '0');
   return {date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, time: `${pad(d.getHours())}:${pad(d.getMinutes())}`};
 }
 
-// Minutengenau: a plain time input; otherwise a dropdown of the grid's times.
-function timeFieldHtml(id) {
+// Minutengenau: a plain time input; otherwise a dropdown of the grid's times,
+// plus `extraTime` (an existing entry's off-grid time) so it can be shown as-is.
+function timeFieldHtml(id, extraTime = null) {
   if (ZEIT_ROUNDING === 1) return `<input type="time" id="${id}">`;
   const times = Array.from({length: 1440 / ZEIT_ROUNDING}, (_, i) => {
     const m = i * ZEIT_ROUNDING;
     return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
   });
+  if (extraTime && !times.includes(extraTime)) times.push(extraTime), times.sort();
   return `<select id="${id}">${times.map(t => `<option>${t}</option>`).join('')}</select>`;
 }
 
@@ -201,15 +205,20 @@ function openTimeEntryModal(id = null) {
   const e = id ? TIME_ENTRIES.find(e => e.id === id) : null;
   const defaultProject = e ? e.project_id : (CURRENT_PROJECT || document.getElementById('zeit-project-filter').value);
   const now = new Date();
+  const start = e ? isoToGridParts(e.started_at, false) : isoToGridParts(new Date(now.getTime() - 3600000).toISOString());
+  const end = e ? isoToGridParts(e.ended_at, false) : isoToGridParts(now.toISOString());
+  // An entry of a since-deleted project keeps that project as an option.
+  const projectOptions = PROJECTS_LIST.map(p => ({id: p.id, name: p.name}));
+  if (e && !projectOptions.some(p => p.id === e.project_id)) projectOptions.push({id: e.project_id, name: `${e.project_name} (gelöscht)`});
   const modal = openModal(`
     <h3>${e ? 'Eintrag bearbeiten' : 'Eintrag nachtragen'}</h3>
     <div class="row"><select id="te-project" class="flex-input-wide">
-      ${PROJECTS_LIST.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('')}
+      ${projectOptions.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('')}
     </select></div>
     <div class="row mobile-fields">
       <input type="date" id="te-date">
-      <label class="muted">Von ${timeFieldHtml('te-start')}</label>
-      <label class="muted">Bis ${timeFieldHtml('te-end')}</label>
+      <label class="muted">Von ${timeFieldHtml('te-start', start.time)}</label>
+      <label class="muted">Bis ${timeFieldHtml('te-end', end.time)}</label>
     </div>
     <div class="row"><input type="text" id="te-note" class="flex-input-wide" placeholder="Notiz (optional)"></div>
     <div class="row modal-actions">
@@ -218,8 +227,6 @@ function openTimeEntryModal(id = null) {
     </div>`, { wide: true });
 
   document.getElementById('te-project').value = String(defaultProject || (PROJECTS_LIST[0] && PROJECTS_LIST[0].id) || '');
-  const start = isoToGridParts(e ? e.started_at : new Date(now.getTime() - 3600000).toISOString());
-  const end = isoToGridParts(e ? e.ended_at : now.toISOString());
   document.getElementById('te-date').value = start.date;
   document.getElementById('te-start').value = start.time;
   document.getElementById('te-end').value = end.time;
@@ -238,10 +245,13 @@ function openTimeEntryModal(id = null) {
     const startDate = new Date(`${date}T${from}`);
     const endDate = new Date(`${date}T${to}`);
     if (to < from) endDate.setDate(endDate.getDate() + 1); // past midnight
+    // Times left untouched -> send the stored values verbatim (incl. seconds)
+    // so the server keeps them instead of re-snapping to the current grid.
+    const timesUnchanged = e && date === start.date && from === start.time && to === end.time;
     const body = JSON.stringify({
       project_id,
-      started_at: startDate.toISOString(),
-      ended_at: endDate.toISOString(),
+      started_at: timesUnchanged ? e.started_at : startDate.toISOString(),
+      ended_at: timesUnchanged ? e.ended_at : endDate.toISOString(),
       note: document.getElementById('te-note').value.trim(),
     });
     try {

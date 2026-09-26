@@ -187,12 +187,34 @@ def add_time_entry(te: TimeEntryIn):
 
 @router.put("/api/time-entries/{entry_id}")
 def update_time_entry(entry_id: int, te: TimeEntryIn):
+    """Unchanged times are kept exactly as stored (never re-snapped to the
+    current grid - e.g. fixing only the note on an entry saved under an older
+    rounding setting must not shift its already-invoiced duration); only
+    times that actually changed get snapped. Likewise an entry of a since-
+    deleted project can be saved while keeping that project (its stored
+    name snapshot), instead of forcing a move to some other project."""
     _validate_range(te.started_at, te.ended_at)
     with get_db() as db:
-        started_at, ended_at = _snapped_range(te.started_at, te.ended_at, _settings(db)[1])
+        row = db.execute("SELECT * FROM time_entries WHERE id=?", (entry_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "Eintrag nicht gefunden")
+        unchanged = (
+            row["ended_at"] is not None
+            and _parse(te.started_at) == _parse(row["started_at"])
+            and _parse(te.ended_at) == _parse(row["ended_at"])
+        )
+        if unchanged:
+            started_at, ended_at = row["started_at"], row["ended_at"]
+        else:
+            started_at, ended_at = _snapped_range(te.started_at, te.ended_at, _settings(db)[1])
+        project_exists = db.execute("SELECT 1 FROM projects WHERE id=?", (te.project_id,)).fetchone()
+        if te.project_id == row["project_id"] and not project_exists:
+            project_name = row["project_name"]
+        else:
+            project_name = _project_name(db, te.project_id)
         db.execute(
             "UPDATE time_entries SET project_id=?, project_name=?, started_at=?, ended_at=?, note=? WHERE id=?",
-            (te.project_id, _project_name(db, te.project_id), started_at, ended_at, te.note, entry_id),
+            (te.project_id, project_name, started_at, ended_at, te.note, entry_id),
         )
     return {"ok": True}
 

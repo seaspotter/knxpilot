@@ -4,7 +4,7 @@ async function loadProjectManuals() {
   const ul = document.getElementById('project-manuals-list');
   ul.innerHTML = manuals.map(m => `
     <li>
-      <div><b>${m.device_name}</b>${m.description ? ` <span class="muted">— ${escapeHtml(m.description)}</span>` : ''}</div>
+      <div><b>${escapeHtml(m.device_name)}</b>${m.description ? ` <span class="muted">— ${escapeHtml(m.description)}</span>` : ''}</div>
       <div class="row" style="margin:0; gap:6px;">
         ${m.file_id
           ? `<button class="btn secondary small" onclick="viewProjectManual(${m.file_id})">Ansehen</button>
