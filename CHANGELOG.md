@@ -16,6 +16,8 @@ restructuring below — history before that is available via `git log`.
   Übergabe-Checkliste's). They appear in the Funktionscheckliste PDF and
   the Dokumentation chapter; the Dokumentation's Inhalt card flags a
   missing Systemintegrator signature.
+- **README screenshots refreshed**, plus new ones of the Gebäudestruktur
+  tree and the Dokumentation tab.
 - **"Inhalt" and "Vorschau" on the Pflichtenheft and Dokumentation tabs** —
   both tabs used to show just two buttons. They now list the PDF's
   sections/chapters in order, each with whether it's included and what's

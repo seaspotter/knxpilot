@@ -15,17 +15,22 @@ Vorlagen erzeugt.
 ## Screenshots
 
 <img src="docs/screenshots/uebersicht.png" width="800" alt="Projektübersicht">
+<img src="docs/screenshots/gebaeudestruktur.png" width="800" alt="Gebäudestruktur als Baum mit Drag &amp; Drop">
 <img src="docs/screenshots/funktionen.png" width="800" alt="Räume und Funktionen zuweisen">
 <img src="docs/screenshots/gruppenadressen.png" width="800" alt="Gruppenadressen-Baum">
 <img src="docs/screenshots/abgangsliste.png" width="800" alt="Abgangsliste mit Kanalübersicht">
 <img src="docs/screenshots/funktionscheckliste.png" width="800" alt="Funktionscheckliste zum digitalen Abhaken vor Ort">
 <img src="docs/screenshots/uebergabe-checkliste.png" width="800" alt="Übergabe-Checkliste mit Ja/Nein/Nicht-nötig-Status">
+<img src="docs/screenshots/dokumentation.png" width="800" alt="Dokumentation mit Inhalt und Stand je Kapitel">
 
 ## Funktionsumfang
 
 - **Adressierung nach festem Schema** — Hauptgruppe = Funktionskategorie,
   Mittelgruppe = Zentral/je Geschoss, Untergruppe = Adressblock je Punkt,
   mit reservierten `res`-Plätzen für spätere Erweiterung.
+- **Gebäudestruktur als Baum** — Geschoss → Raum → Verteiler per Drag &
+  Drop, optional mehrere KNX-Linien (z.B. je Wohnung) mit physikalischer
+  Adressvergabe je Linie.
 - **ETS6-kompatibler CSV-Export/-Import**, byte-genau gegen echte
   ETS6-Exporte geprüft.
 - **Abgangsliste** — automatische Kanalzuordnung Aktor ↔ Funktion je
