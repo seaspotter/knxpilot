@@ -152,8 +152,8 @@ def build_pflichtenheft_spec_story(db, project_id, company, styles):
     export can include the exact same "what was planned" content verbatim,
     alongside the checklists' actual on-site results."""
     story = []
-    preamble = (company.get("pflichtenheft_preamble") or "").strip()
-    if preamble and company.get("pflichtenheft_include_vorbemerkungen", True):
+    preamble = (company.get("specification_preamble") or "").strip()
+    if preamble and company.get("specification_include_preamble", True):
         preamble_flowables = _preamble_story(preamble, styles)
         heading = Paragraph("Vorbemerkungen", styles["SectionHeading"])
         if preamble_flowables:
@@ -171,7 +171,7 @@ def build_pflichtenheft_spec_story(db, project_id, company, styles):
         rooms = db.execute("SELECT * FROM rooms WHERE floor_id=? ORDER BY order_idx", (floor["id"],)).fetchall()
         floor_rooms.append((floor, rooms))
 
-    if company.get("pflichtenheft_include_struktur", True):
+    if company.get("specification_include_structure", True):
         directory_table = _floor_room_table(styles, [(f["name"], [r["name"] for r in rooms]) for f, rooms in floor_rooms if rooms])
         if directory_table:
             story.append(KeepTogether([
@@ -249,7 +249,7 @@ def build_pflichtenheft_spec_story(db, project_id, company, styles):
         if central_table:
             story.append(central_table)
 
-    if company.get("pflichtenheft_include_geraeteliste", True):
+    if company.get("specification_include_device_list", True):
         summary = device_summary(project_id)
         if summary:
             story.append(PageBreak())
@@ -335,14 +335,14 @@ def pflichtenheft_contents(project_id: int):
         company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
         s = pflichtenheft_stats(db, project_id)
     off = "aus (Setup → Pflichtenheft)"
-    has_preamble = bool((company.get("pflichtenheft_preamble") or "").strip())
+    has_preamble = bool((company.get("specification_preamble") or "").strip())
     sections = []
-    if not company.get("pflichtenheft_include_vorbemerkungen", True):
+    if not company.get("specification_include_preamble", True):
         sections.append(_section("Vorbemerkungen", False, off))
     else:
         sections.append(_section("Vorbemerkungen", has_preamble,
                                  "Text aus Setup → Pflichtenheft" if has_preamble else "kein Text hinterlegt (Setup → Pflichtenheft)"))
-    if not company.get("pflichtenheft_include_struktur", True):
+    if not company.get("specification_include_structure", True):
         sections.append(_section("Stockwerk- und Raumverzeichnis", False, off))
     else:
         sections.append(_section("Stockwerk- und Raumverzeichnis", s["rooms"] > 0, f"{s['floors']} Geschosse · {s['rooms']} Räume"))
@@ -353,7 +353,7 @@ def pflichtenheft_contents(project_id: int):
                              detail if s["rooms"] else "noch keine Räume angelegt", warn=bool(s["empty_rooms"]) or not s["rooms"]))
     sections.append(_section("Zentral- und Allgemeinfunktionen", s["central"] > 0,
                              f"{s['central']} Funktionen" if s["central"] else "keine"))
-    if not company.get("pflichtenheft_include_geraeteliste", True):
+    if not company.get("specification_include_device_list", True):
         sections.append(_section("Stückliste", False, off))
     else:
         sections.append(_section("Stückliste", s["device_types"] > 0,

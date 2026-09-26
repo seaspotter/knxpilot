@@ -1,0 +1,56 @@
+{% from "setup/_macros.html" import checkbox, form_open %}
+<div class="card">
+  {{ form_open("backup") }}
+  <h3>Backup <span class="info-icon" tabindex="0" data-tip="Sichert die komplette Datenbank (alle Projekte, Geräte-Katalog, Setup) als eine Datei - anders als 'Sichern (JSON)' im Projektkopf, das nur ein einzelnes Projekt exportiert. Wiederherstellen weiter unten auf dieser Seite, direkt in der App.">i</span></h3>
+  <p class="muted">Automatische und/oder manuelle Sicherung auf ein NAS/gemountetes Verzeichnis und/oder Nextcloud — beide Ziele lassen sich unabhängig voneinander aktivieren.</p>
+  <div class="row mobile-fields">
+    {{ checkbox(c, "backup_enabled", "Automatische Sicherung aktiv") }}
+    <label style="display:flex; align-items:center; gap:4px;">alle <input type="number" name="backup_interval_hours" min="1" style="width:60px;" value="{{ c.backup_interval_hours or 24 }}"> Stunden</label>
+    <label style="display:flex; align-items:center; gap:4px;">Aufbewahren: letzte <input type="number" name="backup_retention_count" min="1" style="width:60px;" value="{{ c.backup_retention_count or 14 }}"> Sicherungen
+      <span class="info-icon" tabindex="0" data-tip="Gilt je Ziel getrennt - ältere Sicherungen über dieser Anzahl werden bei jedem Lauf automatisch gelöscht.">i</span>
+    </label>
+  </div>
+  {% if last_run %}
+    <p class="muted"{% if c.backup_last_run_status != "OK" %} style="color:var(--danger);"{% endif %}>Letzte Sicherung: {{ last_run }} — {{ c.backup_last_run_status or "?" }}</p>
+  {% else %}
+    <p class="muted">Noch keine Sicherung durchgeführt.</p>
+  {% endif %}
+  <hr class="sep">
+  <h4>NAS / gemountetes Verzeichnis</h4>
+  <p class="muted">Das Verzeichnis muss im Container erreichbar sein, z.B. per Bind-Mount in <code>docker-compose.yml</code> auf einen NAS-Freigabe-Pfad (siehe DEPLOYMENT.md).</p>
+  <div class="row mobile-fields">
+    {{ checkbox(c, "backup_local_enabled", "Aktiv") }}
+    <input type="text" name="backup_local_path" class="flex-input-wide" placeholder="Pfad im Container, z.B. /app/backups" value="{{ c.backup_local_path or '' }}">
+  </div>
+  <hr class="sep">
+  <h4>Nextcloud (WebDAV)</h4>
+  <div class="row mobile-fields">
+    {{ checkbox(c, "backup_nextcloud_enabled", "Aktiv") }}
+    <input type="text" name="backup_nextcloud_url" class="flex-input-wide" placeholder="WebDAV-Ordner-URL, z.B. https://cloud.example.com/remote.php/dav/files/BENUTZER/Backups/KNXpilot/" value="{{ c.backup_nextcloud_url or '' }}">
+  </div>
+  <div class="row mobile-fields">
+    <input type="text" name="backup_nextcloud_username" placeholder="Benutzername" value="{{ c.backup_nextcloud_username or '' }}">
+    <input type="password" name="backup_nextcloud_password" placeholder="Passwort" value="{{ c.backup_nextcloud_password or '' }}" autocomplete="new-password">
+    <span class="info-icon" tabindex="0" data-tip="Ein Nextcloud-App-Passwort (Einstellungen -> Sicherheit -> Geräte & Sitzungen) statt des echten Kontopassworts wird empfohlen - lässt sich einzeln widerrufen, ohne das Hauptpasswort zu ändern.">i</span>
+  </div>
+  <div style="margin-top:10px;">
+    <button type="submit" class="btn">Speichern</button>
+    <button type="button" class="btn secondary" hx-post="/hx/setup/backup/run" hx-target="#setup-subtab-backup" hx-swap="innerHTML">Jetzt sichern</button>
+  </div>
+  </form>
+</div>
+
+<div class="card">
+  <h4>Vorhandene Sicherungen</h4>
+  <p class="muted">Listet Sicherungen aus jedem aktivierten Ziel (NAS/gemountetes Verzeichnis und/oder Nextcloud).</p>
+  <ul class="list" id="backup-files-list" hx-get="/hx/setup/backup/files" hx-trigger="load"><li class="muted">Wird geladen...</li></ul>
+</div>
+
+<div class="card">
+  <h4>Sicherung wiederherstellen (Datei hochladen)</h4>
+  <p class="muted">Ersetzt die komplette aktuelle Datenbank durch den Inhalt der hochgeladenen Datei — vorher wird automatisch eine Sicherung des aktuellen Stands angelegt, danach startet die App neu.</p>
+  <div class="row">
+    <input type="file" id="restore-upload-file" accept=".db">
+    <button type="button" class="btn danger" onclick="restoreFromUpload()">Wiederherstellen</button>
+  </div>
+</div>

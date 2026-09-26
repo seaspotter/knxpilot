@@ -67,7 +67,7 @@ the user to make explicitly, not something to introduce as a side effect of
 - **htmx migration:** tabs are being moved to server-rendered htmx one at
   a time (vendored in `frontend/vendor/`, Jinja templates in
   `backend/templates/<tab>/`, `/hx/...` endpoints in the tab's router) -
-  done so far: clarification list, time tracking. See "htmx tabs" and
+  done so far: clarification list, time tracking, Setup's settings pages. See "htmx tabs" and
   "htmx migration" (order, rules) in [`DEVELOPMENT.md`](./DEVELOPMENT.md).
   Convert only the tab the user confirmed next, and don't add other
   frontend libraries.

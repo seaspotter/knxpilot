@@ -1,0 +1,27 @@
+{% from "setup/_macros.html" import checkbox, form_open %}
+<div class="card">
+  {{ form_open("company") }}
+  <h3>Firma <span class="info-icon" tabindex="0" data-tip="Ihre Firmenangaben - werden im Programmkopf neben dem KNXpilot-Logo angezeigt und optional als Briefkopf (Logo/Name oben, Adresse/Kontakt in der Fusszeile) auf jedem PDF-Export (Abgangsliste, Geräteliste, Pflichtenheft) übernommen.">i</span></h3>
+  <p class="muted">Einmalig hinterlegen - erscheint programmweit im Kopfbereich und optional auf allen PDF-Exporten.</p>
+  {# The logo is auto-cropped in the browser (setup.js), which fills the hidden field. #}
+  <input type="hidden" name="logo_data_url" id="company-logo-data" value="{{ c.logo_data_url or '' }}">
+  <div class="row" style="align-items:center;">
+    <img id="company-logo-preview" src="{{ c.logo_data_url or '' }}" alt="Logo-Vorschau" style="{% if not c.logo_data_url %}display:none; {% endif %}height:72px; width:auto; max-width:240px; object-fit:contain; border:1px solid var(--border); border-radius:8px; background:var(--panel2); padding:4px;">
+    <div class="row" style="margin:0;">
+      <input type="file" id="company-logo-file" accept="image/*" onchange="onCompanyLogoFileChange(event)">
+      <button type="button" class="btn secondary small" onclick="clearCompanyLogo()">Logo entfernen</button>
+    </div>
+  </div>
+  <hr class="sep">
+  <div class="row"><input type="text" name="name" class="flex-input-wide" placeholder="Firmenname" value="{{ c.name or '' }}"></div>
+  <div class="row"><input type="text" name="address" class="flex-input-wide" placeholder="Adresse (Strasse, PLZ Ort)" value="{{ c.address or '' }}"></div>
+  <div class="row mobile-fields">
+    <input type="text" name="phone" style="flex:1;" placeholder="Telefon" value="{{ c.phone or '' }}">
+    <input type="text" name="email" style="flex:1;" placeholder="E-Mail" value="{{ c.email or '' }}">
+    <input type="text" name="website" style="flex:1;" placeholder="Website" value="{{ c.website or '' }}">
+  </div>
+  <hr class="sep">
+  <div class="row">{{ checkbox(c, "show_on_pdf", "Firmenlogo/-daten auf PDF-Exporten anzeigen", "Gilt global für alle PDF-Exporte in jedem Projekt - kein Schalter je Export.") }}</div>
+  <div><button type="submit" class="btn">Speichern</button></div>
+  </form>
+</div>

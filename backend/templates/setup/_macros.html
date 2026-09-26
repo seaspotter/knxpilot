@@ -1,0 +1,7 @@
+{# Shared bits of the Setup settings pages. #}
+{% macro checkbox(c, name, label, tip="") %}
+  <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" name="{{ name }}"{% if c[name] %} checked{% endif %}> {{ label }}
+    {%- if tip %}<span class="info-icon" tabindex="0" data-tip="{{ tip }}">i</span>{% endif %}</label>
+{% endmacro %}
+{# Each page is one form posting only its own fields; the answer re-renders the page (+ a toast). #}
+{% macro form_open(section) %}<form hx-post="/hx/setup/{{ section }}" hx-target="#setup-subtab-{{ section }}" hx-swap="innerHTML">{% endmacro %}

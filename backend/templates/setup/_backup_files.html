@@ -1,0 +1,18 @@
+{# Existing backups in every enabled destination. Restoring restarts the app, so it stays JS (setup.js). #}
+{% if nextcloud_error %}<li class="muted" style="color:var(--danger);">Nextcloud-Liste nicht abrufbar: {{ nextcloud_error }}</li>{% endif %}
+{% for f in files %}
+  <li>
+    <div>
+      <b>{{ f.filename }}</b>
+      <span class="pill">{{ "Nextcloud" if f.source == "nextcloud" else "NAS" }}</span>
+      {% if f.size_text %}<span class="pill">{{ f.size_text }}</span>{% endif %}
+      {% if f.modified_text %}<span class="pill">{{ f.modified_text }}</span>{% endif %}
+    </div>
+    <div>
+      <button class="btn secondary small" onclick="window.location.href = '{{ '/api/system/backups/nextcloud/' if f.source == 'nextcloud' else '/api/system/backups/' }}{{ f.filename | urlencode }}/download'">Herunterladen</button>
+      <button class="btn danger small" onclick="restoreFromExistingBackup({{ f.filename | tojson | forceescape }}, '{{ f.source }}')">Wiederherstellen</button>
+    </div>
+  </li>
+{% else %}
+  {% if not nextcloud_error %}<li class="muted">Keine Sicherungen gefunden (kein Ziel aktiv oder noch keine Sicherung gelaufen).</li>{% endif %}
+{% endfor %}

@@ -764,7 +764,11 @@ selbstverständlich.
 
 Firma, Kategorien, Funktionstypen, Zentral-/Allgemeinfunktions-Vorlagen,
 Pflichtenheft, Dokumentation, E-Mail, Backup und Zeiterfassung sind eigene Unterreiter
-innerhalb des Setup-Tabs, nicht alle gleichzeitig sichtbar.
+innerhalb des Setup-Tabs, nicht alle gleichzeitig sichtbar. Bei Firma,
+Pflichtenheft, Dokumentation, E-Mail, Backup und Zeiterfassung speichert
+**Speichern** nur die Felder dieses Unterreiters (mit kurzer Bestätigung
+"Gespeichert.") — Änderungen auf einem anderen Unterreiter bleiben davon
+unberührt.
 
 - **Firma** — Name, Adresse, Telefon, E-Mail, Website und ein Logo,
   einmalig hinterlegt. Erscheint als Badge im Programmkopf neben dem

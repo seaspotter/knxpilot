@@ -1,0 +1,22 @@
+{% from "setup/_macros.html" import checkbox, form_open %}
+<div class="card">
+  {{ form_open("specification") }}
+  <h3>Pflichtenheft</h3>
+  <p class="muted">Steuert, was im Pflichtenheft-PDF-Export erscheint (siehe Projekt-Tab Pflichtenheft).</p>
+  <div class="row">{{ checkbox(c, "specification_include_preamble", "Vorbemerkungen im PDF anzeigen") }}</div>
+  <div class="row">
+    <label style="display:block; width:100%;">
+      Vorbemerkungen-Text
+      <span class="info-icon" tabindex="0" data-tip="Allgemeiner Erklärungstext (z.B. wie Schalten/Dimmen/Jalousie/Heizung bedient werden), der als eigener Abschnitt am Anfang jedes Pflichtenheft-PDFs erscheint. Mit sinnvollem Standardtext vorbelegt - hier anpassen, oder oben abwählen, um den Abschnitt weglassen ohne den Text zu verlieren. Einfache Formatierung möglich: eine Leerzeile trennt Absätze, ## oder ### Überschrift für Zwischentitel, eine Zeile nur mit **Text** für eine kleinere Unterüberschrift, eine Zeile nur mit *Text* für einen kursiven Hinweis, --- für eine Trennlinie, - Text für Aufzählungspunkte, **Text** mitten im Satz für Fettdruck.">i</span>
+      <textarea name="specification_preamble" rows="10" style="width:100%; margin-top:6px; font-family:inherit;">{{ c.specification_preamble or '' }}</textarea>
+    </label>
+  </div>
+  <hr class="sep">
+  <p class="muted" style="margin-bottom:6px;">Zusätzliche Abschnitte im PDF (neben den Funktionen je Raum, die immer enthalten sind):</p>
+  <div class="row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+    {{ checkbox(c, "specification_include_structure", "Stockwerk- und Raumverzeichnis") }}
+    {{ checkbox(c, "specification_include_device_list", "Geräteliste (Stückliste)") }}
+  </div>
+  <div style="margin-top:10px;"><button type="submit" class="btn">Speichern</button></div>
+  </form>
+</div>

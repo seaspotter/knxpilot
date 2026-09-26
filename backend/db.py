@@ -416,7 +416,7 @@ def init_db():
             -- Klärungsliste: per-project questions/tasks/notes for site visits,
             -- optionally tied to a room and/or a specific point within it. Internal
             -- working list by default - only appears in the Pflichtenheft export if
-            -- explicitly opted into (company_profile.pflichtenheft_include_klaerungsliste).
+            -- explicitly opted into (company_profile.documentation_include_clarification_list).
             CREATE TABLE IF NOT EXISTS klaerungen (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -569,18 +569,18 @@ def init_db():
                 phone TEXT NOT NULL DEFAULT '',
                 logo_data_url TEXT NOT NULL DEFAULT '',
                 show_on_pdf INTEGER NOT NULL DEFAULT 0,
-                pflichtenheft_preamble TEXT NOT NULL DEFAULT '',
-                pflichtenheft_include_vorbemerkungen INTEGER NOT NULL DEFAULT 1,
-                pflichtenheft_include_struktur INTEGER NOT NULL DEFAULT 1,
-                pflichtenheft_include_geraeteliste INTEGER NOT NULL DEFAULT 1,
-                pflichtenheft_include_geraete_je_raum INTEGER NOT NULL DEFAULT 0,
-                pflichtenheft_include_gruppenadressen INTEGER NOT NULL DEFAULT 0,
-                pflichtenheft_include_abgangsliste INTEGER NOT NULL DEFAULT 0,
-                pflichtenheft_include_verteilerplanung INTEGER NOT NULL DEFAULT 0,
-                pflichtenheft_include_klaerungsliste INTEGER NOT NULL DEFAULT 0,
-                dokumentation_include_funktionscheckliste INTEGER NOT NULL DEFAULT 1,
-                dokumentation_include_uebergabe INTEGER NOT NULL DEFAULT 1,
-                dokumentation_include_handbuecher INTEGER NOT NULL DEFAULT 1,
+                specification_preamble TEXT NOT NULL DEFAULT '',
+                specification_include_preamble INTEGER NOT NULL DEFAULT 1,
+                specification_include_structure INTEGER NOT NULL DEFAULT 1,
+                specification_include_device_list INTEGER NOT NULL DEFAULT 1,
+                documentation_include_devices_per_room INTEGER NOT NULL DEFAULT 0,
+                documentation_include_group_addresses INTEGER NOT NULL DEFAULT 0,
+                documentation_include_circuit_list INTEGER NOT NULL DEFAULT 0,
+                documentation_include_distribution_boards INTEGER NOT NULL DEFAULT 0,
+                documentation_include_clarification_list INTEGER NOT NULL DEFAULT 0,
+                documentation_include_function_checklist INTEGER NOT NULL DEFAULT 1,
+                documentation_include_handover_checklist INTEGER NOT NULL DEFAULT 1,
+                documentation_include_manuals INTEGER NOT NULL DEFAULT 1,
                 backup_enabled INTEGER NOT NULL DEFAULT 0,
                 backup_interval_hours INTEGER NOT NULL DEFAULT 24,
                 backup_retention_count INTEGER NOT NULL DEFAULT 14,
@@ -622,6 +622,18 @@ def init_db():
         for table, old, new in [
             ("company_profile", "zeiterfassung_enabled", "time_tracking_enabled"),
             ("company_profile", "zeiterfassung_rounding_minutes", "time_tracking_rounding_minutes"),
+            ("company_profile", "pflichtenheft_preamble", "specification_preamble"),
+            ("company_profile", "pflichtenheft_include_vorbemerkungen", "specification_include_preamble"),
+            ("company_profile", "pflichtenheft_include_struktur", "specification_include_structure"),
+            ("company_profile", "pflichtenheft_include_geraeteliste", "specification_include_device_list"),
+            ("company_profile", "pflichtenheft_include_geraete_je_raum", "documentation_include_devices_per_room"),
+            ("company_profile", "pflichtenheft_include_gruppenadressen", "documentation_include_group_addresses"),
+            ("company_profile", "pflichtenheft_include_abgangsliste", "documentation_include_circuit_list"),
+            ("company_profile", "pflichtenheft_include_verteilerplanung", "documentation_include_distribution_boards"),
+            ("company_profile", "pflichtenheft_include_klaerungsliste", "documentation_include_clarification_list"),
+            ("company_profile", "dokumentation_include_funktionscheckliste", "documentation_include_function_checklist"),
+            ("company_profile", "dokumentation_include_uebergabe", "documentation_include_handover_checklist"),
+            ("company_profile", "dokumentation_include_handbuecher", "documentation_include_manuals"),
         ]:
             cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]
             if old in cols and new not in cols:
@@ -659,30 +671,30 @@ def init_db():
             ("projects", "additional_recipients",
              "ALTER TABLE projects ADD COLUMN additional_recipients TEXT NOT NULL DEFAULT ''"),
             ("klaerungen", "antwort", "ALTER TABLE klaerungen ADD COLUMN antwort TEXT NOT NULL DEFAULT ''"),
-            ("company_profile", "pflichtenheft_preamble",
-             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_preamble TEXT NOT NULL DEFAULT ''"),
-            ("company_profile", "pflichtenheft_include_vorbemerkungen",
-             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_vorbemerkungen INTEGER NOT NULL DEFAULT 1"),
-            ("company_profile", "pflichtenheft_include_struktur",
-             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_struktur INTEGER NOT NULL DEFAULT 1"),
-            ("company_profile", "pflichtenheft_include_geraeteliste",
-             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_geraeteliste INTEGER NOT NULL DEFAULT 1"),
-            ("company_profile", "pflichtenheft_include_geraete_je_raum",
-             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_geraete_je_raum INTEGER NOT NULL DEFAULT 0"),
-            ("company_profile", "pflichtenheft_include_gruppenadressen",
-             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_gruppenadressen INTEGER NOT NULL DEFAULT 0"),
-            ("company_profile", "pflichtenheft_include_abgangsliste",
-             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_abgangsliste INTEGER NOT NULL DEFAULT 0"),
-            ("company_profile", "pflichtenheft_include_verteilerplanung",
-             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_verteilerplanung INTEGER NOT NULL DEFAULT 0"),
-            ("company_profile", "pflichtenheft_include_klaerungsliste",
-             "ALTER TABLE company_profile ADD COLUMN pflichtenheft_include_klaerungsliste INTEGER NOT NULL DEFAULT 0"),
-            ("company_profile", "dokumentation_include_funktionscheckliste",
-             "ALTER TABLE company_profile ADD COLUMN dokumentation_include_funktionscheckliste INTEGER NOT NULL DEFAULT 1"),
-            ("company_profile", "dokumentation_include_uebergabe",
-             "ALTER TABLE company_profile ADD COLUMN dokumentation_include_uebergabe INTEGER NOT NULL DEFAULT 1"),
-            ("company_profile", "dokumentation_include_handbuecher",
-             "ALTER TABLE company_profile ADD COLUMN dokumentation_include_handbuecher INTEGER NOT NULL DEFAULT 1"),
+            ("company_profile", "specification_preamble",
+             "ALTER TABLE company_profile ADD COLUMN specification_preamble TEXT NOT NULL DEFAULT ''"),
+            ("company_profile", "specification_include_preamble",
+             "ALTER TABLE company_profile ADD COLUMN specification_include_preamble INTEGER NOT NULL DEFAULT 1"),
+            ("company_profile", "specification_include_structure",
+             "ALTER TABLE company_profile ADD COLUMN specification_include_structure INTEGER NOT NULL DEFAULT 1"),
+            ("company_profile", "specification_include_device_list",
+             "ALTER TABLE company_profile ADD COLUMN specification_include_device_list INTEGER NOT NULL DEFAULT 1"),
+            ("company_profile", "documentation_include_devices_per_room",
+             "ALTER TABLE company_profile ADD COLUMN documentation_include_devices_per_room INTEGER NOT NULL DEFAULT 0"),
+            ("company_profile", "documentation_include_group_addresses",
+             "ALTER TABLE company_profile ADD COLUMN documentation_include_group_addresses INTEGER NOT NULL DEFAULT 0"),
+            ("company_profile", "documentation_include_circuit_list",
+             "ALTER TABLE company_profile ADD COLUMN documentation_include_circuit_list INTEGER NOT NULL DEFAULT 0"),
+            ("company_profile", "documentation_include_distribution_boards",
+             "ALTER TABLE company_profile ADD COLUMN documentation_include_distribution_boards INTEGER NOT NULL DEFAULT 0"),
+            ("company_profile", "documentation_include_clarification_list",
+             "ALTER TABLE company_profile ADD COLUMN documentation_include_clarification_list INTEGER NOT NULL DEFAULT 0"),
+            ("company_profile", "documentation_include_function_checklist",
+             "ALTER TABLE company_profile ADD COLUMN documentation_include_function_checklist INTEGER NOT NULL DEFAULT 1"),
+            ("company_profile", "documentation_include_handover_checklist",
+             "ALTER TABLE company_profile ADD COLUMN documentation_include_handover_checklist INTEGER NOT NULL DEFAULT 1"),
+            ("company_profile", "documentation_include_manuals",
+             "ALTER TABLE company_profile ADD COLUMN documentation_include_manuals INTEGER NOT NULL DEFAULT 1"),
             ("company_profile", "backup_enabled",
              "ALTER TABLE company_profile ADD COLUMN backup_enabled INTEGER NOT NULL DEFAULT 0"),
             ("company_profile", "backup_interval_hours",
@@ -816,25 +828,25 @@ def init_db():
         (count,) = db.execute("SELECT COUNT(*) FROM company_profile").fetchone()
         if count == 0:
             db.execute(
-                "INSERT INTO company_profile (id, pflichtenheft_preamble) VALUES (1, ?)",
+                "INSERT INTO company_profile (id, specification_preamble) VALUES (1, ?)",
                 (DEFAULT_PFLICHTENHEFT_PREAMBLE,),
             )
 
         # Backfill for installs that already had a company_profile row before
-        # this default text existed (the pflichtenheft_preamble column's own
+        # this default text existed (the specification_preamble column's own
         # ADD COLUMN migration above defaults it to '', so the count==0 seed
         # above never touches them) - only fills in a still-empty field,
         # never overwrites text someone has actually written. An empty text
         # field isn't a meaningful "I want this hidden" signal anymore either,
-        # now that pflichtenheft_include_vorbemerkungen (a real checkbox)
+        # now that specification_include_preamble (a real checkbox)
         # covers that.
         db.execute(
-            "UPDATE company_profile SET pflichtenheft_preamble=? WHERE pflichtenheft_preamble=''",
+            "UPDATE company_profile SET specification_preamble=? WHERE specification_preamble=''",
             (DEFAULT_PFLICHTENHEFT_PREAMBLE,),
         )
         for old_text in _SUPERSEDED_PFLICHTENHEFT_PREAMBLES:
             db.execute(
-                "UPDATE company_profile SET pflichtenheft_preamble=? WHERE pflichtenheft_preamble=?",
+                "UPDATE company_profile SET specification_preamble=? WHERE specification_preamble=?",
                 (DEFAULT_PFLICHTENHEFT_PREAMBLE, old_text),
             )
 

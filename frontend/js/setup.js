@@ -1,150 +1,38 @@
-// ---------- Setup: Company profile ----------
-let COMPANY_LOGO_DATA_URL = '';
+// ---------- Setup: settings pages (company, specification, documentation, email, time tracking, backup) ----------
+// Rendered server-side with htmx (backend/templates/setup/, /hx/setup/...):
+// each page is a form saving only its own fields. What stays here: loading a
+// page when its sub-tab opens, the header branding/timer settings that
+// depend on the company profile, the logo auto-crop (canvas, browser only)
+// and restoring a backup (the app restarts, see update.js).
+const SETUP_HX_SECTIONS = ['company', 'specification', 'documentation', 'email', 'time-tracking', 'backup'];
 
+function loadSetupSection(name) {
+  if (!SETUP_HX_SECTIONS.includes(name)) return;
+  return htmx.ajax('GET', `/hx/setup/${name}`, {target: `#setup-subtab-${name}`, swap: 'innerHTML'});
+}
+
+function loadActiveSetupSection() {
+  const active = document.querySelector('#setup-subnav button.active');
+  return active ? loadSetupSection(active.dataset.subtab) : undefined;
+}
+
+// Header logo/name and the time tracking switch/grid - on page load and
+// whenever a settings page was saved (HX-Trigger "company-profile-changed").
 async function loadCompanyProfile() {
   const c = await api('/company-profile');
-  document.getElementById('company-name').value = c.name || '';
-  document.getElementById('company-address').value = c.address || '';
-  document.getElementById('company-phone').value = c.phone || '';
-  document.getElementById('company-email').value = c.email || '';
-  document.getElementById('company-website').value = c.website || '';
-  document.getElementById('company-show-on-pdf').checked = !!c.show_on_pdf;
-  document.getElementById('company-pflichtenheft-preamble').value = c.pflichtenheft_preamble || '';
-  document.getElementById('pht-include-vorbemerkungen').checked = !!c.pflichtenheft_include_vorbemerkungen;
-  document.getElementById('pht-include-struktur').checked = !!c.pflichtenheft_include_struktur;
-  document.getElementById('pht-include-geraeteliste').checked = !!c.pflichtenheft_include_geraeteliste;
-  document.getElementById('pht-include-geraete-je-raum').checked = !!c.pflichtenheft_include_geraete_je_raum;
-  document.getElementById('pht-include-gruppenadressen').checked = !!c.pflichtenheft_include_gruppenadressen;
-  document.getElementById('pht-include-abgangsliste').checked = !!c.pflichtenheft_include_abgangsliste;
-  document.getElementById('pht-include-verteilerplanung').checked = !!c.pflichtenheft_include_verteilerplanung;
-  document.getElementById('pht-include-klaerungsliste').checked = !!c.pflichtenheft_include_klaerungsliste;
-  document.getElementById('doku-include-funktionscheckliste').checked = !!c.dokumentation_include_funktionscheckliste;
-  document.getElementById('doku-include-uebergabe').checked = !!c.dokumentation_include_uebergabe;
-  document.getElementById('doku-include-handbuecher').checked = !!c.dokumentation_include_handbuecher;
-  document.getElementById('smtp-enabled').checked = !!c.smtp_enabled;
-  document.getElementById('smtp-host').value = c.smtp_host || '';
-  document.getElementById('smtp-port').value = c.smtp_port || 587;
-  document.getElementById('smtp-encryption').value = c.smtp_encryption || 'starttls';
-  document.getElementById('smtp-username').value = c.smtp_username || '';
-  document.getElementById('smtp-password').value = c.smtp_password || '';
-  document.getElementById('smtp-from-email').value = c.smtp_from_email || '';
-  document.getElementById('smtp-cc-self-default').checked = !!c.smtp_cc_self_default;
-  document.getElementById('tt-enabled').checked = !!c.time_tracking_enabled;
-  document.getElementById('tt-rounding-minutes').value = String(c.time_tracking_rounding_minutes || 15);
   applyTimeTrackingSettings(c);
-  document.getElementById('backup-enabled').checked = !!c.backup_enabled;
-  document.getElementById('backup-interval-hours').value = c.backup_interval_hours || 24;
-  document.getElementById('backup-retention-count').value = c.backup_retention_count || 14;
-  document.getElementById('backup-local-enabled').checked = !!c.backup_local_enabled;
-  document.getElementById('backup-local-path').value = c.backup_local_path || '';
-  document.getElementById('backup-nextcloud-enabled').checked = !!c.backup_nextcloud_enabled;
-  document.getElementById('backup-nextcloud-url').value = c.backup_nextcloud_url || '';
-  document.getElementById('backup-nextcloud-username').value = c.backup_nextcloud_username || '';
-  document.getElementById('backup-nextcloud-password').value = c.backup_nextcloud_password || '';
-  renderBackupStatus(c);
-  COMPANY_LOGO_DATA_URL = c.logo_data_url || '';
-  updateCompanyLogoPreview();
   renderHeaderCompanyBranding(c);
 }
+document.addEventListener('company-profile-changed', () => { loadCompanyProfile().catch(() => {}); });
 
-function renderBackupStatus(c) {
-  const el = document.getElementById('backup-status-text');
-  if (!c.backup_last_run_at) {
-    el.textContent = 'Noch keine Sicherung durchgeführt.';
-    return;
-  }
-  const when = new Date(c.backup_last_run_at).toLocaleString('de-DE');
-  el.textContent = `Letzte Sicherung: ${when} — ${c.backup_last_run_status || '?'}`;
-  el.style.color = c.backup_last_run_status === 'OK' ? '' : 'var(--danger)';
+function renderHeaderCompanyBranding(c) {
+  const el = document.getElementById('header-company-brand');
+  if (!c || (!c.name && !c.logo_data_url)) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.innerHTML = `${c.logo_data_url ? `<img src="${escapeAttr(c.logo_data_url)}" alt="${escapeAttr(c.name || 'Firmenlogo')}">` : ''}${c.name ? `<span>${escapeHtml(c.name)}</span>` : ''}`;
+  el.style.display = 'flex';
 }
 
-async function runBackupNow() {
-  const result = await api('/system/backup', {method: 'POST'});
-  await loadCompanyProfile();
-  await loadBackupFilesList();
-  if (result.ok) {
-    showToast('Sicherung erfolgreich.', 'success');
-  } else {
-    const detail = Object.entries(result.results).map(([k, v]) => `${k}: ${v}`).join('\n');
-    showToast(`Sicherung fehlgeschlagen:\n${detail}`, 'error', {sticky: true});
-  }
-}
-
-// ---------- Setup: Backup - existing files + restore ----------
-function humanFileSize(bytes) {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
-  let i = -1;
-  do { bytes /= 1024; i++; } while (bytes >= 1024 && i < units.length - 1);
-  return `${bytes.toFixed(1)} ${units[i]}`;
-}
-
-async function loadBackupFilesList() {
-  const data = await api('/system/backups');
-  const ul = document.getElementById('backup-files-list');
-  const rows = [
-    ...data.local.map(f => ({...f, source: 'local'})),
-    ...data.nextcloud.map(f => ({...f, source: 'nextcloud'})),
-  ].sort((a, b) => b.filename.localeCompare(a.filename));
-
-  const errorHtml = data.nextcloud_error
-    ? `<li class="muted" style="color:var(--danger);">Nextcloud-Liste nicht abrufbar: ${data.nextcloud_error}</li>`
-    : '';
-  const rowsHtml = rows.map(f => `
-    <li>
-      <div>
-        <b>${f.filename}</b>
-        <span class="pill">${f.source === 'nextcloud' ? 'Nextcloud' : 'NAS'}</span>
-        ${f.size ? `<span class="pill">${humanFileSize(f.size)}</span>` : ''}
-        ${f.modified_at ? `<span class="pill">${new Date(f.modified_at).toLocaleString('de-DE')}</span>` : ''}
-      </div>
-      <div>
-        <button class="btn secondary small" onclick="downloadBackupFile('${f.filename}', '${f.source}')">Herunterladen</button>
-        <button class="btn danger small" onclick="restoreFromExistingBackup('${f.filename}', '${f.source}')">Wiederherstellen</button>
-      </div>
-    </li>
-  `).join('');
-  ul.innerHTML = errorHtml + (rowsHtml || (errorHtml ? '' : '<li class="muted">Keine Sicherungen gefunden (kein Ziel aktiv oder noch keine Sicherung gelaufen).</li>'));
-}
-
-function downloadBackupFile(filename, source) {
-  const path = source === 'nextcloud'
-    ? `/api/system/backups/nextcloud/${encodeURIComponent(filename)}/download`
-    : `/api/system/backups/${encodeURIComponent(filename)}/download`;
-  window.location.href = path;
-}
-
-const RESTORE_CONFIRM_TEXT = (label) =>
-  `Sicherung "${label}" wiederherstellen?\n\nDie komplette aktuelle Datenbank wird ersetzt (vorher wird automatisch eine Sicherung des aktuellen Stands angelegt) und die App startet danach neu. Nicht rückgängig zu machen, ausser über die eben angelegte Sicherung.`;
-
-async function restoreFromExistingBackup(filename, source) {
-  if (!(await showConfirm(RESTORE_CONFIRM_TEXT(filename), {danger: true}))) return;
-  const path = source === 'nextcloud' ? `/system/restore-nextcloud/${encodeURIComponent(filename)}` : `/system/restore-local/${encodeURIComponent(filename)}`;
-  await performRestore(() => api(path, {method: 'POST'}));
-}
-
-async function restoreFromUpload() {
-  const fileInput = document.getElementById('restore-upload-file');
-  const file = fileInput.files[0];
-  if (!file) return showToast('Bitte zuerst eine Sicherungsdatei auswählen', 'warning');
-  if (!(await showConfirm(RESTORE_CONFIRM_TEXT(file.name), {danger: true}))) return;
-  const formData = new FormData();
-  formData.append('file', file);
-  await performRestore(() => api('/system/restore-upload', {method: 'POST', body: formData}));
-}
-
-async function performRestore(triggerFn) {
-  try {
-    const result = await triggerFn();
-    if (result.restarting) {
-      showToast('Wiederhergestellt. App startet neu...', 'info', {sticky: true});
-      await waitForRestartThenReload();
-    }
-  } catch (e) {
-    showToast('Wiederherstellen fehlgeschlagen: ' + e.message, 'error', {sticky: true});
-  }
-}
-
+// ---------- Company logo (auto-cropped in the browser, stored as a data URL) ----------
 function autocropLogoDataUrl(dataUrl) {
   // Many logo files ship with transparent or white padding baked around the
   // actual mark, which makes them look tiny once fit into a small header/PDF
@@ -208,85 +96,62 @@ function autocropLogoDataUrl(dataUrl) {
   });
 }
 
+function setCompanyLogo(dataUrl) {
+  document.getElementById('company-logo-data').value = dataUrl;
+  const img = document.getElementById('company-logo-preview');
+  img.src = dataUrl;
+  img.style.display = dataUrl ? '' : 'none';
+}
+
 function onCompanyLogoFileChange(event) {
   const file = event.target.files[0];
   if (!file) return;
-  const MAX_BYTES = 2 * 1024 * 1024; // 2 MB - round-trips as base64 on every Setup load
+  const MAX_BYTES = 2 * 1024 * 1024; // 2 MB - stored as base64 on the company profile
   if (file.size > MAX_BYTES) {
     showToast('Logo ist zu gross (max. 2 MB). Bitte ein kleineres Bild wählen.', 'warning');
     event.target.value = '';
     return;
   }
   const reader = new FileReader();
-  reader.onload = async () => {
-    COMPANY_LOGO_DATA_URL = await autocropLogoDataUrl(reader.result);
-    updateCompanyLogoPreview();
-  };
+  reader.onload = async () => setCompanyLogo(await autocropLogoDataUrl(reader.result));
   reader.readAsDataURL(file);
 }
 
 function clearCompanyLogo() {
-  COMPANY_LOGO_DATA_URL = '';
   document.getElementById('company-logo-file').value = '';
-  updateCompanyLogoPreview();
+  setCompanyLogo('');
 }
 
-function updateCompanyLogoPreview() {
-  const img = document.getElementById('company-logo-preview');
-  if (COMPANY_LOGO_DATA_URL) { img.src = COMPANY_LOGO_DATA_URL; img.style.display = ''; }
-  else { img.src = ''; img.style.display = 'none'; }
+// ---------- Backup: restore (the app restarts afterwards) ----------
+const RESTORE_CONFIRM_TEXT = (label) =>
+  `Sicherung "${label}" wiederherstellen?\n\nDie komplette aktuelle Datenbank wird ersetzt (vorher wird automatisch eine Sicherung des aktuellen Stands angelegt) und die App startet danach neu. Nicht rückgängig zu machen, ausser über die eben angelegte Sicherung.`;
+
+async function restoreFromExistingBackup(filename, source) {
+  if (!(await showConfirm(RESTORE_CONFIRM_TEXT(filename), {danger: true}))) return;
+  const path = source === 'nextcloud' ? `/system/restore-nextcloud/${encodeURIComponent(filename)}` : `/system/restore-local/${encodeURIComponent(filename)}`;
+  await performRestore(() => api(path, {method: 'POST'}));
 }
 
-async function saveCompanyProfile() {
-  const body = JSON.stringify({
-    name: document.getElementById('company-name').value.trim(),
-    address: document.getElementById('company-address').value.trim(),
-    phone: document.getElementById('company-phone').value.trim(),
-    email: document.getElementById('company-email').value.trim(),
-    website: document.getElementById('company-website').value.trim(),
-    logo_data_url: COMPANY_LOGO_DATA_URL,
-    show_on_pdf: document.getElementById('company-show-on-pdf').checked,
-    pflichtenheft_preamble: document.getElementById('company-pflichtenheft-preamble').value.trim(),
-    pflichtenheft_include_vorbemerkungen: document.getElementById('pht-include-vorbemerkungen').checked,
-    pflichtenheft_include_struktur: document.getElementById('pht-include-struktur').checked,
-    pflichtenheft_include_geraeteliste: document.getElementById('pht-include-geraeteliste').checked,
-    pflichtenheft_include_geraete_je_raum: document.getElementById('pht-include-geraete-je-raum').checked,
-    pflichtenheft_include_gruppenadressen: document.getElementById('pht-include-gruppenadressen').checked,
-    pflichtenheft_include_abgangsliste: document.getElementById('pht-include-abgangsliste').checked,
-    pflichtenheft_include_verteilerplanung: document.getElementById('pht-include-verteilerplanung').checked,
-    pflichtenheft_include_klaerungsliste: document.getElementById('pht-include-klaerungsliste').checked,
-    dokumentation_include_funktionscheckliste: document.getElementById('doku-include-funktionscheckliste').checked,
-    dokumentation_include_uebergabe: document.getElementById('doku-include-uebergabe').checked,
-    dokumentation_include_handbuecher: document.getElementById('doku-include-handbuecher').checked,
-    smtp_enabled: document.getElementById('smtp-enabled').checked,
-    smtp_host: document.getElementById('smtp-host').value.trim(),
-    smtp_port: parseInt(document.getElementById('smtp-port').value, 10) || 587,
-    smtp_encryption: document.getElementById('smtp-encryption').value,
-    smtp_username: document.getElementById('smtp-username').value.trim(),
-    smtp_password: document.getElementById('smtp-password').value,
-    smtp_from_email: document.getElementById('smtp-from-email').value.trim(),
-    smtp_cc_self_default: document.getElementById('smtp-cc-self-default').checked,
-    time_tracking_enabled: document.getElementById('tt-enabled').checked,
-    time_tracking_rounding_minutes: parseInt(document.getElementById('tt-rounding-minutes').value, 10) || 15,
-    backup_enabled: document.getElementById('backup-enabled').checked,
-    backup_interval_hours: parseInt(document.getElementById('backup-interval-hours').value) || 24,
-    backup_retention_count: parseInt(document.getElementById('backup-retention-count').value) || 14,
-    backup_local_enabled: document.getElementById('backup-local-enabled').checked,
-    backup_local_path: document.getElementById('backup-local-path').value.trim(),
-    backup_nextcloud_enabled: document.getElementById('backup-nextcloud-enabled').checked,
-    backup_nextcloud_url: document.getElementById('backup-nextcloud-url').value.trim(),
-    backup_nextcloud_username: document.getElementById('backup-nextcloud-username').value.trim(),
-    backup_nextcloud_password: document.getElementById('backup-nextcloud-password').value,
-  });
-  await api('/company-profile', {method:'PUT', headers:{'Content-Type':'application/json'}, body});
-  await loadCompanyProfile();
+async function restoreFromUpload() {
+  const fileInput = document.getElementById('restore-upload-file');
+  const file = fileInput.files[0];
+  if (!file) return showToast('Bitte zuerst eine Sicherungsdatei auswählen', 'warning');
+  if (!(await showConfirm(RESTORE_CONFIRM_TEXT(file.name), {danger: true}))) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  await performRestore(() => api('/system/restore-upload', {method: 'POST', body: formData}));
 }
 
-function renderHeaderCompanyBranding(c) {
-  const el = document.getElementById('header-company-brand');
-  if (!c || (!c.name && !c.logo_data_url)) { el.style.display = 'none'; el.innerHTML = ''; return; }
-  el.innerHTML = `${c.logo_data_url ? `<img src="${c.logo_data_url}" alt="${c.name || 'Firmenlogo'}">` : ''}${c.name ? `<span>${c.name}</span>` : ''}`;
-  el.style.display = 'flex';
+async function performRestore(triggerFn) {
+  try {
+    const result = await triggerFn();
+    if (result.restarting) {
+      showToast('Wiederhergestellt. App startet neu...', 'info', {sticky: true});
+      await waitForRestartThenReload();
+    }
+  } catch (e) {
+    showToast('Wiederherstellen fehlgeschlagen: ' + e.message, 'error', {sticky: true});
+  }
 }
 
 // ---------- Setup: Categories ----------

@@ -11,12 +11,10 @@ project's own Handbücher tab/project_manuals store, never merged into
 this document), plus whichever optional as-built sections (Abgangsliste,
 Verteilerplanung, Gruppenadressen, Klärungsliste, Geräte je Raum) are
 toggled on in Setup -> Dokumentation. The three checklist-style chapters
-are themselves toggleable via
-dokumentation_include_funktionscheckliste/_uebergabe/_handbuecher
-(default on); the five as-built sections reuse the existing
-pflichtenheft_include_* company_profile columns as-is - moved *usage*
-only, not renamed, since renaming would need a DB migration for a purely
-internal wiring change.
+are themselves toggleable via the company_profile columns
+documentation_include_function_checklist/_handover_checklist/_manuals
+(default on), the five as-built sections via documentation_include_*
+(default off) - see DOKU_CHAPTERS below.
 
 The export opens with an Inhaltsverzeichnis whose entries are real
 clickable internal PDF links (ReportLab's `<a href="#anchor">`/
@@ -220,14 +218,14 @@ def _uebergabe_story(db, project_id, styles, status_map):
 # narrative sections above it.
 DOKU_CHAPTERS = [
     ("pflichtenheft", "Pflichtenheft", None, True),
-    ("funktionscheckliste", "Funktionscheckliste — Testergebnisse", "dokumentation_include_funktionscheckliste", True),
-    ("uebergabe", "Übergabe-Checkliste — Ergebnisse", "dokumentation_include_uebergabe", True),
-    ("handbuecher", "Handbücher", "dokumentation_include_handbuecher", True),
-    ("abgangsliste", "Abgangsliste", "pflichtenheft_include_abgangsliste", False),
-    ("verteilerplanung", "Verteilerplanung", "pflichtenheft_include_verteilerplanung", False),
-    ("geraete-je-raum", "Geräte je Raum", "pflichtenheft_include_geraete_je_raum", False),
-    ("klaerungsliste", "Klärungsliste", "pflichtenheft_include_klaerungsliste", False),
-    ("gruppenadressen", "Gruppenadressen", "pflichtenheft_include_gruppenadressen", False),
+    ("funktionscheckliste", "Funktionscheckliste — Testergebnisse", "documentation_include_function_checklist", True),
+    ("uebergabe", "Übergabe-Checkliste — Ergebnisse", "documentation_include_handover_checklist", True),
+    ("handbuecher", "Handbücher", "documentation_include_manuals", True),
+    ("abgangsliste", "Abgangsliste", "documentation_include_circuit_list", False),
+    ("verteilerplanung", "Verteilerplanung", "documentation_include_distribution_boards", False),
+    ("geraete-je-raum", "Geräte je Raum", "documentation_include_devices_per_room", False),
+    ("klaerungsliste", "Klärungsliste", "documentation_include_clarification_list", False),
+    ("gruppenadressen", "Gruppenadressen", "documentation_include_group_addresses", False),
 ]
 
 

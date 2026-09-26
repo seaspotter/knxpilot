@@ -98,13 +98,13 @@ backend/
   ga_logic.py       — group-address tree generation, circuits, per-room/central function listings (used by Pflichtenheft and the checklists)
   pdf_design.py     — shared PDF look (banner, table style, page numbers, letterhead); build_pdf_bytes()/build_pdf_bytes_two_pass() are the raw-bytes builders every export (and email.py's send action) go through
   templating.py     — Jinja2 setup for the htmx tabs (templates/, autoescaped)
-  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: klaerungsliste/, time_tracking/)
+  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: klaerungsliste/, time_tracking/, setup/)
   project_transfer.py — per-project JSON backup/restore + duplicate (what's included, name/position-based references)
   pa_assign.py      — physical-address auto-assign (bucket convention, per KNX line) + line coupler/power supply detection
   email_sender.py   — SMTP mechanics (stdlib smtplib) behind routers/email.py's send-by-mail action
   utils.py          — small dependency-free helpers
   routers/
-    setup.py          — company profile (incl. SMTP credentials), categories, point types, central templates (Setup tab)
+    setup.py          — Setup tab: settings pages on the company profile (htmx: /hx/setup/<page>, SETTINGS_SECTIONS), categories, point types, central templates
     geraete.py         — global device catalog + curated manual_url per device (Geräte Katalog tab: Katalog + Handbücher sub-tabs)
     projects.py        — projects, floors/rooms/points (incl. tree moves with GA-impact dry run), backup/restore (Projekte tab: Gebäudestruktur sub-tab + project CRUD)
     linien.py          — optional KNX lines (Bereich.Linie) + floor/room/actuator line assignment, per-line device counts/warnings (Gebäudestruktur sub-tab)
@@ -127,7 +127,7 @@ frontend/
     api.js            — shared api() fetch wrapper, global state vars, theme toggle, tab-switch wiring
     ui.js              — toasts, modals, shared Markdown renderer (used by Update + Hilfe)
     send_email.js      — shared "Per E-Mail senden" modal, called from Pflichtenheft/Funktionscheckliste/Übergabe-Checkliste/Dokumentation
-    setup.js           — company profile (incl. SMTP settings) + categories + point types + central templates
+    setup.js           — loads the htmx settings pages, header branding, logo auto-crop, backup restore; categories + point types + central templates (classic JS, next migration step)
     geraete.js         — actor types catalog + Handbücher sub-tab (per-device manual URL)
     projekte.js        — project CRUD/meta, Geschoss/Raum/Verteiler tree with drag & drop (Gebäudestruktur sub-tab)
     linien.js          — optional KNX lines card + the line <select>s used by projekte.js/abgangsliste.js (Gebäudestruktur sub-tab)
@@ -220,11 +220,13 @@ rarely need to touch anything else.
   backdrop click, `closeHxModal()` or the server's `HX-Trigger:
   hx-modal-close`); a list can refresh itself after any mutation via
   `hx-trigger="<event> from:body"` plus an `HX-Trigger: <event>` header,
-  so mutation endpoints don't need to know the current filters.
+  so mutation endpoints don't need to know the current filters; a response
+  can show a toast via `HX-Trigger: {"show-toast": {"message", "level"}}`.
 - **htmx migration** (agreed with the user 2026-09-26): one tab per change,
   each renamed to English in the same change, with pytest coverage for its
   `/hx/` endpoints and a browser pass; confirm each next tab with the
-  user. Order: ~~clarification list~~, ~~time tracking~~, Setup sub-tabs,
+  user. Order: ~~clarification list~~, ~~time tracking~~, Setup sub-tabs
+  (~~settings pages~~, categories/function types/central templates),
   device catalog + manuals, overview/specification/documentation,
   function + handover checklists, functions + group addresses, device
   planning + distribution board planning + labels, circuit list, building

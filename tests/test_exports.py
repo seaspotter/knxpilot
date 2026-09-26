@@ -21,9 +21,9 @@ def project(client):
     ok(client.post("/api/time-entries", json={"project_id": pid, "started_at": "2026-09-25T08:00:00Z",
                                                "ended_at": "2026-09-25T09:00:00Z", "note": "Notiz & <mehr>"}))
     cp = ok(client.get("/api/company-profile"))
-    cp.update(name="Firma & Co <GmbH>", show_on_pdf=True, pflichtenheft_include_klaerungsliste=True,
-              pflichtenheft_include_geraete_je_raum=True, pflichtenheft_include_abgangsliste=True,
-              pflichtenheft_include_gruppenadressen=True, pflichtenheft_include_verteilerplanung=True)
+    cp.update(name="Firma & Co <GmbH>", show_on_pdf=True, documentation_include_clarification_list=True,
+              documentation_include_devices_per_room=True, documentation_include_circuit_list=True,
+              documentation_include_group_addresses=True, documentation_include_distribution_boards=True)
     ok(client.put("/api/company-profile", json=cp))
     return pid
 

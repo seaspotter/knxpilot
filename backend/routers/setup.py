@@ -1,12 +1,23 @@
-"""Categories / Point types / Central templates / Company profile ("Setup" tab)."""
+"""Categories / Point types / Central templates / Company profile ("Setup" tab).
+
+The six settings pages that live on the company_profile row (company,
+specification, documentation, email, time tracking, backup) are rendered
+server-side with htmx: templates in backend/templates/setup/, /hx/setup/...
+endpoints at the end of this file. Each page saves only its own fields
+(SETTINGS_SECTIONS). The JSON company-profile endpoints stay for the header
+branding/timer settings (setup.js) and the tests.
+"""
 import io
 import json
 import sqlite3
+from datetime import datetime
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
+from ..backup import list_local_backups, list_nextcloud_backups, run_backup_now
 from ..db import get_db
+from ..templating import client_zone, templates
 from ..models import PointTypeIn, CentralTemplateIn, CompanyProfileIn, CategoryRenameIn
 from ..utils import content_disposition
 
@@ -31,18 +42,18 @@ def get_company_profile():
         return {
             "id": r["id"], "name": r["name"], "address": r["address"], "email": r["email"],
             "website": r["website"], "phone": r["phone"], "logo_data_url": r["logo_data_url"],
-            "show_on_pdf": bool(r["show_on_pdf"]), "pflichtenheft_preamble": r["pflichtenheft_preamble"],
-            "pflichtenheft_include_vorbemerkungen": bool(r["pflichtenheft_include_vorbemerkungen"]),
-            "pflichtenheft_include_struktur": bool(r["pflichtenheft_include_struktur"]),
-            "pflichtenheft_include_geraeteliste": bool(r["pflichtenheft_include_geraeteliste"]),
-            "pflichtenheft_include_geraete_je_raum": bool(r["pflichtenheft_include_geraete_je_raum"]),
-            "pflichtenheft_include_gruppenadressen": bool(r["pflichtenheft_include_gruppenadressen"]),
-            "pflichtenheft_include_abgangsliste": bool(r["pflichtenheft_include_abgangsliste"]),
-            "pflichtenheft_include_verteilerplanung": bool(r["pflichtenheft_include_verteilerplanung"]),
-            "pflichtenheft_include_klaerungsliste": bool(r["pflichtenheft_include_klaerungsliste"]),
-            "dokumentation_include_funktionscheckliste": bool(r["dokumentation_include_funktionscheckliste"]),
-            "dokumentation_include_uebergabe": bool(r["dokumentation_include_uebergabe"]),
-            "dokumentation_include_handbuecher": bool(r["dokumentation_include_handbuecher"]),
+            "show_on_pdf": bool(r["show_on_pdf"]), "specification_preamble": r["specification_preamble"],
+            "specification_include_preamble": bool(r["specification_include_preamble"]),
+            "specification_include_structure": bool(r["specification_include_structure"]),
+            "specification_include_device_list": bool(r["specification_include_device_list"]),
+            "documentation_include_devices_per_room": bool(r["documentation_include_devices_per_room"]),
+            "documentation_include_group_addresses": bool(r["documentation_include_group_addresses"]),
+            "documentation_include_circuit_list": bool(r["documentation_include_circuit_list"]),
+            "documentation_include_distribution_boards": bool(r["documentation_include_distribution_boards"]),
+            "documentation_include_clarification_list": bool(r["documentation_include_clarification_list"]),
+            "documentation_include_function_checklist": bool(r["documentation_include_function_checklist"]),
+            "documentation_include_handover_checklist": bool(r["documentation_include_handover_checklist"]),
+            "documentation_include_manuals": bool(r["documentation_include_manuals"]),
             "backup_enabled": bool(r["backup_enabled"]),
             "backup_interval_hours": r["backup_interval_hours"],
             "backup_retention_count": r["backup_retention_count"],
@@ -74,14 +85,14 @@ def update_company_profile(cp: CompanyProfileIn):
     with get_db() as db:
         db.execute(
             "UPDATE company_profile SET name=?, address=?, email=?, website=?, phone=?, "
-            "logo_data_url=?, show_on_pdf=?, pflichtenheft_preamble=?, "
-            "pflichtenheft_include_vorbemerkungen=?, "
-            "pflichtenheft_include_struktur=?, pflichtenheft_include_geraeteliste=?, "
-            "pflichtenheft_include_geraete_je_raum=?, "
-            "pflichtenheft_include_gruppenadressen=?, pflichtenheft_include_abgangsliste=?, "
-            "pflichtenheft_include_verteilerplanung=?, pflichtenheft_include_klaerungsliste=?, "
-            "dokumentation_include_funktionscheckliste=?, dokumentation_include_uebergabe=?, "
-            "dokumentation_include_handbuecher=?, "
+            "logo_data_url=?, show_on_pdf=?, specification_preamble=?, "
+            "specification_include_preamble=?, "
+            "specification_include_structure=?, specification_include_device_list=?, "
+            "documentation_include_devices_per_room=?, "
+            "documentation_include_group_addresses=?, documentation_include_circuit_list=?, "
+            "documentation_include_distribution_boards=?, documentation_include_clarification_list=?, "
+            "documentation_include_function_checklist=?, documentation_include_handover_checklist=?, "
+            "documentation_include_manuals=?, "
             "backup_enabled=?, backup_interval_hours=?, backup_retention_count=?, "
             "backup_local_enabled=?, backup_local_path=?, "
             "backup_nextcloud_enabled=?, backup_nextcloud_url=?, "
@@ -90,14 +101,14 @@ def update_company_profile(cp: CompanyProfileIn):
             "smtp_username=?, smtp_password=?, smtp_from_email=?, smtp_cc_self_default=?, "
             "time_tracking_enabled=?, time_tracking_rounding_minutes=? WHERE id=1",
             (cp.name, cp.address, cp.email, cp.website, cp.phone, cp.logo_data_url,
-             int(cp.show_on_pdf), cp.pflichtenheft_preamble,
-             int(cp.pflichtenheft_include_vorbemerkungen),
-             int(cp.pflichtenheft_include_struktur), int(cp.pflichtenheft_include_geraeteliste),
-             int(cp.pflichtenheft_include_geraete_je_raum),
-             int(cp.pflichtenheft_include_gruppenadressen), int(cp.pflichtenheft_include_abgangsliste),
-             int(cp.pflichtenheft_include_verteilerplanung), int(cp.pflichtenheft_include_klaerungsliste),
-             int(cp.dokumentation_include_funktionscheckliste), int(cp.dokumentation_include_uebergabe),
-             int(cp.dokumentation_include_handbuecher),
+             int(cp.show_on_pdf), cp.specification_preamble,
+             int(cp.specification_include_preamble),
+             int(cp.specification_include_structure), int(cp.specification_include_device_list),
+             int(cp.documentation_include_devices_per_room),
+             int(cp.documentation_include_group_addresses), int(cp.documentation_include_circuit_list),
+             int(cp.documentation_include_distribution_boards), int(cp.documentation_include_clarification_list),
+             int(cp.documentation_include_function_checklist), int(cp.documentation_include_handover_checklist),
+             int(cp.documentation_include_manuals),
              int(cp.backup_enabled), cp.backup_interval_hours, cp.backup_retention_count,
              int(cp.backup_local_enabled), cp.backup_local_path,
              int(cp.backup_nextcloud_enabled), cp.backup_nextcloud_url,
@@ -417,3 +428,136 @@ def import_central_templates_json(payload: dict):
                 )
                 imported += 1
         return {"imported": imported, "updated": updated, "skipped": skipped}
+
+
+# ---------- htmx: settings pages on the company_profile row ----------
+# Fields each settings page saves - (column, kind); a checkbox missing from
+# the submitted form means "off". Every page only ever writes its own
+# columns, so saving one page can't overwrite what's typed on another.
+SETTINGS_SECTIONS = {
+    "company": [("name", "text"), ("address", "text"), ("phone", "text"), ("email", "text"), ("website", "text"),
+                ("logo_data_url", "text"), ("show_on_pdf", "bool")],
+    "specification": [("specification_preamble", "text"), ("specification_include_preamble", "bool"),
+                      ("specification_include_structure", "bool"), ("specification_include_device_list", "bool")],
+    "documentation": [(c, "bool") for c in (
+        "documentation_include_function_checklist", "documentation_include_handover_checklist",
+        "documentation_include_manuals", "documentation_include_devices_per_room",
+        "documentation_include_group_addresses", "documentation_include_circuit_list",
+        "documentation_include_distribution_boards", "documentation_include_clarification_list")],
+    "email": [("smtp_enabled", "bool"), ("smtp_host", "text"), ("smtp_port", "int"), ("smtp_encryption", "text"),
+              ("smtp_username", "text"), ("smtp_password", "secret"), ("smtp_from_email", "text"),
+              ("smtp_cc_self_default", "bool")],
+    "time-tracking": [("time_tracking_enabled", "bool"), ("time_tracking_rounding_minutes", "int")],
+    "backup": [("backup_enabled", "bool"), ("backup_interval_hours", "int"), ("backup_retention_count", "int"),
+               ("backup_local_enabled", "bool"), ("backup_local_path", "text"), ("backup_nextcloud_enabled", "bool"),
+               ("backup_nextcloud_url", "text"), ("backup_nextcloud_username", "text"),
+               ("backup_nextcloud_password", "secret")],
+}
+
+
+def _company(db):
+    return dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
+
+
+def _validate(values):
+    if "time_tracking_rounding_minutes" in values and values["time_tracking_rounding_minutes"] not in (1, 15, 30):
+        raise HTTPException(400, "Rundung muss 1, 15 oder 30 Minuten sein")
+    for col in ("backup_interval_hours", "backup_retention_count"):
+        if col in values and values[col] < 1:
+            raise HTTPException(400, "Intervall und Aufbewahrung müssen mindestens 1 sein")
+    if "smtp_port" in values and not 1 <= values["smtp_port"] <= 65535:
+        raise HTTPException(400, "Ungültiger SMTP-Port")
+    if values.get("smtp_encryption", "starttls") not in ("starttls", "ssl", "none"):
+        raise HTTPException(400, "Unbekannte Verschlüsselung")
+
+
+def _section_context(request, db, section):
+    c = _company(db)
+    context = {"c": c, "section": section}
+    if section == "backup" and c["backup_last_run_at"]:
+        when = datetime.fromisoformat(c["backup_last_run_at"]).astimezone(client_zone(request))
+        context["last_run"] = f"{when:%d.%m.%Y %H:%M}"
+    return context
+
+
+def _render_section(request, db, section, toast=None, level="success"):
+    response = templates.TemplateResponse(request, f"setup/{section.replace('-', '_')}.html",
+                                          _section_context(request, db, section))
+    events = {"company-profile-changed": True}   # header logo/name, timer settings (setup.js)
+    if toast:
+        events["show-toast"] = {"message": toast, "level": level}
+    response.headers["HX-Trigger"] = json.dumps(events)
+    return response
+
+
+@router.get("/hx/setup/{section}")
+def hx_settings_page(request: Request, section: str):
+    if section not in SETTINGS_SECTIONS:
+        raise HTTPException(404, "Unbekannter Bereich")
+    with get_db() as db:
+        return templates.TemplateResponse(request, f"setup/{section.replace('-', '_')}.html",
+                                          _section_context(request, db, section))
+
+
+@router.post("/hx/setup/{section}")
+async def hx_save_settings(request: Request, section: str):
+    if section not in SETTINGS_SECTIONS:
+        raise HTTPException(404, "Unbekannter Bereich")
+    form = await request.form()
+    values = {}
+    for col, kind in SETTINGS_SECTIONS[section]:
+        raw = form.get(col)
+        if kind == "bool":
+            values[col] = int(raw is not None)
+        elif kind == "int":
+            try:
+                values[col] = int(raw)
+            except (TypeError, ValueError):
+                raise HTTPException(400, "Bitte eine ganze Zahl eingeben")
+        else:
+            values[col] = (raw or "").strip() if kind == "text" else (raw or "")
+    _validate(values)
+    with get_db() as db:
+        db.execute(f"UPDATE company_profile SET {', '.join(f'{c}=?' for c in values)} WHERE id=1", list(values.values()))
+        return _render_section(request, db, section, toast="Gespeichert.")
+
+
+@router.post("/hx/setup/backup/run")
+def hx_backup_now(request: Request):
+    """"Jetzt sichern" - same as the scheduled backup, then the page with the
+    new status line; the result also as a toast."""
+    with get_db() as db:
+        result = run_backup_now(db)
+        detail = "; ".join(f"{k}: {v}" for k, v in result["results"].items())
+        return _render_section(request, db, "backup",
+                               toast="Sicherung erfolgreich." if result["ok"] else f"Sicherung fehlgeschlagen: {detail}",
+                               level="success" if result["ok"] else "error")
+
+
+@router.get("/hx/setup/backup/files")
+def hx_backup_files(request: Request):
+    """The existing backups (loaded separately - listing Nextcloud can take a moment)."""
+    with get_db() as db:
+        c = _company(db)
+    files = [{**f, "source": "local"} for f in (list_local_backups(c["backup_local_path"]) if c["backup_local_enabled"] else [])]
+    nextcloud_error = None
+    if c["backup_nextcloud_enabled"]:
+        try:
+            files += [{**f, "source": "nextcloud"} for f in list_nextcloud_backups(
+                c["backup_nextcloud_url"], c["backup_nextcloud_username"], c["backup_nextcloud_password"])]
+        except Exception as e:
+            nextcloud_error = str(e)
+    zone = client_zone(request)
+    for f in files:
+        size = f.get("size") or 0
+        f["size_text"] = next((f"{size / 1024 ** i:.1f} {u}" for i, u in ((3, "GB"), (2, "MB"), (1, "KB")) if size >= 1024 ** i),
+                              f"{size} B") if size else ""
+        f["modified_text"] = ""
+        if f.get("modified_at"):
+            try:
+                f["modified_text"] = f"{datetime.fromisoformat(f['modified_at'].replace('Z', '+00:00')).astimezone(zone):%d.%m.%Y %H:%M}"
+            except ValueError:
+                f["modified_text"] = f["modified_at"]
+    files.sort(key=lambda f: f["filename"], reverse=True)
+    return templates.TemplateResponse(request, "setup/_backup_files.html",
+                                      {"files": files, "nextcloud_error": nextcloud_error})

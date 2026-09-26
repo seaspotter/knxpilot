@@ -466,56 +466,21 @@
   <!-- SETUP TAB -->
   <div class="tab" id="tab-setup">
     <div class="subnav" id="setup-subnav">
-      <button data-subtab="firma" class="active">Firma</button>
-      <button data-subtab="kategorien">Kategorien</button>
-      <button data-subtab="punkttypen">Funktionstypen</button>
-      <button data-subtab="zentralvorlagen">Zentral-/Allgemeinfunktions-Vorlagen</button>
-      <button data-subtab="pflichtenheft">Pflichtenheft</button>
-      <button data-subtab="dokumentation">Dokumentation</button>
+      <button data-subtab="company" class="active">Firma</button>
+      <button data-subtab="categories">Kategorien</button>
+      <button data-subtab="function-types">Funktionstypen</button>
+      <button data-subtab="central-templates">Zentral-/Allgemeinfunktions-Vorlagen</button>
+      <button data-subtab="specification">Pflichtenheft</button>
+      <button data-subtab="documentation">Dokumentation</button>
       <button data-subtab="email">E-Mail</button>
       <button data-subtab="backup">Backup</button>
       <button data-subtab="time-tracking">Zeiterfassung</button>
     </div>
 
-    <div class="subtab active" id="setup-subtab-firma">
-    <div class="card">
-      <h3>Firma <span class="info-icon" tabindex="0" data-tip="Ihre Firmenangaben - werden im Programmkopf neben dem KNXpilot-Logo angezeigt und optional als Briefkopf (Logo/Name oben, Adresse/Kontakt in der Fusszeile) auf jedem PDF-Export (Abgangsliste, Geräteliste, Pflichtenheft) übernommen.">i</span></h3>
-      <p class="muted">Einmalig hinterlegen - erscheint programmweit im Kopfbereich und optional auf allen PDF-Exporten.</p>
+    <!-- Rendered server-side with htmx (backend/templates/setup/company.html) -->
+    <div class="subtab active" id="setup-subtab-company"></div>
 
-      <div class="row" style="align-items:center;">
-        <img id="company-logo-preview" src="" alt="Logo-Vorschau" style="display:none; height:72px; width:auto; max-width:240px; object-fit:contain; border:1px solid var(--border); border-radius:8px; background:var(--panel2); padding:4px;">
-        <div class="row" style="margin:0;">
-          <input type="file" id="company-logo-file" accept="image/*" onchange="onCompanyLogoFileChange(event)">
-          <button class="btn secondary small" onclick="clearCompanyLogo()">Logo entfernen</button>
-        </div>
-      </div>
-      <hr class="sep">
-
-      <div class="row">
-        <input type="text" id="company-name" class="flex-input-wide" placeholder="Firmenname">
-      </div>
-      <div class="row">
-        <input type="text" id="company-address" class="flex-input-wide" placeholder="Adresse (Strasse, PLZ Ort)">
-      </div>
-      <div class="row mobile-fields">
-        <input type="text" id="company-phone" style="flex:1;" placeholder="Telefon">
-        <input type="text" id="company-email" style="flex:1;" placeholder="E-Mail">
-        <input type="text" id="company-website" style="flex:1;" placeholder="Website">
-      </div>
-      <hr class="sep">
-
-      <div class="row">
-        <label style="display:flex; align-items:center; gap:6px;">
-          <input type="checkbox" id="company-show-on-pdf">
-          Firmenlogo/-daten auf PDF-Exporten anzeigen
-          <span class="info-icon" tabindex="0" data-tip="Gilt global für alle PDF-Exporte in jedem Projekt - kein Schalter je Export.">i</span>
-        </label>
-      </div>
-      <div><button class="btn" onclick="saveCompanyProfile()">Speichern</button></div>
-    </div>
-    </div>
-
-    <div class="subtab" id="setup-subtab-kategorien">
+    <div class="subtab" id="setup-subtab-categories">
     <div class="card">
       <div class="card-header">
         <h3>Kategorien (Hauptgruppen)</h3>
@@ -530,7 +495,7 @@
     </div>
     </div>
 
-    <div class="subtab" id="setup-subtab-punkttypen">
+    <div class="subtab" id="setup-subtab-function-types">
     <div class="card">
       <div class="card-header">
         <h3>Funktionstypen</h3>
@@ -561,7 +526,7 @@
     </div>
     </div>
 
-    <div class="subtab" id="setup-subtab-zentralvorlagen">
+    <div class="subtab" id="setup-subtab-central-templates">
     <div class="card">
       <div class="card-header">
         <h3>Zentral-/Allgemeinfunktions-Vorlagen</h3>
@@ -604,164 +569,21 @@
     </div>
     </div>
 
-    <div class="subtab" id="setup-subtab-pflichtenheft">
-    <div class="card">
-      <h3>Pflichtenheft</h3>
-      <p class="muted">Steuert, was im Pflichtenheft-PDF-Export erscheint (siehe Projekt-Tab Pflichtenheft).</p>
+    <!-- Rendered server-side with htmx (backend/templates/setup/specification.html) -->
+    <div class="subtab" id="setup-subtab-specification"></div>
 
-      <div class="row">
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-vorbemerkungen"> Vorbemerkungen im PDF anzeigen</label>
-      </div>
-      <div class="row">
-        <label style="display:block; width:100%;">
-          Vorbemerkungen-Text
-          <span class="info-icon" tabindex="0" data-tip="Allgemeiner Erklärungstext (z.B. wie Schalten/Dimmen/Jalousie/Heizung bedient werden), der als eigener Abschnitt am Anfang jedes Pflichtenheft-PDFs erscheint. Mit sinnvollem Standardtext vorbelegt - hier anpassen, oder oben abwählen, um den Abschnitt weglassen ohne den Text zu verlieren. Einfache Formatierung möglich: eine Leerzeile trennt Absätze, ## oder ### Überschrift für Zwischentitel, eine Zeile nur mit **Text** für eine kleinere Unterüberschrift, eine Zeile nur mit *Text* für einen kursiven Hinweis, --- für eine Trennlinie, - Text für Aufzählungspunkte, **Text** mitten im Satz für Fettdruck.">i</span>
-          <textarea id="company-pflichtenheft-preamble" rows="10" style="width:100%; margin-top:6px; font-family:inherit;"></textarea>
-        </label>
-      </div>
-      <hr class="sep">
+    <!-- Rendered server-side with htmx (backend/templates/setup/documentation.html) -->
+    <div class="subtab" id="setup-subtab-documentation"></div>
 
-      <p class="muted" style="margin-bottom:6px;">Zusätzliche Abschnitte im PDF (neben den Funktionen je Raum, die immer enthalten sind):</p>
-      <div class="row" style="flex-direction:column; align-items:flex-start; gap:8px;">
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-struktur"> Stockwerk- und Raumverzeichnis</label>
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-geraeteliste"> Geräteliste (Stückliste)</label>
-      </div>
-      <div style="margin-top:10px;"><button class="btn" onclick="saveCompanyProfile()">Speichern</button></div>
-    </div>
-    </div>
+    <!-- Rendered server-side with htmx (backend/templates/setup/email.html) -->
+    <div class="subtab" id="setup-subtab-email"></div>
 
-    <div class="subtab" id="setup-subtab-dokumentation">
-    <div class="card">
-      <h3>Dokumentation</h3>
-      <p class="muted">Steuert, welche Abschnitte im Dokumentation-PDF-Export erscheinen (siehe Projekt-Tab Dokumentation) — neben dem Pflichtenheft-Inhalt, das immer enthalten ist.</p>
-      <div class="row" style="flex-direction:column; align-items:flex-start; gap:8px;">
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="doku-include-funktionscheckliste"> Funktionscheckliste (Testergebnisse)</label>
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="doku-include-uebergabe"> Übergabe-Checkliste (Ergebnisse)</label>
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="doku-include-handbuecher"> Handbücher (Liste, ohne die PDFs selbst)</label>
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-geraete-je-raum"> Geräte je Raum</label>
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-gruppenadressen"> Gruppenadressen<span class="info-icon" tabindex="0" data-tip="Kann bei grösseren Projekten sehr lang werden (eine Zeile je Adresse).">i</span></label>
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-abgangsliste"> Abgangsliste</label>
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-verteilerplanung"> Verteilerplanung</label>
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="pht-include-klaerungsliste"> Klärungsliste</label>
-      </div>
-      <div style="margin-top:10px;"><button class="btn" onclick="saveCompanyProfile()">Speichern</button></div>
-    </div>
-    </div>
+    <!-- Rendered server-side with htmx (backend/templates/setup/time_tracking.html) -->
+    <div class="subtab" id="setup-subtab-time-tracking"></div>
 
-    <div class="subtab" id="setup-subtab-email">
-    <div class="card">
-      <h3>E-Mail <span class="info-icon" tabindex="0" data-tip="SMTP-Zugangsdaten für den Versand von PDF-Exporten direkt aus KNXpilot (Button 'Per E-Mail senden' bei Pflichtenheft, Funktionscheckliste, Übergabe-Checkliste und Dokumentation). Rein manuell ausgelöst, nie automatisch.">i</span></h3>
-      <p class="muted">Ein beliebiger SMTP-Account (z.B. der Firmen-Mailaccount oder ein Transaktions-E-Mail-Dienst) - wird nur zum Versenden von PDF-Exporten auf Knopfdruck verwendet.</p>
+    <!-- Rendered server-side with htmx (backend/templates/setup/backup.html) -->
+    <div class="subtab" id="setup-subtab-backup"></div>
 
-      <div class="row mobile-fields">
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="smtp-enabled"> Aktiv</label>
-        <input type="text" id="smtp-host" placeholder="SMTP-Server, z.B. smtp.example.com">
-        <input type="number" id="smtp-port" min="1" style="width:80px;" placeholder="Port">
-        <select id="smtp-encryption">
-          <option value="starttls">STARTTLS (587)</option>
-          <option value="ssl">SSL/TLS (465)</option>
-          <option value="none">Keine Verschlüsselung</option>
-        </select>
-      </div>
-      <div class="row mobile-fields">
-        <input type="text" id="smtp-username" placeholder="Benutzername">
-        <input type="password" id="smtp-password" placeholder="Passwort">
-        <input type="text" id="smtp-from-email" class="flex-input" placeholder="Absenderadresse (From), z.B. info@example.com">
-      </div>
-      <div class="row mobile-fields">
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="smtp-cc-self-default"> "Kopie an mich" im Sendedialog standardmässig aktiv
-          <span class="info-icon" tabindex="0" data-tip="Verwendet die oben unter Firma hinterlegte E-Mail-Adresse als Kopie-Empfänger.">i</span>
-        </label>
-      </div>
-
-      <div class="row mobile-fields" style="margin-top:10px;">
-        <button class="btn" onclick="saveCompanyProfile()">Speichern</button>
-        <input type="text" id="smtp-test-recipient" placeholder="Test-Empfänger">
-        <button class="btn secondary" onclick="sendTestEmail()">Test-E-Mail senden</button>
-      </div>
-    </div>
-    </div>
-
-    <div class="subtab" id="setup-subtab-time-tracking">
-    <div class="card">
-      <h3>Zeiterfassung</h3>
-      <p class="muted">Einfache Arbeitszeiterfassung je Projekt (Start/Stopp in der Kopfzeile, Reiter Zeiterfassung). Rein intern — erscheint in keinem Projekt-Export und keiner Dokumentation.</p>
-      <div class="row mobile-fields">
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="tt-enabled"> Aktiv
-          <span class="info-icon" tabindex="0" data-tip="Deaktiviert blendet den Reiter Zeiterfassung und den Start/Stopp-Knopf aus. Bereits erfasste Zeiten bleiben gespeichert und sind nach dem Wiedereinschalten wieder da.">i</span>
-        </label>
-      </div>
-      <div class="row mobile-fields">
-        <label class="muted" style="display:flex; align-items:center; gap:6px;">Rundung
-          <select id="tt-rounding-minutes">
-            <option value="1">Minutengenau</option>
-            <option value="15">15 Minuten</option>
-            <option value="30">30 Minuten</option>
-          </select>
-          <span class="info-icon" tabindex="0" data-tip="Start und Stopp werden auf die nächste Marke gerundet (bei 15 Min.: 12:04 → 12:00, 12:55 → 13:00); ein Eintrag zählt mindestens eine Rundungseinheit. Gilt für neue bzw. neu gespeicherte Einträge - bereits erfasste Zeiten werden nicht nachträglich umgerechnet.">i</span>
-        </label>
-      </div>
-      <div class="row mobile-fields" style="margin-top:10px;">
-        <button class="btn" onclick="saveCompanyProfile()">Speichern</button>
-      </div>
-    </div>
-    </div>
-
-    <div class="subtab" id="setup-subtab-backup">
-    <div class="card">
-      <h3>Backup <span class="info-icon" tabindex="0" data-tip="Sichert die komplette Datenbank (alle Projekte, Geräte-Katalog, Setup) als eine Datei - anders als 'Sichern (JSON)' im Projektkopf, das nur ein einzelnes Projekt exportiert. Wiederherstellen weiter unten auf dieser Seite, direkt in der App.">i</span></h3>
-      <p class="muted">Automatische und/oder manuelle Sicherung auf ein NAS/gemountetes Verzeichnis und/oder Nextcloud — beide Ziele lassen sich unabhängig voneinander aktivieren.</p>
-
-      <div class="row mobile-fields">
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="backup-enabled"> Automatische Sicherung aktiv</label>
-        <label style="display:flex; align-items:center; gap:4px;">alle <input type="number" id="backup-interval-hours" min="1" style="width:60px;"> Stunden</label>
-        <label style="display:flex; align-items:center; gap:4px;">Aufbewahren: letzte <input type="number" id="backup-retention-count" min="1" style="width:60px;"> Sicherungen
-          <span class="info-icon" tabindex="0" data-tip="Gilt je Ziel getrennt - ältere Sicherungen über dieser Anzahl werden bei jedem Lauf automatisch gelöscht.">i</span>
-        </label>
-      </div>
-      <p class="muted" id="backup-status-text"></p>
-      <hr class="sep">
-
-      <h4>NAS / gemountetes Verzeichnis</h4>
-      <p class="muted">Das Verzeichnis muss im Container erreichbar sein, z.B. per Bind-Mount in <code>docker-compose.yml</code> auf einen NAS-Freigabe-Pfad (siehe DEPLOYMENT.md).</p>
-      <div class="row mobile-fields">
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="backup-local-enabled"> Aktiv</label>
-        <input type="text" id="backup-local-path" class="flex-input-wide" placeholder="Pfad im Container, z.B. /app/backups">
-      </div>
-      <hr class="sep">
-
-      <h4>Nextcloud (WebDAV)</h4>
-      <div class="row mobile-fields">
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="backup-nextcloud-enabled"> Aktiv</label>
-        <input type="text" id="backup-nextcloud-url" class="flex-input-wide" placeholder="WebDAV-Ordner-URL, z.B. https://cloud.example.com/remote.php/dav/files/BENUTZER/Backups/KNXpilot/">
-      </div>
-      <div class="row mobile-fields">
-        <input type="text" id="backup-nextcloud-username" placeholder="Benutzername">
-        <input type="password" id="backup-nextcloud-password" placeholder="Passwort">
-        <span class="info-icon" tabindex="0" data-tip="Ein Nextcloud-App-Passwort (Einstellungen -> Sicherheit -> Geräte & Sitzungen) statt des echten Kontopassworts wird empfohlen - lässt sich einzeln widerrufen, ohne das Hauptpasswort zu ändern.">i</span>
-      </div>
-
-      <div style="margin-top:10px;">
-        <button class="btn" onclick="saveCompanyProfile()">Speichern</button>
-        <button class="btn secondary" onclick="runBackupNow()">Jetzt sichern</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h4>Vorhandene Sicherungen</h4>
-      <p class="muted">Listet Sicherungen aus jedem aktivierten Ziel (NAS/gemountetes Verzeichnis und/oder Nextcloud).</p>
-      <ul class="list" id="backup-files-list"></ul>
-    </div>
-
-    <div class="card">
-      <h4>Sicherung wiederherstellen (Datei hochladen)</h4>
-      <p class="muted">Ersetzt die komplette aktuelle Datenbank durch den Inhalt der hochgeladenen Datei — vorher wird automatisch eine Sicherung des aktuellen Stands angelegt, danach startet die App neu.</p>
-      <div class="row">
-        <input type="file" id="restore-upload-file" accept=".db">
-        <button class="btn danger" onclick="restoreFromUpload()">Wiederherstellen</button>
-      </div>
-    </div>
-    </div>
   </div>
 
   <!-- UPDATE TAB -->

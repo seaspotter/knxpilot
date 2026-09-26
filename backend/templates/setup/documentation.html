@@ -1,0 +1,18 @@
+{% from "setup/_macros.html" import checkbox, form_open %}
+<div class="card">
+  {{ form_open("documentation") }}
+  <h3>Dokumentation</h3>
+  <p class="muted">Steuert, welche Abschnitte im Dokumentation-PDF-Export erscheinen (siehe Projekt-Tab Dokumentation) — neben dem Pflichtenheft-Inhalt, das immer enthalten ist.</p>
+  <div class="row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+    {{ checkbox(c, "documentation_include_function_checklist", "Funktionscheckliste (Testergebnisse)") }}
+    {{ checkbox(c, "documentation_include_handover_checklist", "Übergabe-Checkliste (Ergebnisse)") }}
+    {{ checkbox(c, "documentation_include_manuals", "Handbücher (Liste, ohne die PDFs selbst)") }}
+    {{ checkbox(c, "documentation_include_devices_per_room", "Geräte je Raum") }}
+    {{ checkbox(c, "documentation_include_group_addresses", "Gruppenadressen", "Kann bei grösseren Projekten sehr lang werden (eine Zeile je Adresse).") }}
+    {{ checkbox(c, "documentation_include_circuit_list", "Abgangsliste") }}
+    {{ checkbox(c, "documentation_include_distribution_boards", "Verteilerplanung") }}
+    {{ checkbox(c, "documentation_include_clarification_list", "Klärungsliste") }}
+  </div>
+  <div style="margin-top:10px;"><button type="submit" class="btn">Speichern</button></div>
+  </form>
+</div>

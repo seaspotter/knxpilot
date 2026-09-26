@@ -25,6 +25,7 @@ document.querySelectorAll('nav button[data-tab]').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab === 'time-tracking') await loadTimeTrackingTab();
+    if (btn.dataset.tab === 'setup') await loadActiveSetupSection();
   };
 });
 
@@ -67,6 +68,7 @@ document.querySelectorAll('#setup-subnav button').forEach(btn => {
     document.querySelectorAll('#tab-setup .subtab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('setup-subtab-' + btn.dataset.subtab).classList.add('active');
+    loadSetupSection(btn.dataset.subtab);
   };
 });
 

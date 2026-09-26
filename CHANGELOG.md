@@ -32,6 +32,19 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
   "htmx tabs". New dependency `jinja2` - after updating, run
   `docker compose pull && docker compose up -d` once. The entries now sit
   in a white card like the groups on every other tab.
+- **Setup's settings pages rendered server-side with htmx** — company,
+  specification, documentation, email, backup and time tracking now come
+  from Jinja templates (`backend/templates/setup/`) via `/hx/setup/...`
+  endpoints. Each page's "Speichern" now saves only that page's fields
+  (before, every save button wrote all settings of all pages at once) and
+  confirms with a toast; backup's "back up now" and the existing-backups
+  list are server-rendered too (restoring, which restarts the app, and the
+  logo auto-crop stay in the browser). The twelve German-named
+  `company_profile` columns are renamed to English
+  (`specification_preamble`, `specification_include_*`,
+  `documentation_include_*` - renamed automatically on startup, values
+  kept), and Setup's sub-tab IDs are English. The categories, function
+  types and central templates editors follow in the next step.
 - **Time tracking rendered server-side with htmx** — the second tab after
   the clarification list: list, filters, totals, the invoiced checkboxes
   and the add/edit dialog now come from Jinja templates

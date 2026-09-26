@@ -1,0 +1,30 @@
+{% from "setup/_macros.html" import checkbox, form_open %}
+<div class="card">
+  {{ form_open("email") }}
+  <h3>E-Mail <span class="info-icon" tabindex="0" data-tip="SMTP-Zugangsdaten für den Versand von PDF-Exporten direkt aus KNXpilot (Button 'Per E-Mail senden' bei Pflichtenheft, Funktionscheckliste, Übergabe-Checkliste und Dokumentation). Rein manuell ausgelöst, nie automatisch.">i</span></h3>
+  <p class="muted">Ein beliebiger SMTP-Account (z.B. der Firmen-Mailaccount oder ein Transaktions-E-Mail-Dienst) - wird nur zum Versenden von PDF-Exporten auf Knopfdruck verwendet.</p>
+  <div class="row mobile-fields">
+    {{ checkbox(c, "smtp_enabled", "Aktiv") }}
+    <input type="text" name="smtp_host" placeholder="SMTP-Server, z.B. smtp.example.com" value="{{ c.smtp_host or '' }}">
+    <input type="number" name="smtp_port" min="1" max="65535" style="width:80px;" placeholder="Port" value="{{ c.smtp_port or 587 }}">
+    <select name="smtp_encryption">
+      {% for value, label in [("starttls", "STARTTLS (587)"), ("ssl", "SSL/TLS (465)"), ("none", "Keine Verschlüsselung")] %}
+        <option value="{{ value }}"{% if (c.smtp_encryption or "starttls") == value %} selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="row mobile-fields">
+    <input type="text" name="smtp_username" placeholder="Benutzername" value="{{ c.smtp_username or '' }}">
+    <input type="password" name="smtp_password" placeholder="Passwort" value="{{ c.smtp_password or '' }}" autocomplete="new-password">
+    <input type="text" name="smtp_from_email" class="flex-input" placeholder="Absenderadresse (From), z.B. info@example.com" value="{{ c.smtp_from_email or '' }}">
+  </div>
+  <div class="row mobile-fields">
+    {{ checkbox(c, "smtp_cc_self_default", '"Kopie an mich" im Sendedialog standardmässig aktiv', "Verwendet die oben unter Firma hinterlegte E-Mail-Adresse als Kopie-Empfänger.") }}
+  </div>
+  <div class="row mobile-fields" style="margin-top:10px;">
+    <button type="submit" class="btn">Speichern</button>
+    <input type="text" id="smtp-test-recipient" placeholder="Test-Empfänger">
+    <button type="button" class="btn secondary" onclick="sendTestEmail()">Test-E-Mail senden</button>
+  </div>
+  </form>
+</div>
