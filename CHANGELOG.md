@@ -16,6 +16,18 @@ restructuring below — history before that is available via `git log`.
   (`.github/workflows/tests.yml`). The database location can now be
   overridden with `KNXPILOT_DB_PATH` (used by the tests). Writing it
   immediately found the download-filename bug below.
+- **Gruppenadressen: "Änderungen seit dem letzten ETS-Export"** — every
+  ETS CSV download now remembers the exported group addresses, and a new
+  card at the top of the Gruppenadressen sub-tab shows what still has to
+  be done in ETS, in working order: **Verschoben** (a function now sits on
+  a different address - typically because a new function shifted the rest
+  of the floor's block; change the address in ETS to keep its links,
+  listed highest-first so each target is already free), **Neu**,
+  **Geändert** (same address, new name/DPT, e.g. a renamed room) and
+  **Entfernt**. "Aktuellen Stand als in ETS übernommen markieren" sets the
+  baseline without downloading - needed once for existing projects. New
+  `ga_export_snapshots` table and `GET .../ga-changes` /
+  `POST .../ga-snapshot` endpoints.
 - **Dependabot** — `.github/dependabot.yml` opens weekly, grouped update
   PRs against `dev` for GitHub Actions, Python packages and the Docker base
   image. All workflows now use the latest (Node 24) majors of their actions

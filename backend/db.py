@@ -504,6 +504,17 @@ def init_db():
             -- any time (UNIQUE(project_id, role) makes re-signing a plain upsert) -
             -- this isn't a tamper-evident legal signature, just a "we did this
             -- digitally instead of on paper" record embedded in the PDF export.
+            -- The group addresses as they were at the last ETS CSV export (or when
+            -- marked "in ETS übernommen"), one row per project - the baseline for
+            -- the Gruppenadressen tab's "Änderungen seit dem letzten ETS-Export"
+            -- (see routers/projects.py). data = JSON list of
+            -- {address, name, dpt} incl. main/middle group rows ("1/2/-").
+            CREATE TABLE IF NOT EXISTS ga_export_snapshots (
+                project_id INTEGER PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
+                exported_at TEXT NOT NULL,
+                data TEXT NOT NULL
+            );
+
             CREATE TABLE IF NOT EXISTS project_signatures (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,

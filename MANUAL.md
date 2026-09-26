@@ -178,6 +178,25 @@ Unterreiters Funktionen weiter unten.
   komplett auf bzw. zu.
 - **CSV für ETS6 herunterladen** exportiert dieselben Adressen als
   ETS6-kompatible CSV-Datei.
+- **Änderungen seit dem letzten ETS-Export** (oben im Unterreiter): Jeder
+  CSV-Download merkt sich den exportierten Stand. Kommen danach Räume oder
+  Funktionen dazu, zeigt diese Karte, was in ETS noch nachzutragen ist —
+  in der Reihenfolge, in der man es am besten abarbeitet:
+  1. **Verschoben** — eine Funktion liegt jetzt auf einer anderen Adresse
+     (typisch: eine neue Funktion schiebt alle folgenden Adressen im
+     Geschoss nach hinten). In ETS die Adresse der bestehenden
+     Gruppenadresse ändern, statt sie neu anzulegen — so bleiben ihre
+     Verknüpfungen erhalten. Von oben nach unten abarbeiten, dann ist die
+     Zieladresse jeweils schon frei.
+  2. **Neu** — in ETS anlegen.
+  3. **Geändert** — gleiche Adresse, neuer Name oder DPT (z.B. ein
+     umbenannter Raum oder ein bisher reservierter "res"-Platz).
+  4. **Entfernt** — in ETS löschen.
+
+  Beim nächsten CSV-Download beginnt die Liste von vorn. Wurde das
+  ETS-Projekt auf anderem Weg aktualisiert (oder für ältere Projekte, die
+  noch keinen gemerkten Export haben), setzt **Aktuellen Stand als in ETS
+  übernommen markieren** den Stand ohne Download.
 - **⭳** (im Projektkopf oben, unterreiterübergreifend sichtbar) speichert
   die komplette Projektdefinition (Metadaten, Geschosse, Räume, Punkte,
   Sonderadressen) als `.json`-Datei — getrennt von der ETS-CSV, gedacht
