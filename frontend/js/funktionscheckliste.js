@@ -48,11 +48,15 @@ function renderChecklistCategories(byCategory) {
 
 function renderChecklistItem(catName, item) {
   const checked = FUNKTIONSCHECKLISTE_STATUS[item.key]?.status === 'ok';
+  // Table-like row: category pill | function | "getestet" + checkbox on the
+  // right. The whole row is the <label>, so tapping anywhere toggles it.
   return `
-    <label id="${checklistDomId(item.key)}" style="display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--border);">
-      <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleFunctionChecklistItem('${item.key}', this.checked)">
-      <span class="pill" style="flex-shrink:0;">${catName}</span>
-      <span>${item.text}</span>
+    <label id="${checklistDomId(item.key)}" class="fc-row${checked ? ' done' : ''}">
+      <span class="pill">${catName}</span>
+      <span class="fc-text">${item.text}</span>
+      <span class="fc-check">getestet
+        <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleFunctionChecklistItem('${item.key}', this.checked)">
+      </span>
     </label>
   `;
 }
@@ -67,6 +71,7 @@ async function toggleFunctionChecklistItem(key, checked) {
     method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({status, note: ''}),
   });
   FUNKTIONSCHECKLISTE_STATUS[key] = {status, note: ''};
+  document.getElementById(checklistDomId(key))?.classList.toggle('done', checked);
   // Deliberately no re-render (see file header) - the checkbox already
   // shows its own new state natively, just keep the cache in sync so a
   // later re-render (e.g. after switching tabs and back) stays correct.

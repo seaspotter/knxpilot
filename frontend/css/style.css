@@ -107,6 +107,15 @@
   .rc-row-3 select { width:100%; }
   .rc-note { color:var(--muted); font-size:12px; }
   .line-select { font-size:12px; padding:3px 6px; }
+  /* Funktionscheckliste rows (funktionscheckliste.js) */
+  .fc-row { display:grid; grid-template-columns:110px 1fr auto; align-items:center; gap:10px; padding:6px 4px; border-bottom:1px solid var(--border); font-size:13.5px; cursor:pointer; }
+  .fc-row:last-child { border-bottom:none; }
+  .fc-row:hover { background:var(--panel2); }
+  .fc-row .pill { justify-self:start; margin:0; }
+  .fc-check { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); white-space:nowrap; }
+  .fc-check input { width:18px; height:18px; margin:0; cursor:pointer; accent-color:var(--accent2); }
+  .fc-row.done .fc-text { color:var(--muted); }
+  .fc-row.done .fc-check { color:var(--accent); font-weight:600; }
   /* Gebäudestruktur tree (projekte.js) */
   .struct-tree { border:1px solid var(--border); border-radius:8px; background:var(--panel2); padding:6px; }
   .st-floor + .st-floor { margin-top:4px; }
@@ -274,6 +283,8 @@
 
   @media (max-width: 700px) {
     .st-meta { display:none; }
+    .fc-row { grid-template-columns:86px 1fr auto; gap:8px; }
+    .fc-row .pill { font-size:10px; padding:2px 6px; }
     .st-row { flex-wrap:wrap; row-gap:4px; }
     .st-spacer { flex-basis:100%; height:0; }  /* line select + actions on their own line */
     .st-row .line-select { flex:1; margin-left:20px; }

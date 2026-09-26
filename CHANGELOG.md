@@ -70,6 +70,9 @@ restructuring below — history before that is available via `git log`.
 
 ### Changed
 
+- **Funktionscheckliste as a table** — category pill in front, function in
+  a slightly smaller font, and "getestet" with the checkbox on the right;
+  the whole row is tappable and tested rows are greyed out.
 - **Stückliste sorted alphabetically by device** — manufacturer + model,
   case-insensitive, instead of by Gruppe; the same order in its PDF, the
   Pflichtenheft's device list and the Handbücher lists.

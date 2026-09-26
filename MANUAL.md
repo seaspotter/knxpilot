@@ -478,7 +478,9 @@ Der digitale Testfortschritt vor Ort: jede geplante Funktion (je
 Geschoss/Raum sowie die Zentral-/Allgemeinfunktionen) lässt sich hier
 direkt auf dem Handy antippen, sobald sie getestet ist — kein Ausdrucken
 und Abhaken auf Papier nötig, der Haken wird sofort im Projekt
-gespeichert. **PDF herunterladen** erzeugt daraus eine Momentaufnahme zum
+gespeichert. Jeder Raum ist eine kleine Tabelle: vorne die Kategorie,
+dann die Funktion, rechts **getestet** mit dem Kästchen; ein Tipp
+irgendwo auf die Zeile genügt, erledigte Zeilen werden ausgegraut. **PDF herunterladen** erzeugt daraus eine Momentaufnahme zum
 Weitergeben, ist aber nicht die primäre Arbeitsweise. **Per E-Mail
 senden** verschickt dieselbe Momentaufnahme direkt (siehe Setup → E-Mail).
 
