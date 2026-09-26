@@ -12,7 +12,11 @@ nobody trusts.
 - [ ] **.knxproj / ETS import** — parse an existing ETS project export (a
   zip of XML) to pre-populate a KNXpilot project's group addresses, instead
   of always starting from a blank building. High value, but real work
-  against ETS's file format.
+  against ETS's file format. Groundwork: format hypotheses, a proposed
+  mapping and open questions in [`docs/FINDINGS-knxproj.md`](./docs/FINDINGS-knxproj.md),
+  plus a read-only probe (`tools/knxproj_probe.py`) - **next step: run it
+  on 2-3 real ETS exports and verify the hypotheses before writing any
+  import code.**
 - [ ] **Store project credentials (Passwörter)** — a place to record the
   ETS project password, visualization/app login, router Wi-Fi credentials
   etc. per project, so handover can include them instead of tracking them

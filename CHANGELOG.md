@@ -28,6 +28,12 @@ restructuring below — history before that is available via `git log`.
   baseline without downloading - needed once for existing projects. New
   `ga_export_snapshots` table and `GET .../ga-changes` /
   `POST .../ga-snapshot` endpoints.
+- **Groundwork for the ETS import** — `docs/FINDINGS-knxproj.md` lists the
+  assumptions about the `.knxproj` format to verify against real exports
+  before building the import, a proposed ETS → KNXpilot mapping and the
+  open questions (password-protected projects, reusing an existing parser);
+  `tools/knxproj_probe.py` is a read-only, standard-library-only inspector
+  to run on a real export for that verification.
 - **Dependabot** — `.github/dependabot.yml` opens weekly, grouped update
   PRs against `dev` for GitHub Actions, Python packages and the Docker base
   image. All workflows now use the latest (Node 24) majors of their actions

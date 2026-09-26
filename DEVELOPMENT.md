@@ -137,7 +137,10 @@ tests/
   conftest.py       — throwaway database per test, demo-project seed helper
   test_*.py         — backend tests (see "Tests" above)
   fixtures/         — golden files, e.g. musterhaus_ga.csv (the demo project's ETS export)
+tools/
+  knxproj_probe.py  — read-only inspector for real ETS .knxproj exports (groundwork for the ETS import, see docs/FINDINGS-knxproj.md)
 docs/
+  FINDINGS-knxproj.md — ETS project-file format: hypotheses to verify against real exports, proposed mapping, open questions
   screenshots/      — README.md's screenshots
   templates/        — default-data JSON exports (Kategorien, Funktionstypen,
                       Zentral-/Allgemeinfunktions-Vorlagen, Geräte Katalog),
