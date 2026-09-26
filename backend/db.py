@@ -725,7 +725,10 @@ def init_db():
         # (channels only apply to the "Aktor" group - sensors, weather stations, touch panels
         # etc. don't have them). SQLite can't relax a NOT NULL constraint via ALTER TABLE, so
         # this recreates the table, preserving every existing row's id (actor_instances.actor_type_id
-        # keeps pointing at the same rows).
+        # keeps pointing at the same rows). Also runs on every fresh install (the CREATE TABLE
+        # above predates group_name), AFTER the ALTER TABLE migration loop - so any column that
+        # loop adds to actor_types must also be in this rebuilt table, or a fresh install ends up
+        # without it (manual_url did: the device catalog 500'd until the next restart).
         cols = [r["name"] for r in db.execute("PRAGMA table_info(actor_types)").fetchall()]
         if "group_name" not in cols:
             # PRAGMA foreign_keys is a no-op while a transaction is open, so commit first -
@@ -744,7 +747,8 @@ def init_db():
                     description TEXT NOT NULL DEFAULT '',
                     channel_type TEXT NOT NULL DEFAULT '',
                     channel_count INTEGER,
-                    width_te INTEGER
+                    width_te INTEGER,
+                    manual_url TEXT NOT NULL DEFAULT ''
                 );
                 INSERT INTO actor_types_new (id, manufacturer, model, channel_type, channel_count)
                     SELECT id, manufacturer, model, channel_type, channel_count FROM actor_types;
