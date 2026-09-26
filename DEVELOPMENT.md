@@ -67,7 +67,7 @@ backend/
     klaerungsliste.py  — questions/tasks/notes per project (Klärungsliste sub-tab)
     project_files.py   — a handful of reference files per project, stored as a BLOB (Übersicht sub-tab)
     manuals.py         — fetches a device's catalog-curated manual_url into the project's own Handbücher store (Handbücher sub-tab)
-    zeiterfassung.py   — internal per-project time tracking: header start/stop timer + global time_entries list (Zeiterfassung tab); never exported
+    zeiterfassung.py   — internal per-project time tracking: header start/stop timer + global time_entries list (Zeiterfassung tab) + its own Stundennachweis PDF; never part of any project export
     system.py          — self-update via git, changelog + manual + version endpoints (Update/Hilfe tabs)
 frontend/
   index.html        — page shell: <head>, nav/tab markup, <script src> tags in load order
@@ -83,7 +83,7 @@ frontend/
     gruppenadressen.js — GA tree preview + CSV export (Gruppenadressen sub-tab)
     uebersicht.js      — project status dashboard + project files (Übersicht sub-tab)
     manuals.js         — device manuals: view/fetch/delete (Handbücher sub-tab)
-    zeiterfassung.js   — header start/stop timer, Zeiterfassung tab (edit entries, totals, client-side CSV export)
+    zeiterfassung.js   — header start/stop timer, Zeiterfassung tab (edit entries, totals, Stundennachweis PDF download)
     abgangsliste.js    — actor instances + circuit assignment
     geraeteplanung.js  — per-room device planning
     pflichtenheft.js   — Pflichtenheft PDF download button (static content)

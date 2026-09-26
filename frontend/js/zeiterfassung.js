@@ -1,5 +1,6 @@
 // ---------- Zeiterfassung (header timer + global tab) ----------
-// Internal only - never part of any export/documentation. Durations are
+// Internal only - never part of any project export/documentation (its own
+// Stundennachweis PDF aside). Durations are
 // rounded up to 15 min by the backend (billed_minutes); raw times stay editable.
 let RUNNING_TIMER = null;
 let TIME_ENTRIES = [];
@@ -200,35 +201,16 @@ async function deleteTimeEntry(id) {
   await loadTimeEntries();
 }
 
-// Built client-side (not via window.location.href like the other exports)
-// so dates/times come out in the browser's own time zone - the server
-// container usually runs in UTC. Semicolon + decimal comma + BOM so it
-// opens cleanly in a German Excel.
-function exportTimeEntriesCsv() {
-  const entries = filteredTimeEntries().filter(e => e.ended_at).slice().reverse();
+// Stundennachweis PDF of the current filter. Passes the browser's time zone
+// so the server (usually UTC in the container) renders local times.
+function exportTimeEntriesPdf() {
+  const entries = filteredTimeEntries().filter(e => e.ended_at);
   if (!entries.length) return showToast('Keine abgeschlossenen Einträge zum Exportieren', 'warning');
-  const q = v => `"${String(v).replace(/"/g, '""')}"`;
-  const hours = min => (min / 60).toFixed(2).replace('.', ',');
-  const date = iso => new Date(iso).toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric'});
-  const time = iso => new Date(iso).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
-  const lines = [['Projekt', 'Datum', 'Von', 'Bis', 'Stunden (15-Min.-Takt)', 'Notiz'].map(q).join(';')];
-  entries.forEach(e => lines.push(
-    [e.project_name, date(e.started_at), time(e.started_at), time(e.ended_at), hours(e.billed_minutes), e.note || ''].map(q).join(';')
-  ));
-  lines.push('');
-  const byProject = new Map();
-  entries.forEach(e => byProject.set(e.project_name, (byProject.get(e.project_name) || 0) + e.billed_minutes));
-  byProject.forEach((min, name) => lines.push([`Summe ${name}`, '', '', '', hours(min), ''].map(q).join(';')));
-  if (byProject.size > 1) {
-    lines.push([q('Summe gesamt'), '', '', '', q(hours(entries.reduce((s, e) => s + e.billed_minutes, 0))), ''].join(';'));
-  }
-
+  const params = new URLSearchParams({
+    tz: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+    offset: new Date().getTimezoneOffset(),
+  });
   const pid = document.getElementById('zeit-project-filter').value;
-  const label = pid ? entries[0].project_name.replace(/[^\wäöüÄÖÜß-]+/g, '_') : 'alle_projekte';
-  const blob = new Blob(['﻿' + lines.join('\r\n')], {type: 'text/csv;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `zeiterfassung_${label}.csv`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  if (pid) params.set('project_id', pid);
+  window.location.href = '/api/time-entries/export.pdf?' + params;
 }

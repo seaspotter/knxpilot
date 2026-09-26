@@ -8,14 +8,25 @@ PDF export (Pflichtenheft, Dokumentation, ...).
 Every entry's duration is rounded UP to the next full 15 minutes on read
 (5 or 10 minutes worked -> 15 minutes billed); the raw start/end times are
 stored unchanged so the rounding rule could change later without data loss.
+The PDF export (Stundennachweis) is the only export - a deliberate
+exception to "never exported", since it's the user's own report, not part
+of any customer documentation.
 """
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from xml.sax.saxutils import escape
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, HTTPException
+from reportlab.lib.units import mm
+from reportlab.platypus import KeepTogether, Paragraph, Spacer, Table
 
 from ..db import get_db
 from ..models import TimeEntryIn, TimerStartIn
+from ..pdf_design import (
+    build_pdf_response, company_footer_line, company_header_block, pdf_styles, pdf_table_style,
+    pdf_title_banner,
+)
 
 router = APIRouter(tags=["zeiterfassung"])
 
@@ -145,3 +156,80 @@ def delete_time_entry(entry_id: int):
     with get_db() as db:
         db.execute("DELETE FROM time_entries WHERE id=?", (entry_id,))
     return {"ok": True}
+
+
+def _client_tz(tz, offset):
+    """The browser's time zone for rendering times in the PDF - the server
+    (container) usually runs in UTC. Prefers the IANA name (DST-correct per
+    entry), falls back to the browser's current fixed UTC offset."""
+    if tz:
+        try:
+            return ZoneInfo(tz)
+        except Exception:
+            pass
+    return timezone(timedelta(minutes=-(offset or 0)))
+
+
+def _fmt_hours(minutes):
+    return f"{minutes // 60}:{minutes % 60:02d} h"
+
+
+@router.get("/api/time-entries/export.pdf")
+def export_time_entries_pdf(project_id: int | None = None, tz: str = "", offset: int = 0):
+    """Stundennachweis: one table per project (Datum/Von/Bis/Dauer/Notiz, each
+    entry rounded up to 15 min) with a per-project sum, plus a grand total when
+    several projects are included. Running timers are left out."""
+    zone = _client_tz(tz, offset)
+    entries = [e for e in list_time_entries(project_id) if e["ended_at"]]
+    entries.sort(key=lambda e: e["started_at"])
+    if not entries:
+        raise HTTPException(404, "Keine abgeschlossenen Zeiteinträge vorhanden")
+
+    by_project = {}
+    for e in entries:
+        by_project.setdefault(e["project_name"], []).append(e)
+
+    with get_db() as db:
+        company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
+
+    styles = pdf_styles()
+    local = lambda iso: _parse(iso).astimezone(zone)
+    first, last = local(entries[0]["started_at"]), local(entries[-1]["ended_at"])
+    title = f"Zeiterfassung — {entries[0]['project_name']}" if project_id is not None else "Zeiterfassung — alle Projekte"
+    story = company_header_block(company) + pdf_title_banner(
+        title, f"Stundennachweis {first:%d.%m.%Y} – {last:%d.%m.%Y} · je Eintrag auf 15 Min. aufgerundet"
+    )
+
+    cell = lambda text: Paragraph(escape(text or ""), styles["TableCell"])
+    grand_total = 0
+    for name in sorted(by_project, key=str.lower):
+        rows = by_project[name]
+        total = sum(e["billed_minutes"] for e in rows)
+        grand_total += total
+        table_data = [["Datum", "Von", "Bis", "Dauer", "Notiz"]]
+        for e in rows:
+            start, end = local(e["started_at"]), local(e["ended_at"])
+            table_data.append([
+                cell(f"{start:%d.%m.%Y}"), cell(f"{start:%H:%M}"), cell(f"{end:%H:%M}"),
+                cell(_fmt_hours(e["billed_minutes"])), cell(e["note"]),
+            ])
+        table_data.append(["Summe", "", "", _fmt_hours(total), ""])
+        table = Table(table_data, colWidths=[28 * mm, 18 * mm, 18 * mm, 22 * mm, 94 * mm], repeatRows=1)
+        table.setStyle(pdf_table_style([
+            ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+            ("SPAN", (0, -1), (2, -1)),
+        ]))
+        story.append(KeepTogether([Paragraph(escape(name), styles["SectionHeading"]), table]))
+        story.append(Spacer(1, 3 * mm))
+
+    if len(by_project) > 1:
+        story.append(Paragraph(f"Gesamt: {_fmt_hours(grand_total)}", styles["SectionHeading"]))
+
+    file_label = entries[0]["project_name"].replace(" ", "_") if project_id is not None else "alle_Projekte"
+    return build_pdf_response(
+        story,
+        footer_left_text="Zeiterfassung",
+        filename=f"Zeiterfassung_{file_label}.pdf",
+        doc_title=title,
+        footer_center_text=company_footer_line(company),
+    )
