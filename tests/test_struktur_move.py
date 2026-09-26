@@ -116,3 +116,10 @@ def test_actor_list_follows_floor_order(client):
     ok(client.post(f"/api/floors/{og['id']}/move", json={"index": 0}))
     floors = [a["floor_id"] for a in ok(client.get(f"/api/projects/{pid}/actor-instances"))]
     assert floors[0] == og["id"] and floors[-1] is None
+
+
+def test_stueckliste_sorted_alphabetically_by_device(client):
+    pid = seed_musterhaus(client)
+    names = [d["device_name"] for d in ok(client.get(f"/api/projects/{pid}/device-summary"))]
+    assert len(names) > 3
+    assert names == sorted(names, key=str.casefold)

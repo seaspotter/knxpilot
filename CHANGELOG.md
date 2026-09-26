@@ -70,6 +70,9 @@ restructuring below — history before that is available via `git log`.
 
 ### Changed
 
+- **Stückliste sorted alphabetically by device** — manufacturer + model,
+  case-insensitive, instead of by Gruppe; the same order in its PDF, the
+  Pflichtenheft's device list and the Handbücher lists.
 - **Abgangsliste: actuators sorted by Geschoss** — "Aktoren in diesem
   Projekt" (and every actuator picker built from it: Abgänge, Labels,
   Verteilerplanung) now follows the Gebäudestruktur's floor order, like

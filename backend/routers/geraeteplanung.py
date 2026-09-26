@@ -235,7 +235,10 @@ def device_summary(project_id: int):
                     "manual_url": dt.get("manual_url", ""),
                 }
             )
-        result.sort(key=lambda r: (r["group_name"], r["device_name"]))
+        # Alphabetical by device (manufacturer + model), case-insensitive -
+        # "THeben" sorts with "Theben". Shared by the Stückliste, its PDF,
+        # the Pflichtenheft and the Handbücher lists.
+        result.sort(key=lambda r: (r["device_name"].casefold(), r["device_type_id"]))
         return result
 
 

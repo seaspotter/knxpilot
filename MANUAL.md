@@ -371,7 +371,8 @@ erscheinen, siehe Punkt 2).
    anlegen — funktioniert genau wie die Raum-Geräte, nur ohne eigens dafür
    einen (unpassenden) Raum erstellen zu müssen.
 2. Oben erscheint automatisch eine **Stückliste** — die Gesamtanzahl jedes
-   benötigten Geräts über das ganze Projekt hinweg, nach Gruppe sortiert.
+   benötigten Geräts über das ganze Projekt hinweg, alphabetisch nach
+   Gerät (Hersteller + Typ) sortiert — ebenso im PDF.
    Praktisch für Bestellung oder Angebotskalkulation. Zählt sowohl hier
    geplante Geräte **als auch** die bereits in der Abgangsliste
    angelegten Aktoren mit — ein Aktor muss also nicht doppelt erfasst
