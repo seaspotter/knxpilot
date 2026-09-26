@@ -25,7 +25,7 @@ from ..pdf_design import (
     company_header_block, company_footer_line, checkbox_cell,
 )
 from ..utils import join_parts, local_time_text
-from .geraeteplanung import device_summary
+from .geraeteplanung import build_stueckliste_story, device_summary
 
 router = APIRouter(tags=["pflichtenheft"])
 
@@ -253,13 +253,7 @@ def build_pflichtenheft_spec_story(db, project_id, company, styles):
         summary = device_summary(project_id)
         if summary:
             story.append(PageBreak())
-            story.append(Paragraph("Stückliste (Geräte gesamt)", styles["SectionHeading"]))
-            table_data = [["Gruppe", "Gerät", "Anzahl"]]
-            for s in summary:
-                table_data.append([s["group_name"], s["device_name"], str(s["total"])])
-            table = Table(table_data, colWidths=[35 * mm, 105 * mm, 25 * mm])
-            table.setStyle(pdf_table_style())
-            story.append(table)
+            story += build_stueckliste_story(summary, styles)  # same as the Geräteliste export
 
     return story
 

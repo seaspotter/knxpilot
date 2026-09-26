@@ -253,35 +253,10 @@ def export_geraeteliste_pdf(project_id: int):
         if not project:
             raise HTTPException(404, "Project not found")
 
-        summary = device_summary(project_id)
-        to_order = [s for s in summary if not s["not_ordering"]]
-        already_have = [s for s in summary if s["not_ordering"]]
-
         company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
         styles = pdf_styles()
         story = company_header_block(company) + pdf_title_banner(f"Geräteliste — {project['name']}", "Bestellübersicht")
-
-        heading = Paragraph("Stückliste (Bestellung)", styles["SectionHeading"])
-        table_data = [["Gruppe", "Hersteller", "Typ", "Beschreibung", "Anzahl"]]
-        for s in to_order:
-            table_data.append([
-                _cell(v, styles) for v in
-                (s["group_name"], s["manufacturer"], s["model"], s["description"], str(s["total"]))
-            ])
-        if len(table_data) == 1:
-            story.append(KeepTogether([heading, Paragraph("Noch keine Geräte geplant.", styles["BodyMuted"])]))
-        else:
-            table = Table(table_data, colWidths=[34 * mm, 28 * mm, 38 * mm, 64 * mm, 16 * mm], repeatRows=1)
-            table.setStyle(pdf_table_style())
-            story.append(KeepTogether([heading, table]))
-
-        if already_have:
-            story.append(Spacer(1, 4 * mm))
-            text = ", ".join(f"{s['total']}× {s['device_name']}" for s in already_have)
-            story.append(KeepTogether([
-                Paragraph("Bereits vorhanden (nicht bestellt)", styles["SubHeading"]),
-                Paragraph(text, styles["BodyMuted"]),
-            ]))
+        story += build_stueckliste_story(device_summary(project_id), styles)
 
         return build_pdf_response(
             story,
@@ -290,6 +265,38 @@ def export_geraeteliste_pdf(project_id: int):
             doc_title=f"Geräteliste {project['name']}",
             footer_center_text=company_footer_line(company),
         )
+
+
+def build_stueckliste_story(summary, styles):
+    """The Stückliste as it appears in every PDF - the Geräteliste (order)
+    export here and the Pflichtenheft/Dokumentation (routers/pflichtenheft.py)
+    - so they're always identical: devices to order in a table (alphabetical,
+    see device_summary), devices marked "Nicht bestellen" listed below as
+    already present."""
+    to_order = [s for s in summary if not s["not_ordering"]]
+    already_have = [s for s in summary if s["not_ordering"]]
+    heading = Paragraph("Stückliste", styles["SectionHeading"])
+    table_data = [["Hersteller", "Typ", "Beschreibung", "Gruppe", "Anzahl"]]
+    for s in to_order:
+        table_data.append([
+            _cell(v, styles) for v in
+            (s["manufacturer"], s["model"], s["description"], s["group_name"], str(s["total"]))
+        ])
+    story = []
+    if len(table_data) == 1:
+        story.append(KeepTogether([heading, Paragraph("Noch keine Geräte geplant.", styles["BodyMuted"])]))
+    else:
+        table = Table(table_data, colWidths=[28 * mm, 38 * mm, 64 * mm, 34 * mm, 16 * mm], repeatRows=1)
+        table.setStyle(pdf_table_style())
+        story.append(KeepTogether([heading, table]))
+    if already_have:
+        story.append(Spacer(1, 4 * mm))
+        text = ", ".join(f"{s['total']}× {s['device_name']}" for s in already_have)
+        story.append(KeepTogether([
+            Paragraph("Bereits vorhanden (nicht bestellt)", styles["SubHeading"]),
+            Paragraph(escape(text), styles["BodyMuted"]),
+        ]))
+    return story
 
 
 def _cell(text, styles):

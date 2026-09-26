@@ -382,9 +382,10 @@ erscheinen, siehe Punkt 2).
    anderen Projekt): bleibt in der Stückliste sichtbar (mit dem Hinweis
    "Bereits vorhanden"), fällt aber aus der Bestellliste im PDF-Export
    heraus.
-3. **PDF herunterladen** exportiert die Bestellliste — Gruppe, Hersteller,
-   Typ und die Beschreibung aus dem Geräte Katalog in getrennten Spalten,
-   plus Anzahl. Als "Nicht bestellen"
+3. **PDF herunterladen** exportiert die Bestellliste — Hersteller, Typ,
+   die Beschreibung aus dem Geräte Katalog und Gruppe in getrennten Spalten,
+   plus Anzahl. Die Stückliste im Pflichtenheft und in der Dokumentation
+   sieht genau gleich aus. Als "Nicht bestellen"
    markierte Geräte stehen separat darunter ("Bereits vorhanden, nicht
    bestellt"), nicht in der eigentlichen Bestelltabelle. Enthält bewusst
    keine Raumaufschlüsselung mehr (die steht im Pflichtenheft, falls dort

@@ -92,6 +92,11 @@ restructuring below — history before that is available via `git log`.
 - **Stückliste sorted alphabetically by device** — manufacturer + model,
   case-insensitive, instead of by Gruppe; the same order in its PDF, the
   Pflichtenheft's device list and the Handbücher lists.
+- **One Stückliste in every PDF** — the Pflichtenheft/Dokumentation used a
+  shorter Gruppe/Gerät/Anzahl table than the Geräteliste (order) export.
+  Both now render the same table (Hersteller, Typ, Beschreibung, Gruppe,
+  Anzahl - manufacturer first, matching the alphabetical order) with the
+  "Bereits vorhanden (nicht bestellt)" devices listed underneath.
 - **Abgangsliste: actuators sorted by Geschoss** — "Aktoren in diesem
   Projekt" (and every actuator picker built from it: Abgänge, Labels,
   Verteilerplanung) now follows the Gebäudestruktur's floor order, like
