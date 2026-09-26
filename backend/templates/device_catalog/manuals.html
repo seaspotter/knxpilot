@@ -1,0 +1,10 @@
+{# Manuals sub-tab: one manufacturer PDF URL per device, saved on change. #}
+<div class="card">
+  <h3>Handbücher</h3>
+  <p class="muted">Link zum Hersteller-PDF je Gerät hinterlegen — bleibt ein Feld leer, wird es einfach nicht genutzt. In der Projektübersicht lässt sich das Handbuch dann für jedes im Projekt verwendete Gerät per Klick herunterladen und als Projektdatei speichern.</p>
+  <div class="row">
+    <input type="text" name="q" class="flex-input-wide" value="{{ q }}" placeholder="🔍 Suchen (Hersteller, Modell, Gruppe)..."
+           hx-get="/hx/device-catalog/manuals/list" hx-trigger="input changed delay:200ms, search" hx-target="#dc-manuals-list" autocomplete="off">
+  </div>
+  <div id="dc-manuals-list">{% include "device_catalog/_manuals_list.html" %}</div>
+</div>

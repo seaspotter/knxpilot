@@ -1,0 +1,48 @@
+{# Catalog sub-tab: add/edit form (editing = device being edited), search, grouped list.
+   Aktor-only fields and the custom group field are shown via the form's data-group (.dc-form in style.css). #}
+{% set e = editing %}
+{% set group = (e.group_name if e.group_name in known_groups else "__custom__") if e else "Aktor" %}
+<div class="card">
+  <div class="card-header">
+    <h3>Geräte-Katalog</h3>
+    <div class="icon-btn-group">
+      <button class="icon-btn" onclick="window.location.href='/api/actor-types/export-json'" data-tip="Katalog als JSON exportieren" tabindex="0">⭳</button>
+      <button class="icon-btn" onclick="importActorTypesJson()" data-tip="Katalog aus JSON importieren - gleicht nach Hersteller+Modell ab (vorhandene werden aktualisiert, neue ergänzt), mehrere Kataloge lassen sich also nacheinander importieren." tabindex="0">⭱</button>
+      <button class="icon-btn" onclick="importDefaultActorTypes()" data-tip="Mitgelieferten Standard-Katalog (er)neut importieren - gleicht wie oben nach Hersteller+Modell ab. Nur auf Klick, nicht automatisch, damit selbst gelöschte Geräte nicht von allein wiederkehren." tabindex="0">⟲</button>
+      <button class="icon-btn danger" hx-delete="/hx/device-catalog" hx-target="#device-catalog-subtab-catalog" hx-swap="innerHTML"
+              hx-confirm="Kompletten Gerätekatalog leeren?&#10;&#10;Geräte, die bereits in einem Projekt (Geräteplanung oder Abgangsliste) verwendet werden, bleiben erhalten.&#10;&#10;Hinweis: Bleibt der Katalog danach leer, wird beim nächsten Neustart automatisch wieder der Standard-Startkatalog eingefügt - bei Bedarf vorher Ihren eigenen Katalog importieren."
+              data-tip="Kompletten Katalog leeren" tabindex="0">🗑</button>
+    </div>
+  </div>
+  <p class="muted">Globaler Katalog, gemeinsam für alle Projekte genutzt — Aktoren, Sensoren, Wetterstationen, Bedienelemente usw. Kanaltyp/Kanäle sind nur für die Gruppe "Aktor" nötig und müssen dann dem Kanaltyp eines Funktionstyps (Setup-Tab) entsprechen, damit der Aktor in der Abgangsliste eines Projekts zuordenbar ist.</p>
+  <form id="dc-form" class="dc-form" data-group="{{ group }}" hx-include="#dc-filter"
+        {% if e %}hx-put="/hx/device-catalog/{{ e.id }}"{% else %}hx-post="/hx/device-catalog"{% endif %}
+        hx-target="#device-catalog-subtab-catalog" hx-swap="innerHTML">
+    {% if e %}<h4 style="margin:4px 0 8px;">Gerät bearbeiten</h4>{% endif %}
+    <div class="row mobile-fields">
+      <input type="text" name="manufacturer" placeholder="Hersteller, z.B. MDT" value="{{ e.manufacturer if e else '' }}">
+      <input type="text" name="model" placeholder="Modell, z.B. AKS-2016.03" value="{{ e.model if e else '' }}" required>
+      <select name="group_name" onchange="this.form.dataset.group = this.value">
+        {% for g in known_groups %}<option value="{{ g }}"{% if group == g %} selected{% endif %}>{{ g }}</option>{% endfor %}
+        <option value="__custom__"{% if group == "__custom__" %} selected{% endif %}>Andere (eingeben)...</option>
+      </select>
+      <input type="text" name="group_custom" class="w-140 dc-only-custom" placeholder="Eigene Gruppe" value="{{ e.group_name if e and group == '__custom__' else '' }}">
+      <label class="dc-only-actuator" style="align-items:center; gap:4px;">Type <input type="text" name="channel_type" class="w-110" placeholder="z.B. Schalten" value="{{ e.channel_type if e and e.channel_type else '' }}"></label>
+      <label class="dc-only-actuator" style="align-items:center; gap:4px;">Kanäle <input type="number" name="channel_count" min="1" style="width:60px;" value="{{ e.channel_count if e and e.channel_count else 8 }}"></label>
+      <label style="display:flex; align-items:center; gap:4px;">TE <input type="number" name="width_te" placeholder="z.B. 4" min="1" style="width:55px;" value="{{ e.width_te if e and e.width_te else '' }}">
+        <span class="info-icon" tabindex="0" data-tip="Breite auf der Hutschiene in Teilungseinheiten (1 TE = 18 mm), laut Datenblatt. Nur für hutschienenmontierte Geräte relevant - bei Tastern/Sensoren/Wetterstationen leer lassen.">i</span>
+      </label>
+    </div>
+    <div class="row mobile-fields">
+      <input type="text" name="description" class="flex-input-wide" placeholder="Beschreibung (optional)" value="{{ e.description if e and e.description else '' }}">
+      <button type="submit" class="btn">{{ "Änderungen speichern" if e else "Gerät speichern" }}</button>
+      {% if e %}<button type="button" class="btn secondary small" hx-get="/hx/device-catalog" hx-include="#dc-filter" hx-target="#device-catalog-subtab-catalog" hx-swap="innerHTML">Abbrechen</button>{% endif %}
+    </div>
+  </form>
+  <hr class="sep">
+  <div class="row">
+    <input type="text" id="dc-filter" name="q" class="flex-input-wide" value="{{ q }}" placeholder="🔍 Suchen (Hersteller, Modell, Beschreibung, Gruppe, Type)..."
+           hx-get="/hx/device-catalog/list" hx-trigger="input changed delay:200ms, search" hx-target="#dc-list" autocomplete="off">
+  </div>
+  <div id="dc-list">{% include "device_catalog/_list.html" %}</div>
+</div>

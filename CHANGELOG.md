@@ -12,6 +12,13 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ### Fixed
 
+- **Clearing the device catalog no longer fails when a device is used as
+  a floor device** — "Katalog leeren" skipped devices used in rooms or as
+  actuators, but not those planned as "devices without a room", so the
+  database refused the delete and the whole action failed. Deleting a
+  single device that's used in a project now explains why it can't be
+  deleted instead of failing with a server error.
+
 - **Update tab no longer half-installs updates with new Python packages** —
   it used to pull such an update and then only ask for `docker compose
   pull`, so until then the new frontend ran against the old backend (e.g.
@@ -32,6 +39,15 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
   "htmx tabs". New dependency `jinja2` - after updating, run
   `docker compose pull && docker compose up -d` once. The entries now sit
   in a white card like the groups on every other tab.
+- **Device catalog rendered server-side with htmx** — both sub-tabs
+  (catalog and manual URLs) come from Jinja templates
+  (`backend/templates/device_catalog/`) via `/hx/device-catalog...`
+  endpoints: the search filters on the server, the form shows the
+  actuator-only fields and the custom group field without custom
+  JavaScript, and edits keep the current search. The JSON import/export
+  with its change preview works as before. Renamed to English:
+  `routers/device_catalog.py`, `js/device_catalog.js`, tab ID
+  `device-catalog`.
 - **Setup's settings pages rendered server-side with htmx** — company,
   specification, documentation, email, backup and time tracking now come
   from Jinja templates (`backend/templates/setup/`) via `/hx/setup/...`

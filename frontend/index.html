@@ -36,7 +36,7 @@
       <button onclick="closeNavDropdowns(); openProjectPickerModal();">Projekt öffnen</button>
     </div>
   </div>
-  <button data-tab="aktoren">Geräte Katalog</button>
+  <button data-tab="device-catalog">Geräte Katalog</button>
   <button data-tab="time-tracking" style="display:none;">Zeiterfassung</button>
   <button data-tab="setup">Setup</button>
   <button data-tab="update">Update</button>
@@ -401,66 +401,14 @@
   </div>
 
   <!-- AKTOREN/GERÄTE TAB -->
-  <div class="tab" id="tab-aktoren">
-    <div class="subnav" id="aktoren-subnav">
-      <button data-subtab="katalog" class="active">Katalog</button>
-      <button data-subtab="handbuecher">Handbücher</button>
+  <div class="tab" id="tab-device-catalog">
+    <div class="subnav" id="device-catalog-subnav">
+      <button data-subtab="catalog" class="active">Katalog</button>
+      <button data-subtab="manuals">Handbücher</button>
     </div>
-
-    <div class="subtab active" id="aktoren-subtab-katalog">
-    <div class="card">
-      <div class="card-header">
-        <h3>Geräte-Katalog</h3>
-        <div class="icon-btn-group">
-          <button class="icon-btn" onclick="exportActorTypesJson()" data-tip="Katalog als JSON exportieren" tabindex="0">⭳</button>
-          <button class="icon-btn" onclick="importActorTypesJson()" data-tip="Katalog aus JSON importieren - gleicht nach Hersteller+Modell ab (vorhandene werden aktualisiert, neue ergänzt), mehrere Kataloge lassen sich also nacheinander importieren." tabindex="0">⭱</button>
-          <button class="icon-btn" onclick="importDefaultActorTypes()" data-tip="Mitgelieferten Standard-Katalog (er)neut importieren - gleicht wie oben nach Hersteller+Modell ab. Nur auf Klick, nicht automatisch, damit selbst gelöschte Geräte nicht von allein wiederkehren." tabindex="0">⟲</button>
-          <button class="icon-btn danger" onclick="clearActorTypeCatalog()" data-tip="Kompletten Katalog leeren" tabindex="0">🗑</button>
-        </div>
-      </div>
-      <p class="muted">Globaler Katalog, gemeinsam für alle Projekte genutzt — Aktoren, Sensoren, Wetterstationen, Bedienelemente usw. Kanaltyp/Kanäle sind nur für die Gruppe "Aktor" nötig und müssen dann dem Kanaltyp eines Funktionstyps (Setup-Tab) entsprechen, damit der Aktor in der Abgangsliste eines Projekts zuordenbar ist.</p>
-      <div class="row mobile-fields">
-        <input type="text" id="actortype-manufacturer" placeholder="Hersteller, z.B. MDT">
-        <input type="text" id="actortype-model" placeholder="Modell, z.B. AKS-2016.03">
-        <select id="actortype-group" onchange="onDeviceGroupChange()">
-          <option value="Aktor">Aktor</option>
-          <option value="Sensor">Sensor</option>
-          <option value="Wetterstation">Wetterstation</option>
-          <option value="Bedienelement">Bedienelement</option>
-          <option value="Sonstiges">Sonstiges</option>
-          <option value="__custom__">Andere (eingeben)...</option>
-        </select>
-        <input type="text" id="actortype-group-custom" class="w-140" placeholder="Eigene Gruppe" style="display:none;" oninput="onDeviceGroupChange()">
-        <label id="actortype-channeltype-label" style="display:flex; align-items:center; gap:4px;">Type <input type="text" id="actortype-channeltype" class="w-110" placeholder="z.B. Schalten"></label>
-        <label id="actortype-count-label" style="display:flex; align-items:center; gap:4px;">Kanäle <input type="number" id="actortype-count" value="8" min="1" style="width:60px;"></label>
-        <label style="display:flex; align-items:center; gap:4px;">TE <input type="number" id="actortype-te" placeholder="z.B. 4" min="1" style="width:55px;">
-          <span class="info-icon" tabindex="0" data-tip="Breite auf der Hutschiene in Teilungseinheiten (1 TE = 18 mm), laut Datenblatt. Nur für hutschienenmontierte Geräte relevant - bei Tastern/Sensoren/Wetterstationen leer lassen.">i</span>
-        </label>
-      </div>
-      <div class="row mobile-fields">
-        <input type="text" id="actortype-description" class="flex-input-wide" placeholder="Beschreibung (optional)">
-        <button class="btn" id="actortype-save-btn" onclick="saveActorType()">Gerät speichern</button>
-        <button class="btn secondary small" id="actortype-cancel-btn" onclick="cancelEditActorType()" style="display:none;">Abbrechen</button>
-      </div>
-      <hr class="sep">
-      <div class="row">
-        <input type="text" id="actortype-filter" class="flex-input-wide" placeholder="🔍 Suchen (Hersteller, Modell, Beschreibung, Gruppe, Type)..." oninput="renderActorTypesList()">
-        <span class="muted" id="actortype-filter-count"></span>
-      </div>
-      <div id="actor-types-groups"></div>
-    </div>
-    </div>
-
-    <div class="subtab" id="aktoren-subtab-handbuecher">
-      <div class="card">
-        <h3>Handbücher</h3>
-        <p class="muted">Link zum Hersteller-PDF je Gerät hinterlegen — bleibt ein Feld leer, wird es einfach nicht genutzt. In der Projektübersicht lässt sich das Handbuch dann für jedes im Projekt verwendete Gerät per Klick herunterladen und als Projektdatei speichern.</p>
-        <div class="row">
-          <input type="text" id="handbuch-filter" class="flex-input-wide" placeholder="🔍 Suchen (Hersteller, Modell, Gruppe)..." oninput="renderHandbuecherList()">
-        </div>
-        <div id="handbuecher-groups"></div>
-      </div>
-    </div>
+    <!-- Both rendered server-side with htmx (backend/templates/device_catalog/), see device_catalog.js -->
+    <div class="subtab active" id="device-catalog-subtab-catalog"></div>
+    <div class="subtab" id="device-catalog-subtab-manuals"></div>
   </div>
 
   <!-- SETUP TAB -->
@@ -556,7 +504,7 @@
 <script src="/js/ui.js"></script>
 <script src="/js/send_email.js"></script>
 <script src="/js/setup.js"></script>
-<script src="/js/geraete.js"></script>
+<script src="/js/device_catalog.js"></script>
 <script src="/js/projekte.js"></script>
 <script src="/js/linien.js"></script>
 <script src="/js/funktionen.js"></script>

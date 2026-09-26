@@ -98,14 +98,14 @@ backend/
   ga_logic.py       — group-address tree generation, circuits, per-room/central function listings (used by Pflichtenheft and the checklists)
   pdf_design.py     — shared PDF look (banner, table style, page numbers, letterhead); build_pdf_bytes()/build_pdf_bytes_two_pass() are the raw-bytes builders every export (and email.py's send action) go through
   templating.py     — Jinja2 setup for the htmx tabs (templates/, autoescaped)
-  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: klaerungsliste/, time_tracking/, setup/)
+  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: klaerungsliste/, time_tracking/, setup/, device_catalog/)
   project_transfer.py — per-project JSON backup/restore + duplicate (what's included, name/position-based references)
   pa_assign.py      — physical-address auto-assign (bucket convention, per KNX line) + line coupler/power supply detection
   email_sender.py   — SMTP mechanics (stdlib smtplib) behind routers/email.py's send-by-mail action
   utils.py          — small dependency-free helpers
   routers/
     setup.py          — Setup tab (htmx, /hx/setup/...): settings pages on the company profile (SETTINGS_SECTIONS) and the categories/function types/central templates editors, plus their JSON APIs
-    geraete.py         — global device catalog + curated manual_url per device (Geräte Katalog tab: Katalog + Handbücher sub-tabs)
+    device_catalog.py  — device catalog tab (htmx: /hx/device-catalog...): catalog + per-device manual URL, JSON import/export with preview, ACTOR_TYPES API
     projects.py        — projects, floors/rooms/points (incl. tree moves with GA-impact dry run), backup/restore (Projekte tab: Gebäudestruktur sub-tab + project CRUD)
     linien.py          — optional KNX lines (Bereich.Linie) + floor/room/actuator line assignment, per-line device counts/warnings (Gebäudestruktur sub-tab)
     abgangsliste.py    — actor instances, circuit assignment, CSV/PDF export (Abgangsliste sub-tab)
@@ -128,7 +128,7 @@ frontend/
     ui.js              — toasts, modals, shared Markdown renderer (used by Update + Hilfe)
     send_email.js      — shared "Per E-Mail senden" modal, called from Pflichtenheft/Funktionscheckliste/Übergabe-Checkliste/Dokumentation
     setup.js           — loads the htmx Setup sub-tabs, header branding, logo auto-crop, backup restore, JSON import (file picker), categories/function types cache for the functions tab
-    geraete.js         — actor types catalog + Handbücher sub-tab (per-device manual URL)
+    device_catalog.js  — loads the htmx device catalog sub-tabs, ACTOR_TYPES cache for other tabs' pickers, JSON import dialogs
     projekte.js        — project CRUD/meta, Geschoss/Raum/Verteiler tree with drag & drop (Gebäudestruktur sub-tab)
     linien.js          — optional KNX lines card + the line <select>s used by projekte.js/abgangsliste.js (Gebäudestruktur sub-tab)
     funktionen.js      — assigning functions to rooms, Sonderadressen (Funktionen sub-tab)
@@ -226,7 +226,7 @@ rarely need to touch anything else.
   each renamed to English in the same change, with pytest coverage for its
   `/hx/` endpoints and a browser pass; confirm each next tab with the
   user. Order: ~~clarification list~~, ~~time tracking~~, ~~Setup~~,
-  device catalog + manuals, overview/specification/documentation,
+  ~~device catalog~~ + project manuals, overview/specification/documentation,
   function + handover checklists, functions + group addresses, device
   planning + distribution board planning + labels, circuit list, building
   structure (drag & drop stays JS).

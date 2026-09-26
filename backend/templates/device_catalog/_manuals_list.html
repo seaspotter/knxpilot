@@ -1,0 +1,14 @@
+{% for group, devices in groups %}
+  <h4 style="margin:14px 0 6px;">{{ group }}</h4>
+  <ul class="list">
+    {% for d in devices %}
+      <li>
+        <div style="flex:1;"><b>{{ [d.manufacturer, d.model] | select | join(" ") }}</b></div>
+        <input type="text" name="manual_url" class="flex-input-wide" value="{{ d.manual_url or '' }}" placeholder="URL zum PDF-Handbuch (optional)"
+               hx-put="/hx/device-catalog/{{ d.id }}/manual-url" hx-trigger="change" hx-swap="none">
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="muted">{{ "Keine Geräte gefunden" if q else "Noch keine Geräte" }}</p>
+{% endfor %}

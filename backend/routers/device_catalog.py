@@ -1,17 +1,26 @@
 """
-Device Types (global catalog shared across all projects: Aktoren, Sensoren,
-Wetterstation, Bedienelemente, etc. Channel info only applies to "Aktor".)
+Device catalog tab ("Geräte Katalog"): the global catalog of device types
+shared across all projects (actuators, sensors, weather stations, operating
+elements, ...; channel info only applies to the "Aktor" group), plus each
+device's curated manual URL (sub-tab "Handbücher").
+
+Both sub-tabs are rendered server-side with htmx (templates in
+backend/templates/device_catalog/, /hx/device-catalog... endpoints at the
+end of this file). The JSON endpoints stay for the pickers in other tabs
+(ACTOR_TYPES cache in device_catalog.js), the JSON import/export with its
+preview, and the tests.
 """
 import io
 import json
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
 
 from ..db import get_db, load_bundled_actor_type_defaults
+from ..templating import templates
 from ..models import ActorTypeIn, ManualUrlIn
 
-router = APIRouter(tags=["geraete"])
+router = APIRouter(tags=["device-catalog"])
 
 
 def _upsert_actor_types(db, actor_types):
@@ -132,6 +141,7 @@ def clear_actor_types():
         db.execute(
             "DELETE FROM actor_types WHERE id NOT IN ("
             "SELECT device_type_id FROM room_devices "
+            "UNION SELECT device_type_id FROM floor_devices "
             "UNION SELECT actor_type_id FROM actor_instances)"
         )
         (remaining,) = db.execute("SELECT COUNT(*) FROM actor_types").fetchone()
@@ -225,3 +235,137 @@ def import_default_actor_types():
     with get_db() as db:
         imported, updated = _upsert_actor_types(db, load_bundled_actor_type_defaults())
         return {"imported": imported, "updated": updated}
+
+
+# ---------- htmx fragments (backend/templates/device_catalog/) ----------
+KNOWN_GROUPS = ["Aktor", "Sensor", "Wetterstation", "Bedienelement", "Sonstiges"]
+
+
+def _grouped(q, fields):
+    """Devices matching the search `q` (in the given fields), grouped by
+    group name, groups sorted - as [(group, [device, ...]), ...]."""
+    q = (q or "").strip().lower()
+    devices = [d for d in list_actor_types()
+               if not q or any(q in (d.get(f) or "").lower() for f in fields)]
+    groups = {}
+    for d in devices:
+        groups.setdefault(d["group_name"] or "Sonstiges", []).append(d)
+    return sorted(groups.items()), len(devices)
+
+
+def _catalog(request, q="", editing=None, toast=None):
+    groups, shown = _grouped(q, ("manufacturer", "model", "group_name", "description", "channel_type"))
+    response = templates.TemplateResponse(request, "device_catalog/catalog.html", {
+        "groups": groups, "shown": shown, "total": len(list_actor_types()), "q": q,
+        "editing": editing, "known_groups": KNOWN_GROUPS})
+    events = {"catalog-changed": True}   # refreshes the ACTOR_TYPES cache (device_catalog.js)
+    if toast:
+        events["show-toast"] = {"message": toast, "level": "success"}
+    response.headers["HX-Trigger"] = json.dumps(events)
+    return response
+
+
+@router.get("/hx/device-catalog")
+def hx_catalog(request: Request, q: str = ""):
+    return _catalog(request, q)
+
+
+@router.get("/hx/device-catalog/list")
+def hx_catalog_list(request: Request, q: str = ""):
+    groups, shown = _grouped(q, ("manufacturer", "model", "group_name", "description", "channel_type"))
+    return templates.TemplateResponse(request, "device_catalog/_list.html", {
+        "groups": groups, "shown": shown, "total": len(list_actor_types()), "q": q})
+
+
+@router.get("/hx/device-catalog/{at_id}/edit")
+def hx_edit(request: Request, at_id: int, q: str = ""):
+    editing = next((d for d in list_actor_types() if d["id"] == at_id), None)
+    if not editing:
+        raise HTTPException(404, "Gerät nicht gefunden")
+    return _catalog(request, q, editing=editing)
+
+
+async def _device_from_form(request, existing=None):
+    """Form -> ActorTypeIn. The group comes from the select, or the custom
+    text field for "Andere"; type/channels only count for "Aktor". The
+    manual URL is curated on the other sub-tab, so an edit keeps it."""
+    form = await request.form()
+    group = form.get("group_name") or "Aktor"
+    if group == "__custom__":
+        group = (form.get("group_custom") or "").strip() or "Sonstiges"
+    is_actuator = group == "Aktor"
+    model = (form.get("model") or "").strip()
+    channel_type = (form.get("channel_type") or "").strip() if is_actuator else ""
+    if not model:
+        raise HTTPException(400, "Modell ist erforderlich")
+    if is_actuator and not channel_type:
+        raise HTTPException(400, 'Type ist für die Gruppe "Aktor" erforderlich')
+
+    def number(name, default=None):
+        value = (form.get(name) or "").strip()
+        try:
+            return int(value) if value else default
+        except ValueError:
+            raise HTTPException(400, "Bitte eine ganze Zahl eingeben")
+    return ActorTypeIn(
+        manufacturer=(form.get("manufacturer") or "").strip(), model=model, group_name=group,
+        description=(form.get("description") or "").strip(), channel_type=channel_type,
+        channel_count=number("channel_count", 1) if is_actuator else None, width_te=number("width_te"),
+        manual_url=existing["manual_url"] if existing else ""), form.get("q") or ""
+
+
+@router.post("/hx/device-catalog")
+async def hx_create(request: Request):
+    device, q = await _device_from_form(request)
+    create_actor_type(device)
+    return _catalog(request, q, toast="Gerät gespeichert.")
+
+
+@router.put("/hx/device-catalog/{at_id}")
+async def hx_update(request: Request, at_id: int):
+    existing = next((d for d in list_actor_types() if d["id"] == at_id), None)
+    if not existing:
+        raise HTTPException(404, "Gerät nicht gefunden")
+    device, q = await _device_from_form(request, existing)
+    update_actor_type(at_id, device)
+    return _catalog(request, q, toast="Gerät gespeichert.")
+
+
+@router.delete("/hx/device-catalog/{at_id}")
+def hx_delete(request: Request, at_id: int, q: str = ""):
+    with get_db() as db:
+        in_use = db.execute(
+            "SELECT 1 FROM room_devices WHERE device_type_id=? UNION SELECT 1 FROM floor_devices WHERE device_type_id=? "
+            "UNION SELECT 1 FROM actor_instances WHERE actor_type_id=?", (at_id, at_id, at_id)).fetchone()
+    if in_use:
+        raise HTTPException(400, "Dieses Gerät wird in einem Projekt verwendet (Geräteplanung oder Abgangsliste) und kann nicht gelöscht werden")
+    delete_actor_type(at_id)
+    return _catalog(request, q)
+
+
+@router.delete("/hx/device-catalog")
+def hx_clear(request: Request):
+    result = clear_actor_types()
+    skipped = f", {result['skipped_in_use']} in Verwendung übersprungen" if result["skipped_in_use"] else ""
+    return _catalog(request, toast=f"{result['deleted']} gelöscht{skipped}.")
+
+
+@router.get("/hx/device-catalog/manuals")
+def hx_manuals(request: Request, q: str = ""):
+    groups, shown = _grouped(q, ("manufacturer", "model", "group_name"))
+    return templates.TemplateResponse(request, "device_catalog/manuals.html", {"groups": groups, "q": q})
+
+
+@router.get("/hx/device-catalog/manuals/list")
+def hx_manuals_list(request: Request, q: str = ""):
+    groups, shown = _grouped(q, ("manufacturer", "model", "group_name"))
+    return templates.TemplateResponse(request, "device_catalog/_manuals_list.html", {"groups": groups, "q": q})
+
+
+@router.put("/hx/device-catalog/{at_id}/manual-url")
+async def hx_manual_url(request: Request, at_id: int):
+    """Saved on change, no re-render (keeps focus while tabbing through the list)."""
+    update_actor_type_manual_url(at_id, ManualUrlIn(manual_url=((await request.form()).get("manual_url") or "").strip()))
+    response = Response(status_code=200)
+    response.headers["HX-Trigger"] = json.dumps({"catalog-changed": True})
+    return response

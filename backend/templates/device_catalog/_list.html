@@ -1,0 +1,24 @@
+{# Grouped device list (filtered by the search field). #}
+{% if q %}<p class="muted" style="margin:0;">{{ shown }} von {{ total }} Geräten</p>{% endif %}
+{% for group, devices in groups %}
+  <h4 style="margin:14px 0 6px;">{{ group }}</h4>
+  <ul class="list">
+    {% for d in devices %}
+      <li>
+        <div>
+          <b>{{ [d.manufacturer, d.model] | select | join(" ") }}</b>
+          {% if d.channel_type %}<span class="pill">{{ d.channel_type }}</span>{% endif %}
+          {% if d.channel_count %}<span class="pill">{{ d.channel_count }} Kanäle</span>{% endif %}
+          {% if d.width_te %}<span class="pill">{{ d.width_te }} TE</span>{% endif %}
+          {% if d.description %}<div class="muted" style="margin-top:2px;">{{ d.description }}</div>{% endif %}
+        </div>
+        <div class="row" style="gap:6px;">
+          <button class="btn secondary small" hx-get="/hx/device-catalog/{{ d.id }}/edit" hx-include="#dc-filter" hx-target="#device-catalog-subtab-catalog" hx-swap="innerHTML">Bearbeiten</button>
+          <button class="btn danger small" hx-delete="/hx/device-catalog/{{ d.id }}" hx-include="#dc-filter" hx-target="#device-catalog-subtab-catalog" hx-swap="innerHTML" hx-confirm="Dieses Gerät löschen?">Löschen</button>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="muted">{{ "Keine Geräte gefunden" if q else "Noch keine Geräte" }}</p>
+{% endfor %}

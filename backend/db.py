@@ -450,7 +450,7 @@ def init_db():
             );
 
             -- Device manuals fetched from a catalog-curated actor_types.manual_url
-            -- (see routers/geraete.py) for a device actually used in this project
+            -- (see routers/device_catalog.py) for a device actually used in this project
             -- (see routers/manuals.py) - kept in its own table rather than
             -- project_files so the Dateien list (things the user themselves
             -- uploaded) never gets mixed with manuals the app fetched on the
@@ -1079,7 +1079,7 @@ def seed_defaults(db):
 
 # Bundled starter catalog: one docs/templates/geraete-katalog_<hersteller>.json file
 # per manufacturer, same format as a user-exported/imported catalog file (see
-# routers/geraete.py). Single source of truth for both the fresh-install seed below
+# routers/device_catalog.py). Single source of truth for both the fresh-install seed below
 # and the "Standard-Katalog importieren" button (POST /api/actor-types/import-defaults)
 # - adding a new manufacturer file here is picked up by both without any code change.
 ACTOR_TYPE_TEMPLATES_DIR = Path(__file__).parent.parent / "docs" / "templates"
@@ -1101,7 +1101,7 @@ def seed_default_actor_types(db):
     runs once, when actor_types is empty - deliberately NOT re-run on later startups,
     since by then the catalog is the user's own (they may have deleted starter devices
     on purpose, or edited them) - see import_default_actor_types() in
-    routers/geraete.py for the equivalent manual, opt-in re-import."""
+    routers/device_catalog.py for the equivalent manual, opt-in re-import."""
     for at in load_bundled_actor_type_defaults():
         db.execute(
             "INSERT INTO actor_types "

@@ -20,7 +20,7 @@ CSV export format (verified against real ETS6 exports):
     DPTs are written as "DPST-x-y". Security is always "Auto".
 
 This file just wires everything together - see backend/routers/ for the
-actual endpoints, grouped by tab (setup, geraete, projects, abgangsliste,
+actual endpoints, grouped by tab (setup, device_catalog, projects, abgangsliste,
 geraeteplanung, verteiler, klaerungsliste, pflichtenheft, system,
 project_files, manuals, checkliste, dokumentation, email, time_tracking,
 linien), backend/db.py for
@@ -44,7 +44,7 @@ from fastapi.staticfiles import StaticFiles
 from .backup import run_backup_now
 from .db import get_db, init_db
 from .routers import (
-    setup, geraete, projects, abgangsliste, geraeteplanung, klaerungsliste, pflichtenheft, system, verteiler,
+    setup, device_catalog, projects, abgangsliste, geraeteplanung, klaerungsliste, pflichtenheft, system, verteiler,
     project_files, manuals, checkliste, dokumentation, email, time_tracking, linien,
 )
 
@@ -93,7 +93,7 @@ app = FastAPI(title="KNXpilot", lifespan=lifespan)
 init_db()
 
 app.include_router(setup.router)
-app.include_router(geraete.router)
+app.include_router(device_catalog.router)
 app.include_router(projects.router)
 app.include_router(abgangsliste.router)
 app.include_router(geraeteplanung.router)
