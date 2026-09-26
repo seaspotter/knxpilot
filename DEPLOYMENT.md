@@ -15,9 +15,10 @@ below); only a changed `requirements.txt`/`Dockerfile` needs a fresh
 Projekte liegen in der SQLite-Datei `backend/data/knx_ga.db`, die über
 `docker-compose.yml` in den Container eingebunden wird — sie übersteht also
 Container-Neubauten/-Neustarts, solange dieser Ordner nicht gelöscht wird.
-Die JSON-Sicherung/-Wiederherstellung (siehe README, Abschnitt
-Gruppenadressen) ist für explizite Portabilität gedacht (Projekt zwischen
-Installationen umziehen, manuelles Backup), nicht für die normale
+Die JSON-Sicherung/-Wiederherstellung je Projekt (siehe MANUAL.md,
+Abschnitt Gruppenadressen) enthält das komplette Projekt und ist für
+explizite Portabilität gedacht (Projekt zwischen Installationen umziehen,
+manuelles Backup eines einzelnen Projekts), nicht für die normale
 Persistenz im Alltag nötig.
 
 ## Backups (Setup → Backup)

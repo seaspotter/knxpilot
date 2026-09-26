@@ -103,9 +103,9 @@ importieren — legt daraus ein neues Projekt an (siehe Gruppenadressen
 unten); existiert bereits ein Projekt mit gleichem Namen, wird der Import
 als "<Name> (imported)" gespeichert statt es zu überschreiben. Jede Zeile
 der Liste hat ausserdem **Öffnen**, **Duplizieren** und **Löschen**
-— Duplizieren legt sofort eine vollständige Kopie an ("<Name> (Kopie)",
+— Duplizieren legt sofort eine Kopie der Planung an ("<Name> (Kopie)",
 bei mehrfachem Duplizieren fortlaufend nummeriert), ohne Umweg über eine
-Datei.
+Datei (was genau kopiert wird: siehe Gruppenadressen, ⭳/Duplizieren).
 
 **Öffnen** eines Projekts (aus der Liste, oder über das Suchfenster
 **Projekt öffnen** im ▾-Menü) zeigt dessen Arbeitsbereich (die
@@ -130,10 +130,9 @@ Projekt hochladen (z.B. Baupläne, ein ETS-Export) — Datei auswählen,
 **Hochladen**, danach mit **Herunterladen**/**Löschen** je Zeile
 verwalten (max. 25 MB je Datei). Bewusst keine vollständige
 Dokumentenablage: die Dateien liegen direkt in der Datenbank und sind
-damit automatisch Teil der Datenbanksicherung (Setup → Backup), erscheinen
-aber **nicht** in der JSON-Projektsicherung (⭳/⭱) oder beim Duplizieren
-(⧉) — die bleiben bewusst ein leichtgewichtiger Export/Kopie nur der
-Gebäudestruktur/Gruppenadressen. Gerätehandbücher gehören bewusst **nicht**
+damit automatisch Teil der Datenbanksicherung (Setup → Backup) und der
+JSON-Projektsicherung (⭳/⭱), beim Duplizieren (⧉) aber nicht — die Pläne
+gehören zum Original-Objekt. Gerätehandbücher gehören bewusst **nicht**
 hierher — die haben ihren eigenen Unterreiter Handbücher (siehe unten).
 
 #### Gebäudestruktur
@@ -234,17 +233,25 @@ Browser merkt sich das).
   noch keinen gemerkten Export haben), setzt **Aktuellen Stand als in ETS
   übernommen markieren** den Stand ohne Download.
 - **⭳** (im Projektkopf oben, unterreiterübergreifend sichtbar) speichert
-  die komplette Projektdefinition (Metadaten, Geschosse, Räume, Punkte,
-  Sonderadressen) als `.json`-Datei — getrennt von der ETS-CSV, gedacht
-  zum Sichern oder Umziehen eines Projekts zwischen Installationen (über
-  das ⭱-Symbol in der Projektliste wieder einspielbar). Beim
-  Wiederherstellen werden Funktionstypen/Kategorien per Name mit der
-  Zielinstallation abgeglichen; was nicht übereinstimmt, wird
-  übersprungen und gemeldet, nie einfach angenommen. Für eine schnelle
-  Kopie auf derselben Installation (z.B. als Vorlage für ein ähnliches
-  Objekt) gibt es stattdessen **Duplizieren** (⧉ im Projektkopf, oder als
-  Button direkt in der Projektliste) — legt ohne Datei-Umweg sofort eine
-  komplette Kopie an.
+  das **komplette Projekt** als `.json`-Datei — getrennt von der ETS-CSV,
+  gedacht zum Sichern oder Umziehen eines Projekts zwischen
+  Installationen (über das ⭱-Symbol in der Projektliste wieder
+  einspielbar): Metadaten, Geschosse/Räume/Funktionen, Sonderadressen,
+  KNX-Linien, Aktoren samt Kanalzuordnung und physikalischen Adressen,
+  geplante Geräte, "Nicht bestellen"-Markierungen, Verteiler, Klärungen,
+  die Haken und Bemerkungen beider Checklisten, Unterschriften, der Stand
+  des letzten ETS-Exports, Projektdateien und abgelegte Handbücher.
+  Nur die Zeiterfassung ist nie dabei (rein intern). Beim Wiederherstellen
+  werden Funktionstypen/Kategorien/Vorlagen per Name und Geräte per
+  Hersteller + Typ mit der Zielinstallation abgeglichen; was nicht
+  übereinstimmt, wird übersprungen und gemeldet, nie einfach angenommen.
+  Für eine schnelle Kopie auf derselben Installation (z.B. als Vorlage für
+  ein ähnliches Objekt) gibt es stattdessen **Duplizieren** (⧉ im
+  Projektkopf, oder als Button direkt in der Projektliste) — kopiert die
+  **Planung** (alles oben bis einschliesslich Verteiler), aber nicht, was
+  zum Original-Objekt gehört: keine Klärungen, Checklisten-Haken,
+  Unterschriften, kein ETS-Export-Stand, keine Dateien oder Handbücher.
+  Die Kopie startet also ungetestet und "noch nie nach ETS exportiert".
 
 #### Abgangsliste
 

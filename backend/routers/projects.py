@@ -13,6 +13,7 @@ from fastapi.responses import StreamingResponse
 
 from ..db import get_db
 from ..ga_logic import build_ga_tree
+from ..project_transfer import build_project_payload, insert_project_from_payload
 from ..models import ProjectIn, FloorIn, RoomIn, RoomPointIn, RoomPointEditIn, SpecialItemIn, StructureMoveIn
 from ..utils import AGED_KLAERUNG_DAYS, content_disposition
 
@@ -419,96 +420,14 @@ def delete_special(special_id: int):
 
 
 # --------------------------------------------------------------------------
-# Project backup / duplicate / transfer (JSON) - separate from the ETS CSV export
+# Project backup / duplicate / transfer (JSON) - separate from the ETS CSV export.
+# The payload itself (what's in it, how references survive another install,
+# "backup" vs "duplicate" mode) lives in backend/project_transfer.py.
 # --------------------------------------------------------------------------
-def _build_project_payload(db, project_id):
-    """
-    Full project definition as a dict: floors, rooms, points, and specials.
-    References point types / categories by NAME (not internal id) so this
-    payload can be re-imported on a different install even if ids don't line
-    up, as long as the same Point Types / Categories exist there. Shared by
-    the export-json endpoint and duplicate_project (which feeds it straight
-    into _insert_project_from_payload without a round-trip through JSON).
-    """
-    project = db.execute("SELECT * FROM projects WHERE id=?", (project_id,)).fetchone()
-    if not project:
-        raise HTTPException(404, "Project not found")
-
-    categories = {r["id"]: r["name"] for r in db.execute("SELECT * FROM categories").fetchall()}
-    point_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM point_types").fetchall()}
-    # KNX lines are referenced by their "Bereich.Linie" address, not by id.
-    line_rows = db.execute("SELECT * FROM knx_lines WHERE project_id=? ORDER BY area, line", (project_id,)).fetchall()
-    line_addr = {r["id"]: f"{r['area']}.{r['line']}" for r in line_rows}
-
-    floors_out = []
-    for floor in db.execute(
-        "SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)
-    ).fetchall():
-        rooms_out = []
-        for room in db.execute(
-            "SELECT * FROM rooms WHERE floor_id=? ORDER BY order_idx", (floor["id"],)
-        ).fetchall():
-            points_out = []
-            for point in db.execute(
-                "SELECT * FROM room_points WHERE room_id=? ORDER BY order_idx", (room["id"],)
-            ).fetchall():
-                pt = point_types.get(point["point_type_id"])
-                if not pt:
-                    continue
-                points_out.append(
-                    {
-                        "point_type_name": pt["name"],
-                        "category_name": categories.get(pt["category_id"], ""),
-                        "label": point["label"],
-                        "has_bwm": bool(point["has_bwm"]),
-                    }
-                )
-            rooms_out.append({"name": room["name"], "line": line_addr.get(room["line_id"]), "points": points_out})
-        floors_out.append({"name": floor["name"], "is_outdoor": bool(floor["is_outdoor"]),
-                           "line": line_addr.get(floor["line_id"]), "rooms": rooms_out})
-
-    floor_order_by_id = {}
-    for floor in db.execute(
-        "SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)
-    ).fetchall():
-        floor_order_by_id[floor["id"]] = floor["order_idx"]
-
-    specials_out = []
-    for s in db.execute(
-        "SELECT * FROM special_items WHERE project_id=? ORDER BY order_idx", (project_id,)
-    ).fetchall():
-        location = s["location"]
-        if location != "central" and location.isdigit() and int(location) in floor_order_by_id:
-            location = f"floor:{floor_order_by_id[int(location)]}"
-        specials_out.append(
-            {
-                "category_name": categories.get(s["category_id"], ""),
-                "location": location,
-                "name": s["name"],
-                "suffixes": json.loads(s["suffixes_json"]),
-            }
-        )
-
-    return {
-        "format": "knx-ga-project-v1.1",
-        "project_name": project["name"],
-        "location": project["location"],
-        "customer": project["customer"],
-        "status": project["status"],
-        "comment": project["comment"],
-        "order_number": project["order_number"],
-        "email": project["email"],
-        "additional_recipients": project["additional_recipients"],
-        "lines": [{"area": r["area"], "line": r["line"], "name": r["name"]} for r in line_rows],
-        "floors": floors_out,
-        "specials": specials_out,
-    }
-
-
 @router.get("/api/projects/{project_id}/export-json")
 def export_project_json(project_id: int):
     with get_db() as db:
-        payload = _build_project_payload(db, project_id)
+        payload = build_project_payload(db, project_id, mode="backup")
     buf = io.StringIO()
     buf.write(json.dumps(payload, ensure_ascii=False, indent=2))
     buf.seek(0)
@@ -520,118 +439,30 @@ def export_project_json(project_id: int):
     )
 
 
-def _insert_project_from_payload(db, payload, forced_name=None):
-    """
-    Recreates a project from a payload produced by _build_project_payload.
-    Matches Point Types and Categories by name against what already exists
-    on this install - anything that doesn't match is skipped (not silently
-    guessed at). If forced_name is given (duplicate_project), it's used
-    as-is (caller already made sure it's unique) - otherwise, a project
-    with the same name already existing gets "<name> (imported)" instead of
-    overwriting it.
-    """
-    name = forced_name if forced_name is not None else payload.get("project_name", "Imported Project")
-    if forced_name is None:
-        existing = db.execute("SELECT id FROM projects WHERE name=?", (name,)).fetchone()
-        if existing:
-            name = f"{name} (imported)"
-
-    categories_by_name = {r["name"]: r["id"] for r in db.execute("SELECT * FROM categories").fetchall()}
-    point_types_by_name = {
-        (r["category_id"], r["name"]): r["id"] for r in db.execute("SELECT * FROM point_types").fetchall()
-    }
-
-    cur = db.execute(
-        "INSERT INTO projects (name, location, customer, status, comment, order_number, "
-        "email, additional_recipients) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (
-            name,
-            payload.get("location", ""),
-            payload.get("customer", ""),
-            payload.get("status", ""),
-            payload.get("comment", ""),
-            payload.get("order_number", ""),
-            payload.get("email", ""),
-            payload.get("additional_recipients", ""),
-        ),
-    )
-    project_id = cur.lastrowid
-    skipped = []
-
-    line_ids = {}  # "Bereich.Linie" -> new knx_lines id
-    for line in payload.get("lines", []):
-        lcur = db.execute("INSERT INTO knx_lines (project_id, area, line, name) VALUES (?, ?, ?, ?)",
-                          (project_id, int(line["area"]), int(line["line"]), line.get("name", "")))
-        line_ids[f"{int(line['area'])}.{int(line['line'])}"] = lcur.lastrowid
-
-    floor_id_map = {}  # index in payload -> new floor id, for resolving special locations
-    for f_idx, floor in enumerate(payload.get("floors", [])):
-        fcur = db.execute(
-            "INSERT INTO floors (project_id, name, order_idx, is_outdoor, line_id) VALUES (?, ?, ?, ?, ?)",
-            (project_id, floor["name"], f_idx, int(floor.get("is_outdoor", False)), line_ids.get(floor.get("line"))),
-        )
-        floor_id = fcur.lastrowid
-        floor_id_map[f_idx] = floor_id
-        for r_idx, room in enumerate(floor.get("rooms", [])):
-            rcur = db.execute(
-                "INSERT INTO rooms (floor_id, name, order_idx, line_id) VALUES (?, ?, ?, ?)",
-                (floor_id, room["name"], r_idx, line_ids.get(room.get("line"))),
-            )
-            room_id = rcur.lastrowid
-            for p_idx, point in enumerate(room.get("points", [])):
-                cat_id = categories_by_name.get(point.get("category_name"))
-                pt_id = point_types_by_name.get((cat_id, point.get("point_type_name")))
-                if not pt_id:
-                    skipped.append(f"{room['name']}: {point.get('point_type_name')}")
-                    continue
-                db.execute(
-                    "INSERT INTO room_points (room_id, point_type_id, label, order_idx, has_bwm) "
-                    "VALUES (?, ?, ?, ?, ?)",
-                    (room_id, pt_id, point.get("label", ""), p_idx, int(point.get("has_bwm", False))),
-                )
-
-    for s_idx, special in enumerate(payload.get("specials", [])):
-        cat_id = categories_by_name.get(special.get("category_name"))
-        if not cat_id:
-            skipped.append(f"special: {special.get('name')}")
-            continue
-        location = special.get("location", "central")
-        if isinstance(location, str) and location.startswith("floor:"):
-            floor_pos = int(location.split(":", 1)[1])
-            location = str(floor_id_map.get(floor_pos, "central"))
-        db.execute(
-            "INSERT INTO special_items (project_id, category_id, location, name, suffixes_json, order_idx) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
-            (project_id, cat_id, location, special.get("name", ""),
-             json.dumps(special.get("suffixes", [])), s_idx),
-        )
-
-    return {"id": project_id, "name": name, "skipped": skipped}
-
-
 @router.post("/api/projects/import-json")
 def import_project_json(payload: dict):
     with get_db() as db:
-        return _insert_project_from_payload(db, payload)
+        return insert_project_from_payload(db, payload)
 
 
 @router.post("/api/projects/{project_id}/duplicate")
 def duplicate_project(project_id: int):
     """
-    Same-install copy: builds the export payload and immediately re-inserts
-    it under a new name, in one connection/transaction - no skipped items
-    are possible here (Point Types/Categories always match themselves), the
-    way they theoretically could on a cross-install import-json.
+    Same-install copy of the planning data ("duplicate" mode - no checklist
+    results, signatures, ETS export state, Klärungen or files): builds the
+    payload and immediately re-inserts it under a new name, in one
+    connection/transaction - nothing can be skipped here, since every
+    catalog reference matches itself on the same install.
     """
     with get_db() as db:
-        payload = _build_project_payload(db, project_id)
+        payload = build_project_payload(db, project_id, mode="duplicate")
         base_name = payload["project_name"]
         name = f"{base_name} (Kopie)"
         n = 2
         while db.execute("SELECT id FROM projects WHERE name=?", (name,)).fetchone():
             name = f"{base_name} (Kopie {n})"
             n += 1
-        return _insert_project_from_payload(db, payload, forced_name=name)
+        return insert_project_from_payload(db, payload, forced_name=name)
 
 
 # --------------------------------------------------------------------------

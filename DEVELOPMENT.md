@@ -97,6 +97,7 @@ backend/
   models.py         — Pydantic request-body schemas
   ga_logic.py       — group-address tree generation, circuits, per-room/central function listings (used by Pflichtenheft and the checklists)
   pdf_design.py     — shared PDF look (banner, table style, page numbers, letterhead); build_pdf_bytes()/build_pdf_bytes_two_pass() are the raw-bytes builders every export (and email.py's send action) go through
+  project_transfer.py — per-project JSON backup/restore + duplicate (what's included, name/position-based references)
   pa_assign.py      — physical-address auto-assign (bucket convention, per KNX line) + line coupler/power supply detection
   email_sender.py   — SMTP mechanics (stdlib smtplib) behind routers/email.py's send-by-mail action
   utils.py          — small dependency-free helpers

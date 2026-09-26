@@ -8,6 +8,18 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- **Complete per-project JSON backup** — "Sichern (JSON)" used to contain
+  only the structure, functions, special addresses and lines; restoring it
+  lost the Abgangsliste, Geräteplanung, Verteiler and all on-site results.
+  It now holds the whole project: actuators with channel assignments and
+  physical addresses, planned devices, "Nicht bestellen" flags, Verteiler,
+  Klärungen, checklist ticks and notes, signatures, the last ETS export
+  snapshot, project files and fetched manuals (never Zeiterfassung). Every
+  reference is by name/position, so it restores on another install;
+  unknown devices are reported, not guessed. **Duplizieren** now copies the
+  full planning (incl. actuators, assignments, devices, Verteiler) but
+  starts untested, unsigned and never exported. Older backup files still
+  import. The code moved to `backend/project_transfer.py`.
 - **Funktionscheckliste: test date and signatures** — every ticked row
   shows when it was ticked (the existing `updated_at`, now also printed
   under the checkbox in the PDF), and a "Bestätigung: Funktionen getestet"

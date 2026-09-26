@@ -1,9 +1,8 @@
 """
 Automatic/manual backups of the whole SQLite database - not just individual
-projects (see routers/projects.py's export-json/duplicate for that, which
-is a lossy per-project snapshot missing Abgangsliste/Geräteplanung/
-Klärungsliste data, by design - it's meant for transferring/duplicating one
-project, not disaster recovery). A full-database backup is a complete,
+projects (see project_transfer.py for the per-project JSON backup/duplicate,
+meant for moving or copying one project, not disaster recovery: it leaves
+out the catalog, Setup and Zeiterfassung). A full-database backup is a complete,
 atomic snapshot: restoring is just replacing backend/data/knx_ga.db with a
 downloaded copy and restarting.
 
