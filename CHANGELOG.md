@@ -8,6 +8,14 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- **"Inhalt" and "Vorschau" on the Pflichtenheft and Dokumentation tabs** —
+  both tabs used to show just two buttons. They now list the PDF's
+  sections/chapters in order, each with whether it's included and what's
+  in it; on the Dokumentation tab this doubles as a readiness check
+  ("9 / 36 getestet", "0 / 2 Unterschriften", open Klärungen in orange).
+  The Dokumentation's chapter list comes from the same spec the PDF's
+  Inhaltsverzeichnis is built from. **Vorschau** opens the PDF in a new
+  browser tab instead of downloading it (`?inline=1` on both exports).
 - **Gebäudestruktur as a tree with drag & drop** — Geschoss → Raum →
   Verteiler as a compact collapsible tree (like the building view in ETS)
   instead of one card per room. Rooms can be dragged to another position

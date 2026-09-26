@@ -107,6 +107,16 @@
   .rc-row-3 select { width:100%; }
   .rc-note { color:var(--muted); font-size:12px; }
   .line-select { font-size:12px; padding:3px 6px; }
+  /* "Inhalt" card, Pflichtenheft/Dokumentation (ui.js renderDocContents) */
+  .doc-contents-heading { margin:14px 0 6px; }
+  .doc-contents { border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .doc-row { display:grid; grid-template-columns:22px minmax(180px, 280px) 1fr; gap:10px; align-items:baseline; padding:7px 10px; font-size:13.5px; }
+  .doc-row + .doc-row { border-top:1px solid var(--border); }
+  .doc-mark { color:var(--accent2); font-weight:700; text-align:center; }
+  .doc-title { font-weight:600; }
+  .doc-detail { color:var(--muted); font-size:13px; }
+  .doc-detail.warn { color:var(--warn); }
+  .doc-row.off .doc-mark, .doc-row.off .doc-title { color:var(--muted); font-weight:normal; }
   /* Funktionscheckliste rows (funktionscheckliste.js) */
   .fc-row { display:grid; grid-template-columns:110px 1fr auto; align-items:center; gap:10px; padding:6px 4px; border-bottom:1px solid var(--border); font-size:13.5px; cursor:pointer; }
   .fc-row:last-child { border-bottom:none; }
@@ -283,6 +293,8 @@
 
   @media (max-width: 700px) {
     .st-meta { display:none; }
+    .doc-row { grid-template-columns:18px 1fr; }
+    .doc-detail { grid-column:2; }
     .fc-row { grid-template-columns:86px 1fr auto; gap:8px; }
     .fc-row .pill { font-size:10px; padding:2px 6px; }
     .st-row { flex-wrap:wrap; row-gap:4px; }

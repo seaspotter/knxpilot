@@ -444,8 +444,12 @@ z.B. Technikraum) und hat eine feste Anzahl Reihen — jede Reihe ist immer
 Die frühe, kundenseitige Leistungsbeschreibung: was wurde vereinbart? Rein
 auf die Planungsphase fokussiert — bewusst ohne Testergebnisse oder
 Ausführungsdetails (dafür: Funktionscheckliste, Übergabe-Checkliste,
-Dokumentation, siehe unten). **PDF herunterladen** erzeugt ein
-mehrseitiges Dokument mit:
+Dokumentation, siehe unten). Der Unterreiter zeigt unter **Inhalt** die
+Abschnitte des PDFs in ihrer Reihenfolge — je Abschnitt, ob er enthalten
+ist und was drinsteht (z.B. "2 Geschosse · 6 Räume", "9 Gerätetypen · 18
+Stück", Räume noch ohne Funktionen orange). **Vorschau** öffnet das PDF
+zum Lesen in einem neuen Browser-Tab, **PDF herunterladen** speichert es.
+Das PDF ist ein mehrseitiges Dokument mit:
 
 - einem **Vorbemerkungen**-Abschnitt (Begriffserklärungen, allgemeine
   Bedienphilosophie, Funktionsübersicht je Gewerk, Prioritäts-/
@@ -580,7 +584,12 @@ Unterreiter, nicht im Dokumentation-PDF eingebettet.
 #### Dokumentation
 
 Die vollständige Abschlussdokumentation, gedacht für das Ende des
-Projekts: **PDF herunterladen** fasst den Pflichtenheft-Inhalt (was
+Projekts. Unter **Inhalt** stehen alle Kapitel in PDF-Reihenfolge mit
+ihrem Stand — gleichzeitig eine Kontrolle vor der Übergabe: z.B. "9 / 36
+getestet", "7 / 19 beantwortet · 0 / 2 Unterschriften", "8 / 10
+Handbücher im Projekt abgelegt" oder offene Klärungen erscheinen orange;
+ausgeschaltete Kapitel grau mit Verweis auf Setup → Dokumentation.
+**Vorschau** öffnet das PDF in einem neuen Browser-Tab. **PDF herunterladen** fasst den Pflichtenheft-Inhalt (was
 vereinbart wurde, als eigener, klar mit "Pflichtenheft" überschriebener
 Abschnitt) mit optional den tatsächlichen Ergebnissen der Funktions- und
 Übergabe-Checkliste, optional einem Handbücher-Nachweis sowie optional

@@ -34,7 +34,7 @@ from reportlab.platypus import Paragraph, Spacer, Table, PageBreak, KeepTogether
 from reportlab.lib.units import mm
 
 from ..db import get_db
-from ..ga_logic import build_ga_tree, get_room_functions_by_category, get_central_functions_overview
+from ..ga_logic import build_ga_tree, get_circuits, get_room_functions_by_category, get_central_functions_overview
 from ..pdf_design import (
     pdf_styles, pdf_title_banner, pdf_table_style, checkbox_cell, build_pdf_bytes_two_pass, pdf_response,
     company_header_block, company_footer_line,
@@ -42,7 +42,7 @@ from ..pdf_design import (
 from .abgangsliste import build_abgangsliste_story
 from .verteiler import build_verteilerplanung_story
 from .geraeteplanung import build_geraete_je_raum_story, device_summary
-from .pflichtenheft import build_pflichtenheft_spec_story, function_checklist_table
+from .pflichtenheft import build_pflichtenheft_spec_story, function_checklist_table, pflichtenheft_stats
 from .checkliste import get_status_map, CHECKLIST_SECTIONS, checklist_section_table, build_signature_row
 
 router = APIRouter(tags=["dokumentation"])
@@ -205,61 +205,54 @@ def _uebergabe_story(db, project_id, styles, status_map):
     return story
 
 
+# The chapters in PDF order, with the Setup → Dokumentation toggle that
+# switches each one on (None = always included) and that toggle's default.
+# One list for both the PDF (_build_dokumentation_chapters, whose
+# Inhaltsverzeichnis is built from its result) and the "Inhalt" card on the
+# Dokumentation tab (dokumentation_contents), so the two can't drift apart.
+# Gruppenadressen last, deliberately - it's the longest/most
+# reference-table-like section on a larger project (every GA in a dense
+# table), so it goes at the very back rather than breaking up the more
+# narrative sections above it.
+DOKU_CHAPTERS = [
+    ("pflichtenheft", "Pflichtenheft", None, True),
+    ("funktionscheckliste", "Funktionscheckliste — Testergebnisse", "dokumentation_include_funktionscheckliste", True),
+    ("uebergabe", "Übergabe-Checkliste — Ergebnisse", "dokumentation_include_uebergabe", True),
+    ("handbuecher", "Handbücher", "dokumentation_include_handbuecher", True),
+    ("abgangsliste", "Abgangsliste", "pflichtenheft_include_abgangsliste", False),
+    ("verteilerplanung", "Verteilerplanung", "pflichtenheft_include_verteilerplanung", False),
+    ("geraete-je-raum", "Geräte je Raum", "pflichtenheft_include_geraete_je_raum", False),
+    ("klaerungsliste", "Klärungsliste", "pflichtenheft_include_klaerungsliste", False),
+    ("gruppenadressen", "Gruppenadressen", "pflichtenheft_include_gruppenadressen", False),
+]
+
+
+def _chapter_enabled(company, toggle, default):
+    return toggle is None or bool(company.get(toggle, default))
+
+
 def _build_dokumentation_chapters(db, project_id, company, styles):
-    """Built as (anchor, title, content) chapters, in the order they'll
-    appear, so the Inhaltsverzeichnis (built from this same list, see
-    _assemble_dokumentation_story()) can never drift out of sync with the
-    actual section titles/order - one source of truth instead of two
-    parallel lists."""
+    """(anchor, title, content) for every enabled chapter with content, in
+    DOKU_CHAPTERS order."""
     status_map = get_status_map(db, project_id)
-
-    chapters = [(
-        "pflichtenheft", "Pflichtenheft",
-        build_pflichtenheft_spec_story(db, project_id, company, styles),
-    )]
-
-    if company.get("dokumentation_include_funktionscheckliste", True):
-        chapters.append((
-            "funktionscheckliste", "Funktionscheckliste — Testergebnisse",
-            _funktionscheckliste_story(db, project_id, styles, status_map),
-        ))
-
-    if company.get("dokumentation_include_uebergabe", True):
-        chapters.append((
-            "uebergabe", "Übergabe-Checkliste — Ergebnisse",
-            _uebergabe_story(db, project_id, styles, status_map),
-        ))
-
-    if company.get("dokumentation_include_handbuecher", True):
-        chapters.append(("handbuecher", "Handbücher", _handbuecher_story(db, project_id, styles)))
-
-    if company.get("pflichtenheft_include_abgangsliste", False):
-        abgangsliste_story = build_abgangsliste_story(db, project_id, styles, page_break_between_floors=False)
-        if abgangsliste_story:
-            chapters.append(("abgangsliste", "Abgangsliste", abgangsliste_story))
-
-    if company.get("pflichtenheft_include_verteilerplanung", False):
-        verteilerplanung_story = build_verteilerplanung_story(db, project_id, styles)
-        if verteilerplanung_story:
-            chapters.append(("verteilerplanung", "Verteilerplanung", verteilerplanung_story))
-
-    if company.get("pflichtenheft_include_geraete_je_raum", False):
-        geraete_je_raum_story = build_geraete_je_raum_story(db, project_id, styles)
-        if geraete_je_raum_story:
-            chapters.append(("geraete-je-raum", "Geräte je Raum", geraete_je_raum_story))
-
-    if company.get("pflichtenheft_include_klaerungsliste", False):
-        chapters.append(("klaerungsliste", "Klärungsliste", _klaerungsliste_story(db, project_id, styles)))
-
-    # Gruppenadressen last, deliberately - it's the longest/most
-    # reference-table-like section on a larger project (every GA in a
-    # dense table), so it goes at the very back rather than breaking up
-    # the more narrative sections above it.
-    if company.get("pflichtenheft_include_gruppenadressen", False):
-        ga_story = _gruppenadressen_story(project_id, styles)
-        if ga_story:
-            chapters.append(("gruppenadressen", "Gruppenadressen", ga_story))
-
+    builders = {
+        "pflichtenheft": lambda: build_pflichtenheft_spec_story(db, project_id, company, styles),
+        "funktionscheckliste": lambda: _funktionscheckliste_story(db, project_id, styles, status_map),
+        "uebergabe": lambda: _uebergabe_story(db, project_id, styles, status_map),
+        "handbuecher": lambda: _handbuecher_story(db, project_id, styles),
+        "abgangsliste": lambda: build_abgangsliste_story(db, project_id, styles, page_break_between_floors=False),
+        "verteilerplanung": lambda: build_verteilerplanung_story(db, project_id, styles),
+        "geraete-je-raum": lambda: build_geraete_je_raum_story(db, project_id, styles),
+        "klaerungsliste": lambda: _klaerungsliste_story(db, project_id, styles),
+        "gruppenadressen": lambda: _gruppenadressen_story(project_id, styles),
+    }
+    chapters = []
+    for anchor, title, toggle, default in DOKU_CHAPTERS:
+        if not _chapter_enabled(company, toggle, default):
+            continue
+        content = builders[anchor]()
+        if content:  # e.g. Abgangsliste without any actuators is left out
+            chapters.append((anchor, title, content))
     return chapters
 
 
@@ -323,6 +316,94 @@ def build_dokumentation_pdf_bytes(project_id: int):
 
 
 @router.get("/api/projects/{project_id}/export-dokumentation.pdf")
-def export_dokumentation_pdf(project_id: int):
+def export_dokumentation_pdf(project_id: int, inline: bool = False):
     data, filename = build_dokumentation_pdf_bytes(project_id)
-    return pdf_response(data, filename)
+    return pdf_response(data, filename, inline=inline)
+
+
+# ---------- "Inhalt" card on the Dokumentation tab ----------
+def _function_checklist_keys(db, project_id):
+    keys = []
+    for room in db.execute(
+        "SELECT r.id FROM rooms r JOIN floors f ON r.floor_id = f.id WHERE f.project_id=?", (project_id,)
+    ).fetchall():
+        for items in get_room_functions_by_category(db, room["id"]).values():
+            keys += [it["key"] for it in items]
+    for _, items in get_central_functions_overview(db, project_id):
+        keys += [it["key"] for it in items]
+    return keys
+
+
+def _chapter_detail(db, project_id, anchor, status_map):
+    """(detail text, warn, has_content) for one chapter - has_content False
+    means the PDF leaves the chapter out even though it's switched on."""
+    if anchor == "pflichtenheft":
+        s = pflichtenheft_stats(db, project_id)
+        return (f"{s['rooms']} Räume · {s['functions']} Funktionen · {s['device_types']} Gerätetypen "
+                "(Details im Unterreiter Pflichtenheft)", not s["rooms"], True)
+    if anchor == "funktionscheckliste":
+        keys = _function_checklist_keys(db, project_id)
+        tested = sum(1 for k in keys if status_map.get(k, {}).get("status") == "ok")
+        if not keys:
+            return "noch keine Funktionen geplant", True, True
+        return f"{tested} / {len(keys)} getestet", tested < len(keys), True
+    if anchor == "uebergabe":
+        items = [f"uebergabe:{slug}" for _, section in CHECKLIST_SECTIONS for slug, _ in section]
+        answered = sum(1 for k in items if status_map.get(k, {}).get("status") in ("ja", "nein", "nicht_noetig"))
+        (signed,) = db.execute("SELECT COUNT(*) FROM project_signatures WHERE project_id=?", (project_id,)).fetchone()
+        return (f"{answered} / {len(items)} beantwortet · {signed} / 2 Unterschriften",
+                answered < len(items) or signed < 2, True)
+    if anchor == "handbuecher":
+        devices = [d for d in device_summary(project_id) if d["manual_url"]]
+        fetched = {r["device_type_id"] for r in db.execute(
+            "SELECT device_type_id FROM project_manuals WHERE project_id=?", (project_id,))}
+        n = sum(1 for d in devices if d["device_type_id"] in fetched)
+        if not devices:
+            return "keine Handbuch-Links für die verwendeten Geräte", False, True
+        return f"{n} / {len(devices)} Handbücher im Projekt abgelegt", n < len(devices), True
+    if anchor == "abgangsliste":
+        (actors,) = db.execute("SELECT COUNT(*) FROM actor_instances WHERE project_id=?", (project_id,)).fetchone()
+        circuits = get_circuits(db, project_id)
+        assigned = sum(1 for c in circuits if c["assignment"])
+        if not actors:
+            return "noch keine Aktoren — entfällt", False, False
+        return f"{actors} Aktoren · {assigned} / {len(circuits)} Abgänge zugeordnet", assigned < len(circuits), True
+    if anchor == "verteilerplanung":
+        (n,) = db.execute("SELECT COUNT(*) FROM verteiler WHERE project_id=?", (project_id,)).fetchone()
+        return (f"{n} Verteiler" if n else "noch keine Verteiler angelegt"), False, True
+    if anchor == "geraete-je-raum":
+        s = pflichtenheft_stats(db, project_id)
+        (actors,) = db.execute("SELECT COUNT(*) FROM actor_instances WHERE project_id=?", (project_id,)).fetchone()
+        (floor_devices,) = db.execute(
+            "SELECT COALESCE(SUM(fd.quantity), 0) FROM floor_devices fd JOIN floors f ON fd.floor_id = f.id "
+            "WHERE f.project_id=?", (project_id,)).fetchone()
+        total = s["devices"] + floor_devices + actors
+        return (f"{total} Geräte" if total else "noch keine Geräte — entfällt"), False, total > 0
+    if anchor == "klaerungsliste":
+        (n,) = db.execute("SELECT COUNT(*) FROM klaerungen WHERE project_id=?", (project_id,)).fetchone()
+        (open_,) = db.execute(
+            "SELECT COUNT(*) FROM klaerungen WHERE project_id=? AND status='offen'", (project_id,)).fetchone()
+        return (f"{n} Einträge · {open_} offen" if n else "keine Einträge"), open_ > 0, True
+    if anchor == "gruppenadressen":
+        tree = build_ga_tree(project_id, db)
+        n = sum(1 for main in tree["main_groups"] for middle in main["middles"]
+                for sub in middle["subs"] if not sub["name"].endswith("res"))
+        return (f"{n} Gruppenadressen" if n else "noch keine — entfällt"), False, n > 0
+    return "", False, True
+
+
+@router.get("/api/projects/{project_id}/dokumentation-contents")
+def dokumentation_contents(project_id: int):
+    """DOKU_CHAPTERS with, per chapter, whether it's in the PDF and a short
+    status - doubles as a readiness check before handing the PDF over."""
+    with get_db() as db:
+        company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
+        status_map = get_status_map(db, project_id)
+        result = []
+        for anchor, title, toggle, default in DOKU_CHAPTERS:
+            if not _chapter_enabled(company, toggle, default):
+                result.append({"title": title, "included": False, "detail": "aus (Setup → Dokumentation)", "warn": False})
+                continue
+            detail, warn, has_content = _chapter_detail(db, project_id, anchor, status_map)
+            result.append({"title": title, "included": has_content, "detail": detail, "warn": warn})
+        return result

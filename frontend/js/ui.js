@@ -199,3 +199,14 @@ function openImportModal(title, hint) {
     });
   });
 }
+
+// "Inhalt" card of the Pflichtenheft/Dokumentation tabs: one row per PDF
+// section, [{title, included, detail, warn}] from the *-contents endpoints.
+function renderDocContents(elementId, sections) {
+  document.getElementById(elementId).innerHTML = `<div class="doc-contents">${sections.map((s, i) => `
+    <div class="doc-row${s.included ? '' : ' off'}">
+      <span class="doc-mark">${s.included ? '✓' : '–'}</span>
+      <span class="doc-title">${s.included ? `${i + 1}. ` : ''}${escapeHtml(s.title)}</span>
+      <span class="doc-detail${s.warn ? ' warn' : ''}">${escapeHtml(s.detail)}</span>
+    </div>`).join('')}</div>`;
+}

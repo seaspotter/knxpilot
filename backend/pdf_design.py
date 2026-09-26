@@ -297,11 +297,13 @@ def build_pdf_bytes_two_pass(build_story, footer_left_text, doc_title, footer_ce
     return buf.getvalue()
 
 
-def pdf_response(data, filename):
+def pdf_response(data, filename, inline=False):
+    """inline=True lets the browser show the PDF in a tab ("Vorschau")
+    instead of downloading it."""
     return StreamingResponse(
         iter([data]),
         media_type="application/pdf",
-        headers={"Content-Disposition": content_disposition(filename)},
+        headers={"Content-Disposition": content_disposition(filename, "inline" if inline else "attachment")},
     )
 
 

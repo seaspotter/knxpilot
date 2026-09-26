@@ -109,7 +109,7 @@ backend/
     geraeteplanung.py  — per-room device planning, bill of materials, PDF export (Geräteplanung sub-tab)
     pflichtenheft.py   — early-stage spec PDF export (Pflichtenheft sub-tab); also home to function_checklist_table(), shared with checkliste.py
     checkliste.py      — digital on-site checklists: checklist_status upsert, Funktionscheckliste + Übergabe-Checkliste JSON/PDF (their sub-tabs)
-    dokumentation.py   — end-of-project assembly PDF, combining Pflichtenheft content + both checklists' results + a Handbücher checklist + optional as-built sections (Dokumentation sub-tab)
+    dokumentation.py   — end-of-project assembly PDF, combining Pflichtenheft content + both checklists' results + a Handbücher checklist + optional as-built sections; the chapter list (DOKU_CHAPTERS) also drives the tab's "Inhalt" card (Dokumentation sub-tab)
     email.py           — "Per E-Mail senden" endpoints, reusing each export's build_*_pdf_bytes() function (Setup → E-Mail + every export tab)
     klaerungsliste.py  — questions/tasks/notes per project + "Offene Punkte" PDF export (Klärungsliste sub-tab)
     project_files.py   — a handful of reference files per project, stored as a BLOB (Übersicht sub-tab)
@@ -134,11 +134,11 @@ frontend/
     zeiterfassung.js   — header start/stop timer, Zeiterfassung tab (edit entries, totals, Stundennachweis PDF download)
     abgangsliste.js    — actor instances + circuit assignment
     geraeteplanung.js  — per-room device planning
-    pflichtenheft.js   — Pflichtenheft PDF download button (static content)
+    pflichtenheft.js   — Pflichtenheft "Inhalt" card (sections + counts), Vorschau and PDF download
     funktionscheckliste.js — digital on-site function testing checklist
     uebergabe_checkliste.js — digital handover checklist
     klaerungsliste.js  — questions/tasks/notes, copy/PDF/email of the open points
-    dokumentation.js   — Dokumentation PDF download button (static content)
+    dokumentation.js   — Dokumentation "Inhalt" card (chapters + readiness status), Vorschau and PDF download
     update.js          — self-update tab + changelog viewer + version badge
     hilfe.js           — in-app manual (renders MANUAL.md)
     init.js            — page-load bootstrap, must load last (calls functions from the files above)

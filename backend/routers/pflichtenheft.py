@@ -295,6 +295,70 @@ def build_pflichtenheft_pdf_bytes(project_id: int):
 
 
 @router.get("/api/projects/{project_id}/export-pflichtenheft.pdf")
-def export_pflichtenheft_pdf(project_id: int):
+def export_pflichtenheft_pdf(project_id: int, inline: bool = False):
     data, filename = build_pflichtenheft_pdf_bytes(project_id)
-    return pdf_response(data, filename)
+    return pdf_response(data, filename, inline=inline)
+
+
+# ---------- "Inhalt" card on the Pflichtenheft tab ----------
+def pflichtenheft_stats(db, project_id):
+    """Counts behind the contents card - shared with routers/dokumentation.py,
+    whose first chapter is this same Pflichtenheft content."""
+    floors = db.execute("SELECT id FROM floors WHERE project_id=?", (project_id,)).fetchall()
+    rooms = db.execute(
+        "SELECT r.id FROM rooms r JOIN floors f ON r.floor_id = f.id WHERE f.project_id=?", (project_id,)
+    ).fetchall()
+    functions = empty_rooms = devices = 0
+    for room in rooms:
+        n_functions = sum(len(items) for items in get_room_functions_by_category(db, room["id"]).values())
+        (n_devices,) = db.execute(
+            "SELECT COALESCE(SUM(quantity), 0) FROM room_devices WHERE room_id=?", (room["id"],)
+        ).fetchone()
+        functions += n_functions
+        devices += n_devices
+        empty_rooms += not n_functions and not n_devices
+    central = sum(len(items) for _, items in get_central_functions_overview(db, project_id))
+    summary = device_summary(project_id)
+    return {
+        "floors": len(floors), "rooms": len(rooms), "functions": functions, "devices": devices,
+        "empty_rooms": empty_rooms, "central": central,
+        "device_types": len(summary), "device_total": sum(s["total"] for s in summary),
+    }
+
+
+def _section(title, included, detail, warn=False):
+    return {"title": title, "included": included, "detail": detail, "warn": warn}
+
+
+@router.get("/api/projects/{project_id}/pflichtenheft-contents")
+def pflichtenheft_contents(project_id: int):
+    """The PDF's sections in PDF order, with what each one contains - same
+    conditions as build_pflichtenheft_spec_story()."""
+    with get_db() as db:
+        company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
+        s = pflichtenheft_stats(db, project_id)
+    off = "aus (Setup → Pflichtenheft)"
+    has_preamble = bool((company.get("pflichtenheft_preamble") or "").strip())
+    sections = []
+    if not company.get("pflichtenheft_include_vorbemerkungen", True):
+        sections.append(_section("Vorbemerkungen", False, off))
+    else:
+        sections.append(_section("Vorbemerkungen", has_preamble,
+                                 "Text aus Setup → Pflichtenheft" if has_preamble else "kein Text hinterlegt (Setup → Pflichtenheft)"))
+    if not company.get("pflichtenheft_include_struktur", True):
+        sections.append(_section("Stockwerk- und Raumverzeichnis", False, off))
+    else:
+        sections.append(_section("Stockwerk- und Raumverzeichnis", s["rooms"] > 0, f"{s['floors']} Geschosse · {s['rooms']} Räume"))
+    detail = f"{s['functions']} Funktionen · {s['devices']} Geräte"
+    if s["empty_rooms"]:
+        detail += f" · {s['empty_rooms']} Raum/Räume noch ohne Funktionen oder Geräte"
+    sections.append(_section("Funktionen und Geräte je Raum", s["rooms"] > 0,
+                             detail if s["rooms"] else "noch keine Räume angelegt", warn=bool(s["empty_rooms"]) or not s["rooms"]))
+    sections.append(_section("Zentral- und Allgemeinfunktionen", s["central"] > 0,
+                             f"{s['central']} Funktionen" if s["central"] else "keine"))
+    if not company.get("pflichtenheft_include_geraeteliste", True):
+        sections.append(_section("Stückliste", False, off))
+    else:
+        sections.append(_section("Stückliste", s["device_types"] > 0,
+                                 f"{s['device_types']} Gerätetypen · {s['device_total']} Stück" if s["device_types"] else "noch keine Geräte geplant"))
+    return sections
