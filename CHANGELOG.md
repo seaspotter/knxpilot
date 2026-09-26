@@ -80,7 +80,9 @@ restructuring below — history before that is available via `git log`.
   (Starlette 1.x), uvicorn 0.30 → 0.54, ReportLab 4.2 → 5.0; test tooling
   pytest 9 and httpx2 (Starlette's new test-client dependency). Dependabot
   security alerts and automatic security updates are now enabled for the
-  repository.
+  repository. `main` is now a protected branch (no force pushes or
+  deletion; a push must have passed the Tests workflow) - see the release
+  routine in `DEVELOPMENT.md`.
 
 ### Fixed
 

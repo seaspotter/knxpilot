@@ -12,9 +12,15 @@
   see `CHANGELOG.md` for the version history.
 - **Release routine:** on `dev`, rename `## [Unreleased]` in `CHANGELOG.md`
   to `## [X.Y.Z] - YYYY-MM-DD` (optionally with a short summary paragraph
-  directly under that heading) and commit; then
+  directly under that heading), commit and push `dev`, and **wait until the
+  Tests workflow has passed for that commit** (`gh run watch`, or the
+  Actions tab); then
   `git checkout main && git merge --ff-only dev && git tag -a vX.Y.Z -m vX.Y.Z`
-  and `git push origin main vX.Y.Z`. Pushing the tag does the rest
+  and `git push origin main vX.Y.Z`. `main` is protected: no force pushes,
+  no deletion, and a push is only accepted if its commit passed the
+  `pytest` check - since `main` is fast-forwarded to the already-tested
+  `dev` commit, that just means "don't release before the tests are
+  green". No pull request is required. Pushing the tag does the rest
   automatically: [`.github/workflows/docker-publish.yml`](./.github/workflows/docker-publish.yml)
   builds and publishes the Docker image, and
   [`.github/workflows/release.yml`](./.github/workflows/release.yml)
