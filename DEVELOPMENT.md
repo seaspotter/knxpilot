@@ -212,8 +212,34 @@ rarely need to touch anything else.
   release's `dist/htmx.min.js` from npm and change the version in its
   name and the `<script>` tag. JSON endpoints stay where other code needs
   them (exports, badge, tests).
-- **User-facing strings are German**; code identifiers, comments, and this
-  documentation are English.
+- **User-facing strings are German**; everything else is English: code
+  identifiers, comments, file/directory names, database tables/columns,
+  API paths, CSS classes, template names, JSON keys, this documentation
+  (standing order since 2026-09-26). Use the glossary below for the
+  domain terms. Existing German names are renamed tab by tab (together
+  with each tab's move to htmx); don't add new ones.
+
+  | UI (German) | English name in code |
+  |---|---|
+  | Projekt, Übersicht | project, overview |
+  | Gebäudestruktur, Geschoss, Raum | building structure, floor, room |
+  | Funktionen (Punkte je Raum) | functions / room points |
+  | Sonder-/Zusatzadressen | special addresses |
+  | Gruppenadressen | group addresses |
+  | KNX-Linien, Linienkoppler | KNX lines, line coupler |
+  | Abgangsliste, Abgang, Aktor, Kanal | circuit list, circuit, actuator, channel |
+  | Labels (Etiketten) | labels |
+  | Geräteplanung, Stückliste | device planning, bill of materials |
+  | Verteilerplanung, Verteiler | distribution board planning, distribution board |
+  | Pflichtenheft | specification |
+  | Funktionscheckliste | function checklist |
+  | Übergabe-Checkliste | handover checklist |
+  | Klärungsliste, Klärung | clarification list, clarification |
+  | Handbücher | manuals |
+  | Dokumentation | documentation |
+  | Geräte Katalog | device catalog |
+  | Zeiterfassung | time tracking |
+  | Setup, Hilfe, Update | setup, help, update |
 - **Tests** — run `pytest` before committing; add a test for new backend
   logic (especially anything that writes data, migrates the schema or
   builds an export). UI changes still need a manual pass through the

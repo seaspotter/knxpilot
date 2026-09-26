@@ -71,6 +71,13 @@ the user to make explicitly, not something to introduce as a side effect of
   user agreed to on 2026-09-26: don't convert further tabs to htmx without
   asking, and don't add other frontend libraries.
 - User-facing strings are German; code, comments, and docs are English.
+  **Standing order from the user (2026-09-26): everything that isn't UI
+  text is English** - file and directory names, identifiers, database
+  tables/columns, API paths, CSS classes, template names, JSON keys. Use
+  the English terms from the glossary in [`DEVELOPMENT.md`](./DEVELOPMENT.md)
+  ("Naming"). Many existing names are still German (e.g.
+  `routers/abgangsliste.py`, table `klaerungen`); they get renamed tab by
+  tab, together with each tab's move to htmx - never add new German names.
 - One router file and one frontend JS file per UI tab/sub-tab — when adding
   a feature to an existing tab, that's almost always the only two files you
   need to touch (see the table in [`DEVELOPMENT.md`](./DEVELOPMENT.md)).
