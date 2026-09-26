@@ -5,9 +5,12 @@ edit entries and export them. Internal only: stored in its own global
 time_entries table, never part of a project's JSON backup/duplicate or any
 PDF export (Pflichtenheft, Dokumentation, ...).
 
-Every entry's duration is rounded UP to the next full 15 minutes on read
-(5 or 10 minutes worked -> 15 minutes billed); the raw start/end times are
-stored unchanged so the rounding rule could change later without data loss.
+Start and end times snap to the NEAREST quarter hour when saved (Start at
+12:04 -> 12:00, Stop at 12:55 -> 13:00, manual entries likewise), and an
+entry whose start and end snap to the same quarter still counts as 15
+minutes (_snapped_range). Durations are additionally rounded UP to full 15
+minutes on read, which only matters for entries saved before snapping
+existed.
 The PDF export (Stundennachweis) is the only export - a deliberate
 exception to "never exported", since it's the user's own report, not part
 of any customer documentation.
@@ -33,8 +36,24 @@ router = APIRouter(tags=["zeiterfassung"])
 ROUND_TO_MINUTES = 15
 
 
-def _now_iso():
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+def _snap(dt):
+    """Round an aware datetime to the nearest quarter hour. Done in UTC, which
+    lands on the same :00/:15/:30/:45 marks as any whole/half-hour time zone."""
+    q = ROUND_TO_MINUTES * 60
+    return datetime.fromtimestamp(math.floor(dt.timestamp() / q + 0.5) * q, timezone.utc)
+
+
+def _iso(dt):
+    return dt.isoformat(timespec="seconds")
+
+
+def _snapped_range(started_at, ended_at):
+    """Snapped (start, end) ISO pair; end is pushed to start + 15 min if both
+    snapped onto the same quarter (a few minutes' work still counts)."""
+    start, end = _snap(_parse(started_at)), _snap(_parse(ended_at))
+    if end <= start:
+        end = start + timedelta(minutes=ROUND_TO_MINUTES)
+    return _iso(start), _iso(end)
 
 
 def _parse(value):
@@ -112,7 +131,7 @@ def start_timer(body: TimerStartIn):
             raise HTTPException(409, f"Es läuft bereits eine Zeiterfassung für \"{name}\" - bitte zuerst stoppen.")
         cur = db.execute(
             "INSERT INTO time_entries (project_id, project_name, started_at) VALUES (?, ?, ?)",
-            (body.project_id, _project_name(db, body.project_id), _now_iso()),
+            (body.project_id, _project_name(db, body.project_id), _iso(_snap(datetime.now(timezone.utc)))),
         )
         return {"id": cur.lastrowid}
 
@@ -120,7 +139,10 @@ def start_timer(body: TimerStartIn):
 @router.post("/api/time-entries/stop")
 def stop_timer():
     with get_db() as db:
-        db.execute("UPDATE time_entries SET ended_at=? WHERE ended_at IS NULL", (_now_iso(),))
+        running = db.execute("SELECT id, started_at FROM time_entries WHERE ended_at IS NULL").fetchall()
+        for r in running:
+            _, ended_at = _snapped_range(r["started_at"], _iso(datetime.now(timezone.utc)))
+            db.execute("UPDATE time_entries SET ended_at=? WHERE id=?", (ended_at, r["id"]))
     return {"ok": True}
 
 
@@ -128,12 +150,11 @@ def stop_timer():
 def add_time_entry(te: TimeEntryIn):
     """Manually add an entry (e.g. forgot to press Start)."""
     _validate_range(te.started_at, te.ended_at)
+    started_at, ended_at = _snapped_range(te.started_at, te.ended_at)
     with get_db() as db:
         cur = db.execute(
             "INSERT INTO time_entries (project_id, project_name, started_at, ended_at, note) VALUES (?, ?, ?, ?, ?)",
-            (te.project_id, _project_name(db, te.project_id),
-             _parse(te.started_at).isoformat(timespec="seconds"),
-             _parse(te.ended_at).isoformat(timespec="seconds"), te.note),
+            (te.project_id, _project_name(db, te.project_id), started_at, ended_at, te.note),
         )
         return {"id": cur.lastrowid}
 
@@ -141,12 +162,11 @@ def add_time_entry(te: TimeEntryIn):
 @router.put("/api/time-entries/{entry_id}")
 def update_time_entry(entry_id: int, te: TimeEntryIn):
     _validate_range(te.started_at, te.ended_at)
+    started_at, ended_at = _snapped_range(te.started_at, te.ended_at)
     with get_db() as db:
         db.execute(
             "UPDATE time_entries SET project_id=?, project_name=?, started_at=?, ended_at=?, note=? WHERE id=?",
-            (te.project_id, _project_name(db, te.project_id),
-             _parse(te.started_at).isoformat(timespec="seconds"),
-             _parse(te.ended_at).isoformat(timespec="seconds"), te.note, entry_id),
+            (te.project_id, _project_name(db, te.project_id), started_at, ended_at, te.note, entry_id),
         )
     return {"ok": True}
 
@@ -197,7 +217,7 @@ def export_time_entries_pdf(project_id: int | None = None, tz: str = "", offset:
     first, last = local(entries[0]["started_at"]), local(entries[-1]["ended_at"])
     title = f"Zeiterfassung — {entries[0]['project_name']}" if project_id is not None else "Zeiterfassung — alle Projekte"
     story = company_header_block(company) + pdf_title_banner(
-        title, f"Stundennachweis {first:%d.%m.%Y} – {last:%d.%m.%Y} · je Eintrag auf 15 Min. aufgerundet"
+        title, f"Stundennachweis {first:%d.%m.%Y} – {last:%d.%m.%Y}"
     )
 
     cell = lambda text: Paragraph(escape(text or ""), styles["TableCell"])

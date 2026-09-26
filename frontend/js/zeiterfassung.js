@@ -1,7 +1,8 @@
 // ---------- Zeiterfassung (header timer + global tab) ----------
 // Internal only - never part of any project export/documentation (its own
-// Stundennachweis PDF aside). Durations are
-// rounded up to 15 min by the backend (billed_minutes); raw times stay editable.
+// Stundennachweis PDF aside). The backend snaps every start/end to the
+// nearest quarter hour (Start 12:04 -> 12:00, Stop 12:55 -> 13:00), so the
+// manual-entry form only offers :00/:15/:30/:45 too.
 let RUNNING_TIMER = null;
 let TIME_ENTRIES = [];
 let TIMER_TICK = null;
@@ -29,8 +30,12 @@ function renderTimerWidget() {
   clearInterval(TIMER_TICK);
   if (RUNNING_TIMER) {
     const otherProject = RUNNING_TIMER.project_id !== CURRENT_PROJECT;
+    // started_at is already snapped to the quarter hour - may even lie a few
+    // minutes in the future (12:08 -> 12:15), hence the clamp to 0 below.
+    const since = new Date(RUNNING_TIMER.started_at).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
     el.innerHTML = `
-      <span class="zeit-clock" id="zeit-clock" title="Läuft seit ${new Date(RUNNING_TIMER.started_at).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})} - wird auf volle 15 Min. aufgerundet">⏱ </span>
+      <span class="muted">seit ${since}</span>
+      <span class="zeit-clock" id="zeit-clock" title="Start/Stopp werden auf die nächste Viertelstunde gerundet">⏱ </span>
       ${otherProject ? `<span class="muted">${escapeHtml(RUNNING_TIMER.project_name)}</span>` : ''}
       <button class="btn danger small" onclick="stopTimer()">■ Stopp</button>`;
     const tick = () => {
@@ -139,11 +144,15 @@ function renderTimeEntries() {
     </tbody></table>`;
 }
 
-// ISO (UTC) <-> <input type="datetime-local"> value (browser local time).
-function isoToLocalInput(iso) {
-  const d = new Date(iso);
+const QUARTER_TIMES = Array.from({length: 96}, (_, i) =>
+  `${String(Math.floor(i / 4)).padStart(2, '0')}:${String(i % 4 * 15).padStart(2, '0')}`);
+
+// ISO (UTC) -> {date: 'YYYY-MM-DD', time: 'HH:MM'} in browser local time,
+// time rounded to the nearest quarter hour (same rule as the backend).
+function isoToQuarterParts(iso) {
+  const d = new Date(Math.round(new Date(iso).getTime() / 900000) * 900000);
   const pad = n => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return {date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, time: `${pad(d.getHours())}:${pad(d.getMinutes())}`};
 }
 
 function openTimeEntryModal(id = null) {
@@ -156,8 +165,9 @@ function openTimeEntryModal(id = null) {
       ${PROJECTS_LIST.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('')}
     </select></div>
     <div class="row mobile-fields">
-      <label class="muted">Von <input type="datetime-local" id="te-start"></label>
-      <label class="muted">Bis <input type="datetime-local" id="te-end"></label>
+      <input type="date" id="te-date">
+      <label class="muted">Von <select id="te-start">${QUARTER_TIMES.map(t => `<option>${t}</option>`).join('')}</select></label>
+      <label class="muted">Bis <select id="te-end">${QUARTER_TIMES.map(t => `<option>${t}</option>`).join('')}</select></label>
     </div>
     <div class="row"><input type="text" id="te-note" class="flex-input-wide" placeholder="Notiz (optional)"></div>
     <div class="row modal-actions">
@@ -166,8 +176,11 @@ function openTimeEntryModal(id = null) {
     </div>`, { wide: true });
 
   document.getElementById('te-project').value = String(defaultProject || (PROJECTS_LIST[0] && PROJECTS_LIST[0].id) || '');
-  document.getElementById('te-start').value = isoToLocalInput(e ? e.started_at : new Date(now.getTime() - 3600000).toISOString());
-  document.getElementById('te-end').value = isoToLocalInput(e ? e.ended_at : now.toISOString());
+  const start = isoToQuarterParts(e ? e.started_at : new Date(now.getTime() - 3600000).toISOString());
+  const end = isoToQuarterParts(e ? e.ended_at : now.toISOString());
+  document.getElementById('te-date').value = start.date;
+  document.getElementById('te-start').value = start.time;
+  document.getElementById('te-end').value = end.time;
   document.getElementById('te-note').value = e ? e.note : '';
 
   modal.overlay.addEventListener('click', async (ev) => {
@@ -175,13 +188,18 @@ function openTimeEntryModal(id = null) {
     if (action === 'cancel') modal.close();
     if (action !== 'save') return;
     const project_id = parseInt(document.getElementById('te-project').value);
-    const start = document.getElementById('te-start').value;
-    const end = document.getElementById('te-end').value;
-    if (!project_id || !start || !end) return showToast('Projekt, Von und Bis sind erforderlich', 'warning');
+    const date = document.getElementById('te-date').value;
+    const from = document.getElementById('te-start').value;
+    const to = document.getElementById('te-end').value;
+    if (!project_id || !date) return showToast('Projekt und Datum sind erforderlich', 'warning');
+    if (to === from) return showToast('Bis muss nach Von liegen', 'warning');
+    const startDate = new Date(`${date}T${from}`);
+    const endDate = new Date(`${date}T${to}`);
+    if (to < from) endDate.setDate(endDate.getDate() + 1); // past midnight
     const body = JSON.stringify({
       project_id,
-      started_at: new Date(start).toISOString(),
-      ended_at: new Date(end).toISOString(),
+      started_at: startDate.toISOString(),
+      ended_at: endDate.toISOString(),
       note: document.getElementById('te-note').value.trim(),
     });
     try {

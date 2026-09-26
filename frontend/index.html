@@ -763,7 +763,7 @@
           <button class="btn" onclick="exportTimeEntriesPdf()">PDF herunterladen</button>
         </div>
       </div>
-      <p class="muted">Arbeitszeit je Projekt — Start/Stopp oben in der Kopfzeile, sobald ein Projekt geöffnet ist. Jeder Eintrag wird auf volle 15 Minuten aufgerundet. Nur intern: erscheint in keinem Projekt-Export und keiner Dokumentation. <b>PDF herunterladen</b> erzeugt einen Stundennachweis für die aktuelle Auswahl.</p>
+      <p class="muted">Arbeitszeit je Projekt — Start/Stopp oben in der Kopfzeile, sobald ein Projekt geöffnet ist. Start und Stopp werden auf die nächste Viertelstunde gerundet (z.B. 12:04 → 12:00, 12:55 → 13:00), mindestens 15 Minuten je Eintrag. Nur intern: erscheint in keinem Projekt-Export und keiner Dokumentation. <b>PDF herunterladen</b> erzeugt einen Stundennachweis für die aktuelle Auswahl.</p>
       <div class="row">
         <select id="zeit-project-filter" class="wide" onchange="loadTimeEntries()"></select>
         <span class="muted" id="zeit-filter-total"></span>
