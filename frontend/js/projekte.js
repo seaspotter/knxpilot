@@ -205,8 +205,29 @@ function renderProjectsList() {
       : '<li class="muted">Noch keine Projekte</li>');
 }
 
+// Turns a */delete-impact response into the "what else goes with it" lines
+// of a delete confirmation - only non-zero counts are listed.
+const DELETE_IMPACT_LABELS = [
+  ['floors', 'Geschoss(e)'], ['rooms', 'Raum/Räume'], ['points', 'Funktion(en)'],
+  ['assignments', 'Kanalzuordnung(en) in der Abgangsliste'], ['devices', 'geplante(s) Gerät(e)'],
+  ['actors', 'Aktor(en)'], ['specials', 'Sonderadresse(n)'], ['klaerungen', 'Klärungslisten-Eintrag/Einträge'],
+  ['files', 'Datei(en)'], ['manuals', 'heruntergeladene(s) Handbuch/Handbücher'],
+];
+function describeDeleteImpact(impact) {
+  const deleted = DELETE_IMPACT_LABELS.filter(([k]) => impact[k]).map(([k, label]) => `• ${impact[k]} ${label}`);
+  const detached = [];
+  if (impact.actors_detached) detached.push(`• ${impact.actors_detached} Aktor(en) verlieren ihre Geschoss-Zuordnung (bleiben erhalten)`);
+  if (impact.verteiler_detached) detached.push(`• ${impact.verteiler_detached} Verteiler verlieren ihre Geschoss-Zuordnung (bleiben erhalten)`);
+  let text = deleted.length ? `\n\nDabei wird mitgelöscht:\n${deleted.join('\n')}` : '\n\nEs hängt nichts weiter daran.';
+  if (detached.length) text += `\n\nAusserdem:\n${detached.join('\n')}`;
+  return text;
+}
+
 async function deleteProject(id) {
-  if (!(await showConfirm('Dieses Projekt und alles darin löschen?', {danger: true}))) return;
+  const p = PROJECTS_LIST.find(p => p.id === id);
+  const impact = await api(`/projects/${id}/delete-impact`);
+  const message = `Projekt "${p ? p.name : ''}" endgültig löschen?${describeDeleteImpact(impact)}\n\nErfasste Zeiten (Zeiterfassung) bleiben erhalten.`;
+  if (!(await showConfirm(message, {danger: true, confirmLabel: 'Löschen'}))) return;
   await api('/projects/' + id, {method:'DELETE'});
   if (CURRENT_PROJECT === id) {
     document.getElementById('project-detail').style.display = 'none';
@@ -323,6 +344,8 @@ async function renameFloor(id, currentName, currentOutdoor) {
 }
 
 async function deleteFloor(id) {
+  const impact = await api(`/floors/${id}/delete-impact`);
+  if (!(await showConfirm(`Geschoss "${impact.name}" löschen?${describeDeleteImpact(impact)}`, {danger: true, confirmLabel: 'Löschen'}))) return;
   await api('/floors/' + id, {method:'DELETE'});
   await renderFloors();
   await renderFunktionenRooms();
@@ -412,6 +435,8 @@ async function renameRoom(id, currentName) {
 }
 
 async function deleteRoom(id) {
+  const impact = await api(`/rooms/${id}/delete-impact`);
+  if (!(await showConfirm(`Raum "${impact.name}" löschen?${describeDeleteImpact(impact)}`, {danger: true, confirmLabel: 'Löschen'}))) return;
   await api('/rooms/' + id, {method:'DELETE'});
   await renderFloors();
   await renderFunktionenRooms();

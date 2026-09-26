@@ -4,6 +4,27 @@ Notable changes to KNXpilot. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this file starts from the
 restructuring below — history before that is available via `git log`.
 
+## [Unreleased]
+
+### Changed
+
+- **Deleting a floor or room now asks first and says what goes with it** —
+  previously "Geschoss löschen" and "Raum löschen" deleted immediately,
+  without any confirmation, even though a floor takes all its rooms,
+  functions, Abgangsliste channel assignments, planned devices and
+  Klärungsliste entries with it. The confirmation now lists exactly what
+  gets deleted and what only loses its floor (actuators, distribution
+  boards); deleting a whole project shows the same breakdown and notes that
+  logged Zeiterfassung times are kept. New `GET .../delete-impact`
+  endpoints for projects, floors and rooms.
+
+### Fixed
+
+- **Special addresses of a deleted floor no longer linger** — deleting a
+  floor now also removes the special addresses (Sonderadressen) assigned to
+  it; before, they stayed in the database invisibly, never showing up in
+  the GA tree again.
+
 ## [0.7.1] - 2026-09-26
 
 Open Klärungsliste points can now be passed on to the customer or

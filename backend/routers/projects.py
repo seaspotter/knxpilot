@@ -107,6 +107,67 @@ def update_project(project_id: int, p: ProjectIn):
     return {"ok": True}
 
 
+def _impact(db, room_ids, floor_ids):
+    """Counts of what deleting these rooms/floors takes with it (via ON DELETE
+    CASCADE) or detaches (ON DELETE SET NULL) - shown in the delete
+    confirmation so nothing disappears unannounced."""
+    def count(sql, ids):
+        if not ids:
+            return 0
+        marks = ",".join("?" * len(ids))
+        return db.execute(sql.format(marks=marks), ids).fetchone()[0]
+    return {
+        "rooms": len(room_ids),
+        "points": count("SELECT COUNT(*) FROM room_points WHERE room_id IN ({marks})", room_ids),
+        "assignments": count(
+            "SELECT COUNT(*) FROM channel_assignments WHERE room_point_id IN "
+            "(SELECT id FROM room_points WHERE room_id IN ({marks}))", room_ids),
+        "devices": count("SELECT COUNT(*) FROM room_devices WHERE room_id IN ({marks})", room_ids)
+                   + count("SELECT COUNT(*) FROM floor_devices WHERE floor_id IN ({marks})", floor_ids),
+        "klaerungen": count("SELECT COUNT(*) FROM klaerungen WHERE room_id IN ({marks})", room_ids),
+        "specials": count("SELECT COUNT(*) FROM special_items WHERE location IN ({marks})", [str(f) for f in floor_ids]),
+        "actors_detached": count("SELECT COUNT(*) FROM actor_instances WHERE floor_id IN ({marks})", floor_ids),
+        "verteiler_detached": count("SELECT COUNT(*) FROM verteiler WHERE floor_id IN ({marks})", floor_ids),
+    }
+
+
+@router.get("/api/floors/{floor_id}/delete-impact")
+def floor_delete_impact(floor_id: int):
+    with get_db() as db:
+        floor = db.execute("SELECT name FROM floors WHERE id=?", (floor_id,)).fetchone()
+        if not floor:
+            raise HTTPException(404, "Floor not found")
+        room_ids = [r["id"] for r in db.execute("SELECT id FROM rooms WHERE floor_id=?", (floor_id,))]
+        return {"name": floor["name"], **_impact(db, room_ids, [floor_id])}
+
+
+@router.get("/api/rooms/{room_id}/delete-impact")
+def room_delete_impact(room_id: int):
+    with get_db() as db:
+        room = db.execute("SELECT name FROM rooms WHERE id=?", (room_id,)).fetchone()
+        if not room:
+            raise HTTPException(404, "Room not found")
+        result = _impact(db, [room_id], [])
+        result.pop("rooms")
+        return {"name": room["name"], **result}
+
+
+@router.get("/api/projects/{project_id}/delete-impact")
+def project_delete_impact(project_id: int):
+    with get_db() as db:
+        floor_ids = [r["id"] for r in db.execute("SELECT id FROM floors WHERE project_id=?", (project_id,))]
+        room_ids = [r["id"] for r in db.execute(
+            "SELECT r.id FROM rooms r JOIN floors f ON r.floor_id = f.id WHERE f.project_id=?", (project_id,))]
+        result = _impact(db, room_ids, floor_ids)
+        result["floors"] = len(floor_ids)
+        result["actors"] = db.execute("SELECT COUNT(*) FROM actor_instances WHERE project_id=?", (project_id,)).fetchone()[0]
+        result["files"] = db.execute("SELECT COUNT(*) FROM project_files WHERE project_id=?", (project_id,)).fetchone()[0]
+        result["manuals"] = db.execute("SELECT COUNT(*) FROM project_manuals WHERE project_id=?", (project_id,)).fetchone()[0]
+        for k in ("actors_detached", "verteiler_detached", "specials"):
+            result.pop(k)  # the whole project goes, nothing is merely detached
+        return result
+
+
 @router.delete("/api/projects/{project_id}")
 def delete_project(project_id: int):
     with get_db() as db:
@@ -138,6 +199,10 @@ def update_floor(floor_id: int, f: FloorIn):
 @router.delete("/api/floors/{floor_id}")
 def delete_floor(floor_id: int):
     with get_db() as db:
+        # special_items.location is a polymorphic string ('central' or a floor
+        # id), so there's no FK to cascade - without this they'd linger as
+        # invisible leftovers that never show up in the GA tree again.
+        db.execute("DELETE FROM special_items WHERE location=?", (str(floor_id),))
         db.execute("DELETE FROM floors WHERE id=?", (floor_id,))
     return {"ok": True}
 

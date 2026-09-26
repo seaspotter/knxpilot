@@ -45,14 +45,14 @@ function openModal(bodyHtml, { wide = false, onClose } = {}) {
   return { overlay, close };
 }
 
-function showConfirm(message, { danger = false } = {}) {
+function showConfirm(message, { danger = false, confirmLabel = 'OK' } = {}) {
   return new Promise((resolve) => {
     let settled = false;
     const modal = openModal(`
       <p></p>
       <div class="row modal-actions">
         <button class="btn secondary" data-action="cancel">Abbrechen</button>
-        <button class="btn ${danger ? 'danger' : ''}" data-action="confirm">OK</button>
+        <button class="btn ${danger ? 'danger' : ''}" data-action="confirm">${escapeHtml(confirmLabel)}</button>
       </div>`, {
       onClose: () => { if (!settled) { settled = true; resolve(false); } },
     });

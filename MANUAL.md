@@ -148,6 +148,11 @@ Unterreiters Funktionen weiter unten.
   Liste von Raumnamen (ein Name pro Zeile) auf einmal einfügen.
 - Sowohl Geschoss- als auch Raumnamen lassen sich über den
   **Bearbeiten**-Button daneben jederzeit nachträglich umbenennen.
+- **Löschen** fragt immer nach und listet dabei genau auf, was mitgelöscht
+  wird (Räume, Funktionen, Kanalzuordnungen, geplante Geräte,
+  Sonderadressen, Klärungslisten-Einträge) und was nur seine
+  Geschoss-Zuordnung verliert (Aktoren, Verteiler). Dasselbe gilt beim
+  Löschen eines ganzen Projekts.
 
 #### Funktionen
 
