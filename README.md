@@ -36,6 +36,9 @@ Vorlagen erzeugt.
   Abschlussdokumentation am Ende, alle aus denselben Projektdaten.
 - **Globaler Gerätekatalog**, mit Startkatalog gängiger KNX-Hersteller
   vorbelegt.
+- **Zeiterfassung je Projekt** (optional) — Start/Stopp im Programmkopf,
+  einstellbare Rundung, Abgerechnet-Markierung und Stundennachweis als
+  PDF; rein intern, taucht in keinem Projekt-Export auf.
 - Einzelbenutzer, **keine Authentifizierung** — für den Betrieb im eigenen
   internen Netzwerk gedacht. Soll das Tool über eine Domain erreichbar
   sein, gehört eine Zugriffskontrolle davor (VPN, oder ein Login via

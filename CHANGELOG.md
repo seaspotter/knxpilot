@@ -8,6 +8,26 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- **Zeiterfassung: simple per-project time tracking** — while a project is
+  open, the header shows **▶ Start**; a running timer shows its start
+  time, a live clock and **■ Stopp** (survives closing the project,
+  switching tabs or reloading; at most one timer at a time). New top-level
+  **Zeiterfassung** tab: totals per project, all entries with edit/delete,
+  **+ Eintrag nachtragen** for forgotten times, an **Abgerechnet**
+  checkbox per entry plus "Alle angezeigten als abgerechnet markieren",
+  filters by project and abgerechnet yes/no, and a **Stundennachweis
+  PDF** of the current selection. Start/stop snap to the nearest mark of
+  a configurable grid (default 15 min: 12:04 → 12:00, 12:55 → 13:00;
+  minimum one grid step per entry); the manual-entry form only offers
+  times on that grid. New Setup → **Zeiterfassung** sub-tab to switch the
+  feature off (tab + header button hidden, data kept) or pick the grid:
+  minutengenau, 15 or 30 minutes - a changed grid only applies to new or
+  re-saved entries, never recalculating already-invoiced ones. Strictly
+  internal: stored in its own global `time_entries` table (kept when a
+  project is deleted), never part of any project export (Pflichtenheft,
+  Dokumentation, checklists, JSON backup/duplicate, email). New
+  `backend/routers/zeiterfassung.py` and `frontend/js/zeiterfassung.js`.
+
 - **Device manuals: curate a URL, fetch into the project on click** —
   Geräte Katalog gets a new **Handbücher** sub-tab (next to the existing
   Katalog sub-tab) for hinterlegen a manufacturer PDF URL per device;

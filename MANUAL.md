@@ -48,7 +48,7 @@ Zeilen zu überspringen: ein kleines Testprojekt exportieren und mit der
 Ausgabe des Tools vergleichen — der CSV-Schreiber ist in `export_csv()`
 in `backend/routers/projects.py` isoliert.
 
-## Die fünf Tabs
+## Die Tabs
 
 - **Projekte** — Projekte anlegen/suchen/öffnen; ein Klick auf den kleinen
   Pfeil ▾ daneben öffnet ein Menü mit **Neues Projekt** und
@@ -59,13 +59,17 @@ in `backend/routers/projects.py` isoliert.
   Programmkopf (neben der Versionsnummer) jederzeit, welches — ein Klick
   darauf springt dorthin, das **×** daneben schliesst es direkt von
   überall aus, ohne erst zum Projekte-Tab wechseln zu müssen. Ein
-  geöffnetes Projekt zeigt einen Arbeitsbereich mit dreizehn Unterreitern
+  geöffnetes Projekt zeigt einen Arbeitsbereich mit vierzehn Unterreitern
   (Übersicht, Gebäudestruktur, Funktionen, Gruppenadressen, Abgangsliste,
   Labels, Geräteplanung, Verteilerplanung, Pflichtenheft,
-  Funktionscheckliste, Übergabe-Checkliste, Klärungsliste, Dokumentation),
-  die alle am selben Projekt arbeiten.
+  Funktionscheckliste, Übergabe-Checkliste, Klärungsliste, Handbücher,
+  Dokumentation), die alle am selben Projekt arbeiten.
 - **Geräte Katalog** — globaler Gerätekatalog (Aktoren, Sensoren,
   Bedienelemente usw.), gemeinsam für alle Projekte genutzt.
+- **Zeiterfassung** — einfache Arbeitszeiterfassung je Projekt
+  (Start/Stopp im Programmkopf), mit Abgerechnet-Markierung und
+  Stundennachweis als PDF. Lässt sich unter Setup → Zeiterfassung
+  abschalten, dann ist der Tab ausgeblendet.
 - **Setup** — Firmenprofil (Name/Adresse/Kontakt/Logo), Kategorien,
   Funktionstypen und Zentral-/Allgemeinfunktions-Vorlagen als eigene
   Unterreiter. Funktionstypen und Vorlagen lassen sich nachträglich
@@ -586,10 +590,55 @@ Diese Links sind die Grundlage für den eigenen **Handbücher**-Unterreiter
 in jedem Projekt-Arbeitsbereich (siehe dort) — nur Geräte mit hinterlegtem
 Link erscheinen dort zum Herunterladen.
 
+### Zeiterfassung
+
+Einfache Erfassung der eigenen Arbeitszeit je Projekt — für den eigenen
+Überblick und die Abrechnung. **Rein intern:** die Zeiten erscheinen in
+keinem Projekt-Export (Pflichtenheft, Dokumentation, Checklisten,
+Geräteliste usw.), nicht in der JSON-Projektsicherung/-Duplizierung und
+nicht im E-Mail-Versand. Sie liegen in einer eigenen, projektübergreifenden
+Tabelle: wird ein Projekt gelöscht, bleiben seine erfassten Zeiten
+erhalten. Teil der Datenbanksicherung (Setup → Backup) sind sie
+selbstverständlich.
+
+- **Start/Stopp** — ist ein Projekt geöffnet, erscheint im Programmkopf
+  ein **▶ Start**-Knopf. Während die Zeit läuft, zeigt der Kopf den
+  (gerundeten) Startzeitpunkt, eine laufende Uhr und **■ Stopp** — auch
+  nach dem Schliessen des Projekts, einem Tab-Wechsel oder einem
+  Neuladen der Seite. Es läuft immer höchstens eine Zeiterfassung; läuft
+  sie für ein anderes Projekt, steht dessen Name daneben.
+- **Rundung** — Start und Stopp werden beim Speichern auf die nächste
+  Marke des in Setup → Zeiterfassung gewählten Rasters gerundet
+  (Standard 15 Minuten: Start um 12:04 → 12:00, Stopp um 12:55 → 13:00).
+  Ein Eintrag zählt immer mindestens eine Rastereinheit (12:04–12:06 →
+  12:00–12:15). Alternativ 30 Minuten oder minutengenau.
+- **Übersicht** — Summe je Projekt und Liste aller Einträge (Datum,
+  Projekt, Von, Bis, Dauer, Notiz), filterbar nach Projekt und nach
+  **Abgerechnet** (Alle / Nicht abgerechnet / Abgerechnet). Summe und
+  Summe je Projekt folgen den Filtern.
+- **Bearbeiten / Nachtragen** — jeder Eintrag lässt sich bearbeiten
+  (Projekt, Datum, Von, Bis, Notiz) oder löschen; **+ Eintrag
+  nachtragen** erfasst Zeiten nachträglich, z.B. wenn Start vergessen
+  wurde. Die Uhrzeit-Auswahl bietet nur Zeiten im eingestellten Raster
+  (bei 15 Minuten also :00/:15/:30/:45). Liegt Bis vor Von, gilt der
+  Eintrag als über Mitternacht.
+- **Abgerechnet** — Häkchen je Eintrag, um bereits in Rechnung gestellte
+  Zeiten zu markieren. **Alle angezeigten als abgerechnet markieren**
+  markiert nach Rückfrage alle aktuell sichtbaren, noch offenen Einträge
+  auf einmal. Typischer Ablauf: Projekt wählen, Filter "Nicht
+  abgerechnet", PDF herunterladen, Rechnung schreiben, dann alles als
+  abgerechnet markieren — spätere Nacharbeiten tauchen danach wieder
+  unter "Nicht abgerechnet" auf.
+- **PDF herunterladen** — Stundennachweis der aktuellen Auswahl (folgt
+  beiden Filtern): je Projekt eine Tabelle mit Datum/Von/Bis/Dauer/Notiz
+  und Summe, bei mehreren Projekten zusätzlich eine Gesamtsumme. Uhrzeiten
+  in der Zeitzone des Browsers. Laufende Zeiterfassungen sind nicht
+  enthalten.
+
 ### Setup
 
 Firma, Kategorien, Funktionstypen, Zentral-/Allgemeinfunktions-Vorlagen,
-Pflichtenheft, Dokumentation, E-Mail und Backup sind eigene Unterreiter
+Pflichtenheft, Dokumentation, E-Mail, Backup und Zeiterfassung sind eigene Unterreiter
 innerhalb des Setup-Tabs, nicht alle gleichzeitig sichtbar.
 
 - **Firma** — Name, Adresse, Telefon, E-Mail, Website und ein Logo,
@@ -697,6 +746,15 @@ innerhalb des Setup-Tabs, nicht alle gleichzeitig sichtbar.
   Datei wird vor der Übernahme geprüft (muss wie eine echte
   KNXpilot-Datenbank aussehen), damit weder ein Fehlklick noch eine
   falsche Datei etwas endgültig zerstört.
+- **Zeiterfassung** — **Aktiv** schaltet die ganze Zeiterfassung ein
+  oder aus (standardmässig an). Ausgeschaltet verschwinden der Tab
+  Zeiterfassung und der Start-Knopf im Programmkopf; bereits erfasste
+  Zeiten bleiben gespeichert und sind nach dem Wiedereinschalten wieder
+  da. **Rundung**: minutengenau, 15 Minuten (Standard) oder 30 Minuten —
+  siehe *Zeiterfassung* oben. Eine geänderte Rundung gilt nur für neue
+  bzw. neu gespeicherte Einträge; bereits erfasste Zeiten werden nie
+  nachträglich umgerechnet, damit schon abgerechnete Summen stabil
+  bleiben.
 
 ### Update
 
@@ -716,7 +774,8 @@ Installation geändert hat, ohne extra auf GitHub nachsehen zu müssen.
 ## PDF-Exporte
 
 Alle PDF-Exporte (Abgangsliste, Geräteliste, Pflichtenheft,
-Funktionscheckliste, Übergabe-Checkliste, Dokumentation) nutzen dieselbe
+Funktionscheckliste, Übergabe-Checkliste, Dokumentation, sowie der
+interne Stundennachweis der Zeiterfassung) nutzen dieselbe
 Gestaltung: ein dunkler
 Banner-Titelkopf, eine einheitliche Tabellenoptik, und eine Fusszeile mit
 Projektname sowie **Seite X von Y** auf jeder Seite. Der gemeinsame Code
