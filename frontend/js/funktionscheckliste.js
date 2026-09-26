@@ -22,10 +22,10 @@ async function loadFunktionschecklisteForCurrentProject() {
     for (const room of floor.rooms) {
       const byCategory = await api(`/rooms/${room.id}/function-checklist`);
       if (Object.keys(byCategory).length === 0) continue;
-      roomBlocks.push(`<div class="room-card"><b>${room.name}</b>${renderChecklistCategories(byCategory)}</div>`);
+      roomBlocks.push(`<div class="room-card rc-room"><div class="rc-room-title">${room.name}</div>${renderChecklistCategories(byCategory)}</div>`);
     }
     if (roomBlocks.length) {
-      floorBlocks.push(`<div class="floor-card"><b>${floor.name}</b>${roomBlocks.join('')}</div>`);
+      floorBlocks.push(`<div class="floor-card"><div class="rc-floor-title">${floor.name}</div>${roomBlocks.join('')}</div>`);
     }
   }
 
@@ -33,7 +33,7 @@ async function loadFunktionschecklisteForCurrentProject() {
   if (central.length) {
     const byCategory = {};
     central.forEach(([catName, items]) => { byCategory[catName] = items; });
-    centralHtml = `<div class="floor-card"><b>Zentral- und Allgemeinfunktionen</b>${renderChecklistCategories(byCategory)}</div>`;
+    centralHtml = `<div class="floor-card"><div class="rc-floor-title">Zentral- und Allgemeinfunktionen</div>${renderChecklistCategories(byCategory)}</div>`;
   }
 
   container.innerHTML = floorBlocks.join('') + centralHtml

@@ -53,7 +53,7 @@ async function renderGeraeteplanungRooms() {
     }
     sections.push(`
       <div class="floor-card">
-        <b>${floor.name}</b>
+        <div class="rc-floor-title">${floor.name}</div>
         ${renderFloorDevices(floor, floorDevices)}
         ${roomBlocks.join('') || '<p class="muted">Noch keine Räume</p>'}
       </div>
@@ -62,18 +62,30 @@ async function renderGeraeteplanungRooms() {
   container.innerHTML = sections.join('') || '<p class="muted">Noch keine Geschosse in diesem Projekt</p>';
 }
 
+// Devices grouped by catalog Gruppe (Sensor, Bedienelement, ...) into the
+// shared rc-row layout - same look as the Funktionen sub-tab.
+function renderDeviceRows(devices, editFn, deleteFn, ownerId) {
+  const groups = new Map();
+  devices.forEach(d => {
+    const g = d.group_name || 'Sonstige';
+    if (!groups.has(g)) groups.set(g, []);
+    groups.get(g).push(d);
+  });
+  if (!groups.size) return '<p class="muted" style="margin:4px 0;">Keine Geräte</p>';
+  return `<div class="rc-rows">${[...groups.entries()].map(([group, items]) => `
+    <div class="rc-row"><div class="rc-type">${group}</div><div class="rc-pills">${items.map(d => `
+      <span class="rc-pill">${d.device_name}${d.physical_address ? ` <span class="rc-tag">${d.physical_address}</span>` : ''}${d.note ? ` <span class="rc-note">${d.note}</span>` : ''}
+        <a href="#" onclick="${editFn}(event, ${ownerId}, ${d.id})" class="rc-pill-edit" title="Bearbeiten">✎</a>
+        <a href="#" onclick="${deleteFn}(event, ${d.id})" class="rc-pill-del" title="Löschen">×</a></span>`).join('')}
+    </div></div>`).join('')}</div>`;
+}
+
 function renderFloorDevices(floor, devices) {
-  const devicesHtml = devices.map(d => `
-    <span class="pill">${d.device_name}${d.physical_address ? ' · ' + d.physical_address : ''}${d.note ? ' — ' + d.note : ''} <a href="#" onclick="editFloorDevice(event, ${floor.id}, ${d.id})" style="color:var(--accent); text-decoration:none;" title="Bearbeiten">✎</a> <a href="#" onclick="deleteFloorDevice(event, ${d.id})" style="color:var(--danger); text-decoration:none;">×</a></span>
-  `).join('') || '<span class="muted">Keine Geräte</span>';
   return `
-    <div class="room-card">
-      <div class="row" style="margin:0 0 4px; align-items:center;">
-        <b>Geräte ohne Raum</b>
-        <span class="info-icon" tabindex="0" data-tip="Für Geräte, die keinem bestimmten Raum zuzuordnen sind - z.B. eine Wetterstation an der Fassade oder ein Aussen-Bewegungsmelder.">i</span>
-      </div>
-      <div style="margin:6px 0;">${devicesHtml}</div>
-      <div class="quick-add mobile-fields">
+    <div class="room-card rc-room">
+      <div class="rc-room-title"><span>Geräte ohne Raum <span class="info-icon" tabindex="0" data-tip="Für Geräte, die keinem bestimmten Raum zuzuordnen sind - z.B. eine Wetterstation an der Fassade oder ein Aussen-Bewegungsmelder.">i</span></span></div>
+      ${renderDeviceRows(devices, 'editFloorDevice', 'deleteFloorDevice', floor.id)}
+      <div class="quick-add rc-add mobile-fields">
         <select id="fd-device-${floor.id}" class="wide">
           ${ACTOR_TYPES.filter(at => at.group_name !== 'Aktor').map(at => `<option value="${at.id}">${at.group_name} — ${[at.manufacturer, at.model].filter(Boolean).join(' ')}</option>`).join('')}
         </select>
@@ -161,14 +173,11 @@ async function deleteFloorDevice(ev, id) {
 }
 
 function renderRoomDevices(room, devices) {
-  const devicesHtml = devices.map(d => `
-    <span class="pill">${d.device_name}${d.physical_address ? ' · ' + d.physical_address : ''}${d.note ? ' — ' + d.note : ''} <a href="#" onclick="editRoomDevice(event, ${room.id}, ${d.id})" style="color:var(--accent); text-decoration:none;" title="Bearbeiten">✎</a> <a href="#" onclick="deleteRoomDevice(event, ${d.id})" style="color:var(--danger); text-decoration:none;">×</a></span>
-  `).join('') || '<span class="muted">Keine Geräte</span>';
   return `
-    <div class="room-card">
-      <b>${room.name}</b>
-      <div style="margin:6px 0;">${devicesHtml}</div>
-      <div class="quick-add mobile-fields">
+    <div class="room-card rc-room">
+      <div class="rc-room-title">${room.name}</div>
+      ${renderDeviceRows(devices, 'editRoomDevice', 'deleteRoomDevice', room.id)}
+      <div class="quick-add rc-add mobile-fields">
         <select id="rd-device-${room.id}" class="wide">
           ${ACTOR_TYPES.filter(at => at.group_name !== 'Aktor').map(at => `<option value="${at.id}">${at.group_name} — ${[at.manufacturer, at.model].filter(Boolean).join(' ')}</option>`).join('')}
         </select>

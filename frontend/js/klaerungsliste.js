@@ -150,7 +150,7 @@ function renderKlaerungsliste() {
     const heading = roomInfo ? roomInfo.label : 'Allgemein';
     return `
       <div class="floor-card">
-        <b>${heading}</b>
+        <div class="rc-floor-title">${heading}</div>
         ${entries.map(k => `
           <div class="room-card">
             <div class="row" style="justify-content:space-between;">

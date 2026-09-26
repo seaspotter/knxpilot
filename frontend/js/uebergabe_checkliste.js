@@ -25,7 +25,7 @@ function renderUebergabe() {
   const container = document.getElementById('uebergabe-content');
   container.innerHTML = UEBERGABE_SECTIONS.map(sec => `
     <div class="floor-card">
-      <b>${sec.section}</b>
+      <div class="rc-floor-title">${sec.section}</div>
       ${sec.items.map(item => renderUebergabeItem(item)).join('')}
     </div>
   `).join('') + renderSignatures();
@@ -90,7 +90,7 @@ const UEB_SIGNATURE_ROLES = [['systemintegrator', 'Systemintegrator'], ['kunde',
 function renderSignatures() {
   return `
     <div class="floor-card">
-      <b>Unterschriften</b>
+      <div class="rc-floor-title">Unterschriften</div>
       <div class="row" style="gap:20px; flex-wrap:wrap; margin-top:8px; align-items:flex-start;">
         ${UEB_SIGNATURE_ROLES.map(([role, label]) => renderSignatureBlock(role, label)).join('')}
       </div>

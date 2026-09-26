@@ -337,12 +337,12 @@ async function renderFloors() {
   const container = document.getElementById('floors-container');
   container.innerHTML = tree.floors.map(floor => `
     <div class="floor-card">
-      <div class="row" style="justify-content:space-between;">
-        <div>
-          <b>${floor.name}</b>
+      <div class="rc-floor-head">
+        <div class="rc-floor-title">
+          ${floor.name}
           ${floor.is_outdoor ? '<span class="pill">Aussen/unbeheizt</span>' : ''}
         </div>
-        <div>
+        <div class="row">
           <input type="text" placeholder="Raumname" id="room-name-${floor.id}" style="width:140px;">
           <button class="btn secondary small" onclick="addRoom(${floor.id})">+ Raum hinzufügen</button>
           <button class="btn secondary small" onclick="toggleBulkRoomInput(${floor.id})">Mehrere...</button>
@@ -361,10 +361,10 @@ async function renderFloors() {
 
 function renderRoom(room) {
   return `
-    <div class="room-card">
-      <div class="row" style="justify-content:space-between;">
-        <b>${room.name}</b>
-        <div>
+    <div class="room-card rc-room">
+      <div class="rc-room-title">
+        <span>${room.name}</span>
+        <div class="row">
           <button class="btn secondary small" onclick="renameRoom(${room.id}, '${room.name.replace(/'/g,"\\'")}')">Bearbeiten</button>
           <button class="btn danger small" onclick="deleteRoom(${room.id})">Raum löschen</button>
         </div>

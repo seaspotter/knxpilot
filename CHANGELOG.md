@@ -65,11 +65,17 @@ restructuring below — history before that is available via `git log`.
   you last picked instead of jumping back to the first entry, so adding
   e.g. "Licht (Dimmen)" to several rooms in a row needs no re-picking.
   Resets on page reload.
-- **Funktionen: clearer room layout** — each room name is now a heading
-  with an accent underline, function types sit in a fixed left column so
-  every row's label pills start at the same position, the pills are
-  larger, and the "add function" row is set apart by a divider. On narrow
-  screens the type label moves above its pills.
+- **Clearer room layout across the project tabs** — in Funktionen, each
+  room name is now a heading with an accent underline, function types sit
+  in a fixed left column so every row's label pills start at the same
+  position, the pills are larger, and the "add function" row is set apart
+  by a divider. The same layout now applies to **Geräteplanung** (devices
+  grouped by Gruppe, physical address and note shown inside the pill),
+  **Abgangsliste** (Abgänge grouped by Geschoss → Raum, with aligned
+  Funktionstyp / Funktion / Aktor-Kanal columns instead of one flat list),
+  and the floor/room headings of **Gebäudestruktur**,
+  **Funktionscheckliste**, **Klärungsliste** and **Übergabe-Checkliste**.
+  On narrow screens the type label moves above its pills.
 
 ### Fixed
 

@@ -158,7 +158,10 @@ async function renderCircuits() {
     `${assignedCount} / ${circuits.length} Abgänge zugeordnet`;
 
   const ul = document.getElementById('circuits-list');
-  ul.innerHTML = circuits.map(c => {
+  // Grouped floor -> room in the shared rc-* room layout. circuits arrive
+  // already ordered floor -> room -> point, so the selects end up in the
+  // same order as `circuits` (relied on by the value re-sync below).
+  const circuitRow = c => {
     const matching = instances.filter(ai => ai.channel_type === c.channel_type);
     const options = ['<option value="">— nicht zugeordnet —</option>'];
     matching.forEach(ai => {
@@ -170,13 +173,32 @@ async function renderCircuits() {
       }
     });
     const selectedValue = c.assignment ? `${c.assignment.actor_instance_id}|${c.assignment.channel_letter}` : '';
-    return `<li>
-      <div>${c.floor_name} / <b>${c.function_name}</b> <span class="pill">${c.channel_type}</span> <span class="pill">${c.point_type_name}</span></div>
+    const label = c.function_name.slice(c.room_name.length).trim() || '(kein Label)';
+    return `<div class="rc-row rc-row-3">
+      <div class="rc-type">${c.point_type_name}</div>
+      <div><span class="rc-pill">${label} <span class="rc-tag">${c.channel_type}</span></span></div>
       <select onchange="onCircuitAssignChange(${c.room_point_id}, ${c.channel_seq}, this.value)" ${matching.length === 0 ? 'disabled title="Noch kein passender Aktor hinzugefügt"' : ''}>
         ${options.join('')}
       </select>
-    </li>`;
-  }).join('') || '<li class="muted">Noch keine Abgänge — oben Räume und Punkte hinzufügen</li>';
+    </div>`;
+  };
+  const floors = [];
+  circuits.forEach(c => {
+    let floor = floors.find(f => f.id === c.floor_id);
+    if (!floor) floors.push(floor = {id: c.floor_id, name: c.floor_name, rooms: []});
+    let room = floor.rooms.find(r => r.id === c.room_id);
+    if (!room) floor.rooms.push(room = {id: c.room_id, name: c.room_name, circuits: []});
+    room.circuits.push(c);
+  });
+  ul.innerHTML = floors.map(f => `
+    <div class="floor-card">
+      <div class="rc-floor-title">${f.name}</div>
+      ${f.rooms.map(r => `
+        <div class="room-card rc-room">
+          <div class="rc-room-title">${r.name}</div>
+          <div class="rc-rows">${r.circuits.map(circuitRow).join('')}</div>
+        </div>`).join('')}
+    </div>`).join('') || '<p class="muted">Noch keine Abgänge — oben Räume und Punkte hinzufügen</p>';
 
   // Ensure each select reflects current assignment (re-set value since duplicate option values across selects is fine per-select)
   [...ul.querySelectorAll('select')].forEach((sel, i) => {

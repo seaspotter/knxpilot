@@ -21,7 +21,7 @@ async function renderFunktionenRooms() {
   }
   container.innerHTML = tree.floors.map(floor => `
     <div class="floor-card">
-      <div class="fn-floor-title">${floor.name}</div>
+      <div class="rc-floor-title">${floor.name}</div>
       ${floor.rooms.map(room => renderRoomFunctions(room)).join('') || '<p class="muted">Noch keine Räume — zuerst im Unterreiter Gebäudestruktur anlegen.</p>'}
     </div>
   `).join('');
@@ -35,15 +35,15 @@ function renderRoomFunctions(room) {
   });
   const pointsHtml = Object.entries(pointsByType).map(([ptId, pts]) => {
     const pt = POINT_TYPES.find(p => p.id === parseInt(ptId));
-    const labels = pts.map(p => `<span class="fn-pill">${p.label || '<span class="muted">(kein Label)</span>'}${p.has_bwm ? ' <span class="fn-bwm">+BWM</span>' : ''} <a href="#" onclick="editRoomPoint(event, ${room.id}, ${p.id})" class="fn-pill-edit" title="Bearbeiten">✎</a> <a href="#" onclick="deleteRoomPoint(event, ${p.id})" class="fn-pill-del" title="Löschen">×</a></span>`).join('');
-    return `<div class="fn-row"><div class="fn-type">${pt?.name || '?'}</div><div class="fn-pills">${labels}</div></div>`;
+    const labels = pts.map(p => `<span class="rc-pill">${p.label || '<span class="muted">(kein Label)</span>'}${p.has_bwm ? ' <span class="rc-tag">+BWM</span>' : ''} <a href="#" onclick="editRoomPoint(event, ${room.id}, ${p.id})" class="rc-pill-edit" title="Bearbeiten">✎</a> <a href="#" onclick="deleteRoomPoint(event, ${p.id})" class="rc-pill-del" title="Löschen">×</a></span>`).join('');
+    return `<div class="rc-row"><div class="rc-type">${pt?.name || '?'}</div><div class="rc-pills">${labels}</div></div>`;
   }).join('') || '<p class="muted" style="margin:4px 0;">Noch keine Funktionen</p>';
 
   return `
-    <div class="room-card fn-room">
-      <div class="fn-room-title">${room.name}</div>
-      <div class="fn-rows">${pointsHtml}</div>
-      <div class="quick-add fn-add mobile-fields">
+    <div class="room-card rc-room">
+      <div class="rc-room-title">${room.name}</div>
+      <div class="rc-rows">${pointsHtml}</div>
+      <div class="quick-add rc-add mobile-fields">
         <select id="ptype-${room.id}" class="wide" onchange="LAST_POINT_TYPE_ID = parseInt(this.value)">
           ${POINT_TYPES.map(pt => `<option value="${pt.id}"${pt.id === LAST_POINT_TYPE_ID ? ' selected' : ''}>${CATEGORIES.find(c=>c.id===pt.category_id)?.name} — ${pt.name}</option>`).join('')}
         </select>
