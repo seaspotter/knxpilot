@@ -532,26 +532,35 @@ async function applyStructDrop(drag, target) {
       const siblings = floor.rooms.map(r => r.id).filter(rid => rid !== drag.id);
       index = siblings.indexOf(id) + (target.mode === 'after' ? 1 : 0);
     }
-    const room = structFloorOf(drag.id).rooms.find(r => r.id === drag.id);
-    await moveStructure(`/rooms/${drag.id}/move`, {floor_id: floor.id, index}, `Raum "${room.name}" nach "${floor.name}" verschieben?`);
+    const current = structFloorOf(drag.id);
+    const room = current.rooms.find(r => r.id === drag.id);
+    if (floor.id === current.id) {
+      if (current.rooms.findIndex(r => r.id === drag.id) === index) return;  // dropped where it already is
+      await moveStructure(`/rooms/${drag.id}/move`, {floor_id: floor.id, index}, `Reihenfolge ändern: "${room.name}" in "${floor.name}" verschieben?`,
+        'Die Adressblöcke der Räume folgen ihrer Reihenfolge im Geschoss — die Räume zwischen alter und neuer Position rutschen auf andere Untergruppen.');
+    } else {
+      await moveStructure(`/rooms/${drag.id}/move`, {floor_id: floor.id, index}, `Raum "${room.name}" nach "${floor.name}" verschieben?`);
+    }
   } else if (drag.kind === 'floor') {
     const siblings = STRUCT_TREE.floors.map(f => f.id).filter(fid => fid !== drag.id);
     const index = siblings.indexOf(id) + (target.mode === 'after' ? 1 : 0);
     const floor = STRUCT_TREE.floors.find(f => f.id === drag.id);
-    await moveStructure(`/floors/${drag.id}/move`, {index}, `Geschoss "${floor.name}" verschieben?`);
+    await moveStructure(`/floors/${drag.id}/move`, {index}, `Geschoss "${floor.name}" verschieben?`,
+      'Die Mittelgruppen sind nach Geschossen durchnummeriert — die Geschosse zwischen alter und neuer Position bekommen eine andere Mittelgruppe.');
   } else if (drag.kind === 'verteiler') {
     await setVerteilerLocation(drag.id, kind === 'room' ? {room_id: id} : {floor_id: id});
   }
 }
 
 // Dry run first: only moves that actually shift group addresses ask.
-async function moveStructure(url, body, question) {
+async function moveStructure(url, body, question,
+    why = 'Die Mittelgruppe ist das Geschoss, und die Adressblöcke folgen der Reihenfolge der Räume.') {
   let dry;
   try {
     dry = await api(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...body, dry_run: true})});
   } catch (e) { return showToast(e.message, 'warning'); }
   if (dry.ga_changed) {
-    let message = `${question}\n\nDadurch ändern sich ${dry.ga_changed} Gruppenadresse(n) — die Mittelgruppe ist das Geschoss, und die Adressblöcke folgen der Reihenfolge der Räume.`;
+    let message = `${question}\n\nDadurch ändern sich ${dry.ga_changed} Gruppenadresse(n). ${why}`;
     if (dry.exported) message += '\n\nDas Projekt wurde bereits nach ETS exportiert: was danach in ETS nachzuziehen ist, zeigt Gruppenadressen → "Änderungen seit dem letzten ETS-Export".';
     if (!(await showConfirm(message, {confirmLabel: 'Verschieben'}))) return;
   }
@@ -610,7 +619,8 @@ async function moveFloorDialog(floorId) {
   const value = await structSelectModal(`Geschoss "${escapeHtml(floors[pos].name)}" verschieben an Position`,
     floors.map((f, i) => `<option value="${i}"${i === pos ? ' selected' : ''}>${i + 1}.${i === pos ? ' (aktuell)' : ` — ${i < pos ? 'vor' : 'nach'} ${escapeHtml(f.name)}`}</option>`).join(''));
   if (value === null || parseInt(value, 10) === pos) return;
-  await moveStructure(`/floors/${floorId}/move`, {index: parseInt(value, 10)}, `Geschoss "${floors[pos].name}" verschieben?`);
+  await moveStructure(`/floors/${floorId}/move`, {index: parseInt(value, 10)}, `Geschoss "${floors[pos].name}" verschieben?`,
+    'Die Mittelgruppen sind nach Geschossen durchnummeriert — die Geschosse zwischen alter und neuer Position bekommen eine andere Mittelgruppe.');
 }
 
 async function moveVerteilerDialog(verteilerId) {
