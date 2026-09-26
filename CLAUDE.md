@@ -16,7 +16,8 @@ description and [`DEPLOYMENT.md`](./DEPLOYMENT.md) for how it's deployed).
   (`backend/routers/*.py`), sqlite via a single connection helper in
   `backend/db.py`, Pydantic schemas in `backend/models.py`.
 - **Frontend**: plain HTML/CSS/JS under `frontend/`, **no build step, no
-  framework**. `backend/main.py` mounts `frontend/` directly as static
+  framework** (one tab, the Klärungsliste, uses vendored htmx - see
+  Conventions). `backend/main.py` mounts `frontend/` directly as static
   files. One JS file per tab/sub-tab under `frontend/js/`, loaded via
   classic (non-module) `<script src>` tags in `frontend/index.html`.
 - **Tests**: a `pytest` suite under `tests/` covers the backend (schema
@@ -63,6 +64,12 @@ the user to make explicitly, not something to introduce as a side effect of
   throws on non-2xx using the server's `detail` message). File
   downloads (CSV/PDF/JSON exports) use `window.location.href = '/api/...'`
   instead.
+- **htmx trial:** the Klärungsliste tab is rendered server-side with htmx
+  (vendored in `frontend/vendor/`, Jinja templates in
+  `backend/templates/klaerungsliste/`, `/hx/...` endpoints in its router) -
+  see "htmx tabs" in [`DEVELOPMENT.md`](./DEVELOPMENT.md). It's a trial the
+  user agreed to on 2026-09-26: don't convert further tabs to htmx without
+  asking, and don't add other frontend libraries.
 - User-facing strings are German; code, comments, and docs are English.
 - One router file and one frontend JS file per UI tab/sub-tab — when adding
   a feature to an existing tab, that's almost always the only two files you

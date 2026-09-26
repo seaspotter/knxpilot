@@ -5,11 +5,18 @@ only - does not appear in the Pflichtenheft export. The one thing that
 does leave the app is the "Offene Punkte" export (PDF, or the same list
 as plain text copied in the browser) - still-open entries only, meant to
 be sent to the customer/electrician to get them answered.
+
+This tab is the first one rendered server-side with htmx (see
+DEVELOPMENT.md "htmx tabs"): the /hx/... endpoints below return HTML
+fragments from backend/templates/klaerungsliste/, and the browser swaps
+them in - there is no client-side state. The JSON endpoints stay for the
+subnav badge, the exports and the tests.
 """
+import json
 from datetime import datetime
 from xml.sax.saxutils import escape
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Form, HTTPException, Request
 from reportlab.lib.units import mm
 from reportlab.platypus import KeepTogether, Paragraph, Spacer, Table
 
@@ -19,33 +26,45 @@ from ..pdf_design import (
     build_pdf_bytes, company_footer_line, company_header_block, pdf_response, pdf_styles, pdf_table_style,
     pdf_title_banner,
 )
+from ..templating import templates
 from ..utils import AGED_KLAERUNG_DAYS
 
 router = APIRouter(tags=["klaerungsliste"])
+
+KLAERUNG_TYPES = ["Frage", "Aufgabe", "Notiz"]
+KLAERUNG_STATUSES = ["offen", "geklärt", "abgelehnt"]
+
+
+def _klaerungen(db, project_id):
+    """Every entry in list order (Allgemein first, then by room in the order
+    entries were added), with room/point labels and age."""
+    rows = db.execute(
+        "SELECT k.*, r.name AS room_name, f.name AS floor_name, rp.label AS point_label, "
+        "CAST(julianday('now') - julianday(k.created_at) AS INTEGER) AS age_days "
+        "FROM klaerungen k "
+        "LEFT JOIN rooms r ON k.room_id = r.id "
+        "LEFT JOIN floors f ON r.floor_id = f.id "
+        "LEFT JOIN room_points rp ON k.room_point_id = rp.id "
+        "WHERE k.project_id=? ORDER BY k.room_id IS NULL DESC, k.order_idx",
+        (project_id,),
+    ).fetchall()
+    return [
+        {
+            "id": r["id"], "room_id": r["room_id"], "room_point_id": r["room_point_id"],
+            "room_name": r["room_name"], "point_label": r["point_label"],
+            "group_label": f"{r['floor_name']} — {r['room_name']}" if r["room_name"] else "Allgemein",
+            "text": r["text"], "typ": r["typ"], "status": r["status"], "antwort": r["antwort"],
+            "age_days": r["age_days"] or 0,
+            "aged": r["status"] == "offen" and (r["age_days"] or 0) >= AGED_KLAERUNG_DAYS,
+        }
+        for r in rows
+    ]
 
 
 @router.get("/api/projects/{project_id}/klaerungen")
 def list_klaerungen(project_id: int):
     with get_db() as db:
-        rows = db.execute(
-            "SELECT k.*, r.name AS room_name, rp.label AS point_label, "
-            "CAST(julianday('now') - julianday(k.created_at) AS INTEGER) AS age_days "
-            "FROM klaerungen k "
-            "LEFT JOIN rooms r ON k.room_id = r.id "
-            "LEFT JOIN room_points rp ON k.room_point_id = rp.id "
-            "WHERE k.project_id=? ORDER BY k.room_id IS NULL DESC, k.order_idx",
-            (project_id,),
-        ).fetchall()
-        return [
-            {
-                "id": r["id"], "room_id": r["room_id"], "room_point_id": r["room_point_id"],
-                "room_name": r["room_name"], "point_label": r["point_label"],
-                "text": r["text"], "typ": r["typ"], "status": r["status"], "antwort": r["antwort"],
-                "age_days": r["age_days"] or 0,
-                "aged": r["status"] == "offen" and (r["age_days"] or 0) >= AGED_KLAERUNG_DAYS,
-            }
-            for r in rows
-        ]
+        return [{k: v for k, v in e.items() if k != "group_label"} for e in _klaerungen(db, project_id)]
 
 
 @router.post("/api/projects/{project_id}/klaerungen")
@@ -149,3 +168,169 @@ def build_klaerungsliste_pdf_bytes(project_id: int):
 def export_klaerungsliste_pdf(project_id: int):
     data, filename = build_klaerungsliste_pdf_bytes(project_id)
     return pdf_response(data, filename)
+
+
+def open_klaerungen_text(db, project_id):
+    """The "Als Text kopieren" list - same grouping and numbers as the PDF
+    (open_klaerungen_grouped), rendered into the tab so the copy button
+    works without a request (clipboard access needs the click itself)."""
+    groups = open_klaerungen_grouped(db, project_id)
+    if not groups:
+        return ""
+    project = db.execute("SELECT name FROM projects WHERE id=?", (project_id,)).fetchone()
+    lines = [f"Offene Punkte – {project['name']} (Stand {datetime.now():%d.%m.%Y})", ""]
+    for label, entries in groups:
+        lines.append(label)
+        for e in entries:
+            lines.append(f"{e['nr']}. [{e['typ']}] {e['text']}" + (f" (Punkt: {e['point_label']})" if e["point_label"] else ""))
+            if e["antwort"]:
+                lines.append(f"   Bisher: {e['antwort']}")
+        lines.append("")
+    return "\n".join(lines).strip()
+
+
+# ---------- htmx fragments (backend/templates/klaerungsliste/) ----------
+def _rooms_with_points(db, project_id):
+    rooms = []
+    for floor in db.execute("SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall():
+        for room in db.execute("SELECT * FROM rooms WHERE floor_id=? ORDER BY order_idx", (floor["id"],)).fetchall():
+            points = db.execute(
+                "SELECT id, label FROM room_points WHERE room_id=? ORDER BY order_idx", (room["id"],)
+            ).fetchall()
+            rooms.append({"id": room["id"], "label": f"{floor['name']} — {room['name']}",
+                          "points": [dict(p) for p in points]})
+    return rooms
+
+
+def _form_context(db, project_id, entry=None):
+    rooms = _rooms_with_points(db, project_id)
+    room = next((r for r in rooms if entry and r["id"] == entry["room_id"]), None)
+    return {"project_id": project_id, "entry": entry, "rooms": rooms, "types": KLAERUNG_TYPES,
+            "points": room["points"] if room else [], "selected_point": entry["room_point_id"] if entry else None}
+
+
+def _list_context(db, project_id):
+    entries = _klaerungen(db, project_id)
+    groups = {}
+    for e in entries:
+        groups.setdefault(e["group_label"], []).append(e)
+    return {"project_id": project_id, "groups": list(groups.items()),
+            "aged_count": sum(e["aged"] for e in entries), "aged_days": AGED_KLAERUNG_DAYS,
+            "statuses": KLAERUNG_STATUSES, "open_text": open_klaerungen_text(db, project_id),
+            "open_count": sum(e["status"] == "offen" for e in entries)}
+
+
+def _render(request, name, context, headers=None):
+    """Every fragment that shows the list also tells the page the new counts
+    (HX-Trigger), so the subnav badge "Klärungsliste (n)" stays current."""
+    response = templates.TemplateResponse(request, name, context)
+    if "open_count" in context:
+        response.headers["HX-Trigger"] = json.dumps(
+            {"klaerungen-changed": {"open": context["open_count"], "aged": context["aged_count"]}})
+    return response
+
+
+def _project_of(db, k_id):
+    row = db.execute("SELECT project_id FROM klaerungen WHERE id=?", (k_id,)).fetchone()
+    if not row:
+        raise HTTPException(404, "Eintrag nicht mehr vorhanden")
+    return row["project_id"]
+
+
+def _int_or_none(value):
+    return int(value) if value not in (None, "") else None
+
+
+def _tab(request, db, project_id):
+    return _render(request, "klaerungsliste/tab.html", {**_form_context(db, project_id), **_list_context(db, project_id)})
+
+
+def _list(request, db, project_id):
+    return _render(request, "klaerungsliste/_list.html", _list_context(db, project_id))
+
+
+@router.get("/hx/projects/{project_id}/klaerungsliste")
+def hx_tab(request: Request, project_id: int):
+    with get_db() as db:
+        return _tab(request, db, project_id)
+
+
+@router.get("/hx/projects/{project_id}/klaerungsliste/form")
+def hx_form(request: Request, project_id: int):
+    """The empty "Neuer Eintrag" form (e.g. "Abbrechen" while editing)."""
+    with get_db() as db:
+        return _render(request, "klaerungsliste/_form.html", _form_context(db, project_id))
+
+
+@router.get("/hx/klaerungsliste/points")
+def hx_points(request: Request, room_id: str = ""):
+    """The point <select> for the chosen room (empty for Allgemein/no points)."""
+    points = []
+    if room_id:
+        with get_db() as db:
+            points = [dict(p) for p in db.execute(
+                "SELECT id, label FROM room_points WHERE room_id=? ORDER BY order_idx", (int(room_id),)).fetchall()]
+    return _render(request, "klaerungsliste/_points.html", {"points": points, "selected_point": None})
+
+
+@router.post("/hx/projects/{project_id}/klaerungen")
+def hx_create(request: Request, project_id: int, text: str = Form(""), typ: str = Form("Frage"),
+              room_id: str = Form(""), room_point_id: str = Form("")):
+    if not text.strip():
+        raise HTTPException(400, "Text ist erforderlich")
+    with get_db() as db:
+        (count,) = db.execute("SELECT COUNT(*) FROM klaerungen WHERE project_id=?", (project_id,)).fetchone()
+        db.execute(
+            "INSERT INTO klaerungen (project_id, room_id, room_point_id, text, typ, order_idx) VALUES (?, ?, ?, ?, ?, ?)",
+            (project_id, _int_or_none(room_id), _int_or_none(room_point_id), text.strip(), typ, count),
+        )
+        return _tab(request, db, project_id)
+
+
+@router.get("/hx/klaerungen/{k_id}/edit")
+def hx_edit_form(request: Request, k_id: int):
+    with get_db() as db:
+        project_id = _project_of(db, k_id)
+        entry = next(e for e in _klaerungen(db, project_id) if e["id"] == k_id)
+        return _render(request, "klaerungsliste/_form.html", _form_context(db, project_id, entry))
+
+
+@router.put("/hx/klaerungen/{k_id}")
+def hx_update(request: Request, k_id: int, text: str = Form(""), typ: str = Form("Frage"),
+              room_id: str = Form(""), room_point_id: str = Form("")):
+    if not text.strip():
+        raise HTTPException(400, "Text ist erforderlich")
+    with get_db() as db:
+        project_id = _project_of(db, k_id)
+        db.execute("UPDATE klaerungen SET text=?, typ=?, room_id=?, room_point_id=? WHERE id=?",
+                   (text.strip(), typ, _int_or_none(room_id), _int_or_none(room_point_id), k_id))
+        return _tab(request, db, project_id)
+
+
+@router.post("/hx/klaerungen/{k_id}/status")
+def hx_status(request: Request, k_id: int, status: str = Form(...)):
+    if status not in KLAERUNG_STATUSES:
+        raise HTTPException(400, "Unbekannter Status")
+    with get_db() as db:
+        project_id = _project_of(db, k_id)
+        db.execute("UPDATE klaerungen SET status=? WHERE id=?", (status, k_id))
+        return _list(request, db, project_id)
+
+
+@router.post("/hx/klaerungen/{k_id}/antwort")
+def hx_antwort(request: Request, k_id: int, antwort: str = Form("")):
+    """Saved on change without re-rendering (keeps focus/cursor); only the
+    hidden "Als Text kopieren" text is refreshed, out of band."""
+    with get_db() as db:
+        project_id = _project_of(db, k_id)
+        db.execute("UPDATE klaerungen SET antwort=? WHERE id=?", (antwort.strip(), k_id))
+        return _render(request, "klaerungsliste/_open_text.html",
+                       {"open_text": open_klaerungen_text(db, project_id), "oob": True})
+
+
+@router.delete("/hx/klaerungen/{k_id}")
+def hx_delete(request: Request, k_id: int):
+    with get_db() as db:
+        project_id = _project_of(db, k_id)
+        db.execute("DELETE FROM klaerungen WHERE id=?", (k_id,))
+        return _list(request, db, project_id)

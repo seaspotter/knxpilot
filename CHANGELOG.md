@@ -6,6 +6,19 @@ restructuring below — history before that is available via `git log`.
 
 ## [Unreleased]
 
+### Changed
+
+- **Klärungsliste rendered server-side with htmx (trial)** — looks and
+  works the same, but its HTML now comes from Jinja templates
+  (`backend/templates/klaerungsliste/`) via `/hx/...` endpoints, with htmx
+  (vendored in `frontend/vendor/`, no build step) doing the requests; the
+  tab's JavaScript shrank from ~250 to ~60 lines, the rendering is now
+  covered by pytest, and user text is escaped by default. "Als Text
+  kopieren" now uses the same server-side grouping/numbering as the PDF.
+  A trial for moving more of the frontend into Python - see DEVELOPMENT.md
+  "htmx tabs". New dependency `jinja2` - after updating, run
+  `docker compose pull && docker compose up -d` once.
+
 ## [0.8.0] - 2026-09-26
 
 A big planning and handover release. The Gebäudestruktur is now an

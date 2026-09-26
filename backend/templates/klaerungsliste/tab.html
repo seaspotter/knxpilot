@@ -1,0 +1,18 @@
+{# The whole Klärungsliste tab body, swapped into #klaerungsliste-root. #}
+<div class="card" id="kl-form-card">
+  {% include "klaerungsliste/_form.html" %}
+</div>
+<div class="card">
+  <div class="card-header">
+    <h4 style="margin:0;">Offene Punkte weitergeben</h4>
+    <div class="row" style="margin:0; gap:6px;">
+      <button class="btn secondary small" onclick="copyOpenKlaerungenAsText()">Als Text kopieren</button>
+      <button class="btn secondary small" onclick="openSendEmailModal('klaerungsliste', 'Offene Punkte')">Per E-Mail senden</button>
+      <button class="btn" onclick="downloadKlaerungslistePdf()">PDF herunterladen</button>
+    </div>
+  </div>
+  <p class="muted" style="margin-bottom:0;">Alle noch offenen Einträge nummeriert und nach Raum gruppiert — zum Klären mit Kunde oder Elektriker. Als Text zum Einfügen in eine eigene E-Mail, oder als PDF mit Antwort-Spalte zum Ausfüllen.</p>
+</div>
+<div id="kl-list">
+  {% include "klaerungsliste/_list.html" %}
+</div>

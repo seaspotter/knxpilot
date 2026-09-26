@@ -97,6 +97,8 @@ backend/
   models.py         — Pydantic request-body schemas
   ga_logic.py       — group-address tree generation, circuits, per-room/central function listings (used by Pflichtenheft and the checklists)
   pdf_design.py     — shared PDF look (banner, table style, page numbers, letterhead); build_pdf_bytes()/build_pdf_bytes_two_pass() are the raw-bytes builders every export (and email.py's send action) go through
+  templating.py     — Jinja2 setup for the htmx tabs (templates/, autoescaped)
+  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: klaerungsliste/)
   project_transfer.py — per-project JSON backup/restore + duplicate (what's included, name/position-based references)
   pa_assign.py      — physical-address auto-assign (bucket convention, per KNX line) + line coupler/power supply detection
   email_sender.py   — SMTP mechanics (stdlib smtplib) behind routers/email.py's send-by-mail action
@@ -119,6 +121,7 @@ backend/
     system.py          — self-update via git, changelog + manual + version endpoints (Update/Hilfe tabs)
 frontend/
   index.html        — page shell: <head>, nav/tab markup, <script src> tags in load order
+  vendor/           — vendored third-party files, committed as-is (no npm): htmx-<version>.min.js + its license
   css/style.css      — the entire stylesheet (single file, theming via CSS custom properties)
   js/
     api.js            — shared api() fetch wrapper, global state vars, theme toggle, tab-switch wiring
@@ -191,6 +194,24 @@ rarely need to touch anything else.
   server's `detail` message, and auto-parses JSON). File downloads
   (CSV/PDF/JSON exports) bypass it and just set
   `window.location.href = '/api/...'`.
+- **htmx tabs** (so far only the Klärungsliste - a trial; the other tabs
+  are classic JS): the tab's HTML is rendered by the server from Jinja
+  templates in `backend/templates/<tab>/`, returned by `/hx/...` endpoints
+  in the tab's router, and `hx-*` attributes in that HTML do the requests
+  and swap the answer in - no client-side cache, no `render*()`. The tab's
+  JS file only loads the tab (`htmx.ajax(...)` into a root `<div>`) and
+  holds the few things that must stay in the browser (clipboard, downloads,
+  badge). Conventions: actions that change the list re-render only the part
+  that changed (so a half-typed form survives); `hx-confirm` shows the
+  app's own dialog and failed requests show a toast with the server's
+  `detail` (both wired up once in `ui.js`); the server tells the page about
+  side effects via an `HX-Trigger` response header (e.g. new badge
+  counts). Jinja autoescapes all user text. htmx is vendored in
+  `frontend/vendor/` (no CDN, works offline on a LAN, and the git-pull
+  update keeps working); to update it, replace the file with the new
+  release's `dist/htmx.min.js` from npm and change the version in its
+  name and the `<script>` tag. JSON endpoints stay where other code needs
+  them (exports, badge, tests).
 - **User-facing strings are German**; code identifiers, comments, and this
   documentation are English.
 - **Tests** — run `pytest` before committing; add a test for new backend
@@ -206,6 +227,8 @@ rarely need to touch anything else.
 2. New request/response shape → add a Pydantic model to `backend/models.py`.
 3. New UI → add markup to the relevant section of `frontend/index.html` and
    JS to the matching `frontend/js/*.js` file, following the `load*/render*`
-   pattern above.
+   pattern above - or, in an htmx tab, edit its template in
+   `backend/templates/<tab>/` and add an `/hx/...` endpoint (see "htmx
+   tabs" above; test it with pytest like any other endpoint).
 4. Manually verify by running the app locally and clicking through the
    affected tab.

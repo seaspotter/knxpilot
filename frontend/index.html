@@ -378,40 +378,8 @@
       </div>
 
       <div class="subtab" id="subtab-klaerungsliste">
-        <div class="card">
-          <h4 id="kl-form-title">Neuer Eintrag</h4>
-          <div class="row mobile-fields">
-            <select id="kl-typ">
-              <option value="Frage">Frage</option>
-              <option value="Aufgabe">Aufgabe</option>
-              <option value="Notiz">Notiz</option>
-            </select>
-            <select id="kl-room" class="wide" onchange="onKlRoomChange()">
-              <option value="">Allgemein (kein Raum)</option>
-            </select>
-            <select id="kl-point" class="wide" style="display:none;">
-              <option value="">(kein bestimmter Punkt)</option>
-            </select>
-          </div>
-          <div class="row mobile-fields">
-            <input type="text" id="kl-text" class="kl-text-input" placeholder="Frage, Aufgabe oder Notiz...">
-            <button class="btn" id="kl-save-btn" onclick="saveKlaerung()">+ Hinzufügen</button>
-            <button class="btn secondary small" id="kl-cancel-btn" onclick="cancelEditKlaerung()" style="display:none;">Abbrechen</button>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            <h4 style="margin:0;">Offene Punkte weitergeben</h4>
-            <div class="row" style="margin:0; gap:6px;">
-              <button class="btn secondary small" onclick="copyOpenKlaerungenAsText()">Als Text kopieren</button>
-              <button class="btn secondary small" onclick="openSendEmailModal('klaerungsliste', 'Offene Punkte')">Per E-Mail senden</button>
-              <button class="btn" onclick="downloadKlaerungslistePdf()">PDF herunterladen</button>
-            </div>
-          </div>
-          <p class="muted" style="margin-bottom:0;">Alle noch offenen Einträge nummeriert und nach Raum gruppiert — zum Klären mit Kunde oder Elektriker. Als Text zum Einfügen in eine eigene E-Mail, oder als PDF mit Antwort-Spalte zum Ausfüllen.</p>
-        </div>
-        <div id="klaerungsliste-digest"></div>
-        <div id="klaerungsliste-groups"></div>
+        <!-- Rendered server-side with htmx (backend/templates/klaerungsliste/), see klaerungsliste.js -->
+        <div id="klaerungsliste-root"></div>
       </div>
 
       <div class="subtab" id="subtab-dokumentation">
@@ -850,6 +818,8 @@
 
 </main>
 
+<!-- htmx (vendored, 0BSD - see frontend/vendor/htmx-LICENSE.txt): server-rendered tabs, see DEVELOPMENT.md -->
+<script src="/vendor/htmx-2.0.11.min.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/ui.js"></script>
 <script src="/js/send_email.js"></script>

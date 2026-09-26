@@ -210,3 +210,22 @@ function renderDocContents(elementId, sections) {
       <span class="doc-detail${s.warn ? ' warn' : ''}">${escapeHtml(s.detail)}</span>
     </div>`).join('')}</div>`;
 }
+
+function escapeAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
+// ---------- htmx glue (tabs rendered server-side, e.g. klaerungsliste.js) ----------
+// hx-confirm="..." uses the app's own confirm dialog instead of the browser's.
+document.addEventListener('htmx:confirm', ev => {
+  if (!ev.detail.question) return;
+  ev.preventDefault();
+  showConfirm(ev.detail.question, {danger: true, confirmLabel: 'Löschen'}).then(ok => { if (ok) ev.detail.issueRequest(true); });
+});
+// Errors show as a toast with the server's "detail" message, like api() does.
+document.addEventListener('htmx:responseError', ev => {
+  let message = `Fehler ${ev.detail.xhr.status}`;
+  try { message = JSON.parse(ev.detail.xhr.responseText).detail || message; } catch (e) { /* not JSON */ }
+  showToast(message, 'warning');
+});
+document.addEventListener('htmx:sendError', () => showToast('Server nicht erreichbar', 'warning'));

@@ -1,0 +1,7 @@
+{# Point picker for the chosen room - nothing at all for Allgemein or a room without points. #}
+{% if points %}
+<select name="room_point_id" class="wide">
+  <option value="">(kein bestimmter Punkt)</option>
+  {% for p in points %}<option value="{{ p.id }}"{% if selected_point == p.id %} selected{% endif %}>{{ p.label or "(kein Label)" }}</option>{% endfor %}
+</select>
+{% endif %}
