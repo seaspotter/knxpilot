@@ -578,7 +578,11 @@ def init_db():
                 smtp_username TEXT NOT NULL DEFAULT '',
                 smtp_password TEXT NOT NULL DEFAULT '',
                 smtp_from_email TEXT NOT NULL DEFAULT '',
-                smtp_cc_self_default INTEGER NOT NULL DEFAULT 1
+                smtp_cc_self_default INTEGER NOT NULL DEFAULT 1,
+                -- Zeiterfassung (routers/zeiterfassung.py): feature on/off, and
+                -- the grid start/stop times snap to - 1 (minutengenau), 15 or 30.
+                zeiterfassung_enabled INTEGER NOT NULL DEFAULT 1,
+                zeiterfassung_rounding_minutes INTEGER NOT NULL DEFAULT 15
             );
             """
         )
@@ -677,6 +681,10 @@ def init_db():
              "ALTER TABLE company_profile ADD COLUMN smtp_from_email TEXT NOT NULL DEFAULT ''"),
             ("company_profile", "smtp_cc_self_default",
              "ALTER TABLE company_profile ADD COLUMN smtp_cc_self_default INTEGER NOT NULL DEFAULT 1"),
+            ("company_profile", "zeiterfassung_enabled",
+             "ALTER TABLE company_profile ADD COLUMN zeiterfassung_enabled INTEGER NOT NULL DEFAULT 1"),
+            ("company_profile", "zeiterfassung_rounding_minutes",
+             "ALTER TABLE company_profile ADD COLUMN zeiterfassung_rounding_minutes INTEGER NOT NULL DEFAULT 15"),
             ("time_entries", "invoiced", "ALTER TABLE time_entries ADD COLUMN invoiced INTEGER NOT NULL DEFAULT 0"),
         ]:
             cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]

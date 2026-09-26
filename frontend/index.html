@@ -37,7 +37,7 @@
     </div>
   </div>
   <button data-tab="aktoren">Geräte Katalog</button>
-  <button data-tab="zeiterfassung">Zeiterfassung</button>
+  <button data-tab="zeiterfassung" style="display:none;">Zeiterfassung</button>
   <button data-tab="setup">Setup</button>
   <button data-tab="update">Update</button>
   <button data-tab="hilfe">Hilfe</button>
@@ -470,6 +470,7 @@
       <button data-subtab="dokumentation">Dokumentation</button>
       <button data-subtab="email">E-Mail</button>
       <button data-subtab="backup">Backup</button>
+      <button data-subtab="zeiterfassung">Zeiterfassung</button>
     </div>
 
     <div class="subtab active" id="setup-subtab-firma">
@@ -677,6 +678,31 @@
     </div>
     </div>
 
+    <div class="subtab" id="setup-subtab-zeiterfassung">
+    <div class="card">
+      <h3>Zeiterfassung</h3>
+      <p class="muted">Einfache Arbeitszeiterfassung je Projekt (Start/Stopp in der Kopfzeile, Reiter Zeiterfassung). Rein intern — erscheint in keinem Projekt-Export und keiner Dokumentation.</p>
+      <div class="row mobile-fields">
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="zeit-enabled"> Aktiv
+          <span class="info-icon" tabindex="0" data-tip="Deaktiviert blendet den Reiter Zeiterfassung und den Start/Stopp-Knopf aus. Bereits erfasste Zeiten bleiben gespeichert und sind nach dem Wiedereinschalten wieder da.">i</span>
+        </label>
+      </div>
+      <div class="row mobile-fields">
+        <label class="muted" style="display:flex; align-items:center; gap:6px;">Rundung
+          <select id="zeit-rounding-minutes">
+            <option value="1">Minutengenau</option>
+            <option value="15">15 Minuten</option>
+            <option value="30">30 Minuten</option>
+          </select>
+          <span class="info-icon" tabindex="0" data-tip="Start und Stopp werden auf die nächste Marke gerundet (bei 15 Min.: 12:04 → 12:00, 12:55 → 13:00); ein Eintrag zählt mindestens eine Rundungseinheit. Gilt für neue bzw. neu gespeicherte Einträge - bereits erfasste Zeiten werden nicht nachträglich umgerechnet.">i</span>
+        </label>
+      </div>
+      <div class="row mobile-fields" style="margin-top:10px;">
+        <button class="btn" onclick="saveCompanyProfile()">Speichern</button>
+      </div>
+    </div>
+    </div>
+
     <div class="subtab" id="setup-subtab-backup">
     <div class="card">
       <h3>Backup <span class="info-icon" tabindex="0" data-tip="Sichert die komplette Datenbank (alle Projekte, Geräte-Katalog, Setup) als eine Datei - anders als 'Sichern (JSON)' im Projektkopf, das nur ein einzelnes Projekt exportiert. Wiederherstellen weiter unten auf dieser Seite, direkt in der App.">i</span></h3>
@@ -763,7 +789,7 @@
           <button class="btn" onclick="exportTimeEntriesPdf()">PDF herunterladen</button>
         </div>
       </div>
-      <p class="muted">Arbeitszeit je Projekt — Start/Stopp oben in der Kopfzeile, sobald ein Projekt geöffnet ist. Start und Stopp werden auf die nächste Viertelstunde gerundet (z.B. 12:04 → 12:00, 12:55 → 13:00), mindestens 15 Minuten je Eintrag. Nur intern: erscheint in keinem Projekt-Export und keiner Dokumentation. <b>PDF herunterladen</b> erzeugt einen Stundennachweis für die aktuelle Auswahl.</p>
+      <p class="muted">Arbeitszeit je Projekt — Start/Stopp oben in der Kopfzeile, sobald ein Projekt geöffnet ist. <span id="zeit-rounding-hint"></span> Nur intern: erscheint in keinem Projekt-Export und keiner Dokumentation. <b>PDF herunterladen</b> erzeugt einen Stundennachweis für die aktuelle Auswahl.</p>
       <div class="row">
         <select id="zeit-project-filter" class="wide" onchange="loadTimeEntries()"></select>
         <select id="zeit-invoiced-filter" onchange="renderTimeEntries()">

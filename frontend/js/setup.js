@@ -29,6 +29,9 @@ async function loadCompanyProfile() {
   document.getElementById('smtp-password').value = c.smtp_password || '';
   document.getElementById('smtp-from-email').value = c.smtp_from_email || '';
   document.getElementById('smtp-cc-self-default').checked = !!c.smtp_cc_self_default;
+  document.getElementById('zeit-enabled').checked = !!c.zeiterfassung_enabled;
+  document.getElementById('zeit-rounding-minutes').value = String(c.zeiterfassung_rounding_minutes || 15);
+  applyZeiterfassungSettings(c);
   document.getElementById('backup-enabled').checked = !!c.backup_enabled;
   document.getElementById('backup-interval-hours').value = c.backup_interval_hours || 24;
   document.getElementById('backup-retention-count').value = c.backup_retention_count || 14;
@@ -263,6 +266,8 @@ async function saveCompanyProfile() {
     smtp_password: document.getElementById('smtp-password').value,
     smtp_from_email: document.getElementById('smtp-from-email').value.trim(),
     smtp_cc_self_default: document.getElementById('smtp-cc-self-default').checked,
+    zeiterfassung_enabled: document.getElementById('zeit-enabled').checked,
+    zeiterfassung_rounding_minutes: parseInt(document.getElementById('zeit-rounding-minutes').value, 10) || 15,
     backup_enabled: document.getElementById('backup-enabled').checked,
     backup_interval_hours: parseInt(document.getElementById('backup-interval-hours').value) || 24,
     backup_retention_count: parseInt(document.getElementById('backup-retention-count').value) || 14,

@@ -1,11 +1,29 @@
 // ---------- Zeiterfassung (header timer + global tab) ----------
 // Internal only - never part of any project export/documentation (its own
 // Stundennachweis PDF aside). The backend snaps every start/end to the
-// nearest quarter hour (Start 12:04 -> 12:00, Stop 12:55 -> 13:00), so the
-// manual-entry form only offers :00/:15/:30/:45 too.
+// nearest mark of the grid set in Setup -> Zeiterfassung (1/15/30 min; with
+// 15: Start 12:04 -> 12:00, Stop 12:55 -> 13:00), so the manual-entry form
+// only offers times on that grid too.
 let RUNNING_TIMER = null;
 let TIME_ENTRIES = [];
 let TIMER_TICK = null;
+let ZEIT_ENABLED = false;
+let ZEIT_ROUNDING = 15;
+
+// Called by loadCompanyProfile() (setup.js) on page load and after saving.
+function applyZeiterfassungSettings(c) {
+  ZEIT_ENABLED = !!c.zeiterfassung_enabled;
+  ZEIT_ROUNDING = c.zeiterfassung_rounding_minutes || 15;
+  const navBtn = document.querySelector('nav button[data-tab="zeiterfassung"]');
+  navBtn.style.display = ZEIT_ENABLED ? '' : 'none';
+  if (!ZEIT_ENABLED && navBtn.classList.contains('active')) {
+    document.querySelector('nav button[data-tab="projects"]').click();
+  }
+  document.getElementById('zeit-rounding-hint').textContent = ZEIT_ROUNDING === 1
+    ? 'Zeiten werden minutengenau erfasst.'
+    : `Start und Stopp werden auf die nächsten ${ZEIT_ROUNDING} Minuten gerundet (z.B. 12:04 → 12:00, 12:55 → 13:00), mindestens ${ZEIT_ROUNDING} Minuten je Eintrag.`;
+  renderTimerWidget();
+}
 
 async function loadRunningTimer() {
   RUNNING_TIMER = await api('/time-entries/running');
@@ -35,7 +53,7 @@ function renderTimerWidget() {
     const since = new Date(RUNNING_TIMER.started_at).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
     el.innerHTML = `
       <span class="muted">seit ${since}</span>
-      <span class="zeit-clock" id="zeit-clock" title="Start/Stopp werden auf die nächste Viertelstunde gerundet">⏱ </span>
+      <span class="zeit-clock" id="zeit-clock" title="${ZEIT_ROUNDING === 1 ? 'Minutengenau' : `Start/Stopp werden auf ${ZEIT_ROUNDING} Min. gerundet`}">⏱ </span>
       ${otherProject ? `<span class="muted">${escapeHtml(RUNNING_TIMER.project_name)}</span>` : ''}
       <button class="btn danger small" onclick="stopTimer()">■ Stopp</button>`;
     const tick = () => {
@@ -45,7 +63,7 @@ function renderTimerWidget() {
     tick();
     TIMER_TICK = setInterval(tick, 1000);
     el.style.display = '';
-  } else if (CURRENT_PROJECT) {
+  } else if (CURRENT_PROJECT && ZEIT_ENABLED) {
     el.innerHTML = `<button class="btn secondary small" onclick="startTimer()" title="Zeiterfassung für dieses Projekt starten">▶ Start</button>`;
     el.style.display = '';
   } else {
@@ -160,15 +178,23 @@ function renderTimeEntries() {
     </tbody></table>`;
 }
 
-const QUARTER_TIMES = Array.from({length: 96}, (_, i) =>
-  `${String(Math.floor(i / 4)).padStart(2, '0')}:${String(i % 4 * 15).padStart(2, '0')}`);
-
 // ISO (UTC) -> {date: 'YYYY-MM-DD', time: 'HH:MM'} in browser local time,
-// time rounded to the nearest quarter hour (same rule as the backend).
-function isoToQuarterParts(iso) {
-  const d = new Date(Math.round(new Date(iso).getTime() / 900000) * 900000);
+// time rounded to the nearest grid mark (same rule as the backend).
+function isoToGridParts(iso) {
+  const step = ZEIT_ROUNDING * 60000;
+  const d = new Date(Math.round(new Date(iso).getTime() / step) * step);
   const pad = n => String(n).padStart(2, '0');
   return {date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, time: `${pad(d.getHours())}:${pad(d.getMinutes())}`};
+}
+
+// Minutengenau: a plain time input; otherwise a dropdown of the grid's times.
+function timeFieldHtml(id) {
+  if (ZEIT_ROUNDING === 1) return `<input type="time" id="${id}">`;
+  const times = Array.from({length: 1440 / ZEIT_ROUNDING}, (_, i) => {
+    const m = i * ZEIT_ROUNDING;
+    return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  });
+  return `<select id="${id}">${times.map(t => `<option>${t}</option>`).join('')}</select>`;
 }
 
 function openTimeEntryModal(id = null) {
@@ -182,8 +208,8 @@ function openTimeEntryModal(id = null) {
     </select></div>
     <div class="row mobile-fields">
       <input type="date" id="te-date">
-      <label class="muted">Von <select id="te-start">${QUARTER_TIMES.map(t => `<option>${t}</option>`).join('')}</select></label>
-      <label class="muted">Bis <select id="te-end">${QUARTER_TIMES.map(t => `<option>${t}</option>`).join('')}</select></label>
+      <label class="muted">Von ${timeFieldHtml('te-start')}</label>
+      <label class="muted">Bis ${timeFieldHtml('te-end')}</label>
     </div>
     <div class="row"><input type="text" id="te-note" class="flex-input-wide" placeholder="Notiz (optional)"></div>
     <div class="row modal-actions">
@@ -192,8 +218,8 @@ function openTimeEntryModal(id = null) {
     </div>`, { wide: true });
 
   document.getElementById('te-project').value = String(defaultProject || (PROJECTS_LIST[0] && PROJECTS_LIST[0].id) || '');
-  const start = isoToQuarterParts(e ? e.started_at : new Date(now.getTime() - 3600000).toISOString());
-  const end = isoToQuarterParts(e ? e.ended_at : now.toISOString());
+  const start = isoToGridParts(e ? e.started_at : new Date(now.getTime() - 3600000).toISOString());
+  const end = isoToGridParts(e ? e.ended_at : now.toISOString());
   document.getElementById('te-date').value = start.date;
   document.getElementById('te-start').value = start.time;
   document.getElementById('te-end').value = end.time;
@@ -207,7 +233,7 @@ function openTimeEntryModal(id = null) {
     const date = document.getElementById('te-date').value;
     const from = document.getElementById('te-start').value;
     const to = document.getElementById('te-end').value;
-    if (!project_id || !date) return showToast('Projekt und Datum sind erforderlich', 'warning');
+    if (!project_id || !date || !from || !to) return showToast('Projekt, Datum, Von und Bis sind erforderlich', 'warning');
     if (to === from) return showToast('Bis muss nach Von liegen', 'warning');
     const startDate = new Date(`${date}T${from}`);
     const endDate = new Date(`${date}T${to}`);
