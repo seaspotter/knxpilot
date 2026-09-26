@@ -18,6 +18,7 @@ async function checkForUpdate() {
   const errorEl = document.getElementById('update-error');
   const btn = document.getElementById('update-btn');
   statusEl.textContent = 'Suche nach Updates...';
+  document.getElementById('update-image').style.display = 'none';
   errorEl.style.display = 'none';
   errorEl.textContent = '';
   btn.style.display = 'none';
@@ -29,7 +30,12 @@ async function checkForUpdate() {
       errorEl.style.display = 'block';
       return;
     }
-    if (status.update_available) {
+    if (status.update_available && status.needs_image) {
+      // New Python packages: pulling from inside the app would leave new
+      // code running on old packages - the server command does it all.
+      statusEl.textContent = `Update verfügbar (${status.current} → ${status.latest})`;
+      showImageUpdateCommand(status.image_command);
+    } else if (status.update_available) {
       statusEl.textContent = `Update verfügbar (${status.current} → ${status.latest})`;
       btn.style.display = 'inline-block';
     } else {
@@ -50,6 +56,13 @@ async function performUpdate() {
   statusEl.textContent = 'Aktualisiere...';
   try {
     const result = await api('/system/update', {method: 'POST'});
+    if (result.needs_image) {  // upstream gained new packages since the check
+      statusEl.textContent = '';
+      btn.style.display = 'none';
+      btn.disabled = false;
+      showImageUpdateCommand(result.image_command);
+      return;
+    }
     if (!result.ok) {
       showToast('Update fehlgeschlagen:\n\n' + result.message, 'error', {sticky: true});
       statusEl.textContent = '';
@@ -96,3 +109,19 @@ async function loadChangelog() {
     : '<p class="muted">Kein Änderungsprotokoll gefunden.</p>';
 }
 
+
+function showImageUpdateCommand(command) {
+  document.getElementById('update-image-command').textContent = command;
+  document.getElementById('update-image').style.display = '';
+}
+
+function copyUpdateCommand() {
+  const text = document.getElementById('update-image-command').textContent;
+  // Same fallback as the Klärungsliste copy: plain http:// has no navigator.clipboard.
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  const ok = document.execCommand('copy');
+  ta.remove();
+  showToast(ok ? 'Befehl kopiert' : 'Kopieren nicht möglich - bitte markieren und kopieren', ok ? 'success' : 'warning');
+}

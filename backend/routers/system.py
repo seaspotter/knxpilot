@@ -77,6 +77,33 @@ def get_version():
         return {"version": os.environ.get("KNXPILOT_IMAGE_VERSION") or None, "self_update_available": self_update_available}
 
 
+# An update that changes these needs a new image (new Python packages), which
+# the in-app update can't provide - see _image_update() below.
+IMAGE_FILES = ("requirements.txt", "Dockerfile")
+
+
+def _git(*args, timeout=30):
+    return subprocess.run(["git", "-C", REPO_DIR, *args], capture_output=True, text=True, timeout=timeout, check=True).stdout.strip()
+
+
+def _image_update():
+    """(needed, command) for the fetched-but-not-pulled upstream commits.
+    Needed means they change requirements.txt/Dockerfile: then the update
+    must NOT be pulled from inside the app - the new code would already be
+    on disk (the frontend is served straight from it) while the old process
+    keeps running without the new packages, a half-updated app (e.g. a tab
+    calling endpoints the running backend doesn't have yet). Instead the
+    whole update is one command on the server."""
+    changed = _git("diff", "--name-only", "HEAD", "@{u}").splitlines()
+    needed = any(f in IMAGE_FILES for f in changed)
+    command = "git pull && docker compose pull && docker compose up -d"
+    branch = _git("rev-parse", "--abbrev-ref", "HEAD")
+    if needed and branch != "main":
+        # `latest` is built from main only - see docker-compose.yml/DEPLOYMENT.md.
+        command = f'grep -q KNXPILOT_IMAGE_TAG=dev .env 2>/dev/null || echo "KNXPILOT_IMAGE_TAG=dev" >> .env; {command}'
+    return needed, command
+
+
 @router.get("/api/system/status")
 def system_status():
     try:
@@ -93,7 +120,9 @@ def system_status():
                 "current": current, "latest": None, "update_available": False,
                 "error": "No upstream branch configured. Run once: git branch --set-upstream-to=origin/main main",
             }
-        return {"current": current, "latest": latest, "update_available": current != latest, "error": None}
+        needs_image, image_command = _image_update() if current != latest else (False, "")
+        return {"current": current, "latest": latest, "update_available": current != latest, "error": None,
+                "needs_image": needs_image, "image_command": image_command}
     except FileNotFoundError:
         return {"current": None, "latest": None, "update_available": False, "error": "git is not installed in this container"}
     except subprocess.CalledProcessError as e:
@@ -110,6 +139,16 @@ def _restart_process():
 @router.post("/api/system/update")
 def system_update(background_tasks: BackgroundTasks):
     try:
+        _git("fetch")
+        needs_image, image_command = _image_update()
+        if needs_image:
+            return {
+                "ok": False, "restarting": False, "needs_image": True, "image_command": image_command,
+                "message": (
+                    "Dieses Update bringt neue Python-Pakete mit und lässt sich deshalb nicht per Knopf "
+                    f"installieren. Auf dem Server im KNXpilot-Verzeichnis ausführen:\n\n{image_command}"
+                ),
+            }
         before = subprocess.run(
             ["git", "-C", REPO_DIR, "rev-parse", "HEAD"], capture_output=True, text=True, check=True
         ).stdout.strip()
@@ -126,7 +165,9 @@ def system_update(background_tasks: BackgroundTasks):
         changed = subprocess.run(
             ["git", "-C", REPO_DIR, "diff", "--name-only", before, after], capture_output=True, text=True, check=True
         ).stdout
-        if "requirements.txt" in changed or "Dockerfile" in changed:
+        # Safety net only - _image_update() above normally stops such an
+        # update before pulling (this catches upstream changing in between).
+        if any(f in changed.splitlines() for f in IMAGE_FILES):
             message = (
                 "Updated, but requirements.txt or the Dockerfile changed - a new image is needed. "
                 "Run on the server: docker compose pull && docker compose up -d"

@@ -116,10 +116,16 @@ Update-Button, innerhalb des Containers gegen dasselbe eingebundene
 Verzeichnis) aktualisiert den laufenden Code sofort — ein Prozess-Neustart
 übernimmt ihn, ohne dass ein neues Image nötig ist (siehe
 `backend/routers/system.py`). Die Datenbank bleibt dabei unangetastet.
-Ändern sich `requirements.txt` oder das `Dockerfile`, führt der Button
-**keinen** automatischen Neustart durch — stattdessen zeigt er eine
-Meldung, dass ein neues Image nötig ist (`docker compose pull && docker
-compose up -d`). Das Image dafür baut GitHub Actions bereits bei jedem
+Ändern sich `requirements.txt` oder das `Dockerfile`, installiert der
+Button das Update **nicht** — sonst läge neuer Code (inklusive der direkt
+von der Platte ausgelieferten Oberfläche) schon auf dem Server, während
+der alte Prozess ohne die neuen Pakete weiterläuft (halb aktualisierte
+App, z.B. "Not Found" in einem Tab). Stattdessen zeigt der Update-Tab
+schon beim Prüfen den einen Befehl, der alles erledigt und auf dem Server
+im KNXpilot-Verzeichnis auszuführen ist (mit Kopieren-Knopf):
+`git pull && docker compose pull && docker compose up -d` (auf einem
+`dev`-Checkout ergänzt um das Setzen von `KNXPILOT_IMAGE_TAG=dev`, siehe
+unten). Das Image dafür baut GitHub Actions bereits bei jedem
 Push auf `main` (siehe oben) — auf dem Server ist dafür kein lokaler
 Build nötig, nur ein Pull.
 

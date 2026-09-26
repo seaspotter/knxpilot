@@ -107,6 +107,7 @@
   .rc-row-3 select { width:100%; }
   .rc-note { color:var(--muted); font-size:12px; }
   .line-select { font-size:12px; padding:3px 6px; }
+  .update-command { background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:6px 10px; font-size:12.5px; word-break:break-all; flex:1; }
   /* "Inhalt" card, Pflichtenheft/Dokumentation (ui.js renderDocContents) */
   .doc-contents-heading { margin:14px 0 6px; }
   .doc-contents { border:1px solid var(--border); border-radius:8px; overflow:hidden; }

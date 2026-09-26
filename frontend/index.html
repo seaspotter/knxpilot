@@ -774,6 +774,13 @@
         <button id="update-btn" class="btn secondary" onclick="performUpdate()" style="display:none;">⭱ Update installieren</button>
       </div>
       <p class="muted" id="update-status"></p>
+      <div id="update-image" style="display:none;">
+        <p style="color:var(--warn); margin:0 0 6px; font-size:13px;">Dieses Update bringt neue Python-Pakete mit und lässt sich deshalb nicht per Knopf installieren (sonst liefe neuer Code mit alten Paketen). Auf dem Server im KNXpilot-Verzeichnis ausführen:</p>
+        <div class="row" style="gap:6px; align-items:center;">
+          <code id="update-image-command" class="update-command"></code>
+          <button class="btn secondary small" onclick="copyUpdateCommand()">Kopieren</button>
+        </div>
+      </div>
       <p class="error" id="update-error" style="display:none;"></p>
     </div>
 

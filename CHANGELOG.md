@@ -6,6 +6,15 @@ restructuring below — history before that is available via `git log`.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Update tab no longer half-installs updates with new Python packages** —
+  it used to pull such an update and then only ask for `docker compose
+  pull`, so until then the new frontend ran against the old backend (e.g.
+  "Not Found" in the Klärungsliste after the htmx change). Now it doesn't
+  pull at all and shows, already when checking, the one command that does
+  the whole update on the server (with a copy button).
+
 ### Changed
 
 - **Klärungsliste rendered server-side with htmx (trial)** — looks and
