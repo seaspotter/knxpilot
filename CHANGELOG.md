@@ -4,7 +4,12 @@ Notable changes to KNXpilot. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this file starts from the
 restructuring below — history before that is available via `git log`.
 
-## [Unreleased]
+## [0.7.1] - 2026-09-26
+
+Open Klärungsliste points can now be passed on to the customer or
+electrician - as copyable text, a PDF with an answer column, or by email.
+GitHub Releases are now created automatically from version tags, and a
+special-character bug in the Dokumentation PDF is fixed.
 
 ### Added
 
