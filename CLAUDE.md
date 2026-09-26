@@ -19,8 +19,13 @@ description and [`DEPLOYMENT.md`](./DEPLOYMENT.md) for how it's deployed).
   framework**. `backend/main.py` mounts `frontend/` directly as static
   files. One JS file per tab/sub-tab under `frontend/js/`, loaded via
   classic (non-module) `<script src>` tags in `frontend/index.html`.
-- **No automated tests** exist. Changes are verified manually by running the
-  app and clicking through the affected tab(s).
+- **Tests**: a `pytest` suite under `tests/` covers the backend (schema
+  migrations on fresh and old databases, the ETS CSV against a golden file,
+  every PDF/CSV/JSON export with special characters, Zeiterfassung rounding,
+  manual downloads, delete impact). Run `pytest` before committing; CI runs
+  it on every push (`.github/workflows/tests.yml`). The frontend has no
+  automated tests - verify UI changes by running the app and clicking
+  through the affected tab(s).
 
 Full structure and conventions: [`DEVELOPMENT.md`](./DEVELOPMENT.md).
 

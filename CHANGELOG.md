@@ -6,6 +6,17 @@ restructuring below — history before that is available via `git log`.
 
 ## [Unreleased]
 
+### Added
+
+- **Automated tests** — a `pytest` suite (`tests/`, dev dependencies in
+  `requirements-dev.txt`) covering schema migrations on fresh and old
+  databases, the ETS group-address CSV against a golden file, every
+  PDF/CSV/JSON export with special characters, Zeiterfassung rounding and
+  editing, manual downloads and delete impact; runs in CI on every push
+  (`.github/workflows/tests.yml`). The database location can now be
+  overridden with `KNXPILOT_DB_PATH` (used by the tests). Writing it
+  immediately found the download-filename bug below.
+
 ### Changed
 
 - **Deleting a floor or room now asks first and says what goes with it** —
@@ -20,6 +31,12 @@ restructuring below — history before that is available via `git log`.
 
 ### Fixed
 
+- **Downloads no longer fail for names with special characters** — every
+  export put the project name (or an uploaded file's name) into the
+  download's filename header, which only allows Latin-1: a name containing
+  e.g. an en dash "–" or "€" made every PDF/CSV/JSON export of that project
+  fail with a server error, and a double quote broke the header. Filenames
+  are now sent RFC 5987-encoded (exact UTF-8 name plus an ASCII fallback).
 - **Special addresses of a deleted floor no longer linger** — deleting a
   floor now also removes the special addresses (Sonderadressen) assigned to
   it; before, they stayed in the database invisibly, never showing up in

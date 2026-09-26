@@ -8,6 +8,7 @@ from fastapi.responses import StreamingResponse
 
 from ..db import get_db
 from ..models import PointTypeIn, CentralTemplateIn, CompanyProfileIn, CategoryRenameIn
+from ..utils import content_disposition
 
 router = APIRouter(tags=["setup"])
 
@@ -19,7 +20,7 @@ def _json_download(payload, filename):
     return StreamingResponse(
         iter([buf.getvalue().encode("utf-8")]),
         media_type="application/json",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={"Content-Disposition": content_disposition(filename)},
     )
 
 

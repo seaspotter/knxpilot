@@ -4,11 +4,14 @@ for existing installs, and the default seed data (categories, point types,
 central templates) derived from analysis of real ETS6 exports.
 """
 import json
+import os
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent / "data" / "knx_ga.db"
+# KNXPILOT_DB_PATH overrides the location - used by the test suite (tests/)
+# so it never touches the real database; normal installs leave it unset.
+DB_PATH = Path(os.environ.get("KNXPILOT_DB_PATH") or Path(__file__).parent / "data" / "knx_ga.db")
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 # Default "Vorbemerkungen" text for the Pflichtenheft PDF - a fuller KNX

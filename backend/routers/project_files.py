@@ -14,6 +14,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import Response
 
 from ..db import get_db
+from ..utils import content_disposition
 
 router = APIRouter(tags=["project_files"])
 
@@ -59,7 +60,7 @@ def download_project_file(file_id: int):
         return Response(
             content=row["data"],
             media_type=row["content_type"] or "application/octet-stream",
-            headers={"Content-Disposition": f'attachment; filename="{row["filename"]}"'},
+            headers={"Content-Disposition": content_disposition(row["filename"])},
         )
 
 

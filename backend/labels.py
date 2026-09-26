@@ -21,6 +21,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas as pdfcanvas
 
+from .utils import content_disposition
+
 LABEL_FORMATS = {
     "l6037": {
         "name": "Avery Zweckform L6037 (25,4 × 10 mm)",
@@ -92,5 +94,5 @@ def render_label_sheet(items, filename, format="l6037", start=1, debug=False):
     return StreamingResponse(
         iter([buf.getvalue()]),
         media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={"Content-Disposition": content_disposition(filename)},
     )

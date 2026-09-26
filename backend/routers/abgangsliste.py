@@ -17,7 +17,7 @@ from ..labels import LABEL_FORMATS, render_label_sheet
 from ..models import ActorInstanceIn, ActorInstanceEditIn, ChannelAssignIn, PhysicalAddressAssignIn
 from ..pa_assign import compute_pa_assignments
 from ..pdf_design import pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response, company_header_block, company_footer_line, PDF_MUTED_COLOR
-from ..utils import join_parts, channel_letters
+from ..utils import join_parts, channel_letters, content_disposition
 
 router = APIRouter(tags=["abgangsliste"])
 
@@ -348,7 +348,7 @@ def export_abgangsliste(project_id: int):
         return StreamingResponse(
             iter([buf.getvalue().encode("iso-8859-1", errors="replace")]),
             media_type="text/csv",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+            headers={"Content-Disposition": content_disposition(filename)},
         )
 
 

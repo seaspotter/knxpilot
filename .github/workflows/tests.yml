@@ -1,0 +1,26 @@
+name: Tests
+
+# Runs the pytest suite (tests/) on every push to dev/main and on pull
+# requests - catches regressions like a broken fresh-install migration or
+# an export that crashes on special characters before they're released.
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - run: pip install -r requirements-dev.txt
+
+      - run: pytest -q

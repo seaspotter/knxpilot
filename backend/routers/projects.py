@@ -13,7 +13,7 @@ from fastapi.responses import StreamingResponse
 from ..db import get_db
 from ..ga_logic import build_ga_tree
 from ..models import ProjectIn, FloorIn, RoomIn, RoomPointIn, RoomPointEditIn, SpecialItemIn
-from ..utils import AGED_KLAERUNG_DAYS
+from ..utils import AGED_KLAERUNG_DAYS, content_disposition
 
 router = APIRouter(tags=["projects"])
 
@@ -430,7 +430,7 @@ def export_project_json(project_id: int):
     return StreamingResponse(
         iter([buf.getvalue().encode("utf-8")]),
         media_type="application/json",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={"Content-Disposition": content_disposition(filename)},
     )
 
 
@@ -579,5 +579,5 @@ def export_csv(project_id: int):
     return StreamingResponse(
         iter([buf.getvalue().encode("iso-8859-1", errors="replace")]),
         media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={"Content-Disposition": content_disposition(filename)},
     )

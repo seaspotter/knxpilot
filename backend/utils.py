@@ -1,4 +1,7 @@
 """Small shared helpers with no dependencies on the rest of the app."""
+import re
+import unicodedata
+from urllib.parse import quote
 
 # An open Klärung older than this counts as "aged" - used both by
 # klaerungsliste.py (per-entry age_days/aged flag) and projects.py (the
@@ -22,3 +25,14 @@ def channel_letters(n):
             label = chr(65 + rem) + label
         result.append(label)
     return result
+
+
+def content_disposition(filename, disposition="attachment"):
+    """Content-Disposition header value that survives any filename. HTTP
+    headers are Latin-1 only, so a project name like "Haus – Süd" (en dash)
+    used to crash the download with a 500, and a quote broke the header.
+    Sends an ASCII fallback (umlauts transliterated, anything else -> "_")
+    plus the exact UTF-8 name per RFC 5987, which every current browser uses."""
+    ascii_name = unicodedata.normalize("NFKD", filename).encode("ascii", "ignore").decode("ascii")
+    ascii_name = re.sub(r'[^A-Za-z0-9 ._()-]', "_", ascii_name).strip() or "download"
+    return f"{disposition}; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(filename, safe='')}"

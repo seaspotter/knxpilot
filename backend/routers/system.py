@@ -18,6 +18,7 @@ from ..backup import (
     restore_database, run_backup_now,
 )
 from ..db import get_db
+from ..utils import content_disposition
 
 router = APIRouter(tags=["system"])
 
@@ -208,7 +209,7 @@ def download_backup_nextcloud(filename: str):
         raise HTTPException(502, f"Nextcloud-Download fehlgeschlagen: {e}")
     return Response(
         content=data, media_type="application/octet-stream",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={"Content-Disposition": content_disposition(filename)},
     )
 
 

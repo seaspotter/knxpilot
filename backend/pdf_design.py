@@ -16,6 +16,8 @@ from reportlab.lib.units import mm
 from reportlab.platypus import Image, SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.pdfgen import canvas as pdfcanvas
 
+from .utils import content_disposition
+
 PDF_BANNER_COLOR = colors.HexColor("#14532d")
 PDF_ACCENT_COLOR = colors.HexColor("#16a34a")
 PDF_MUTED_COLOR = colors.HexColor("#64748b")
@@ -299,7 +301,7 @@ def pdf_response(data, filename):
     return StreamingResponse(
         iter([data]),
         media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={"Content-Disposition": content_disposition(filename)},
     )
 
 

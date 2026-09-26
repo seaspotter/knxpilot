@@ -50,9 +50,31 @@ There's no local `.db` file checked into the repo — `backend/db.py` creates
 point types, central-function templates, and an actor-type catalog (see
 `seed_defaults()` / `seed_default_actor_types()` in `backend/db.py`).
 
-No automated tests exist yet. Verify changes manually by clicking through
-the affected tab(s) in the browser — see the "Die vier Tabs" section in
-[`README.md`](./README.md) for what each tab does.
+## Tests
+
+```bash
+pip install -r requirements-dev.txt   # pytest + httpx, on top of requirements.txt
+pytest
+```
+
+The suite under `tests/` covers the backend: schema setup on a fresh and
+on an old database, the ETS group-address CSV (format rules plus a golden
+file, `tests/fixtures/musterhaus_ga.csv`), every PDF/CSV/JSON export built
+from a demo project whose names contain `&`, `<`, quotes, an en dash and
+`€`, Zeiterfassung rounding/editing, manual downloads against a local HTTP
+server, and the delete-impact counts. Each test runs against its own
+throwaway database (`tests/conftest.py` points `KNXPILOT_DB_PATH` /
+`backend.db.DB_PATH` at a temp file), so the real `backend/data/knx_ga.db`
+is never touched. CI runs it on every push to `dev`/`main`
+([`.github/workflows/tests.yml`](./.github/workflows/tests.yml)).
+
+If a change to the addressing logic changes the GA export *on purpose*,
+regenerate the golden file with `KNXPILOT_UPDATE_GOLDEN=1 pytest
+tests/test_ga_export.py` and review the diff before committing it.
+
+The frontend has no automated tests — verify UI changes by clicking
+through the affected tab(s) in the browser (see [`MANUAL.md`](./MANUAL.md)
+for what each tab does).
 
 ## Project structure
 
@@ -105,6 +127,10 @@ frontend/
     update.js          — self-update tab + changelog viewer + version badge
     hilfe.js           — in-app manual (renders MANUAL.md)
     init.js            — page-load bootstrap, must load last (calls functions from the files above)
+tests/
+  conftest.py       — throwaway database per test, demo-project seed helper
+  test_*.py         — backend tests (see "Tests" above)
+  fixtures/         — golden files, e.g. musterhaus_ga.csv (the demo project's ETS export)
 docs/
   screenshots/      — README.md's screenshots
   templates/        — default-data JSON exports (Kategorien, Funktionstypen,
@@ -148,9 +174,10 @@ rarely need to touch anything else.
   `window.location.href = '/api/...'`.
 - **User-facing strings are German**; code identifiers, comments, and this
   documentation are English.
-- **No automated tests** — when adding a feature, do a manual pass through
-  the tab(s) it touches (create/edit/delete, and any PDF/CSV export) before
-  considering it done.
+- **Tests** — run `pytest` before committing; add a test for new backend
+  logic (especially anything that writes data, migrates the schema or
+  builds an export). UI changes still need a manual pass through the
+  tab(s) they touch (create/edit/delete, and any PDF/CSV export).
 
 ## Adding a new feature
 

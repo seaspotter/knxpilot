@@ -22,6 +22,7 @@ from fastapi.responses import Response
 
 from ..db import get_db
 from .geraeteplanung import device_summary
+from ..utils import content_disposition
 
 router = APIRouter(tags=["manuals"])
 
@@ -120,12 +121,11 @@ def view_project_manual(file_id: int):
         # Always served as a PDF with nosniff - never with a stored,
         # remote-claimed type (see _fetch_manual_bytes), so nothing fetched
         # can ever render as HTML on KNXpilot's own origin.
-        safe_name = "".join(c for c in row["device_name"] if c.isalnum() or c in " ._-") or "Geraet"
         return Response(
             content=row["data"],
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'inline; filename="{safe_name} Handbuch.pdf"',
+                "Content-Disposition": content_disposition(f"{row['device_name']} Handbuch.pdf", "inline"),
                 "X-Content-Type-Options": "nosniff",
             },
         )
