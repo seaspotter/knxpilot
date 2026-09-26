@@ -10,6 +10,17 @@
   forward at a release, via a fast-forward merge from `dev`
   (`git checkout main && git merge --ff-only dev`) plus a `vX.Y.Z` tag —
   see `CHANGELOG.md` for the version history.
+- **Release routine:** on `dev`, rename `## [Unreleased]` in `CHANGELOG.md`
+  to `## [X.Y.Z] - YYYY-MM-DD` (optionally with a short summary paragraph
+  directly under that heading) and commit; then
+  `git checkout main && git merge --ff-only dev && git tag -a vX.Y.Z -m vX.Y.Z`
+  and `git push origin main vX.Y.Z`. Pushing the tag does the rest
+  automatically: [`.github/workflows/docker-publish.yml`](./.github/workflows/docker-publish.yml)
+  builds and publishes the Docker image, and
+  [`.github/workflows/release.yml`](./.github/workflows/release.yml)
+  creates the GitHub Release with that version's CHANGELOG section as its
+  text (it fails loudly if the section is missing, and skips if a release
+  already exists).
 - To switch your local checkout between them: `git checkout dev` /
   `git checkout main` (or `git switch dev` / `git switch main`). `main`
   only has what's actually been released, so it'll usually look "behind"

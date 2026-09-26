@@ -1,0 +1,45 @@
+name: Create GitHub release
+
+# Turns every pushed version tag (vX.Y.Z) into a GitHub Release, so the
+# repo's "Releases" box stays in step with the tags without doing it by
+# hand. The release text is that version's section of CHANGELOG.md -
+# everything between its "## [X.Y.Z] - date" heading and the next "## ["
+# heading, so an optional summary paragraph written directly under the
+# heading (above the first "### Added") becomes the release's intro.
+# Skips (without failing) if a release for the tag already exists, e.g.
+# one created by hand.
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v ver="$version" '
+            index($0, "## [" ver "]") == 1 { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          if ! grep -q '[^[:space:]]' notes.md; then
+            echo "::error::No CHANGELOG.md section found for [$version] - rename [Unreleased] to [$version] before tagging."
+            exit 1
+          fi
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists - nothing to do."
+            exit 0
+          fi
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag

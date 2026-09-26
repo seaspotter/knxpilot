@@ -4,7 +4,24 @@ Notable changes to KNXpilot. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this file starts from the
 restructuring below — history before that is available via `git log`.
 
+## [Unreleased]
+
+### Added
+
+- **GitHub Releases are created automatically** — new
+  `.github/workflows/release.yml`: pushing a `vX.Y.Z` tag now also creates
+  the GitHub Release, using that version's CHANGELOG section (including an
+  optional summary paragraph right under the version heading) as the
+  release text - no more creating releases by hand. Release routine
+  documented in `DEVELOPMENT.md`.
+
 ## [0.7.0] - 2026-09-26
+
+Adds simple per-project time tracking (Zeiterfassung), sending PDF exports
+by email, and device manuals fetched on click into their own Handbücher
+tab. The project tabs get a clearer, aligned room layout, the device lists
+and PDFs now show each device's Beschreibung, and a fresh-install bug in
+the device catalog is fixed.
 
 ### Added
 
