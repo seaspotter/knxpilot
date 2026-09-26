@@ -32,6 +32,7 @@ def pdf_styles():
     styles.add(ParagraphStyle("SubHeading", fontName="Helvetica-Bold", fontSize=9.5, textColor=colors.HexColor("#0f172a"), spaceBefore=4, spaceAfter=1, leading=13))
     styles.add(ParagraphStyle("Body", fontName="Helvetica", fontSize=9.5, textColor=colors.HexColor("#0f172a"), leading=13))
     styles.add(ParagraphStyle("BodyBullet", fontName="Helvetica", fontSize=9.5, textColor=colors.HexColor("#0f172a"), leading=13, leftIndent=4 * mm, spaceAfter=2))
+    styles.add(ParagraphStyle("TableCell", fontName="Helvetica", fontSize=9, textColor=colors.HexColor("#0f172a"), leading=11))
     styles.add(ParagraphStyle("BodyMuted", fontName="Helvetica-Oblique", fontSize=9, textColor=PDF_MUTED_COLOR, leading=12))
     styles.add(ParagraphStyle("CompanyName", fontName="Helvetica-Bold", fontSize=13, textColor=PDF_BANNER_COLOR, leading=16))
     styles.add(ParagraphStyle("TOCLink", fontName="Helvetica", fontSize=11, textColor=PDF_ACCENT_COLOR, leading=18))

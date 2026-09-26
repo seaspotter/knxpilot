@@ -303,8 +303,9 @@ erscheinen, siehe Punkt 2).
    anderen Projekt): bleibt in der Stückliste sichtbar (mit dem Hinweis
    "Bereits vorhanden"), fällt aber aus der Bestellliste im PDF-Export
    heraus.
-3. **PDF herunterladen** exportiert die Bestellliste — Gruppe, Hersteller
-   und Typ in getrennten Spalten, plus Anzahl. Als "Nicht bestellen"
+3. **PDF herunterladen** exportiert die Bestellliste — Gruppe, Hersteller,
+   Typ und die Beschreibung aus dem Geräte Katalog in getrennten Spalten,
+   plus Anzahl. Als "Nicht bestellen"
    markierte Geräte stehen separat darunter ("Bereits vorhanden, nicht
    bestellt"), nicht in der eigentlichen Bestelltabelle. Enthält bewusst
    keine Raumaufschlüsselung mehr (die steht im Pflichtenheft, falls dort
@@ -312,8 +313,8 @@ erscheinen, siehe Punkt 2).
    gedacht.
 4. Im Bereich **Geräte je Raum** exportiert **PDF herunterladen** stattdessen
    alle Geräte des Projekts (inkl. der Aktoren aus der Abgangsliste)
-   gruppiert nach Geschoss/Raum, mit Gruppe, Hersteller, Typ und
-   physischer Adresse — als Installationsreferenz für die Ausführung vor
+   gruppiert nach Geschoss/Raum, mit Gruppe, Hersteller, Typ,
+   Beschreibung (aus dem Geräte Katalog) und physischer Adresse — als Installationsreferenz für die Ausführung vor
    Ort, getrennt von der Bestellliste oben. Lässt sich zusätzlich optional
    ins Dokumentation-PDF aufnehmen (siehe unten, Setup → Dokumentation).
 5. **PA automatisch zuordnen** vergibt physikalische Adressen für alle

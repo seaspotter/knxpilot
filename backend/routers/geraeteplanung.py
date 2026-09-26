@@ -4,6 +4,8 @@ station, actuator...) are planned per room or floor, a project-wide bill of
 materials, the Geräteliste PDF export (order list), and the Geräte je Raum
 PDF export (installation reference - every device, grouped by Geschoss/Raum).
 """
+from xml.sax.saxutils import escape
+
 from fastapi import APIRouter, HTTPException
 from reportlab.platypus import KeepTogether, Paragraph, Spacer, Table
 from reportlab.lib.units import mm
@@ -227,6 +229,7 @@ def device_summary(project_id: int):
                     "manufacturer": dt.get("manufacturer", ""), "model": dt.get("model", ""),
                     "device_name": join_parts(dt.get("manufacturer", ""), dt.get("model", "")) or "?",
                     "group_name": dt.get("group_name", ""),
+                    "description": dt.get("description", "") or "",
                     "total": entry["total"], "rooms": entry["rooms"],
                     "not_ordering": order_flags.get(device_type_id, False),
                     "manual_url": dt.get("manual_url", ""),
@@ -238,7 +241,7 @@ def device_summary(project_id: int):
 
 @router.get("/api/projects/{project_id}/export-geraeteliste.pdf")
 def export_geraeteliste_pdf(project_id: int):
-    """Just the order-relevant Stückliste (Gruppe/Hersteller/Typ/Anzahl) - no
+    """Just the order-relevant Stückliste (Gruppe/Hersteller/Typ/Beschreibung/Anzahl) - no
     per-room breakdown, this is meant as a clean list to hand to a supplier.
     Devices marked "nicht bestellen" (see set_device_order_flag) are left out
     of the order table itself and listed separately underneath instead."""
@@ -256,13 +259,16 @@ def export_geraeteliste_pdf(project_id: int):
         story = company_header_block(company) + pdf_title_banner(f"Geräteliste — {project['name']}", "Bestellübersicht")
 
         heading = Paragraph("Stückliste (Bestellung)", styles["SectionHeading"])
-        table_data = [["Gruppe", "Hersteller", "Typ", "Anzahl"]]
+        table_data = [["Gruppe", "Hersteller", "Typ", "Beschreibung", "Anzahl"]]
         for s in to_order:
-            table_data.append([s["group_name"], s["manufacturer"], s["model"], str(s["total"])])
+            table_data.append([
+                _cell(v, styles) for v in
+                (s["group_name"], s["manufacturer"], s["model"], s["description"], str(s["total"]))
+            ])
         if len(table_data) == 1:
             story.append(KeepTogether([heading, Paragraph("Noch keine Geräte geplant.", styles["BodyMuted"])]))
         else:
-            table = Table(table_data, colWidths=[30 * mm, 55 * mm, 65 * mm, 15 * mm])
+            table = Table(table_data, colWidths=[34 * mm, 28 * mm, 38 * mm, 64 * mm, 16 * mm], repeatRows=1)
             table.setStyle(pdf_table_style())
             story.append(KeepTogether([heading, table]))
 
@@ -283,11 +289,20 @@ def export_geraeteliste_pdf(project_id: int):
         )
 
 
+def _cell(text, styles):
+    """Wrapping table cell - needed for the free-text Beschreibung column (a
+    plain string cell would just overflow into the neighbouring column), and
+    used for every body cell of the device tables so all cells of a row share
+    the same vertical alignment."""
+    return Paragraph(escape(text or ""), styles["TableCell"])
+
+
 def _geraete_je_raum_rows(db, project_id):
     """Every device in the project - room_devices, floor_devices ("Ohne
     Raum"), and Abgangsliste's actor_instances (grouped by Standortbezeichnung,
     since they have no room_id) - as (floor_name, room_name, [devices]) tuples,
-    device dicts shaped {manufacturer, model, group_name, physical_address}.
+    device dicts shaped {manufacturer, model, group_name, description,
+    physical_address}.
     Shared by the standalone Geräte-je-Raum PDF and its optional Pflichtenheft
     section, same pattern as build_verteilerplanung_story/
     build_abgangsliste_story in the sibling routers."""
@@ -297,7 +312,7 @@ def _geraete_je_raum_rows(db, project_id):
         rooms = db.execute("SELECT * FROM rooms WHERE floor_id=? ORDER BY order_idx", (floor["id"],)).fetchall()
         for room in rooms:
             devices = db.execute(
-                "SELECT rd.*, at.manufacturer, at.model, at.group_name FROM room_devices rd "
+                "SELECT rd.*, at.manufacturer, at.model, at.group_name, at.description FROM room_devices rd "
                 "JOIN actor_types at ON rd.device_type_id = at.id "
                 "WHERE rd.room_id=? ORDER BY rd.order_idx",
                 (room["id"],),
@@ -306,7 +321,7 @@ def _geraete_je_raum_rows(db, project_id):
                 rows.append((floor["name"], room["name"], devices))
 
         floor_devices = db.execute(
-            "SELECT fd.*, at.manufacturer, at.model, at.group_name FROM floor_devices fd "
+            "SELECT fd.*, at.manufacturer, at.model, at.group_name, at.description FROM floor_devices fd "
             "JOIN actor_types at ON fd.device_type_id = at.id "
             "WHERE fd.floor_id=? ORDER BY fd.order_idx",
             (floor["id"],),
@@ -315,7 +330,7 @@ def _geraete_je_raum_rows(db, project_id):
             rows.append((floor["name"], "Ohne Raum", floor_devices))
 
         actor_rows = db.execute(
-            "SELECT ai.*, at.manufacturer, at.model, at.group_name FROM actor_instances ai "
+            "SELECT ai.*, at.manufacturer, at.model, at.group_name, at.description FROM actor_instances ai "
             "JOIN actor_types at ON ai.actor_type_id = at.id "
             "WHERE ai.project_id=? AND ai.floor_id=? ORDER BY ai.order_idx",
             (project_id, floor["id"]),
@@ -323,7 +338,7 @@ def _geraete_je_raum_rows(db, project_id):
         rows += _grouped_actor_rows(actor_rows, floor["name"])
 
     actor_no_floor = db.execute(
-        "SELECT ai.*, at.manufacturer, at.model, at.group_name FROM actor_instances ai "
+        "SELECT ai.*, at.manufacturer, at.model, at.group_name, at.description FROM actor_instances ai "
         "JOIN actor_types at ON ai.actor_type_id = at.id "
         "WHERE ai.project_id=? AND ai.floor_id IS NULL ORDER BY ai.order_idx",
         (project_id,),
@@ -342,7 +357,7 @@ def _grouped_actor_rows(actor_rows, floor_name):
     return [
         (floor_name, label, [
             {"manufacturer": ai["manufacturer"], "model": ai["model"], "group_name": ai["group_name"],
-             "physical_address": ai["physical_address"]}
+             "description": ai["description"], "physical_address": ai["physical_address"]}
             for ai in group
         ])
         for label, group in by_label.items()
@@ -350,7 +365,7 @@ def _grouped_actor_rows(actor_rows, floor_name):
 
 
 def build_geraete_je_raum_story(db, project_id, styles):
-    """One table per Raum/floor-location: Gruppe/Hersteller/Typ/Adresse -
+    """One table per Raum/floor-location: Gruppe/Hersteller/Typ/Beschreibung/Adresse -
     factored out so both the standalone export and the Pflichtenheft's
     optional inclusion share one rendering."""
     rows = _geraete_je_raum_rows(db, project_id)
@@ -368,10 +383,13 @@ def build_geraete_je_raum_story(db, project_id, styles):
             group.append(Paragraph(floor_name, styles["SectionHeading"]))
             current_floor = floor_name
         group.append(Paragraph(room_name, styles["RoomHeading"]))
-        table_data = [["Gruppe", "Hersteller", "Typ", "Adresse"]]
+        table_data = [["Gruppe", "Hersteller", "Typ", "Beschreibung", "Adresse"]]
         for d in devices:
-            table_data.append([d["group_name"], d["manufacturer"], d["model"], d["physical_address"] or "—"])
-        table = Table(table_data, colWidths=[25 * mm, 45 * mm, 65 * mm, 35 * mm], repeatRows=1)
+            table_data.append([
+                _cell(v, styles) for v in
+                (d["group_name"], d["manufacturer"], d["model"], d["description"], d["physical_address"] or "—")
+            ])
+        table = Table(table_data, colWidths=[34 * mm, 26 * mm, 36 * mm, 60 * mm, 24 * mm], repeatRows=1)
         table.setStyle(pdf_table_style())
         group.append(table)
         # Keep the (optional floor +) room heading together with its table
@@ -389,7 +407,7 @@ def build_geraete_je_raum_story(db, project_id, styles):
 @router.get("/api/projects/{project_id}/export-geraete-je-raum.pdf")
 def export_geraete_je_raum_pdf(project_id: int):
     """Installation reference: every device in the project, grouped by
-    Geschoss/Raum with Gruppe/Hersteller/Typ/Adresse - the counterpart to
+    Geschoss/Raum with Gruppe/Hersteller/Typ/Beschreibung/Adresse - the counterpart to
     the order-focused Geräteliste export above."""
     with get_db() as db:
         project = db.execute("SELECT * FROM projects WHERE id=?", (project_id,)).fetchone()

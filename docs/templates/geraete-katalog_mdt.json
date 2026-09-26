@@ -519,7 +519,7 @@
       "model": "AKD-0424R.02",
       "group_name": "Aktor",
       "description": "LED Controller 4 Kanäle",
-      "channel_type": "Dimmen",
+      "channel_type": "LED",
       "channel_count": 4,
       "width_te": 4
     },
@@ -528,7 +528,7 @@
       "model": "AKD-0424R2.02",
       "group_name": "Aktor",
       "description": "LED Controller 4 Kanäle",
-      "channel_type": "Dimmen",
+      "channel_type": "LED",
       "channel_count": 4,
       "width_te": 4
     },

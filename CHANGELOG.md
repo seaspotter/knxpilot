@@ -52,6 +52,24 @@ restructuring below — history before that is available via `git log`.
   new send-by-mail action, so the emailed PDF is always identical to the
   downloaded one.
 
+### Changed
+
+- **Geräteliste and Geräte je Raum PDFs show the device description** —
+  both exports (and the Geräte-je-Raum section of the Dokumentation PDF)
+  get a new **Beschreibung** column filled from the Geräte Katalog's
+  description field, so a bare model number like "BE-GT2TW.02" comes with
+  a readable "Glastaster II Smart Weiß mit Temperatursensor". All cells in
+  these tables now wrap instead of overflowing into the next column.
+
+### Fixed
+
+- **MDT AKD-0424R.02 / AKD-0424R2.02 are LED controllers, not dimmers** —
+  the bundled starter catalog (`docs/templates/geraete-katalog_mdt.json`)
+  had their Type set to `Dimmen`; it's now `LED`. Only affects new
+  installs automatically - an existing catalog picks it up via Geräte
+  Katalog → **Standard-Katalog importieren** (or by editing the two
+  devices by hand).
+
 ## [0.6.0] - 2026-08-20
 
 ### Added
