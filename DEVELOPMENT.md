@@ -59,7 +59,7 @@ point types, central-function templates, and an actor-type catalog (see
 ## Tests
 
 ```bash
-pip install -r requirements-dev.txt   # pytest + httpx, on top of requirements.txt
+pip install -r requirements-dev.txt   # pytest + httpx2, on top of requirements.txt
 pytest
 ```
 

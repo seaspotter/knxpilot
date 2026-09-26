@@ -69,6 +69,19 @@ restructuring below — history before that is available via `git log`.
   opened, so the manual refresh button was redundant (and was also the
   only oversized button in that row).
 
+### Security
+
+- **All dependencies updated to their latest releases** - fixes the 27
+  known vulnerabilities Dependabot reported right after being enabled:
+  Pillow 10.4.0 → 12.3.0 (19 advisories, incl. out-of-bounds writes and
+  decompression bombs - relevant since logos/signatures are uploaded
+  images) and python-multipart 0.0.12 → 0.0.32 (8 advisories, incl.
+  denial of service via crafted uploads). Also FastAPI 0.115 → 0.141
+  (Starlette 1.x), uvicorn 0.30 → 0.54, ReportLab 4.2 → 5.0; test tooling
+  pytest 9 and httpx2 (Starlette's new test-client dependency). Dependabot
+  security alerts and automatic security updates are now enabled for the
+  repository.
+
 ### Fixed
 
 - **Downloads no longer fail for names with special characters** — every
