@@ -2,6 +2,11 @@
 let EDITING_ROOM_POINT_ID = null;
 let EDITING_ROOM_POINT_ROOM_ID = null;
 let FUNKTIONEN_POINTS_BY_ID = {};
+// Last function type picked in any room's quick-add dropdown - preselected in
+// every room after each re-render, so adding e.g. "Dimmen" to several rooms
+// in a row doesn't mean re-picking it each time. In-memory only (a page
+// reload resets it to the first entry).
+let LAST_POINT_TYPE_ID = null;
 
 async function renderFunktionenRooms() {
   const tree = await api(`/projects/${CURRENT_PROJECT}/tree`);
@@ -39,8 +44,8 @@ function renderRoomFunctions(room) {
       <b>${room.name}</b>
       ${pointsHtml}
       <div class="quick-add mobile-fields">
-        <select id="ptype-${room.id}" class="wide">
-          ${POINT_TYPES.map(pt => `<option value="${pt.id}">${CATEGORIES.find(c=>c.id===pt.category_id)?.name} — ${pt.name}</option>`).join('')}
+        <select id="ptype-${room.id}" class="wide" onchange="LAST_POINT_TYPE_ID = parseInt(this.value)">
+          ${POINT_TYPES.map(pt => `<option value="${pt.id}"${pt.id === LAST_POINT_TYPE_ID ? ' selected' : ''}>${CATEGORIES.find(c=>c.id===pt.category_id)?.name} — ${pt.name}</option>`).join('')}
         </select>
         <input type="text" id="label-${room.id}" class="w-210" placeholder="Label z.B. Decke, Spots, Nord (leer = keins)">
         <input type="number" id="qty-${room.id}" value="1" min="1" title="Anzahl">
@@ -56,6 +61,7 @@ async function saveRoomPoint(roomId) {
   const point_type_id = parseInt(document.getElementById(`ptype-${roomId}`).value);
   const label = document.getElementById(`label-${roomId}`).value.trim();
   const has_bwm = document.getElementById(`bwm-${roomId}`).checked;
+  LAST_POINT_TYPE_ID = point_type_id;
   if (EDITING_ROOM_POINT_ID && EDITING_ROOM_POINT_ROOM_ID === roomId) {
     await api('/room-points/' + EDITING_ROOM_POINT_ID, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({point_type_id, label, has_bwm})});
   } else {
