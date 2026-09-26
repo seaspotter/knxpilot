@@ -16,7 +16,8 @@ nobody trusts.
   mapping and open questions in [`docs/FINDINGS-knxproj.md`](./docs/FINDINGS-knxproj.md),
   plus a read-only probe (`tools/knxproj_probe.py`) - **next step: run it
   on 2-3 real ETS exports and verify the hypotheses before writing any
-  import code.**
+  import code.** On hold (2026-09-26) until the user's current project is
+  finished - its ETS export will be the first real test file.
 - [ ] **Store project credentials (Passwörter)** — a place to record the
   ETS project password, visualization/app login, router Wi-Fi credentials
   etc. per project, so handover can include them instead of tracking them
