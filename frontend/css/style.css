@@ -108,6 +108,13 @@
   .rc-note { color:var(--muted); font-size:12px; }
   .line-select { font-size:12px; padding:3px 6px; }
   .update-command { background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:6px 10px; font-size:12.5px; word-break:break-all; flex:1; }
+  /* Setup definition lists (function types, central templates): name + meta left, data points aligned */
+  ul.list.def-list li { display:grid; grid-template-columns:230px 1fr auto; gap:6px 14px; align-items:start; }
+  .def-name b { display:block; }
+  .def-meta { font-size:12px; color:var(--muted); }
+  .def-pills { display:flex; flex-wrap:wrap; gap:4px; }
+  .def-pills .pill { margin:0; }
+  .def-actions { margin:0; align-self:center; }
   /* Setup central templates form: fields that only apply to one scope (templates/setup/central_templates.html) */
   .ct-form .ct-only-floor, .ct-form .ct-only-room { display:none; }
   .ct-form[data-scope="floor"] .ct-only-floor, .ct-form[data-scope="room_multi"] .ct-only-room { display:flex; }
@@ -312,6 +319,8 @@
 
   @media (max-width: 700px) {
     .st-meta { display:none; }
+    ul.list.def-list li { grid-template-columns:1fr auto; }
+    ul.list.def-list .def-pills { grid-column:1 / -1; grid-row:2; }
     .ub-row { grid-template-columns:1fr; }
     .ub-right { justify-content:flex-end; }
     .doc-row { grid-template-columns:18px 1fr; }

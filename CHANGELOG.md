@@ -50,7 +50,9 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
   function type/template forms and the scope-dependent template fields
   work without custom JavaScript; deleting and clearing ask via the app's
   dialog and report back with a toast. JSON export/import work as before.
-  The functions tab picks up changes made here immediately.
+  The functions tab picks up changes made here immediately. Both lists
+  now use aligned columns: name with category/block/channel (or scope) as
+  a small line below on the left, the data points lined up next to it.
 - **Time tracking rendered server-side with htmx** — the second tab after
   the clarification list: list, filters, totals, the invoiced checkboxes
   and the add/edit dialog now come from Jinja templates

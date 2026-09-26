@@ -49,15 +49,14 @@
     </div>
   </form>
   <hr class="sep">
-  <ul class="list" id="central-templates-list">
+  <ul class="list def-list" id="central-templates-list">
     {% for ct in central_templates %}
       <li>
-        <div><b>{{ ct.name or "(kein Präfix)" }}</b> <span class="pill">{{ cat_name.get(ct.category_id, "?") }}</span> <span class="pill">{{ ct.scope }}</span>
-          {% if ct.skip_outdoor_floors %}<span class="pill">ohne Aussen</span>{% endif %}
-          {% if ct.scope == "room_multi" %}<span class="pill">ab {{ ct.trigger_count or 2 }} Punkten</span>{% if ct.block_size %}<span class="pill">Block {{ ct.block_size }}</span>{% endif %}{% endif %}
-          {% for s in ct.suffixes %}<span class="pill">{{ s.suffix or "(keiner)" }} · {{ s.dpt }}</span>{% endfor %}
+        <div class="def-name"><b>{{ ct.name or "(kein Präfix)" }}</b>
+          <span class="def-meta">{{ cat_name.get(ct.category_id, "?") }} · {{ ct.scope }}{% if ct.skip_outdoor_floors %} · ohne Aussen{% endif %}{% if ct.scope == "room_multi" %} · ab {{ ct.trigger_count or 2 }} Punkten{% if ct.block_size %} · Block {{ ct.block_size }}{% endif %}{% endif %}</span>
         </div>
-        <div class="row" style="gap:6px;">
+        <div class="def-pills">{% for s in ct.suffixes %}<span class="pill">{{ s.suffix or "(keiner)" }} · {{ s.dpt }}</span>{% endfor %}</div>
+        <div class="row def-actions" style="gap:6px;">
           <button class="btn secondary small" hx-get="/hx/setup/central-templates/{{ ct.id }}/edit" hx-target="#setup-subtab-central-templates" hx-swap="innerHTML">Bearbeiten</button>
           <button class="btn danger small" hx-delete="/hx/setup/central-templates/{{ ct.id }}" hx-target="#setup-subtab-central-templates" hx-swap="innerHTML" hx-confirm="Diese Vorlage löschen?">Löschen</button>
         </div>
