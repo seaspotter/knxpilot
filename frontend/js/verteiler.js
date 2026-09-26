@@ -4,8 +4,13 @@ let VERTEILER_ACTOR_INSTANCES = [];
 
 async function loadVerteilerplanungForCurrentProject() {
   const tree = await api(`/projects/${CURRENT_PROJECT}/tree`);
+  // Geschoss, or optionally a room in it (the Verteiler then shows under
+  // that room in the Gebäudestruktur tree).
   document.getElementById('verteiler-floor').innerHTML =
-    tree.floors.map(f => `<option value="${f.id}">${f.name}</option>`).join('') ||
+    tree.floors.map(f => `<optgroup label="${escapeHtml(f.name)}">
+      <option value="floor:${f.id}">${escapeHtml(f.name)} (ganzes Geschoss)</option>
+      ${f.rooms.map(r => `<option value="room:${r.id}">${escapeHtml(r.name)}</option>`).join('')}
+    </optgroup>`).join('') ||
     '<option value="">Noch keine Geschosse - zuerst in Gebäudestruktur anlegen</option>';
   VERTEILER_ACTOR_INSTANCES = await api(`/projects/${CURRENT_PROJECT}/actor-instances`);
   VERTEILER_LIST = await api(`/projects/${CURRENT_PROJECT}/verteiler`);
@@ -19,12 +24,13 @@ function downloadVerteilerplanungPdf() {
 async function createVerteiler() {
   const floorVal = document.getElementById('verteiler-floor').value;
   if (!floorVal) return showToast('Zuerst ein Geschoss in Gebäudestruktur anlegen', 'warning');
-  const floor_id = parseInt(floorVal);
+  const [kind, locId] = floorVal.split(':');
+  const location = kind === 'room' ? {room_id: parseInt(locId, 10)} : {floor_id: parseInt(locId, 10)};
   const name = document.getElementById('verteiler-name').value.trim();
   const row_count = parseInt(document.getElementById('verteiler-rows').value) || 4;
   await api(`/projects/${CURRENT_PROJECT}/verteiler`, {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({floor_id, name, row_count}),
+    body: JSON.stringify({...location, name, row_count}),
   });
   document.getElementById('verteiler-name').value = '';
   VERTEILER_LIST = await api(`/projects/${CURRENT_PROJECT}/verteiler`);
@@ -36,7 +42,7 @@ function renderVerteilerList() {
   container.innerHTML = VERTEILER_LIST.map(v => `
     <div class="card">
       <div class="row" style="justify-content:space-between;">
-        <h4 style="margin:0;">${v.name || 'Verteiler'} ${v.floor_name ? `<span class="pill">${v.floor_name}</span>` : ''}</h4>
+        <h4 style="margin:0;">${v.name || 'Verteiler'} ${v.floor_name ? `<span class="pill">${escapeHtml(v.floor_name)}${v.room_name ? ` · ${escapeHtml(v.room_name)}` : ''}</span>` : ''}</h4>
         <div class="row" style="margin:0; gap:6px;">
           <button class="btn secondary small" onclick="editVerteiler(${v.id})">Bearbeiten</button>
           <button class="btn danger small" onclick="deleteVerteiler(${v.id})">Löschen</button>

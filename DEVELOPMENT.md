@@ -103,7 +103,7 @@ backend/
   routers/
     setup.py          — company profile (incl. SMTP credentials), categories, point types, central templates (Setup tab)
     geraete.py         — global device catalog + curated manual_url per device (Geräte Katalog tab: Katalog + Handbücher sub-tabs)
-    projects.py        — projects, floors/rooms/points, backup/restore (Projekte tab: Gebäudestruktur sub-tab + project CRUD)
+    projects.py        — projects, floors/rooms/points (incl. tree moves with GA-impact dry run), backup/restore (Projekte tab: Gebäudestruktur sub-tab + project CRUD)
     linien.py          — optional KNX lines (Bereich.Linie) + floor/room/actuator line assignment, per-line device counts/warnings (Gebäudestruktur sub-tab)
     abgangsliste.py    — actor instances, circuit assignment, CSV/PDF export (Abgangsliste sub-tab)
     geraeteplanung.py  — per-room device planning, bill of materials, PDF export (Geräteplanung sub-tab)
@@ -125,7 +125,7 @@ frontend/
     send_email.js      — shared "Per E-Mail senden" modal, called from Pflichtenheft/Funktionscheckliste/Übergabe-Checkliste/Dokumentation
     setup.js           — company profile (incl. SMTP settings) + categories + point types + central templates
     geraete.js         — actor types catalog + Handbücher sub-tab (per-device manual URL)
-    projekte.js        — project CRUD/meta, floors/rooms (Gebäudestruktur sub-tab)
+    projekte.js        — project CRUD/meta, Geschoss/Raum/Verteiler tree with drag & drop (Gebäudestruktur sub-tab)
     linien.js          — optional KNX lines card + the line <select>s used by projekte.js/abgangsliste.js (Gebäudestruktur sub-tab)
     funktionen.js      — assigning functions to rooms, Sonderadressen (Funktionen sub-tab)
     gruppenadressen.js — GA tree preview + CSV export (Gruppenadressen sub-tab)

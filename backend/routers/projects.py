@@ -13,7 +13,7 @@ from fastapi.responses import StreamingResponse
 
 from ..db import get_db
 from ..ga_logic import build_ga_tree
-from ..models import ProjectIn, FloorIn, RoomIn, RoomPointIn, RoomPointEditIn, SpecialItemIn
+from ..models import ProjectIn, FloorIn, RoomIn, RoomPointIn, RoomPointEditIn, SpecialItemIn, StructureMoveIn
 from ..utils import AGED_KLAERUNG_DAYS, content_disposition
 
 router = APIRouter(tags=["projects"])
@@ -233,6 +233,72 @@ def delete_room(room_id: int):
     return {"ok": True}
 
 
+# Drag & drop in the Gebäudestruktur tree. Moving a room (or reordering
+# floors/rooms) shifts group addresses: the Mittelgruppe is the Geschoss and
+# the rooms' address blocks follow their order. So the frontend first calls
+# with dry_run=true, which applies the move inside the transaction, compares
+# the GA tree before/after and rolls back - the count goes into the confirm.
+def _function_gas(db, project_id):
+    return {(r["address"], r["name"]) for r in _flatten_ga(build_ga_tree(project_id, db)) if _is_function(r)}
+
+
+def _reorder(db, table, ids):
+    for idx, row_id in enumerate(ids):
+        db.execute(f"UPDATE {table} SET order_idx=? WHERE id=?", (idx, row_id))
+
+
+def _finish_move(db, project_id, before, dry_run):
+    after = _function_gas(db, project_id)
+    changed = len(before - after)
+    if dry_run:
+        db.rollback()
+    has_snapshot = db.execute(
+        "SELECT 1 FROM ga_export_snapshots WHERE project_id=?", (project_id,)
+    ).fetchone() is not None
+    return {"ga_changed": changed, "exported": has_snapshot}
+
+
+@router.post("/api/rooms/{room_id}/move")
+def move_room(room_id: int, m: StructureMoveIn):
+    with get_db() as db:
+        room = db.execute(
+            "SELECT r.*, f.project_id FROM rooms r JOIN floors f ON r.floor_id = f.id WHERE r.id=?", (room_id,)
+        ).fetchone()
+        if not room:
+            raise HTTPException(404, "Room not found")
+        target_floor = m.floor_id if m.floor_id is not None else room["floor_id"]
+        if not db.execute("SELECT 1 FROM floors WHERE id=? AND project_id=?", (target_floor, room["project_id"])).fetchone():
+            raise HTTPException(400, "Geschoss gehört nicht zu diesem Projekt")
+        before = _function_gas(db, room["project_id"])
+
+        old_siblings = [r["id"] for r in db.execute(
+            "SELECT id FROM rooms WHERE floor_id=? AND id<>? ORDER BY order_idx", (room["floor_id"], room_id))]
+        target_siblings = old_siblings if target_floor == room["floor_id"] else [r["id"] for r in db.execute(
+            "SELECT id FROM rooms WHERE floor_id=? ORDER BY order_idx", (target_floor,))]
+        target_siblings.insert(max(0, min(m.index, len(target_siblings))), room_id)
+        db.execute("UPDATE rooms SET floor_id=? WHERE id=?", (target_floor, room_id))
+        # A Verteiler placed in this room moves along to the new Geschoss.
+        db.execute("UPDATE verteiler SET floor_id=? WHERE room_id=?", (target_floor, room_id))
+        if target_floor != room["floor_id"]:
+            _reorder(db, "rooms", old_siblings)
+        _reorder(db, "rooms", target_siblings)
+        return _finish_move(db, room["project_id"], before, m.dry_run)
+
+
+@router.post("/api/floors/{floor_id}/move")
+def move_floor(floor_id: int, m: StructureMoveIn):
+    with get_db() as db:
+        floor = db.execute("SELECT * FROM floors WHERE id=?", (floor_id,)).fetchone()
+        if not floor:
+            raise HTTPException(404, "Floor not found")
+        before = _function_gas(db, floor["project_id"])
+        siblings = [r["id"] for r in db.execute(
+            "SELECT id FROM floors WHERE project_id=? AND id<>? ORDER BY order_idx", (floor["project_id"], floor_id))]
+        siblings.insert(max(0, min(m.index, len(siblings))), floor_id)
+        _reorder(db, "floors", siblings)
+        return _finish_move(db, floor["project_id"], before, m.dry_run)
+
+
 @router.post("/api/rooms/{room_id}/points")
 def add_room_point(room_id: int, rp: RoomPointIn):
     with get_db() as db:
@@ -276,7 +342,19 @@ def get_project_tree(project_id: int):
         floors = db.execute(
             "SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)
         ).fetchall()
-        result = {"id": project["id"], "name": project["name"], "floors": []}
+        result = {"id": project["id"], "name": project["name"], "floors": [], "unplaced_verteiler": []}
+        verteiler = db.execute(
+            "SELECT id, name, floor_id, room_id, row_count FROM verteiler WHERE project_id=? ORDER BY order_idx",
+            (project_id,),
+        ).fetchall()
+        def verteiler_of(floor_id=None, room_id=None):
+            return [
+                {"id": v["id"], "name": v["name"], "row_count": v["row_count"]}
+                for v in verteiler
+                if (room_id is not None and v["room_id"] == room_id)
+                or (room_id is None and v["floor_id"] == floor_id and v["room_id"] is None)
+            ]
+        result["unplaced_verteiler"] = verteiler_of(floor_id=None)
         for f in floors:
             rooms = db.execute(
                 "SELECT * FROM rooms WHERE floor_id=? ORDER BY order_idx", (f["id"],)
@@ -289,6 +367,7 @@ def get_project_tree(project_id: int):
                 room_list.append(
                     {
                         "id": r["id"], "name": r["name"], "line_id": r["line_id"],
+                        "verteiler": verteiler_of(room_id=r["id"]),
                         "points": [
                             {
                                 "id": p["id"], "point_type_id": p["point_type_id"], "label": p["label"],
@@ -299,7 +378,8 @@ def get_project_tree(project_id: int):
                     }
                 )
             result["floors"].append(
-                {"id": f["id"], "name": f["name"], "is_outdoor": bool(f["is_outdoor"]), "line_id": f["line_id"], "rooms": room_list}
+                {"id": f["id"], "name": f["name"], "is_outdoor": bool(f["is_outdoor"]), "line_id": f["line_id"],
+                 "verteiler": verteiler_of(floor_id=f["id"]), "rooms": room_list}
             )
         return result
 

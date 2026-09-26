@@ -8,6 +8,18 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- **Gebäudestruktur as a tree with drag & drop** — Geschoss → Raum →
+  Verteiler as a compact collapsible tree (like the building view in ETS)
+  instead of one card per room. Rooms can be dragged to another position
+  or Geschoss, Geschosse reordered, and a Verteiler dropped on a Geschoss
+  or into a room; a ⇄ button does the same without a mouse. Moves that
+  change group addresses ask first and say how many (computed by a dry
+  run on the server); after an ETS export the GA changes view lists what
+  to update in ETS.
+- **Verteiler in a room** — a Verteiler can now optionally sit in a room
+  (e.g. Technikraum), chosen when creating it or by dragging it in the
+  tree; shown in the Verteilerplanung card and its PDF heading. When the
+  room moves to another Geschoss, the Verteiler goes along.
 - **Docker image for the dev branch** — every push to `dev` now also
   publishes `ghcr.io/seaspotter/knxpilot:dev`. A server tracking `dev`
   sets `KNXPILOT_IMAGE_TAG=dev` in a `.env` file next to

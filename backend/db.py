@@ -719,6 +719,8 @@ def init_db():
             ("actor_instances", "line_id",
              "ALTER TABLE actor_instances ADD COLUMN line_id INTEGER REFERENCES knx_lines(id) ON DELETE SET NULL"),
             ("time_entries", "invoiced", "ALTER TABLE time_entries ADD COLUMN invoiced INTEGER NOT NULL DEFAULT 0"),
+            # Optional room a Verteiler sits in (floor_id is kept in sync with the room's floor).
+            ("verteiler", "room_id", "ALTER TABLE verteiler ADD COLUMN room_id INTEGER REFERENCES rooms(id) ON DELETE SET NULL"),
         ]:
             cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]
             if column not in cols:

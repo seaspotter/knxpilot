@@ -141,13 +141,34 @@ hierher — die haben ihren eigenen Unterreiter Handbücher (siehe unten).
 Nur das Gebäude selbst — welche Funktionen wo landen, ist Sache des
 Unterreiters Funktionen weiter unten.
 
+Die Struktur erscheint als Baum wie in ETS: Geschoss → Raum → Verteiler.
+Jedes Geschoss lässt sich über den Pfeil davor auf- und zuklappen (der
+Browser merkt sich das).
+
 - Geschosse (Stockwerke) hinzufügen; ein Geschoss als **Aussen/unbeheizt**
   markieren (z.B. "Aussen", "Garage"), wenn es von entsprechend markierten
   Vorlagen ausgeschlossen werden soll.
-- Räume je Geschoss hinzufügen — einzeln, oder über **Mehrere...** eine
-  Liste von Raumnamen (ein Name pro Zeile) auf einmal einfügen.
-- Sowohl Geschoss- als auch Raumnamen lassen sich über den
-  **Bearbeiten**-Button daneben jederzeit nachträglich umbenennen.
+- Räume je Geschoss hinzufügen — unter den Räumen des Geschosses einzeln
+  (**+ Raum**, oder Enter), oder über **Mehrere...** eine Liste von
+  Raumnamen (ein Name pro Zeile) auf einmal einfügen.
+- **✎** benennt ein Geschoss oder einen Raum um, **×** löscht es.
+- **Ziehen und Ablegen** (am Griff ⠿ oder der ganzen Zeile): einen Raum
+  an eine andere Stelle oder in ein anderes Geschoss ziehen (auf einen
+  anderen Raum: davor/danach, auf eine Geschosszeile: ans Ende dieses
+  Geschosses), Geschosse untereinander umsortieren, einen Verteiler auf
+  ein Geschoss oder in einen Raum ziehen. Der Raum nimmt dabei alles mit —
+  Funktionen, Geräte, Klärungen, einen Verteiler darin. Ohne Maus (Tablet,
+  Tastatur) macht **⇄** an jeder Zeile dasselbe über eine Auswahl.
+- Weil die Mittelgruppe das Geschoss ist und die Adressblöcke der
+  Reihenfolge der Räume folgen, ändert Verschieben meist Gruppenadressen.
+  Dann fragt KNXpilot vorher nach und nennt die Anzahl; wurde das Projekt
+  schon nach ETS exportiert, zeigt Gruppenadressen → "Änderungen seit dem
+  letzten ETS-Export" danach genau, was in ETS nachzuziehen ist.
+  Verschiebungen ohne Auswirkung auf Gruppenadressen passieren ohne
+  Rückfrage.
+- **Verteiler** erscheinen im Baum unter ihrem Geschoss bzw. Raum (angelegt
+  werden sie im Unterreiter Verteilerplanung, ein Klick auf den Namen
+  springt dorthin).
 - **Löschen** fragt immer nach und listet dabei genau auf, was mitgelöscht
   wird (Räume, Funktionen, Kanalzuordnungen, geplante Geräte,
   Sonderadressen, Klärungslisten-Einträge) und was nur seine
@@ -379,10 +400,13 @@ erscheinen, siehe Punkt 2).
 #### Verteilerplanung
 
 Ein einfaches visuelles Layout des Schaltschranks (Hutschiene) je Geschoss.
-Ein **Verteiler** gehört zu einem Geschoss und hat eine feste Anzahl Reihen
-— jede Reihe ist immer 12 TE (Teilungseinheiten, 1 TE = 18 mm) breit.
+Ein **Verteiler** gehört zu einem Geschoss (optional zu einem Raum darin,
+z.B. Technikraum) und hat eine feste Anzahl Reihen — jede Reihe ist immer
+12 TE (Teilungseinheiten, 1 TE = 18 mm) breit.
 
-- **+ Verteiler anlegen** — Geschoss, Name und Anzahl Reihen wählen. Über
+- **+ Verteiler anlegen** — Geschoss oder Raum, Name und Anzahl Reihen
+  wählen. Den Ort ändert man später in der Gebäudestruktur (Ziehen oder
+  **⇄**); im PDF steht er als "Geschoss / Raum" hinter dem Namen. Über
   **Bearbeiten** lassen sich beide später ändern (die Reihenzahl nicht
   unter die höchste noch belegte Reihe, sonst Fehlermeldung).
 - Jede Reihe zeigt ihre Elemente als proportional breite Kästchen (nach

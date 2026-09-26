@@ -24,20 +24,6 @@ nobody trusts.
   item. Security-sensitive: needs real thought on encryption at rest before
   building, not just a plain-text column - this isn't a "just add a field"
   task.
-- [ ] **Gebäudestruktur as a tree view (ETS-like)** — raised 2026-09-26.
-  A compact collapsible tree (Geschoss → Raum → Verteiler) instead of one
-  big card per room, with drag & drop to reorder rooms and move a room to
-  another Geschoss (native HTML5 drag & drop, no framework needed).
-  Proposed steps: (1) tree + drag & drop for rooms/floors; moving a room
-  changes its functions' Mittelgruppe, so the drop needs a confirm and the
-  GA "Änderungen seit dem letzten ETS-Export" view shows the effect;
-  (2) Verteiler optionally placed in a room (today a Verteiler belongs
-  only to a Geschoss), useful for the Dokumentation. **Rooms inside rooms**
-  is the open question: every export, the GA naming "{Raum} {Label}", the
-  checklists and the PA buckets assume exactly Geschoss → Raum, so nesting
-  would touch almost everything - only worth it for a concrete use case
-  (e.g. "Wohnung → Zimmer"), and then possibly as a grouping level above
-  rooms rather than arbitrary nesting.
 
 ## Explicitly deferred
 
@@ -51,3 +37,7 @@ nobody trusts.
   (see `CHANGELOG.md`/`DEPLOYMENT.md`) now covers the reverse-proxy/domain
   case; a plain VPN (WireGuard/Tailscale) remains the simpler option when
   a domain isn't actually needed.
+- **Rooms inside rooms** in the Gebäudestruktur — decided against
+  (2026-09-26) when the tree view shipped (see CHANGELOG): every export, the
+  GA naming "{Raum} {Label}", the checklists and the PA buckets assume
+  exactly Geschoss → Raum. Apartments are covered by KNX lines.

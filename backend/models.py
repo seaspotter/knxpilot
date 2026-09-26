@@ -175,6 +175,7 @@ class TestEmailIn(BaseModel):
 
 class VerteilerIn(BaseModel):
     floor_id: int | None = None
+    room_id: int | None = None
     name: str = ""
     row_count: int = 4
 
@@ -250,6 +251,17 @@ class KnxLineIn(BaseModel):
     area: int                # Bereich, 0-15
     line: int                # Linie, 0-15
     name: str = ""           # e.g. "Wohnung EG", "Aussen"
+
+
+class StructureMoveIn(BaseModel):
+    index: int                   # target position (0-based) among the target's siblings
+    floor_id: int | None = None  # rooms only: the Geschoss to move into
+    dry_run: bool = False        # only report how many group addresses would change
+
+
+class VerteilerLocationIn(BaseModel):
+    floor_id: int | None = None
+    room_id: int | None = None   # set -> floor_id follows the room's floor
 
 
 class LineAssignIn(BaseModel):

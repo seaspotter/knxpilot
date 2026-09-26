@@ -12,7 +12,7 @@ from reportlab.lib.units import mm
 from reportlab.platypus import KeepTogether, Paragraph, Spacer, Table, TableStyle
 
 from ..db import get_db
-from ..models import VerteilerIn, VerteilerUpdateIn, VerteilerItemIn, VerteilerItemMoveIn
+from ..models import VerteilerIn, VerteilerUpdateIn, VerteilerItemIn, VerteilerItemMoveIn, VerteilerLocationIn
 from ..pdf_design import (
     pdf_styles, pdf_title_banner, build_pdf_response, company_header_block, company_footer_line,
     PDF_BORDER_COLOR,
@@ -61,7 +61,7 @@ def _serialize_verteiler(db, row):
             rows[it["row_idx"]].append(entry)
 
     return {
-        "id": row["id"], "floor_id": row["floor_id"], "name": row["name"],
+        "id": row["id"], "floor_id": row["floor_id"], "room_id": row["room_id"], "name": row["name"],
         "row_count": row["row_count"], "row_width_te": ROW_WIDTH_TE, "rows": rows,
     }
 
@@ -70,6 +70,8 @@ def _serialize_verteiler(db, row):
 def list_verteiler(project_id: int):
     with get_db() as db:
         floors = {r["id"]: r["name"] for r in db.execute("SELECT * FROM floors WHERE project_id=?", (project_id,)).fetchall()}
+        rooms = {r["id"]: r["name"] for r in db.execute(
+            "SELECT r.id, r.name FROM rooms r JOIN floors f ON r.floor_id = f.id WHERE f.project_id=?", (project_id,))}
         rows = db.execute(
             "SELECT * FROM verteiler WHERE project_id=? ORDER BY order_idx", (project_id,)
         ).fetchall()
@@ -77,19 +79,51 @@ def list_verteiler(project_id: int):
         for row in rows:
             v = _serialize_verteiler(db, row)
             v["floor_name"] = floors.get(row["floor_id"], "")
+            v["room_name"] = rooms.get(row["room_id"], "")
             result.append(v)
         return result
+
+
+def _resolve_location(db, project_id, floor_id, room_id):
+    """(floor_id, room_id) for a Verteiler - a room implies its floor, and
+    both have to belong to the project."""
+    if room_id is not None:
+        room = db.execute(
+            "SELECT r.floor_id FROM rooms r JOIN floors f ON r.floor_id = f.id WHERE r.id=? AND f.project_id=?",
+            (room_id, project_id),
+        ).fetchone()
+        if not room:
+            raise HTTPException(400, "Raum gehört nicht zu diesem Projekt")
+        return room["floor_id"], room_id
+    if floor_id is not None and not db.execute(
+        "SELECT 1 FROM floors WHERE id=? AND project_id=?", (floor_id, project_id)
+    ).fetchone():
+        raise HTTPException(400, "Geschoss gehört nicht zu diesem Projekt")
+    return floor_id, None
 
 
 @router.post("/api/projects/{project_id}/verteiler")
 def create_verteiler(project_id: int, v: VerteilerIn):
     with get_db() as db:
+        floor_id, room_id = _resolve_location(db, project_id, v.floor_id, v.room_id)
         (count,) = db.execute("SELECT COUNT(*) FROM verteiler WHERE project_id=?", (project_id,)).fetchone()
         cur = db.execute(
-            "INSERT INTO verteiler (project_id, floor_id, name, row_count, order_idx) VALUES (?, ?, ?, ?, ?)",
-            (project_id, v.floor_id, v.name, max(1, v.row_count), count),
+            "INSERT INTO verteiler (project_id, floor_id, room_id, name, row_count, order_idx) VALUES (?, ?, ?, ?, ?, ?)",
+            (project_id, floor_id, room_id, v.name, max(1, v.row_count), count),
         )
         return {"id": cur.lastrowid}
+
+
+@router.put("/api/verteiler/{verteiler_id}/location")
+def set_verteiler_location(verteiler_id: int, loc: VerteilerLocationIn):
+    """Gebäudestruktur drag & drop: put a Verteiler on a Geschoss or into a room."""
+    with get_db() as db:
+        row = db.execute("SELECT project_id FROM verteiler WHERE id=?", (verteiler_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "Verteiler not found")
+        floor_id, room_id = _resolve_location(db, row["project_id"], loc.floor_id, loc.room_id)
+        db.execute("UPDATE verteiler SET floor_id=?, room_id=? WHERE id=?", (floor_id, room_id, verteiler_id))
+    return {"ok": True}
 
 
 @router.put("/api/verteiler/{verteiler_id}")
@@ -254,6 +288,8 @@ def build_verteilerplanung_story(db, project_id, styles):
     inclusion (see pflichtenheft.py's pflichtenheft_include_verteilerplanung
     toggle) share one rendering, same pattern as build_abgangsliste_story."""
     floors = {r["id"]: r["name"] for r in db.execute("SELECT * FROM floors WHERE project_id=?", (project_id,)).fetchall()}
+    rooms = {r["id"]: r["name"] for r in db.execute(
+        "SELECT r.id, r.name FROM rooms r JOIN floors f ON r.floor_id = f.id WHERE f.project_id=?", (project_id,))}
     verteiler_rows = db.execute(
         "SELECT * FROM verteiler WHERE project_id=? ORDER BY order_idx", (project_id,)
     ).fetchall()
@@ -267,10 +303,10 @@ def build_verteilerplanung_story(db, project_id, styles):
         if i > 0:
             story.append(Spacer(1, 6 * mm))
         serialized = _serialize_verteiler(db, v)
-        floor_name = floors.get(v["floor_id"], "")
+        where = " / ".join(n for n in (floors.get(v["floor_id"], ""), rooms.get(v["room_id"], "")) if n)
         heading = v["name"] or "Verteiler"
-        if floor_name:
-            heading += f" — {floor_name}"
+        if where:
+            heading += f" — {where}"
         heading_para = Paragraph(heading, styles["RoomHeading"])
         row_tables = [t for t in (
             _verteiler_row_table(row_items, serialized["row_width_te"], styles)
