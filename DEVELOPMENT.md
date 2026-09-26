@@ -21,6 +21,12 @@
   creates the GitHub Release with that version's CHANGELOG section as its
   text (it fails loudly if the section is missing, and skips if a release
   already exists).
+- **Dependency updates:** Dependabot ([`.github/dependabot.yml`](./.github/dependabot.yml))
+  checks weekly for newer GitHub Actions, Python packages
+  (`requirements*.txt`) and the Docker base image, and opens grouped pull
+  requests against `dev`; the Tests workflow runs on each. A new Python
+  minor version in the base image also needs the pinned packages to support
+  it — build the image locally before merging that one.
 - To switch your local checkout between them: `git checkout dev` /
   `git checkout main` (or `git switch dev` / `git switch main`). `main`
   only has what's actually been released, so it'll usually look "behind"

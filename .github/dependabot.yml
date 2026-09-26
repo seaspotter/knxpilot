@@ -1,0 +1,37 @@
+# Dependabot version updates: a weekly check that opens pull requests
+# against dev (not main - releases still go dev -> main as usual, see
+# DEVELOPMENT.md) when a newer version exists. The Tests workflow runs on
+# each PR. Updates are grouped per ecosystem, so it's a handful of PRs a
+# week at most rather than one per package.
+#
+# Note: Dependabot reads this file from the default branch (main), so it
+# only becomes active once it's been released.
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  - package-ecosystem: pip
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+    groups:
+      python-dependencies:
+        patterns: ["*"]
+
+  # The Dockerfile's python:X.Y-slim base image. A new Python minor version
+  # also needs the pinned packages to support it - the PR's Docker build
+  # only runs after merging to main, so check it locally before merging.
+  - package-ecosystem: docker
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly

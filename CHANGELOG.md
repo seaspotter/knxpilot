@@ -16,6 +16,11 @@ restructuring below — history before that is available via `git log`.
   (`.github/workflows/tests.yml`). The database location can now be
   overridden with `KNXPILOT_DB_PATH` (used by the tests). Writing it
   immediately found the download-filename bug below.
+- **Dependabot** — `.github/dependabot.yml` opens weekly, grouped update
+  PRs against `dev` for GitHub Actions, Python packages and the Docker base
+  image. All workflows now use the latest (Node 24) majors of their actions
+  (`actions/checkout@v7`, `actions/setup-python@v7`, docker/* latest),
+  replacing the Node 20 versions GitHub deprecated.
 
 ### Changed
 
