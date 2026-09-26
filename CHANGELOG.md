@@ -100,6 +100,10 @@ restructuring below — history before that is available via `git log`.
 
 ### Changed
 
+- **Übergabe-Checkliste in the same table look** — each item has a
+  Ja | Nein | Nicht nötig switch on the right (the chosen answer coloured,
+  tapping it again clears it), when it was answered, and a slimmer
+  Bemerkungen line; README screenshot refreshed.
 - **Funktionscheckliste as a table** — category pill in front, function in
   a slightly smaller font, and "getestet" with the checkbox on the right;
   the whole row is tappable and tested rows are greyed out.

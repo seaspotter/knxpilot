@@ -127,6 +127,20 @@
   .fc-when { font-size:11px; color:var(--muted); font-weight:normal; margin-right:4px; }
   .fc-row.done .fc-text { color:var(--muted); }
   .fc-row.done .fc-check { color:var(--accent); font-weight:600; }
+  /* Übergabe-Checkliste rows (uebergabe_checkliste.js) - same look as .fc-row */
+  .ub-row { display:grid; grid-template-columns:1fr auto; gap:4px 12px; align-items:center; padding:7px 4px; border-bottom:1px solid var(--border); font-size:13.5px; }
+  .ub-row:last-child { border-bottom:none; }
+  .ub-row.done .fc-text { color:var(--muted); }
+  .ub-right { display:flex; align-items:center; gap:8px; }
+  .ub-seg { display:inline-flex; border:1px solid var(--border); border-radius:6px; overflow:hidden; flex-shrink:0; }
+  .ub-seg button { background:var(--panel2); color:var(--text); border:none; border-left:1px solid var(--border); padding:5px 10px; font-size:12px; cursor:pointer; }
+  .ub-seg button:first-child { border-left:none; }
+  .ub-seg button:hover { color:var(--accent); }
+  .ub-seg button.active { color:var(--btn-text); font-weight:600; }
+  .ub-seg button.ja.active { background:var(--accent2); }
+  .ub-seg button.nein.active { background:var(--danger); }
+  .ub-seg button.nicht_noetig.active { background:var(--muted); }
+  .ub-note { grid-column:1 / -1; font-size:12.5px; padding:4px 8px; width:100%; box-sizing:border-box; }
   /* Gebäudestruktur tree (projekte.js) */
   .struct-tree { border:1px solid var(--border); border-radius:8px; background:var(--panel2); padding:6px; }
   .st-floor + .st-floor { margin-top:4px; }
@@ -294,6 +308,8 @@
 
   @media (max-width: 700px) {
     .st-meta { display:none; }
+    .ub-row { grid-template-columns:1fr; }
+    .ub-right { justify-content:flex-end; }
     .doc-row { grid-template-columns:18px 1fr; }
     .doc-detail { grid-column:2; }
     .fc-row { grid-template-columns:86px 1fr auto; gap:8px; }

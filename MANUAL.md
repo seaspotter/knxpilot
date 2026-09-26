@@ -511,9 +511,11 @@ Ein zweites, weitgehend allgemeines digitales Formular für das
 Anlagenübergabe) — bewusst auf die Arbeit des Systemintegrators
 beschränkt (Programmierung/Inbetriebnahme, Kundengespräch, Übergabe),
 ohne Punkte zur physischen Elektroinstallation (Verdrahtung, Montage,
-E-Check usw.), die Sache des Elektrikers ist. Je Punkt ein
-Ja/Nein/Nicht-nötig-Status plus ein
-Bemerkungsfeld, direkt hier ausgefüllt und gespeichert; nur der
+E-Check usw.), die Sache des Elektrikers ist. Gleiche Tabellenoptik wie
+die Funktionscheckliste: je Punkt rechts ein Schalter **Ja | Nein | Nicht
+nötig** (die gewählte Antwort farbig; nochmals antippen hebt sie wieder
+auf), daneben wann sie gesetzt wurde, darunter ein Bemerkungsfeld —
+direkt hier ausgefüllt und gespeichert; nur der
 Projektname ist projektspezifisch, der restliche Fragenkatalog ist fest
 und wiederverwendbar.
 

@@ -57,9 +57,10 @@ function renderFunktionsSignatures() {
     </div>`;
 }
 
-// "26.09.26, 14:32" - updated_at is sqlite CURRENT_TIMESTAMP (UTC, no zone).
+// "26.09.26, 14:32" for an answered/ticked item - updated_at is sqlite
+// CURRENT_TIMESTAMP (UTC, no zone). Also used by the Übergabe-Checkliste.
 function checklistWhen(entry) {
-  if (!entry || entry.status !== 'ok' || !entry.updated_at) return '';
+  if (!entry || !entry.status || !entry.updated_at) return '';
   const iso = entry.updated_at.includes('T') ? entry.updated_at : entry.updated_at.replace(' ', 'T') + 'Z';
   return new Date(iso).toLocaleString('de-DE', {day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'});
 }

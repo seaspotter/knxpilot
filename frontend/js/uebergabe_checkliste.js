@@ -32,27 +32,22 @@ function renderUebergabe() {
 }
 
 const UEB_STATUS_LABEL = {ja: 'Ja', nein: 'Nein', nicht_noetig: 'Nicht nötig'};
-const UEB_STATUS_CLASS = {ja: 'status-geklaert', nein: 'status-abgelehnt', nicht_noetig: 'status-offen'};
 const UEB_STATUS_OPTIONS = ['ja', 'nein', 'nicht_noetig'];
 
+// Same table-like look as the Funktionscheckliste: task on the left, the
+// answer as a Ja | Nein | Nicht nötig switch on the right (tapping the active
+// one clears it), when it was answered, and the Bemerkungen line below.
 function renderUebergabeItem(item) {
   const entry = UEBERGABE_STATUS[item.key] || {status: '', note: ''};
-  const buttons = UEB_STATUS_OPTIONS.filter(v => v !== entry.status)
-    .map(v => `<button class="btn secondary small" onclick="setUebergabeStatus('${item.key}', '${v}')">${UEB_STATUS_LABEL[v]}</button>`)
-    .join('');
+  const segments = UEB_STATUS_OPTIONS.map(v => `<button class="${v}${entry.status === v ? ' active' : ''}"
+      onclick="setUebergabeStatus('${item.key}', '${entry.status === v ? '' : v}')">${UEB_STATUS_LABEL[v]}</button>`).join('');
   return `
-    <div style="padding:8px 0; border-bottom:1px solid var(--border);">
-      <div class="row" style="justify-content:space-between;">
-        <div>
-          <span>${item.text}</span>
-          ${entry.status ? `<span class="pill ${UEB_STATUS_CLASS[entry.status]}">${UEB_STATUS_LABEL[entry.status]}</span>` : ''}
-        </div>
-        <div class="row" style="gap:6px; margin:0;">${buttons}</div>
-      </div>
-      <input type="text" class="flex-input" placeholder="Bemerkungen"
+    <div class="ub-row${entry.status ? ' done' : ''}">
+      <span class="fc-text">${item.text}</span>
+      <span class="ub-right"><span class="fc-when">${checklistWhen(entry)}</span><span class="ub-seg">${segments}</span></span>
+      <input type="text" class="ub-note" placeholder="Bemerkungen"
         value="${escapeAttr(entry.note)}"
-        onblur="saveUebergabeNote('${item.key}', this.value)"
-        style="margin-top:6px; width:100%;">
+        onblur="saveUebergabeNote('${item.key}', this.value)">
     </div>
   `;
 }
@@ -62,7 +57,7 @@ async function setUebergabeStatus(key, status) {
   await api(`/projects/${CURRENT_PROJECT}/checklist-status/${encodeURIComponent(key)}`, {
     method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({status, note: currentNote}),
   });
-  UEBERGABE_STATUS[key] = {status, note: currentNote};
+  UEBERGABE_STATUS[key] = {status, note: currentNote, updated_at: new Date().toISOString()};
   renderUebergabe();
 }
 
@@ -71,7 +66,7 @@ async function saveUebergabeNote(key, note) {
   await api(`/projects/${CURRENT_PROJECT}/checklist-status/${encodeURIComponent(key)}`, {
     method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({status: currentStatus, note}),
   });
-  UEBERGABE_STATUS[key] = {status: currentStatus, note};
+  UEBERGABE_STATUS[key] = {...UEBERGABE_STATUS[key], status: currentStatus, note};
   // Local-cache-only, no re-render (matches saveKlAntwortInline's pattern
   // in klaerungsliste.js) - avoids losing focus/cursor on blur-triggered save.
 }
