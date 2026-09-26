@@ -8,12 +8,31 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- **Klärungsliste: pass on the open points** — new "Offene Punkte
+  weitergeben" card in the Klärungsliste sub-tab to clarify open questions
+  with the customer or electrician: **Als Text kopieren** (numbered list
+  grouped by room, for pasting into your own email - also works on a plain
+  `http://` LAN address, where the browser's clipboard API isn't
+  available), **PDF herunterladen** ("Offene Punkte" PDF with Nr./Typ/
+  Frage/Antwort columns - answers already noted are filled in, otherwise
+  left blank to fill in by hand) and **Per E-Mail senden** (same PDF via
+  the existing email feature). Only entries with status *offen*; text and
+  PDF use the same numbering. New endpoint
+  `GET /api/projects/{id}/export-klaerungsliste.pdf`.
+
 - **GitHub Releases are created automatically** — new
   `.github/workflows/release.yml`: pushing a `vX.Y.Z` tag now also creates
   the GitHub Release, using that version's CHANGELOG section (including an
   optional summary paragraph right under the version heading) as the
   release text - no more creating releases by hand. Release routine
   documented in `DEVELOPMENT.md`.
+
+### Fixed
+
+- **Dokumentation PDF no longer breaks on special characters in the
+  Klärungsliste** — an entry containing `&` or `<` in its text or answer
+  made the optional Klärungsliste section (and with it the whole
+  Dokumentation PDF and its email sending) fail.
 
 ## [0.7.0] - 2026-09-26
 

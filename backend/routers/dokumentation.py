@@ -101,11 +101,11 @@ def _klaerungsliste_story(db, project_id, styles):
     table_data = [["Raum", "Typ", "Text", "Status", "Antwort"]]
     for r in rows:
         table_data.append([
-            Paragraph(r["room_name"] or "Allgemein", styles["Body"]),
-            Paragraph(r["typ"], styles["Body"]),
-            Paragraph(r["text"], styles["Body"]),
-            Paragraph(r["status"], styles["Body"]),
-            Paragraph(r["antwort"] or "", styles["Body"]),
+            Paragraph(escape(r["room_name"] or "Allgemein"), styles["Body"]),
+            Paragraph(escape(r["typ"]), styles["Body"]),
+            Paragraph(escape(r["text"]), styles["Body"]),
+            Paragraph(escape(r["status"]), styles["Body"]),
+            Paragraph(escape(r["antwort"] or ""), styles["Body"]),
         ])
     table = Table(table_data, colWidths=[28 * mm, 20 * mm, 55 * mm, 20 * mm, 57 * mm], repeatRows=1)
     table.setStyle(pdf_table_style([("VALIGN", (0, 0), (-1, -1), "MIDDLE")]))

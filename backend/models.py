@@ -163,7 +163,7 @@ class SignatureIn(BaseModel):
 
 
 class SendEmailIn(BaseModel):
-    document: str  # "pflichtenheft" | "funktionscheckliste" | "uebergabe" | "dokumentation"
+    document: str  # "pflichtenheft" | "funktionscheckliste" | "uebergabe" | "dokumentation" | "klaerungsliste"
     to: str = ""              # comma/semicolon-separated addresses
     cc: str = ""              # comma/semicolon-separated addresses
     note: str = ""            # optional extra line appended to the message body

@@ -193,3 +193,60 @@ async function refreshKlaerungsBadge() {
   updateKlaerungsBadgeText(entries);
 }
 
+
+// ---------- Offene Punkte weitergeben ----------
+function downloadKlaerungslistePdf() {
+  window.location.href = `/api/projects/${CURRENT_PROJECT}/export-klaerungsliste.pdf`;
+}
+
+// Same grouping/numbering as the PDF (backend open_klaerungen_grouped()):
+// open entries only, in list order, grouped by room in order of first
+// appearance, numbered consecutively across groups.
+function openKlaerungenAsText() {
+  const project = PROJECTS_LIST.find(p => p.id === CURRENT_PROJECT);
+  const groups = new Map();
+  KLAERUNGEN.filter(k => k.status === 'offen').forEach(k => {
+    const label = KL_ROOMS.find(r => r.id === k.room_id)?.label || 'Allgemein';
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label).push(k);
+  });
+  if (!groups.size) return '';
+  const today = new Date().toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric'});
+  const lines = [`Offene Punkte – ${project ? project.name : ''} (Stand ${today})`, ''];
+  let nr = 0; // numbered after grouping, same as the PDF
+  groups.forEach((items, label) => {
+    lines.push(label);
+    items.forEach(k => {
+      nr += 1;
+      lines.push(`${nr}. [${k.typ}] ${k.text}${k.point_label ? ` (Punkt: ${k.point_label})` : ''}`);
+      if (k.antwort) lines.push(`   Bisher: ${k.antwort}`);
+    });
+    lines.push('');
+  });
+  return lines.join('\n').trim();
+}
+
+async function copyOpenKlaerungenAsText() {
+  const text = openKlaerungenAsText();
+  if (!text) return showToast('Keine offenen Punkte', 'warning');
+  // navigator.clipboard only exists on HTTPS/localhost - KNXpilot usually
+  // runs on a plain http:// LAN address, so fall back to execCommand.
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      if (!ok) throw new Error('copy failed');
+    }
+    showToast('Offene Punkte in die Zwischenablage kopiert', 'success');
+  } catch (e) {
+    showToast('Kopieren nicht möglich - bitte PDF verwenden', 'warning');
+  }
+}

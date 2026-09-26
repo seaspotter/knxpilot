@@ -436,7 +436,8 @@ direkt, z.B. um das unterschriebene Protokoll gegenzeichnen zu lassen
 Interne Arbeitsliste für Fragen, Aufgaben und Notizen, die z.B. bei einem
 Kundentermin anfallen (etwa "Tasterfarbe schwarz oder weiss?") — erscheint
 **nicht** im Pflichtenheft-Export, sondern optional (siehe unten) im
-Dokumentation-Export.
+Dokumentation-Export. Die noch offenen Punkte lassen sich zusätzlich
+gezielt weitergeben (siehe *Offene Punkte weitergeben* unten).
 
 - Jeder Eintrag hat einen **Typ** (Frage / Aufgabe / Notiz) und optional
   einen **Raum**, darin wiederum optional einen bestimmten **Punkt**; ohne
@@ -458,6 +459,19 @@ Dokumentation-Export.
   ein Hinweis ("⚠ N Einträge sind seit mehr als 7 Tagen unbeantwortet").
   Dieselbe Kennzahl fliesst auch in die Projektübersicht auf der
   Projektliste ein (siehe oben).
+- **Offene Punkte weitergeben** — um offene Fragen mit Kunde oder
+  Elektriker zu klären. Enthält nur Einträge mit Status *offen*, nach Raum
+  gruppiert und durchnummeriert (gleiche Nummern in Text und PDF, damit
+  man sich im Gespräch auf "Punkt 3" beziehen kann):
+  - **Als Text kopieren** legt die Liste in die Zwischenablage, zum
+    Einfügen in eine eigene E-Mail oder Nachricht. Eine bereits
+    notierte Antwort steht als "Bisher: …" darunter.
+  - **PDF herunterladen** erzeugt das PDF "Offene Punkte" mit den
+    Spalten Nr., Typ, Frage/Aufgabe und **Antwort** — bereits notierte
+    Antworten sind eingetragen, sonst bleibt die Spalte zum
+    handschriftlichen Ausfüllen frei.
+  - **Per E-Mail senden** verschickt dieses PDF direkt (wie bei den
+    anderen Exporten, siehe Setup → E-Mail).
 
 #### Handbücher
 
@@ -710,7 +724,8 @@ innerhalb des Setup-Tabs, nicht alle gleichzeitig sichtbar.
 - **E-Mail** — SMTP-Zugangsdaten (Server, Port, Verschlüsselung
   STARTTLS/SSL/keine, Benutzername/Passwort, Absenderadresse) für den
   **Per E-Mail senden**-Button bei Pflichtenheft, Funktionscheckliste,
-  Übergabe-Checkliste und Dokumentation — rein manuell ausgelöst, nie
+  Übergabe-Checkliste, Dokumentation und den offenen Punkten der
+  Klärungsliste — rein manuell ausgelöst, nie
   automatisch (z.B. nicht beim Signieren der Übergabe-Checkliste). Ein
   beliebiger SMTP-Account funktioniert (Firmen-Mailaccount, Transaktions-
   E-Mail-Dienst usw.). "Kopie an mich" steuert, ob der Sendedialog
@@ -774,8 +789,9 @@ Installation geändert hat, ohne extra auf GitHub nachsehen zu müssen.
 ## PDF-Exporte
 
 Alle PDF-Exporte (Abgangsliste, Geräteliste, Pflichtenheft,
-Funktionscheckliste, Übergabe-Checkliste, Dokumentation, sowie der
-interne Stundennachweis der Zeiterfassung) nutzen dieselbe
+Funktionscheckliste, Übergabe-Checkliste, Dokumentation, Offene Punkte der
+Klärungsliste, sowie der interne Stundennachweis der Zeiterfassung) nutzen
+dieselbe
 Gestaltung: ein dunkler
 Banner-Titelkopf, eine einheitliche Tabellenoptik, und eine Fusszeile mit
 Projektname sowie **Seite X von Y** auf jeder Seite. Der gemeinsame Code

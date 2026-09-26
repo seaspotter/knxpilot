@@ -1,7 +1,8 @@
 """
 Send-by-email tab plumbing: a manual "Per E-Mail senden" action next to
 each PDF export's existing "PDF herunterladen" button (Pflichtenheft,
-Funktionscheckliste, Übergabe-Checkliste, Dokumentation) - never triggered
+Funktionscheckliste, Übergabe-Checkliste, Dokumentation, Klärungsliste's
+"Offene Punkte") - never triggered
 automatically (e.g. right after a signature is captured), so the sender
 always sees and confirms exactly who's about to receive what.
 
@@ -24,6 +25,7 @@ from ..models import SendEmailIn, TestEmailIn
 from .pflichtenheft import build_pflichtenheft_pdf_bytes
 from .checkliste import build_funktionscheckliste_pdf_bytes, build_uebergabe_checkliste_pdf_bytes
 from .dokumentation import build_dokumentation_pdf_bytes
+from .klaerungsliste import build_klaerungsliste_pdf_bytes
 
 router = APIRouter(tags=["email"])
 
@@ -34,6 +36,7 @@ DOCUMENT_BUILDERS = {
     "funktionscheckliste": (build_funktionscheckliste_pdf_bytes, "Funktionscheckliste", "die Funktionscheckliste"),
     "uebergabe": (build_uebergabe_checkliste_pdf_bytes, "Übergabe-Checkliste", "die Übergabe-Checkliste"),
     "dokumentation": (build_dokumentation_pdf_bytes, "Dokumentation", "die vollständige Projektdokumentation"),
+    "klaerungsliste": (build_klaerungsliste_pdf_bytes, "Offene Punkte", "die offenen Punkte zur Klärung"),
 }
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")

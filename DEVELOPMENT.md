@@ -75,7 +75,7 @@ backend/
     checkliste.py      — digital on-site checklists: checklist_status upsert, Funktionscheckliste + Übergabe-Checkliste JSON/PDF (their sub-tabs)
     dokumentation.py   — end-of-project assembly PDF, combining Pflichtenheft content + both checklists' results + a Handbücher checklist + optional as-built sections (Dokumentation sub-tab)
     email.py           — "Per E-Mail senden" endpoints, reusing each export's build_*_pdf_bytes() function (Setup → E-Mail + every export tab)
-    klaerungsliste.py  — questions/tasks/notes per project (Klärungsliste sub-tab)
+    klaerungsliste.py  — questions/tasks/notes per project + "Offene Punkte" PDF export (Klärungsliste sub-tab)
     project_files.py   — a handful of reference files per project, stored as a BLOB (Übersicht sub-tab)
     manuals.py         — fetches a device's catalog-curated manual_url into the project's own Handbücher store (Handbücher sub-tab)
     zeiterfassung.py   — internal per-project time tracking: header start/stop timer + global time_entries list (Zeiterfassung tab) + its own Stundennachweis PDF; never part of any project export
@@ -100,7 +100,7 @@ frontend/
     pflichtenheft.js   — Pflichtenheft PDF download button (static content)
     funktionscheckliste.js — digital on-site function testing checklist
     uebergabe_checkliste.js — digital handover checklist
-    klaerungsliste.js  — questions/tasks/notes
+    klaerungsliste.js  — questions/tasks/notes, copy/PDF/email of the open points
     dokumentation.js   — Dokumentation PDF download button (static content)
     update.js          — self-update tab + changelog viewer + version badge
     hilfe.js           — in-app manual (renders MANUAL.md)

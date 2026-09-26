@@ -1,8 +1,9 @@
 // ---------- Send by email (shared modal) ----------
 // Used from the "Per E-Mail senden" button on Pflichtenheft,
-// Funktionscheckliste, Übergabe-Checkliste and Dokumentation - one shared
-// implementation rather than duplicating the modal four times, since all
-// four just differ by which document type/label they pass in. Always a
+// Funktionscheckliste, Übergabe-Checkliste, Dokumentation and the
+// Klärungsliste's "Offene Punkte" - one shared implementation rather than
+// duplicating the modal per document, since they just differ by which
+// document type/label they pass in. Always a
 // manual, one-click-per-send action (never triggered automatically, e.g.
 // right after a signature is captured) - the dialog always shows exactly
 // who's about to receive what before anything goes out.
