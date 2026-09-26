@@ -144,7 +144,7 @@ function renderTimeEntries() {
       byProject.set(e.project_id, t);
     });
     totalsEl.innerHTML = `<h4>Summe je Projekt</h4>
-      <table class="zeit-table"><thead><tr><th>Projekt</th><th class="num">Stunden</th></tr></thead><tbody>
+      <table class="data-table"><thead><tr><th>Projekt</th><th class="num">Stunden</th></tr></thead><tbody>
       ${[...byProject.values()].sort((a, b) => a.name.localeCompare(b.name)).map(t =>
         `<tr><td>${escapeHtml(t.name)}</td><td class="num">${formatHours(t.minutes)}</td></tr>`).join('')}
       </tbody></table>`;
@@ -160,7 +160,7 @@ function renderTimeEntries() {
   const fmtDate = iso => new Date(iso).toLocaleDateString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit', year:'numeric'});
   const fmtTime = iso => new Date(iso).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
   listEl.innerHTML = `<h4>Einträge</h4>
-    <table class="zeit-table"><thead><tr>
+    <table class="data-table"><thead><tr>
       <th>Datum</th><th>Projekt</th><th>Von</th><th>Bis</th><th class="num">Dauer</th><th>Notiz</th><th>Abgerechnet</th><th></th>
     </tr></thead><tbody>
     ${entries.map(e => `<tr>
@@ -171,7 +171,7 @@ function renderTimeEntries() {
       <td class="num" title="${e.ended_at ? `tatsächlich ${Math.round(e.raw_minutes)} Min.` : ''}">${e.ended_at ? formatHours(e.billed_minutes) : '—'}</td>
       <td>${escapeHtml(e.note || '')}</td>
       <td>${e.ended_at ? `<input type="checkbox" ${e.invoiced ? 'checked' : ''} onchange="setTimeEntriesInvoiced([${e.id}], this.checked)" title="Abgerechnet">` : ''}</td>
-      <td class="zeit-actions">${e.ended_at ? `
+      <td class="actions">${e.ended_at ? `
         <button class="btn secondary small" onclick="openTimeEntryModal(${e.id})">Bearbeiten</button>
         <button class="btn danger small" onclick="deleteTimeEntry(${e.id})">Löschen</button>` : ''}</td>
     </tr>`).join('')}

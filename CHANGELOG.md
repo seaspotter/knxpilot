@@ -80,6 +80,10 @@ restructuring below — history before that is available via `git log`.
   description field, so a bare model number like "BE-GT2TW.02" comes with
   a readable "Glastaster II Smart Weiß mit Temperatursensor". All cells in
   these tables now wrap instead of overflowing into the next column.
+- **Geräteplanung Stückliste is now a table** — columns Gerät,
+  Beschreibung (from the Geräte Katalog), Gruppe, Anzahl and the "Nicht
+  bestellen" checkbox, instead of a list of pills; devices marked as
+  already available are greyed out with a "Bereits vorhanden" tag.
 - **Handbücher sub-tab shows the device description** — each device line
   now shows its Geräte Katalog description next to the model number
   (e.g. "MDT BE-GT2TW.02 — Glastaster II Smart Weiß mit Temperatursensor").

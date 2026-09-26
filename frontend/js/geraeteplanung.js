@@ -14,18 +14,22 @@ async function loadGeraeteplanungForCurrentProject() {
 
 async function renderDeviceSummary() {
   const summary = await api(`/projects/${CURRENT_PROJECT}/device-summary`);
-  const ul = document.getElementById('device-summary-list');
-  ul.innerHTML = summary.map(s => `
-    <li>
-      <div><b${s.not_ordering ? ' class="muted"' : ''}>${s.device_name}</b> <span class="pill">${s.group_name}</span>${s.not_ordering ? ' <span class="pill">Bereits vorhanden</span>' : ''}</div>
-      <div class="row" style="margin:0; gap:10px;">
-        <span class="pill">${s.total} Stück</span>
-        <label style="display:flex; align-items:center; gap:4px; font-size:12px; white-space:nowrap;">
-          <input type="checkbox" ${s.not_ordering ? 'checked' : ''} onchange="toggleDeviceOrderFlag(${s.device_type_id}, this.checked)">
-          Nicht bestellen
-        </label>
-      </div>
-    </li>`).join('') || '<li class="muted">Noch keine Geräte geplant</li>';
+  const el = document.getElementById('device-summary-list');
+  if (!summary.length) {
+    el.innerHTML = '<p class="muted">Noch keine Geräte geplant</p>';
+    return;
+  }
+  el.innerHTML = `<table class="data-table"><thead><tr>
+      <th>Gerät</th><th>Beschreibung</th><th>Gruppe</th><th class="num">Anzahl</th><th class="actions">Nicht bestellen</th>
+    </tr></thead><tbody>
+    ${summary.map(s => `<tr${s.not_ordering ? ' class="muted-row"' : ''}>
+      <td class="strong">${escapeHtml(s.device_name)}</td>
+      <td>${escapeHtml(s.description || '')}${s.not_ordering ? ' <span class="pill">Bereits vorhanden</span>' : ''}</td>
+      <td>${escapeHtml(s.group_name || '')}</td>
+      <td class="num">${s.total}</td>
+      <td class="actions"><input type="checkbox" ${s.not_ordering ? 'checked' : ''} onchange="toggleDeviceOrderFlag(${s.device_type_id}, this.checked)" title="Nicht bestellen (bereits vorhanden)"></td>
+    </tr>`).join('')}
+    </tbody></table>`;
 }
 
 async function toggleDeviceOrderFlag(deviceTypeId, notOrdering) {
