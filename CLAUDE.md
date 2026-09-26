@@ -123,7 +123,10 @@ change** — don't leave it for later:
 - `DEPLOYMENT.md` — if it affects persistence, the update mechanism, or
   deployment steps.
 - `CHANGELOG.md` — add an entry under `[Unreleased]` for any
-  user-/deployer-/developer-visible change.
+  user-/deployer-/developer-visible change. Written in English with the
+  glossary terms (DEVELOPMENT.md "Naming"); a German on-screen label only
+  where the reader needs it to find something, always in quotes (user's
+  decision, 2026-09-26).
 - `ROADMAP.md` — if the change ships something listed there, check it off
   or remove it (with a pointer to the CHANGELOG entry) in the same change,
   so it doesn't silently drift out of sync with what's actually built.
