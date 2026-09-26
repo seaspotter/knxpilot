@@ -7,7 +7,7 @@
 // every room × every function) - no scroll-jump concern.
 let UEBERGABE_SECTIONS = [];
 let UEBERGABE_STATUS = {};
-let UEBERGABE_SIGNATURES = {};
+let PROJECT_SIGNATURES = {};  // {role: {signed_at}} - shared with funktionscheckliste.js
 
 async function loadUebergabeForCurrentProject() {
   const [sections, statusMap, signatures] = await Promise.all([
@@ -17,7 +17,7 @@ async function loadUebergabeForCurrentProject() {
   ]);
   UEBERGABE_SECTIONS = sections;
   UEBERGABE_STATUS = statusMap;
-  UEBERGABE_SIGNATURES = signatures;
+  PROJECT_SIGNATURES = signatures;
   renderUebergabe();
 }
 
@@ -84,7 +84,9 @@ function downloadUebergabeChecklist() {
 // Captured via an HTML canvas signature pad instead of printing the PDF
 // and signing on paper - editable/re-signable and deletable at any time.
 // Embedded into both this PDF export and the Dokumentation export
-// (backend/routers/checkliste.py's build_signature_row()).
+// (backend/routers/checkliste.py's build_signature_row()). The block/modal
+// helpers are shared with the Funktionscheckliste (its own fc_* roles):
+// `rerender` names the function that repaints the calling tab's signatures.
 const UEB_SIGNATURE_ROLES = [['systemintegrator', 'Systemintegrator'], ['kunde', 'Kunde/Betreiber']];
 
 function renderSignatures() {
@@ -92,19 +94,19 @@ function renderSignatures() {
     <div class="floor-card">
       <div class="rc-floor-title">Unterschriften</div>
       <div class="row" style="gap:20px; flex-wrap:wrap; margin-top:8px; align-items:flex-start;">
-        ${UEB_SIGNATURE_ROLES.map(([role, label]) => renderSignatureBlock(role, label)).join('')}
+        ${UEB_SIGNATURE_ROLES.map(([role, label]) => renderSignatureBlock(role, label, 'renderUebergabe')).join('')}
       </div>
     </div>
   `;
 }
 
-function renderSignatureBlock(role, label) {
-  const entry = UEBERGABE_SIGNATURES[role];
+function renderSignatureBlock(role, label, rerender, hint = '') {
+  const entry = PROJECT_SIGNATURES[role];
   if (!entry) {
     return `
       <div style="min-width:200px;">
-        <div class="muted" style="margin-bottom:4px;">${label}</div>
-        <button class="btn secondary small" onclick="openSignatureModal('${role}', '${label}')">Unterschreiben</button>
+        <div class="muted" style="margin-bottom:4px;">${label}${hint ? ` <span style="font-size:12px;">(${hint})</span>` : ''}</div>
+        <button class="btn secondary small" onclick="openSignatureModal('${role}', '${label}', '${rerender}')">Unterschreiben</button>
       </div>
     `;
   }
@@ -117,14 +119,14 @@ function renderSignatureBlock(role, label) {
         style="max-width:220px; max-height:80px; background:#fff; border:1px solid var(--border); border-radius:6px; display:block;">
       <div class="muted" style="font-size:12px; margin-top:4px;">Unterschrieben am ${when}</div>
       <div class="row" style="gap:6px; margin-top:6px;">
-        <button class="btn secondary small" onclick="openSignatureModal('${role}', '${label}')">Neu unterschreiben</button>
-        <button class="btn danger small" onclick="deleteUebergabeSignature('${role}', '${label}')">Löschen</button>
+        <button class="btn secondary small" onclick="openSignatureModal('${role}', '${label}', '${rerender}')">Neu unterschreiben</button>
+        <button class="btn danger small" onclick="deleteSignature('${role}', '${label}', '${rerender}')">Löschen</button>
       </div>
     </div>
   `;
 }
 
-function openSignatureModal(role, label) {
+function openSignatureModal(role, label, rerender) {
   const modal = openModal(`
     <h3>Unterschrift — ${label}</h3>
     <canvas id="sig-canvas" style="width:100%; height:200px; border:1px solid var(--border); border-radius:6px; touch-action:none; background:#fff; display:block;"></canvas>
@@ -191,17 +193,17 @@ function openSignatureModal(role, label) {
       const r = await api(`/projects/${CURRENT_PROJECT}/signatures/${role}`, {
         method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({image: dataUrl}),
       });
-      UEBERGABE_SIGNATURES[role] = {signed_at: r.signed_at};
+      PROJECT_SIGNATURES[role] = {signed_at: r.signed_at};
       modal.close();
-      renderUebergabe();
+      window[rerender]();
     }
   });
 }
 
-async function deleteUebergabeSignature(role, label) {
+async function deleteSignature(role, label, rerender) {
   const ok = await showConfirm(`Unterschrift von ${label} wirklich löschen?`, {danger: true});
   if (!ok) return;
   await api(`/projects/${CURRENT_PROJECT}/signatures/${role}`, {method: 'DELETE'});
-  delete UEBERGABE_SIGNATURES[role];
-  renderUebergabe();
+  delete PROJECT_SIGNATURES[role];
+  window[rerender]();
 }

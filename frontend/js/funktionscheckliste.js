@@ -8,12 +8,14 @@
 let FUNKTIONSCHECKLISTE_STATUS = {};
 
 async function loadFunktionschecklisteForCurrentProject() {
-  const [tree, statusMap, central] = await Promise.all([
+  const [tree, statusMap, central, signatures] = await Promise.all([
     api(`/projects/${CURRENT_PROJECT}/tree`),
     api(`/projects/${CURRENT_PROJECT}/checklist-status`),
     api(`/projects/${CURRENT_PROJECT}/central-functions-checklist`),
+    api(`/projects/${CURRENT_PROJECT}/signatures`),
   ]);
   FUNKTIONSCHECKLISTE_STATUS = statusMap;
+  PROJECT_SIGNATURES = signatures;
   const container = document.getElementById('funktionscheckliste-content');
 
   const floorBlocks = [];
@@ -36,8 +38,30 @@ async function loadFunktionschecklisteForCurrentProject() {
     centralHtml = `<div class="floor-card"><div class="rc-floor-title">Zentral- und Allgemeinfunktionen</div>${renderChecklistCategories(byCategory)}</div>`;
   }
 
-  container.innerHTML = floorBlocks.join('') + centralHtml
-    || '<p class="muted">Noch keine Funktionen geplant.</p>';
+  container.innerHTML = (floorBlocks.join('') + centralHtml
+    || '<p class="muted">Noch keine Funktionen geplant.</p>') + '<div id="fc-signatures"></div>';
+  renderFunktionsSignatures();
+}
+
+// Own signature pair (fc_* roles, separate from the Übergabe-Checkliste's);
+// the customer's is optional. Only this block re-renders after signing, not
+// the whole list (see file header).
+function renderFunktionsSignatures() {
+  document.getElementById('fc-signatures').innerHTML = `
+    <div class="floor-card">
+      <div class="rc-floor-title">Bestätigung: Funktionen getestet</div>
+      <div class="row" style="gap:20px; flex-wrap:wrap; margin-top:8px; align-items:flex-start;">
+        ${renderSignatureBlock('fc_systemintegrator', 'Systemintegrator', 'renderFunktionsSignatures')}
+        ${renderSignatureBlock('fc_kunde', 'Kunde/Betreiber', 'renderFunktionsSignatures', 'optional')}
+      </div>
+    </div>`;
+}
+
+// "26.09.26, 14:32" - updated_at is sqlite CURRENT_TIMESTAMP (UTC, no zone).
+function checklistWhen(entry) {
+  if (!entry || entry.status !== 'ok' || !entry.updated_at) return '';
+  const iso = entry.updated_at.includes('T') ? entry.updated_at : entry.updated_at.replace(' ', 'T') + 'Z';
+  return new Date(iso).toLocaleString('de-DE', {day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'});
 }
 
 function renderChecklistCategories(byCategory) {
@@ -47,14 +71,15 @@ function renderChecklistCategories(byCategory) {
 }
 
 function renderChecklistItem(catName, item) {
-  const checked = FUNKTIONSCHECKLISTE_STATUS[item.key]?.status === 'ok';
+  const entry = FUNKTIONSCHECKLISTE_STATUS[item.key];
+  const checked = entry?.status === 'ok';
   // Table-like row: category pill | function | "getestet" + checkbox on the
   // right. The whole row is the <label>, so tapping anywhere toggles it.
   return `
     <label id="${checklistDomId(item.key)}" class="fc-row${checked ? ' done' : ''}">
       <span class="pill">${catName}</span>
       <span class="fc-text">${item.text}</span>
-      <span class="fc-check">getestet
+      <span class="fc-check"><span class="fc-when">${checklistWhen(entry)}</span>getestet
         <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleFunctionChecklistItem('${item.key}', this.checked)">
       </span>
     </label>
@@ -70,8 +95,12 @@ async function toggleFunctionChecklistItem(key, checked) {
   await api(`/projects/${CURRENT_PROJECT}/checklist-status/${encodeURIComponent(key)}`, {
     method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({status, note: ''}),
   });
-  FUNKTIONSCHECKLISTE_STATUS[key] = {status, note: ''};
-  document.getElementById(checklistDomId(key))?.classList.toggle('done', checked);
+  FUNKTIONSCHECKLISTE_STATUS[key] = {status, note: '', updated_at: new Date().toISOString()};
+  const row = document.getElementById(checklistDomId(key));
+  if (row) {
+    row.classList.toggle('done', checked);
+    row.querySelector('.fc-when').textContent = checklistWhen(FUNKTIONSCHECKLISTE_STATUS[key]);
+  }
   // Deliberately no re-render (see file header) - the checkbox already
   // shows its own new state natively, just keep the cache in sync so a
   // later re-render (e.g. after switching tabs and back) stays correct.

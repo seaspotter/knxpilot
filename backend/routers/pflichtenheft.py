@@ -24,7 +24,7 @@ from ..pdf_design import (
     pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_bytes, pdf_response,
     company_header_block, company_footer_line, checkbox_cell,
 )
-from ..utils import join_parts
+from ..utils import join_parts, local_time_text
 from .geraeteplanung import device_summary
 
 router = APIRouter(tags=["pflichtenheft"])
@@ -112,12 +112,15 @@ def function_checklist_table(styles, rows_by_category, status_map=None):
                 Paragraph(item["text"], styles["Body"]),
             ]
             if show_checkbox:
-                checked = status_map.get(item["key"], {}).get("status") == "ok"
-                row.append(checkbox_cell(checked=checked))
+                entry = status_map.get(item["key"], {})
+                checked = entry.get("status") == "ok"
+                when = local_time_text(entry.get("updated_at")) if checked else ""
+                row.append([checkbox_cell(checked=checked), Paragraph(when, styles["TinyMuted"])] if when
+                           else checkbox_cell(checked=checked))
             data.append(row)
     if len(data) == 1:
         return None
-    col_widths = [45 * mm, 118 * mm, 17 * mm] if show_checkbox else [45 * mm, 135 * mm]
+    col_widths = [40 * mm, 114 * mm, 26 * mm] if show_checkbox else [45 * mm, 135 * mm]
     extra_style = [("VALIGN", (0, 0), (-1, -1), "MIDDLE")]
     if show_checkbox:
         extra_style.append(("ALIGN", (2, 0), (2, -1), "CENTER"))

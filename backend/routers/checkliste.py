@@ -30,6 +30,7 @@ from ..pdf_design import (
     company_header_block, company_footer_line, checkbox_cell, signature_block,
 )
 from .pflichtenheft import function_checklist_table
+from ..utils import local_time_text
 
 router = APIRouter(tags=["checkliste"])
 
@@ -37,9 +38,11 @@ router = APIRouter(tags=["checkliste"])
 # ---------- Shared checklist-status store ----------
 def get_status_map(db, project_id):
     rows = db.execute(
-        "SELECT item_key, status, note FROM checklist_status WHERE project_id=?", (project_id,)
+        "SELECT item_key, status, note, updated_at FROM checklist_status WHERE project_id=?", (project_id,)
     ).fetchall()
-    return {r["item_key"]: {"status": r["status"], "note": r["note"]} for r in rows}
+    # updated_at = when the item was last ticked/changed (UTC, sqlite
+    # CURRENT_TIMESTAMP) - shown as "getestet am" in the Funktionscheckliste.
+    return {r["item_key"]: {"status": r["status"], "note": r["note"], "updated_at": r["updated_at"]} for r in rows}
 
 
 @router.get("/api/projects/{project_id}/checklist-status")
@@ -128,6 +131,9 @@ def build_funktionscheckliste_pdf_bytes(project_id: int):
                 story.append(Paragraph("Zentral- und Allgemeinfunktionen", styles["SectionHeading"]))
                 story.append(Spacer(1, 2 * mm))
                 story.append(central_table)
+
+        story.append(Spacer(1, 8 * mm))
+        story.append(build_signature_row(db, project_id, styles, FUNKTIONSCHECKLISTE_SIGNATURES, optional=("fc_kunde",)))
 
         data = build_pdf_bytes(
             story,
@@ -225,7 +231,12 @@ def checklist_section_table(styles, items, status_map):
 # paper. Editable/re-signable at any time (UNIQUE(project_id, role) makes
 # re-signing a plain upsert, same idiom as checklist_status/
 # device_order_flags) and independently deletable per role.
-SIGNATURE_ROLES = {"systemintegrator", "kunde"}
+# Übergabe-Checkliste: systemintegrator/kunde. The Funktionscheckliste has its
+# own pair (fc_*) - confirming the functions were tested is a separate act
+# from signing the handover; the customer's is optional there.
+SIGNATURE_ROLES = {"systemintegrator", "kunde", "fc_systemintegrator", "fc_kunde"}
+UEBERGABE_SIGNATURES = (("systemintegrator", "Systemintegrator"), ("kunde", "Kunde/Betreiber"))
+FUNKTIONSCHECKLISTE_SIGNATURES = (("fc_systemintegrator", "Systemintegrator"), ("fc_kunde", "Kunde/Betreiber"))
 
 
 @router.get("/api/projects/{project_id}/signatures")
@@ -274,11 +285,12 @@ def delete_signature(project_id: int, role: str):
     return {"ok": True}
 
 
-def build_signature_row(db, project_id, styles):
+def build_signature_row(db, project_id, styles, roles=UEBERGABE_SIGNATURES, optional=()):
     """The Systemintegrator/Kunde signature row at the end of the Übergabe-
-    Checkliste (and, via routers/dokumentation.py, the Dokumentation) PDF -
-    renders the real captured signature + "signiert am" timestamp for
-    whichever roles have one, and a blank paper-style line for the rest."""
+    Checkliste / Funktionscheckliste (and, via routers/dokumentation.py, the
+    Dokumentation) PDF - renders the real captured signature + "signiert am"
+    timestamp for whichever roles have one, and a blank paper-style line for
+    the rest. Roles in `optional` are left out entirely when unsigned."""
     rows = {
         r["role"]: r
         for r in db.execute(
@@ -290,13 +302,10 @@ def build_signature_row(db, project_id, styles):
         row = rows.get(role)
         if not row:
             return signature_block(label, styles)
-        signed_dt = datetime.fromisoformat(row["signed_at"]).strftime("%d.%m.%Y %H:%M")
-        return signature_block(label, styles, image_bytes=row["image"], signed_at_text=signed_dt)
+        return signature_block(label, styles, image_bytes=row["image"], signed_at_text=local_time_text(row["signed_at"]))
 
-    sig_row = Table([[
-        block("systemintegrator", "Systemintegrator"),
-        block("kunde", "Kunde/Betreiber"),
-    ]], colWidths=[90 * mm, 90 * mm])
+    cells = [block(role, label) for role, label in roles if role in rows or role not in optional]
+    sig_row = Table([cells], colWidths=[90 * mm] * len(cells), hAlign="LEFT")
     sig_row.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "BOTTOM"),
         ("LEFTPADDING", (0, 0), (-1, -1), 0),

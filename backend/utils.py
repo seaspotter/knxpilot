@@ -1,6 +1,7 @@
 """Small shared helpers with no dependencies on the rest of the app."""
 import re
 import unicodedata
+from datetime import datetime, timezone
 from urllib.parse import quote
 
 # An open Klärung older than this counts as "aged" - used both by
@@ -36,3 +37,18 @@ def content_disposition(filename, disposition="attachment"):
     ascii_name = unicodedata.normalize("NFKD", filename).encode("ascii", "ignore").decode("ascii")
     ascii_name = re.sub(r'[^A-Za-z0-9 ._()-]', "_", ascii_name).strip() or "download"
     return f"{disposition}; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(filename, safe='')}"
+
+
+def local_time_text(value):
+    """"26.09.2026 14:32" in the server's local time for a stored timestamp -
+    either sqlite's CURRENT_TIMESTAMP ("2026-09-26 12:32:05", UTC) or an
+    ISO string with offset (signatures). "" for empty/unparseable values."""
+    if not value:
+        return ""
+    try:
+        dt = datetime.fromisoformat(value.replace(" ", "T"))
+    except ValueError:
+        return ""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone().strftime("%d.%m.%Y %H:%M")

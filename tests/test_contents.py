@@ -32,7 +32,21 @@ def test_dokumentation_contents_follow_chapter_spec_and_checklist(client):
     key = next(iter(ok(client.get(f"/api/rooms/{ok(client.get(f'/api/projects/{pid}/tree'))['floors'][0]['rooms'][0]['id']}/function-checklist")).values()))[0]["key"]
     ok(client.put(f"/api/projects/{pid}/checklist-status/{key}", json={"status": "ok", "note": ""}))
     fc = by_title(ok(client.get(f"/api/projects/{pid}/dokumentation-contents")))["Funktionscheckliste — Testergebnisse"]
-    assert fc["detail"] == f"1 / {total} getestet"
+    assert fc["detail"] == f"1 / {total} getestet · Unterschrift Systemintegrator fehlt"
+
+    # tick date is kept per item
+    status = ok(client.get(f"/api/projects/{pid}/checklist-status"))[key]
+    assert status["status"] == "ok" and status["updated_at"]
+
+    # Funktionscheckliste signature (own role, separate from the Übergabe's)
+    png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+    ok(client.put(f"/api/projects/{pid}/signatures/fc_systemintegrator", json={"image": png}))
+    s = by_title(ok(client.get(f"/api/projects/{pid}/dokumentation-contents")))
+    assert s["Funktionscheckliste — Testergebnisse"]["detail"].endswith("· unterschrieben")
+    assert "0 / 2 Unterschriften" in s["Übergabe-Checkliste — Ergebnisse"]["detail"]
+    for doc in ("funktionscheckliste", "dokumentation"):
+        r = client.get(f"/api/projects/{pid}/export-{doc}.pdf")
+        assert r.status_code == 200 and r.content.startswith(b"%PDF")
 
 
 def test_inline_preview_disposition(client):
@@ -41,3 +55,10 @@ def test_inline_preview_disposition(client):
         r = client.get(f"/api/projects/{pid}/export-{doc}.pdf?inline=1")
         assert r.status_code == 200 and r.headers["content-disposition"].startswith("inline;")
         assert client.get(f"/api/projects/{pid}/export-{doc}.pdf").headers["content-disposition"].startswith("attachment;")
+
+
+def test_local_time_text():
+    from backend.utils import local_time_text
+    assert local_time_text("") == "" and local_time_text("kaputt") == ""
+    assert len(local_time_text("2026-09-26 12:32:05")) == len("26.09.2026 14:32")
+    assert local_time_text("2026-09-26T12:32:05+00:00").startswith("26.09.2026")

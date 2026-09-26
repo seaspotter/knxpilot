@@ -43,7 +43,9 @@ from .abgangsliste import build_abgangsliste_story
 from .verteiler import build_verteilerplanung_story
 from .geraeteplanung import build_geraete_je_raum_story, device_summary
 from .pflichtenheft import build_pflichtenheft_spec_story, function_checklist_table, pflichtenheft_stats
-from .checkliste import get_status_map, CHECKLIST_SECTIONS, checklist_section_table, build_signature_row
+from .checkliste import (
+    get_status_map, CHECKLIST_SECTIONS, checklist_section_table, build_signature_row, FUNKTIONSCHECKLISTE_SIGNATURES,
+)
 
 router = APIRouter(tags=["dokumentation"])
 
@@ -185,6 +187,8 @@ def _funktionscheckliste_story(db, project_id, styles, status_map):
             story.append(Paragraph("Zentral- und Allgemeinfunktionen", styles["SectionHeading"]))
             story.append(Spacer(1, 2 * mm))
             story.append(central_table)
+    story.append(Spacer(1, 8 * mm))
+    story.append(build_signature_row(db, project_id, styles, FUNKTIONSCHECKLISTE_SIGNATURES, optional=("fc_kunde",)))
     return story
 
 
@@ -346,11 +350,17 @@ def _chapter_detail(db, project_id, anchor, status_map):
         tested = sum(1 for k in keys if status_map.get(k, {}).get("status") == "ok")
         if not keys:
             return "noch keine Funktionen geplant", True, True
-        return f"{tested} / {len(keys)} getestet", tested < len(keys), True
+        (signed,) = db.execute(
+            "SELECT COUNT(*) FROM project_signatures WHERE project_id=? AND role='fc_systemintegrator'", (project_id,)
+        ).fetchone()
+        return (f"{tested} / {len(keys)} getestet · " + ("unterschrieben" if signed else "Unterschrift Systemintegrator fehlt"),
+                tested < len(keys) or not signed, True)
     if anchor == "uebergabe":
         items = [f"uebergabe:{slug}" for _, section in CHECKLIST_SECTIONS for slug, _ in section]
         answered = sum(1 for k in items if status_map.get(k, {}).get("status") in ("ja", "nein", "nicht_noetig"))
-        (signed,) = db.execute("SELECT COUNT(*) FROM project_signatures WHERE project_id=?", (project_id,)).fetchone()
+        (signed,) = db.execute(
+            "SELECT COUNT(*) FROM project_signatures WHERE project_id=? AND role IN ('systemintegrator', 'kunde')",
+            (project_id,)).fetchone()
         return (f"{answered} / {len(items)} beantwortet · {signed} / 2 Unterschriften",
                 answered < len(items) or signed < 2, True)
     if anchor == "handbuecher":

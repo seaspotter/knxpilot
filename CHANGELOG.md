@@ -8,6 +8,14 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- **Funktionscheckliste: test date and signatures** — every ticked row
+  shows when it was ticked (the existing `updated_at`, now also printed
+  under the checkbox in the PDF), and a "Bestätigung: Funktionen getestet"
+  block takes on-screen signatures from the Systemintegrator and,
+  optionally, the customer (own `fc_*` roles, separate from the
+  Übergabe-Checkliste's). They appear in the Funktionscheckliste PDF and
+  the Dokumentation chapter; the Dokumentation's Inhalt card flags a
+  missing Systemintegrator signature.
 - **"Inhalt" and "Vorschau" on the Pflichtenheft and Dokumentation tabs** —
   both tabs used to show just two buttons. They now list the PDF's
   sections/chapters in order, each with whether it's included and what's
