@@ -41,7 +41,7 @@ def ok(response):
     return response.json()
 
 
-def seed_musterhaus(client, name="Musterhaus"):
+def seed_musterhaus(client, name="Musterhaus", wire=True):
     """A small but complete demo project: 2 floors, 6 rooms, 23 functions,
     devices, actuators with auto-assigned channels and physical addresses.
     Deterministic, so its GA CSV can serve as a golden file."""
@@ -78,6 +78,7 @@ def seed_musterhaus(client, name="Musterhaus"):
     for fid in floor_ids:
         for m in ["AKS-2016.03", "AKD-0401.02", "AKH-0800.03", "JAL-0810M.02"]:
             ok(client.post(f"/api/projects/{pid}/actor-instances", json={"actor_type_id": at[m], "floor_id": fid, "location_label": "Verteilung"}))
-    ok(client.post(f"/api/projects/{pid}/circuits/auto-assign"))
-    ok(client.post(f"/api/projects/{pid}/assign-physical-addresses", json={"prefix": "1.1"}))
+    if wire:
+        ok(client.post(f"/api/projects/{pid}/circuits/auto-assign"))
+        ok(client.post(f"/api/projects/{pid}/assign-physical-addresses", json={"prefix": "1.1"}))
     return pid

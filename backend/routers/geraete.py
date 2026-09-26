@@ -164,6 +164,50 @@ def export_actor_types_json():
         )
 
 
+_CATALOG_FIELDS = [("group_name", "Gruppe"), ("description", "Beschreibung"), ("channel_type", "Type"),
+                   ("channel_count", "Kanäle"), ("width_te", "TE"), ("manual_url", "Handbuch-Link")]
+
+
+def _catalog_import_diff(db, actor_types):
+    """What an import would change, field by field, before anything is
+    written - mirrors _upsert_actor_types() exactly (incl. manual_url only
+    counting when the incoming record has that key)."""
+    new, changed, unchanged = [], [], 0
+    for at in actor_types:
+        name = " ".join(p for p in (at.get("manufacturer", ""), at.get("model", "")) if p) or "?"
+        existing = db.execute(
+            "SELECT * FROM actor_types WHERE manufacturer=? AND model=?", (at.get("manufacturer", ""), at.get("model", ""))
+        ).fetchone()
+        if not existing:
+            new.append(name)
+            continue
+        diffs = []
+        for field, label in _CATALOG_FIELDS:
+            if field == "manual_url" and field not in at:
+                continue
+            default = "Aktor" if field == "group_name" else ("" if field not in ("channel_count", "width_te") else None)
+            old, incoming = existing[field], at.get(field, default)
+            if (old or None) != (incoming or None):
+                diffs.append({"field": label, "old": old, "new": incoming})
+        if diffs:
+            changed.append({"device": name, "changes": diffs})
+        else:
+            unchanged += 1
+    return {"new": new, "changed": changed, "unchanged": unchanged}
+
+
+@router.post("/api/actor-types/import-json/preview")
+def preview_import_actor_types_json(payload: dict):
+    with get_db() as db:
+        return _catalog_import_diff(db, payload.get("actor_types", []))
+
+
+@router.post("/api/actor-types/import-defaults/preview")
+def preview_import_default_actor_types():
+    with get_db() as db:
+        return _catalog_import_diff(db, load_bundled_actor_type_defaults())
+
+
 @router.post("/api/actor-types/import-json")
 def import_actor_types_json(payload: dict):
     with get_db() as db:

@@ -45,7 +45,7 @@ function openModal(bodyHtml, { wide = false, onClose } = {}) {
   return { overlay, close };
 }
 
-function showConfirm(message, { danger = false, confirmLabel = 'OK' } = {}) {
+function showConfirm(message, { danger = false, confirmLabel = 'OK', wide = false } = {}) {
   return new Promise((resolve) => {
     let settled = false;
     const modal = openModal(`
@@ -54,6 +54,7 @@ function showConfirm(message, { danger = false, confirmLabel = 'OK' } = {}) {
         <button class="btn secondary" data-action="cancel">Abbrechen</button>
         <button class="btn ${danger ? 'danger' : ''}" data-action="confirm">${escapeHtml(confirmLabel)}</button>
       </div>`, {
+      wide,
       onClose: () => { if (!settled) { settled = true; resolve(false); } },
     });
     modal.overlay.querySelector('p').textContent = message;
@@ -64,6 +65,14 @@ function showConfirm(message, { danger = false, confirmLabel = 'OK' } = {}) {
       if (action === 'cancel') modal.close();
     });
   });
+}
+
+// Bullet list for a showConfirm() preview ("what exactly will change") -
+// long lists are cut off with a count so the dialog stays usable.
+function previewList(lines, max = 40) {
+  const shown = lines.slice(0, max).map(l => `• ${l}`);
+  if (lines.length > max) shown.push(`… und ${lines.length - max} weitere`);
+  return shown.join('\n');
 }
 
 // ---------- Small hand-written Markdown renderer (no library) ----------

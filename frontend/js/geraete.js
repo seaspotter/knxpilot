@@ -151,15 +151,35 @@ async function importActorTypesJson() {
   } catch (e) {
     return showToast('Diese Datei ist kein gültiges JSON', 'error');
   }
-  const result = await api('/actor-types/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+  const body = JSON.stringify(payload);
+  const preview = await api('/actor-types/import-json/preview', {method:'POST', headers:{'Content-Type':'application/json'}, body});
+  if (!(await confirmCatalogImport(preview, 'Geräte-Katalog importieren'))) return;
+  const result = await api('/actor-types/import-json', {method:'POST', headers:{'Content-Type':'application/json'}, body});
   await loadActorTypes();
   showToast(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert.`, 'success');
 }
 
+// Confirmation listing exactly what a catalog import changes (per device and
+// field) - so e.g. a description you edited yourself isn't overwritten unseen.
+async function confirmCatalogImport(preview, title) {
+  if (!preview.new.length && !preview.changed.length) {
+    showToast(`Nichts zu tun — alle ${preview.unchanged} Geräte sind bereits auf diesem Stand.`, 'info');
+    return false;
+  }
+  const fmt = v => (v === null || v === undefined || v === '') ? '(leer)' : String(v);
+  let message = `${title}?`;
+  if (preview.changed.length) {
+    message += `\n\n${preview.changed.length} Gerät(e) werden geändert:\n` + previewList(preview.changed.map(c =>
+      `${c.device}: ${c.changes.map(d => `${d.field} „${fmt(d.old)}“ → „${fmt(d.new)}“`).join('; ')}`), 30);
+  }
+  if (preview.new.length) message += `\n\n${preview.new.length} Gerät(e) kommen neu dazu:\n${previewList(preview.new, 20)}`;
+  if (preview.unchanged) message += `\n\n${preview.unchanged} Gerät(e) bleiben unverändert.`;
+  return showConfirm(message, {confirmLabel: 'Importieren', wide: true});
+}
+
 async function importDefaultActorTypes() {
-  if (!(await showConfirm(
-    'Mitgelieferten Standard-Katalog (er)neut importieren?\n\nGleicht wie ein normaler Import nach Hersteller+Modell ab: bereits vorhandene Geräte werden aktualisiert (Gruppe/Beschreibung/Type/Kanäle/TE), fehlende werden ergänzt. Selbst gelöschte Geräte kommen dabei nicht von allein zurück - nur was Sie hier anstoßen.'
-  ))) return;
+  const preview = await api('/actor-types/import-defaults/preview', {method:'POST'});
+  if (!(await confirmCatalogImport(preview, 'Mitgelieferten Standard-Katalog importieren'))) return;
   const result = await api('/actor-types/import-defaults', {method:'POST'});
   await loadActorTypes();
   showToast(`Importiert: ${result.imported} neu, ${result.updated} aktualisiert.`, 'success');

@@ -136,6 +136,17 @@ async function deleteActorInstance(id) {
 // device lists regardless of which one triggered it.
 async function assignPhysicalAddresses(prefixInputId) {
   const prefix = document.getElementById(prefixInputId).value.trim() || '1.1';
+  const preview = await api(`/projects/${CURRENT_PROJECT}/assign-physical-addresses/preview`, {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({prefix}),
+  });
+  if (!preview.assignments.length) {
+    const why = preview.skipped.length ? ` (${preview.skipped.length} übersprungen: ${preview.skipped.join(', ')})` : '';
+    return showToast(`Keine Adressen zu vergeben — alle Geräte haben bereits eine${why}.`, preview.skipped.length ? 'warning' : 'info');
+  }
+  let message = `${preview.assignments.length} physikalische Adresse(n) vergeben? Bereits gesetzte Adressen bleiben unverändert.\n\n`
+    + previewList(preview.assignments.map(a => `${a.address}  ${a.device} — ${a.where}`));
+  if (preview.skipped.length) message += `\n\nÜbersprungen:\n${previewList(preview.skipped)}`;
+  if (!(await showConfirm(message, {confirmLabel: 'Adressen vergeben', wide: true}))) return;
   const result = await api(`/projects/${CURRENT_PROJECT}/assign-physical-addresses`, {
     method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({prefix}),
   });
@@ -236,6 +247,16 @@ async function onCircuitAssignChange(room_point_id, channel_seq, value) {
 }
 
 async function autoAssignCircuits() {
+  const preview = await api(`/projects/${CURRENT_PROJECT}/circuits/auto-assign?dry_run=true`, {method:'POST'});
+  if (!preview.assigned && !preview.unassigned.length) {
+    return showToast('Nichts zuzuordnen — bereits vollständig verdrahtet.', 'info');
+  }
+  if (preview.assigned) {
+    let message = `${preview.assigned} Abgang/Abgänge automatisch zuordnen? Bestehende Zuordnungen bleiben unverändert.\n\n`
+      + previewList(preview.details.map(d => `${d.circuit} → ${d.actor}, Kanal ${d.channel}`));
+    if (preview.unassigned.length) message += `\n\nNicht zuordenbar (kein freier passender Kanal auf demselben Geschoss):\n${previewList(preview.unassigned)}`;
+    if (!(await showConfirm(message, {confirmLabel: 'Zuordnen', wide: true}))) return;
+  }
   const result = await api(`/projects/${CURRENT_PROJECT}/circuits/auto-assign`, {method:'POST'});
   await renderCircuits();
   await renderActorInstances();

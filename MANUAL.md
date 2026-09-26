@@ -241,7 +241,9 @@ der Busprogrammierung, die andere der Schaltschrank-Verdrahtung.
 5. Jeder **Abgang** (eine Zeile je benötigtem physischen Ausgang) erscheint
    darunter mit einer Auswahl aller Kanäle passender Aktoren. Einen manuell
    wählen, oder **Alle automatisch zuordnen** klicken, um jeden noch nicht
-   zugeordneten Abgang dem ersten freien passenden Kanal zuzuweisen.
+   zugeordneten Abgang dem ersten freien passenden Kanal zuzuweisen. Vorher
+   zeigt ein Dialog genau, welcher Abgang auf welchen Aktorkanal käme (und
+   was nicht zuordenbar ist) — erst nach **Zuordnen** wird gespeichert.
    **Automatisch zuordnen mischt dabei nie Geschosse** — ein Abgang im EG
    wird nur einem Aktor im EG zugeordnet, selbst wenn dessen Kanäle voll
    sind und ein Aktor im OG noch frei wäre. Aktoren ohne zugewiesenes
@@ -258,8 +260,10 @@ der Busprogrammierung, die andere der Schaltschrank-Verdrahtung.
    **PDF herunterladen** exportiert dieselben Daten als formatiertes, nach
    Geschoss und Aktor gegliedertes PDF (ein Geschoss pro Seite).
 7. **PA automatisch zuordnen** (auch im Unterreiter Geräteplanung
-   verfügbar — beide wirken projektweit auf beide Tabs) vergibt
-   physikalische Adressen für alle Geräte ohne eine, nach fester
+   verfügbar — beide wirken projektweit auf beide Tabs) zeigt zuerst eine
+   Vorschau (welche Adresse an welches Gerät in welchem Raum geht) und
+   vergibt nach Bestätigung physikalische Adressen für alle Geräte ohne
+   eine, nach fester
    Reihenfolge: Systemgeräte (Netzteile, Linienkoppler — Adressen 0-5),
    dann je Geschoss ein Block für Aktoren, dann je Geschoss ein Block für
    Sensoren/Bedienelemente, dann ein Block für Aussen-Geräte (Geschoss als
@@ -613,7 +617,11 @@ nachzuziehen, ohne die mitgelieferten Dateien einzeln herunterladen und
 importieren zu müssen. Gleicht wie jeder andere Import nach (Hersteller,
 Modell) ab (vorhandene werden aktualisiert, fehlende ergänzt) — bewusst
 gelöschte Geräte kommen dadurch **nicht von allein zurück**, nur auf
-diesen expliziten Klick hin.
+diesen expliziten Klick hin. Vor dem Import zeigt ein Dialog genau, was
+sich ändert: welche Geräte neu dazukommen und bei welchen Geräten welches
+Feld von welchem auf welchen Wert geändert wird (z.B. eine selbst
+angepasste Beschreibung) — ist nichts zu tun, passiert nichts. Dasselbe
+gilt für **Importieren (JSON)** einer eigenen Katalogdatei.
 
 #### Handbücher
 

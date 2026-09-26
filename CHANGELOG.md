@@ -52,6 +52,18 @@ restructuring below — history before that is available via `git log`.
   logged Zeiterfassung times are kept. New `GET .../delete-impact`
   endpoints for projects, floors and rooms.
 
+- **Bulk actions show a preview before changing anything** — "Alle
+  automatisch zuordnen" (Abgangsliste) lists which circuit would go to
+  which actuator channel and what can't be assigned; "PA automatisch
+  zuordnen" lists which physical address goes to which device in which
+  room; "Standard-Katalog importieren" and a catalog JSON import list the
+  new devices and, per changed device, each field's old and new value - so
+  e.g. a description you edited yourself is never overwritten unseen, and
+  an import with nothing to change doesn't run at all. The circuit preview
+  runs the real assignment logic and rolls it back, so it can't differ from
+  the actual result. New preview endpoints (`.../circuits/auto-assign?dry_run=true`,
+  `.../assign-physical-addresses/preview`, `/api/actor-types/import-*/preview`).
+
 ### Fixed
 
 - **Downloads no longer fail for names with special characters** — every

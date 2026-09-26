@@ -103,6 +103,43 @@ def delete_actor_instance(ai_id: int):
     return {"ok": True}
 
 
+def _pa_label(db, table, row_id):
+    """Human-readable name of whatever an address is about to go to."""
+    if table == "actor_instances":
+        r = db.execute(
+            "SELECT at.manufacturer, at.model, ai.location_label, f.name AS where_ FROM actor_instances ai "
+            "JOIN actor_types at ON ai.actor_type_id = at.id LEFT JOIN floors f ON ai.floor_id = f.id WHERE ai.id=?",
+            (row_id,)).fetchone()
+        where = join_parts(r["where_"] or "", r["location_label"] or "")
+    elif table == "room_devices":
+        r = db.execute(
+            "SELECT at.manufacturer, at.model, f.name || ' / ' || rm.name AS where_ FROM room_devices rd "
+            "JOIN actor_types at ON rd.device_type_id = at.id JOIN rooms rm ON rd.room_id = rm.id "
+            "JOIN floors f ON rm.floor_id = f.id WHERE rd.id=?", (row_id,)).fetchone()
+        where = r["where_"]
+    else:
+        r = db.execute(
+            "SELECT at.manufacturer, at.model, f.name || ' (ohne Raum)' AS where_ FROM floor_devices fd "
+            "JOIN actor_types at ON fd.device_type_id = at.id JOIN floors f ON fd.floor_id = f.id WHERE fd.id=?",
+            (row_id,)).fetchone()
+        where = r["where_"]
+    return join_parts(r["manufacturer"], r["model"]), where
+
+
+@router.post("/api/projects/{project_id}/assign-physical-addresses/preview")
+def preview_physical_addresses(project_id: int, body: PhysicalAddressAssignIn):
+    """What "PA automatisch zuordnen" would do, without writing anything -
+    shown in its confirmation dialog."""
+    prefix = body.prefix.strip() or "1.1"
+    with get_db() as db:
+        assignments, skipped = compute_pa_assignments(db, project_id, prefix)
+        details = []
+        for a in assignments:
+            device, where = _pa_label(db, a["table"], a["id"])
+            details.append({"address": a["address"], "device": device, "where": where})
+    return {"assignments": details, "skipped": skipped}
+
+
 @router.post("/api/projects/{project_id}/assign-physical-addresses")
 def assign_physical_addresses(project_id: int, body: PhysicalAddressAssignIn):
     """Fills in KNX physical addresses for every actor instance (Abgangsliste)
@@ -186,7 +223,7 @@ def unassign_circuit(project_id: int, room_point_id: int, channel_seq: int):
 
 
 @router.post("/api/projects/{project_id}/circuits/auto-assign")
-def auto_assign_circuits(project_id: int):
+def auto_assign_circuits(project_id: int, dry_run: bool = False):
     """Fills every unassigned circuit into the first free matching-type channel available
     on an actuator on THE SAME FLOOR as the circuit (never mixes floors automatically -
     e.g. an EG circuit will never be auto-assigned to an OG cabinet, even if EG is full).
@@ -198,11 +235,15 @@ def auto_assign_circuits(project_id: int):
     (A+B, C+D, E+F, G+H) rather than whatever two channels happen to be next free - many
     shading actuators wire channels in fixed pairs sharing a common input/reference, so
     two blinds in one room (e.g. two windows) should share a pair for correct wiring, not
-    just consume the next free letters in document order."""
+    just consume the next free letters in document order.
+
+    dry_run=true runs the exact same logic and then rolls the transaction back - the
+    confirmation dialog's preview can't drift from what a real run would do."""
     with get_db() as db:
         circuits = get_circuits(db, project_id)
         actor_instances = db.execute(
-            "SELECT ai.*, at.channel_type as ct, at.channel_count as cc "
+            "SELECT ai.*, at.channel_type as ct, at.channel_count as cc, "
+            "at.manufacturer as mf, at.model as md "
             "FROM actor_instances ai JOIN actor_types at ON ai.actor_type_id = at.id "
             "WHERE ai.project_id=? ORDER BY ai.order_idx",
             (project_id,),
@@ -216,9 +257,15 @@ def auto_assign_circuits(project_id: int):
 
         assigned_count = 0
         unassigned = []
+        details = []
 
         def assign(circuit, ai, letter):
             nonlocal assigned_count
+            details.append({
+                "circuit": f"{circuit['floor_name']} / {circuit['function_name']}",
+                "actor": join_parts(ai["mf"], ai["md"]) + (f" ({ai['physical_address'] or ai['location_label']})" if (ai["physical_address"] or ai["location_label"]) else ""),
+                "channel": letter,
+            })
             db.execute(
                 "INSERT INTO channel_assignments "
                 "(project_id, room_point_id, channel_seq, actor_instance_id, channel_letter) "
@@ -290,7 +337,9 @@ def auto_assign_circuits(project_id: int):
             if not place_single(circuit):
                 unassigned.append(f"{circuit['floor_name']} / {circuit['function_name']} ({circuit['channel_type']})")
 
-        return {"assigned": assigned_count, "unassigned": unassigned}
+        if dry_run:
+            db.rollback()  # get_db()'s commit afterwards then has nothing to commit
+        return {"assigned": assigned_count, "unassigned": unassigned, "details": details}
 
 
 # --------------------------------------------------------------------------
