@@ -17,7 +17,8 @@ restructuring below — history before that is available via `git log`.
   kopieren" now uses the same server-side grouping/numbering as the PDF.
   A trial for moving more of the frontend into Python - see DEVELOPMENT.md
   "htmx tabs". New dependency `jinja2` - after updating, run
-  `docker compose pull && docker compose up -d` once.
+  `docker compose pull && docker compose up -d` once. The entries now sit
+  in a white "Einträge" card like the groups on every other tab.
 
 ## [0.8.0] - 2026-09-26
 

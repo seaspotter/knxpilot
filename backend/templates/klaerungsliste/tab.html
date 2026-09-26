@@ -13,6 +13,10 @@
   </div>
   <p class="muted" style="margin-bottom:0;">Alle noch offenen Einträge nummeriert und nach Raum gruppiert — zum Klären mit Kunde oder Elektriker. Als Text zum Einfügen in eine eigene E-Mail, oder als PDF mit Antwort-Spalte zum Ausfüllen.</p>
 </div>
-<div id="kl-list">
-  {% include "klaerungsliste/_list.html" %}
+{# White card around the groups, like every other tab (.card > .floor-card > .room-card). #}
+<div class="card">
+  <h4 style="margin:0 0 10px;">Einträge</h4>
+  <div id="kl-list">
+    {% include "klaerungsliste/_list.html" %}
+  </div>
 </div>
