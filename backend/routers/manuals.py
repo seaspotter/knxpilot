@@ -81,6 +81,7 @@ def list_project_manuals(project_id: int):
         result.append({
             "device_type_id": d["device_type_id"],
             "device_name": d["device_name"],
+            "description": d["description"],
             "manual_url": d["manual_url"],
             "file_id": fetched.get(d["device_type_id"]),
         })

@@ -60,6 +60,9 @@ restructuring below — history before that is available via `git log`.
   description field, so a bare model number like "BE-GT2TW.02" comes with
   a readable "Glastaster II Smart Weiß mit Temperatursensor". All cells in
   these tables now wrap instead of overflowing into the next column.
+- **Handbücher sub-tab shows the device description** — each device line
+  now shows its Geräte Katalog description next to the model number
+  (e.g. "MDT BE-GT2TW.02 — Glastaster II Smart Weiß mit Temperatursensor").
 - **Funktionen: the function dropdown remembers your last choice** — after
   **+ Hinzufügen**, every room's dropdown now stays on the function type
   you last picked instead of jumping back to the first entry, so adding
