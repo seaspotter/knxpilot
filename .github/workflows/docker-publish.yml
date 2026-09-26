@@ -4,11 +4,13 @@ name: Publish Docker image
 # Registry, so a deployment can just `docker compose pull` instead of
 # building locally (see DEPLOYMENT.md). Runs on every push to main (keeps
 # the `latest` tag in step with what the in-app self-update mechanism
-# pulls via git) and on version tags (pins a specific release).
+# pulls via git), on every push to dev (the `dev` tag, for a server that
+# tracks the dev branch - see DEPLOYMENT.md) and on version tags (pins a
+# specific release).
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     tags: ["v*"]
 
 jobs:
@@ -44,6 +46,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
             type=ref,event=tag
             type=sha,prefix=,format=short,enable={{is_default_branch}}
 

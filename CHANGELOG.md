@@ -8,6 +8,12 @@ restructuring below — history before that is available via `git log`.
 
 ### Added
 
+- **Docker image for the dev branch** — every push to `dev` now also
+  publishes `ghcr.io/seaspotter/knxpilot:dev`. A server tracking `dev`
+  sets `KNXPILOT_IMAGE_TAG=dev` in a `.env` file next to
+  `docker-compose.yml`, so `docker compose pull` after a dependency change
+  gets matching packages instead of the `main` image. The Update tab's
+  "new image needed" message says so when it runs on a non-main branch.
 - **KNX-Linien (optional)** — projects split into several TP lines via
   line couplers (e.g. one line per apartment plus an outdoor line) can
   define their lines under Gebäudestruktur and assign each floor, and

@@ -4,6 +4,9 @@ backend/data/*.db-journal
 backend/data/*.db-wal
 backend/data/*.db-shm
 
+# Local docker compose settings (e.g. KNXPILOT_IMAGE_TAG=dev)
+.env
+
 # Python
 __pycache__/
 **/__pycache__/

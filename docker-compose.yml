@@ -3,10 +3,13 @@ services:
     # Prebuilt image, published by .github/workflows/docker-publish.yml on
     # every push to main - `docker compose pull && docker compose up -d`
     # picks up new dependencies/Dockerfile changes without a local build.
+    # A server that tracks the dev branch instead puts
+    # KNXPILOT_IMAGE_TAG=dev into a .env file next to this file, so the
+    # pull gets the image built from dev (see DEPLOYMENT.md).
     # Prefer building locally instead (e.g. for local changes to
     # requirements.txt/Dockerfile before they're merged)? Replace this
     # line with `build: .`.
-    image: ghcr.io/seaspotter/knxpilot:latest
+    image: ghcr.io/seaspotter/knxpilot:${KNXPILOT_IMAGE_TAG:-latest}
     container_name: knxpilot
     restart: unless-stopped
     ports:

@@ -107,7 +107,10 @@
   .rc-row-3 select { width:100%; }
   .rc-note { color:var(--muted); font-size:12px; }
   .line-select { font-size:12px; padding:3px 6px; }
-  details#knx-lines-card > summary { cursor:pointer; list-style-position:outside; }
+  details#knx-lines-card > summary { cursor:pointer; list-style:none; display:flex; align-items:baseline; flex-wrap:wrap; gap:6px; }
+  details#knx-lines-card > summary::-webkit-details-marker { display:none; }
+  details#knx-lines-card > summary::before { content:'›'; display:inline-block; width:12px; color:var(--accent); font-weight:700; font-size:18px; line-height:1; transition:transform .15s; }
+  details#knx-lines-card[open] > summary::before { transform:rotate(90deg); }
   select.wide { min-width: 180px; }
   .w-60 { width: 60px; }
   .w-110 { width: 110px; }

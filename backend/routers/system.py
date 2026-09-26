@@ -127,14 +127,22 @@ def system_update(background_tasks: BackgroundTasks):
             ["git", "-C", REPO_DIR, "diff", "--name-only", before, after], capture_output=True, text=True, check=True
         ).stdout
         if "requirements.txt" in changed or "Dockerfile" in changed:
-            return {
-                "ok": True,
-                "message": (
-                    "Updated, but requirements.txt or the Dockerfile changed - a new image is needed. "
-                    "Run on the server: docker compose pull && docker compose up -d"
-                ),
-                "restarting": False,
-            }
+            message = (
+                "Updated, but requirements.txt or the Dockerfile changed - a new image is needed. "
+                "Run on the server: docker compose pull && docker compose up -d"
+            )
+            branch = subprocess.run(
+                ["git", "-C", REPO_DIR, "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True
+            ).stdout.strip()
+            if branch and branch != "main":
+                # `latest` is built from main only - a dev checkout needs the
+                # matching `dev` image, see docker-compose.yml/DEPLOYMENT.md.
+                message += (
+                    f" (branch '{branch}': set KNXPILOT_IMAGE_TAG=dev in the .env file next to "
+                    "docker-compose.yml, and wait until the 'Publish Docker image' run for the "
+                    "latest dev push has finished)"
+                )
+            return {"ok": True, "message": message, "restarting": False}
 
         background_tasks.add_task(_restart_process)
         return {"ok": True, "message": "Updated. Restarting now...", "restarting": True}
