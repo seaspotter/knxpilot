@@ -1,5 +1,5 @@
 """
-Zeiterfassung tab: simple personal time tracking per project - a start/stop
+Time tracking tab ("Zeiterfassung"): simple personal time tracking per project - a start/stop
 timer in the app header (while a project is open) plus a global list to
 edit entries and export them. Internal only: stored in its own global
 time_entries table, never part of a project's JSON backup/duplicate or any
@@ -16,30 +16,39 @@ there too (tab + header timer hidden, data kept).
 The PDF export (Stundennachweis) is the only export - a deliberate
 exception to "never exported", since it's the user's own report, not part
 of any customer documentation.
+
+The tab itself is rendered server-side with htmx (templates in
+backend/templates/time_tracking/, /hx/... endpoints at the end of this
+file, times shown in the browser's zone via templating.client_zone). The
+JSON endpoints stay for the header timer (time_tracking.js), the PDF
+export and the tests.
 """
 import math
 from datetime import datetime, timedelta, timezone
 from xml.sax.saxutils import escape
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, HTTPException
+import json
+
+from fastapi import APIRouter, Form, HTTPException, Request, Response
 from reportlab.lib.units import mm
 from reportlab.platypus import KeepTogether, Paragraph, Spacer, Table
 
 from ..db import get_db
 from ..models import TimeEntriesInvoicedIn, TimeEntryIn, TimerStartIn
+from ..templating import client_zone, templates
 from ..pdf_design import (
     build_pdf_response, company_footer_line, company_header_block, pdf_styles, pdf_table_style,
     pdf_title_banner,
 )
 
-router = APIRouter(tags=["zeiterfassung"])
+router = APIRouter(tags=["time-tracking"])
 
 def _settings(db):
     r = db.execute(
-        "SELECT zeiterfassung_enabled, zeiterfassung_rounding_minutes FROM company_profile WHERE id=1"
+        "SELECT time_tracking_enabled, time_tracking_rounding_minutes FROM company_profile WHERE id=1"
     ).fetchone()
-    return bool(r["zeiterfassung_enabled"]), r["zeiterfassung_rounding_minutes"] or 1
+    return bool(r["time_tracking_enabled"]), r["time_tracking_rounding_minutes"] or 1
 
 
 def _snap(dt, minutes):
@@ -303,3 +312,186 @@ def export_time_entries_pdf(
         doc_title=title,
         footer_center_text=company_footer_line(company),
     )
+
+
+# ---------- htmx fragments (backend/templates/time_tracking/) ----------
+WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+
+
+def _bool_or_none(value):
+    return None if value in (None, "") else value in ("1", "true", "True")
+
+
+def _int_or_none(value):
+    return int(value) if value not in (None, "") else None
+
+
+def _view_entries(entries, zone):
+    """Entries with their times as local date/time strings for the table."""
+    out = []
+    for e in entries:
+        start = _parse(e["started_at"]).astimezone(zone)
+        end = _parse(e["ended_at"]).astimezone(zone) if e["ended_at"] else None
+        out.append({**e, "date": f"{WEEKDAYS[start.weekday()]}., {start:%d.%m.%Y}", "start": f"{start:%H:%M}",
+                    "end": f"{end:%H:%M}" if end else None, "hours": _fmt_hours(e["billed_minutes"])})
+    return out
+
+
+def _list_context(project_id, invoiced, zone):
+    all_entries = list_time_entries()
+    entries = [e for e in all_entries
+               if (project_id is None or e["project_id"] == project_id)
+               and (invoiced is None or e["invoiced"] == invoiced)]
+    done = [e for e in entries if e["ended_at"]]
+    totals = {}
+    if project_id is None:
+        for e in done:
+            t = totals.setdefault(e["project_id"], {"name": e["project_name"], "minutes": 0})
+            t["minutes"] += e["billed_minutes"]
+    return {
+        "entries": _view_entries(entries, zone), "any_entries": bool(all_entries),
+        "total": _fmt_hours(sum(e["billed_minutes"] for e in done)) if done else "",
+        "totals": [{"name": t["name"], "hours": _fmt_hours(t["minutes"])}
+                   for t in sorted(totals.values(), key=lambda t: t["name"].lower())],
+        "uninvoiced_count": sum(not e["invoiced"] for e in done),
+    }
+
+
+def _changed(extra=None):
+    """Mutations answer with no body; the list re-fetches itself on this event
+    (hx-trigger="time-entries-changed from:body" in tab.html)."""
+    response = Response(status_code=200)
+    response.headers["HX-Trigger"] = json.dumps({"time-entries-changed": True, **(extra or {})})
+    return response
+
+
+@router.get("/hx/time-tracking")
+def hx_tab(request: Request, project_id: str = "", invoiced: str = ""):
+    with get_db() as db:
+        _, minutes = _settings(db)
+        projects = {r["id"]: r["name"] for r in db.execute("SELECT id, name FROM projects").fetchall()}
+    for e in list_time_entries():   # entries of since-deleted projects stay filterable
+        projects.setdefault(e["project_id"], e["project_name"])
+    pid, inv = _int_or_none(project_id), _bool_or_none(invoiced)
+    return templates.TemplateResponse(request, "time_tracking/tab.html", {
+        "minutes": minutes, "project_id": pid, "invoiced": invoiced,
+        "projects": sorted(projects.items(), key=lambda p: p[1].lower()),
+        **_list_context(pid, inv, client_zone(request)),
+    })
+
+
+@router.get("/hx/time-tracking/list")
+def hx_list(request: Request, project_id: str = "", invoiced: str = ""):
+    return templates.TemplateResponse(request, "time_tracking/_list.html",
+                                      _list_context(_int_or_none(project_id), _bool_or_none(invoiced), client_zone(request)))
+
+
+@router.post("/hx/time-tracking/entries/{entry_id}/invoiced")
+def hx_set_invoiced(entry_id: int, invoiced: str = Form(...)):
+    set_time_entries_invoiced(TimeEntriesInvoicedIn(ids=[entry_id], invoiced=invoiced == "true"))
+    return _changed()
+
+
+@router.post("/hx/time-tracking/mark-invoiced")
+def hx_mark_shown_invoiced(project_id: str = Form(""), invoiced: str = Form("")):
+    """"Alle angezeigten als abgerechnet markieren" - the finished, not yet
+    invoiced entries of the current filter."""
+    pid, inv = _int_or_none(project_id), _bool_or_none(invoiced)
+    ids = [e["id"] for e in list_time_entries(pid, inv) if e["ended_at"] and not e["invoiced"]]
+    set_time_entries_invoiced(TimeEntriesInvoicedIn(ids=ids, invoiced=True))
+    return _changed()
+
+
+@router.delete("/hx/time-tracking/entries/{entry_id}")
+def hx_delete(entry_id: int):
+    delete_time_entry(entry_id)
+    return _changed()
+
+
+def _local_parts(iso, zone, minutes=1):
+    """Stored UTC time -> (date, "HH:MM") in the browser's zone, snapped to
+    the grid (minutes=1: exact, for showing an existing entry as stored)."""
+    dt = _snap(_parse(iso), minutes).astimezone(zone)
+    return f"{dt:%Y-%m-%d}", f"{dt:%H:%M}"
+
+
+def _grid_times(minutes, extra=()):
+    times = [f"{m // 60:02d}:{m % 60:02d}" for m in range(0, 1440, minutes)]
+    return sorted(set(times) | {t for t in extra if t})
+
+
+@router.get("/hx/time-tracking/entries/new")
+def hx_new_form(request: Request, current_project: str = "", project_id: str = ""):
+    """"Eintrag nachtragen": last hour, on the grid, for the open project (or the filtered one)."""
+    zone = client_zone(request)
+    with get_db() as db:
+        _, minutes = _settings(db)
+        projects = [dict(r) for r in db.execute("SELECT id, name FROM projects ORDER BY name COLLATE NOCASE").fetchall()]
+    now = datetime.now(timezone.utc)
+    date, start = _local_parts(_iso(now - timedelta(hours=1)), zone, minutes)
+    _, end = _local_parts(_iso(now), zone, minutes)
+    selected = _int_or_none(current_project) or _int_or_none(project_id) or (projects[0]["id"] if projects else None)
+    return templates.TemplateResponse(request, "time_tracking/_entry_form.html", {
+        "entry": None, "projects": projects, "selected": selected, "date": date, "start": start, "end": end,
+        "note": "", "minutes": minutes, "times": _grid_times(minutes)})
+
+
+@router.get("/hx/time-tracking/entries/{entry_id}/edit")
+def hx_edit_form(request: Request, entry_id: int):
+    zone = client_zone(request)
+    entry = next((e for e in list_time_entries() if e["id"] == entry_id), None)
+    if not entry or not entry["ended_at"]:
+        raise HTTPException(404, "Eintrag nicht gefunden")
+    with get_db() as db:
+        _, minutes = _settings(db)
+        projects = [dict(r) for r in db.execute("SELECT id, name FROM projects ORDER BY name COLLATE NOCASE").fetchall()]
+    if not any(p["id"] == entry["project_id"] for p in projects):   # since-deleted project stays selectable
+        projects.append({"id": entry["project_id"], "name": f"{entry['project_name']} (gelöscht)"})
+    date, start = _local_parts(entry["started_at"], zone)
+    _, end = _local_parts(entry["ended_at"], zone)
+    return templates.TemplateResponse(request, "time_tracking/_entry_form.html", {
+        "entry": entry, "projects": projects, "selected": entry["project_id"], "date": date, "start": start,
+        "end": end, "note": entry["note"], "minutes": minutes, "times": _grid_times(minutes, (start, end))})
+
+
+def _form_to_range(date, start, end, zone):
+    """Local date + "HH:MM" from/to -> UTC ISO pair (an end before the start
+    means past midnight)."""
+    if not (date and start and end):
+        raise HTTPException(400, "Projekt, Datum, Von und Bis sind erforderlich")
+    if start == end:
+        raise HTTPException(400, "Bis muss nach Von liegen")
+    try:
+        begin = datetime.fromisoformat(f"{date}T{start}").replace(tzinfo=zone)
+        finish = datetime.fromisoformat(f"{date}T{end}").replace(tzinfo=zone)
+    except ValueError:
+        raise HTTPException(400, "Ungültige Zeitangabe")
+    if finish < begin:
+        finish += timedelta(days=1)
+    return _iso(begin.astimezone(timezone.utc)), _iso(finish.astimezone(timezone.utc))
+
+
+@router.post("/hx/time-tracking/entries")
+def hx_create(request: Request, project_id: int = Form(...), date: str = Form(""), start: str = Form(""),
+              end: str = Form(""), note: str = Form("")):
+    started_at, ended_at = _form_to_range(date, start, end, client_zone(request))
+    add_time_entry(TimeEntryIn(project_id=project_id, started_at=started_at, ended_at=ended_at, note=note.strip()))
+    return _changed({"hx-modal-close": True})
+
+
+@router.put("/hx/time-tracking/entries/{entry_id}")
+def hx_update(request: Request, entry_id: int, project_id: int = Form(...), date: str = Form(""),
+              start: str = Form(""), end: str = Form(""), note: str = Form("")):
+    """Times left as shown are sent back verbatim (update_time_entry then
+    keeps the stored values instead of re-snapping them to the current grid)."""
+    zone = client_zone(request)
+    entry = next((e for e in list_time_entries() if e["id"] == entry_id), None)
+    if not entry:
+        raise HTTPException(404, "Eintrag nicht gefunden")
+    shown = (*_local_parts(entry["started_at"], zone), _local_parts(entry["ended_at"], zone)[1])
+    if (date, start, end) == shown:
+        started_at, ended_at = entry["started_at"], entry["ended_at"]
+    else:
+        started_at, ended_at = _form_to_range(date, start, end, zone)
+    update_time_entry(entry_id, TimeEntryIn(project_id=project_id, started_at=started_at, ended_at=ended_at, note=note.strip()))
+    return _changed({"hx-modal-close": True})

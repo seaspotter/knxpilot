@@ -243,8 +243,8 @@ class CompanyProfileIn(BaseModel):
     smtp_password: str = ""
     smtp_from_email: str = ""
     smtp_cc_self_default: bool = True
-    zeiterfassung_enabled: bool = True
-    zeiterfassung_rounding_minutes: int = 15   # 1 (minutengenau) | 15 | 30
+    time_tracking_enabled: bool = True
+    time_tracking_rounding_minutes: int = 15   # 1 (minutengenau) | 15 | 30
 
 
 class KnxLineIn(BaseModel):

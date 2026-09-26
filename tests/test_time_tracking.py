@@ -1,6 +1,6 @@
 import pytest
 
-from backend.routers.zeiterfassung import _snapped_range
+from backend.routers.time_tracking import _snapped_range
 from conftest import ok
 
 
@@ -32,7 +32,7 @@ def entries(client):
 
 def set_rounding(client, minutes, enabled=True):
     cp = ok(client.get("/api/company-profile"))
-    cp.update(zeiterfassung_rounding_minutes=minutes, zeiterfassung_enabled=enabled)
+    cp.update(time_tracking_rounding_minutes=minutes, time_tracking_enabled=enabled)
     ok(client.put("/api/company-profile", json=cp))
 
 
@@ -51,7 +51,7 @@ def test_disabled_refuses_start(client, pid):
 
 def test_invalid_rounding_rejected(client):
     cp = ok(client.get("/api/company-profile"))
-    cp["zeiterfassung_rounding_minutes"] = 7
+    cp["time_tracking_rounding_minutes"] = 7
     assert client.put("/api/company-profile", json=cp).status_code == 400
 
 

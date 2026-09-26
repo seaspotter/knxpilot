@@ -270,9 +270,9 @@
   .modal-card h3 { margin:0 0 14px; font-size:15px; }
   .modal-card .modal-actions { justify-content:flex-end; margin:14px 0 0; }
 
-  .zeit-timer { display:inline-flex; align-items:center; gap:6px; }
-  .zeit-clock { font-variant-numeric:tabular-nums; font-weight:600; color:var(--accent); }
-  /* Shared plain data table (Zeiterfassung, Geräteplanung Stückliste) */
+  .tt-timer { display:inline-flex; align-items:center; gap:6px; }
+  .tt-clock { font-variant-numeric:tabular-nums; font-weight:600; color:var(--accent); }
+  /* Shared plain data table (time tracking, device planning bill of materials) */
   .data-table { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:14px; }
   .data-table th, .data-table td { text-align:left; padding:5px 8px; border-bottom:1px solid var(--border); }
   .data-table th { color:var(--muted); font-weight:600; }

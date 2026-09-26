@@ -98,7 +98,7 @@ backend/
   ga_logic.py       — group-address tree generation, circuits, per-room/central function listings (used by Pflichtenheft and the checklists)
   pdf_design.py     — shared PDF look (banner, table style, page numbers, letterhead); build_pdf_bytes()/build_pdf_bytes_two_pass() are the raw-bytes builders every export (and email.py's send action) go through
   templating.py     — Jinja2 setup for the htmx tabs (templates/, autoescaped)
-  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: klaerungsliste/)
+  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: klaerungsliste/, time_tracking/)
   project_transfer.py — per-project JSON backup/restore + duplicate (what's included, name/position-based references)
   pa_assign.py      — physical-address auto-assign (bucket convention, per KNX line) + line coupler/power supply detection
   email_sender.py   — SMTP mechanics (stdlib smtplib) behind routers/email.py's send-by-mail action
@@ -117,7 +117,7 @@ backend/
     klaerungsliste.py  — questions/tasks/notes per project + "Offene Punkte" PDF export (Klärungsliste sub-tab)
     project_files.py   — a handful of reference files per project, stored as a BLOB (Übersicht sub-tab)
     manuals.py         — fetches a device's catalog-curated manual_url into the project's own Handbücher store (Handbücher sub-tab)
-    zeiterfassung.py   — internal per-project time tracking: header start/stop timer + global time_entries list (Zeiterfassung tab) + its own Stundennachweis PDF; never part of any project export
+    time_tracking.py   — internal per-project time tracking ("Zeiterfassung" tab, htmx): header timer JSON API + /hx/ tab fragments + its own timesheet PDF; never part of any project export
     system.py          — self-update via git, changelog + manual + version endpoints (Update/Hilfe tabs)
 frontend/
   index.html        — page shell: <head>, nav/tab markup, <script src> tags in load order
@@ -135,7 +135,7 @@ frontend/
     gruppenadressen.js — GA tree preview + CSV export (Gruppenadressen sub-tab)
     uebersicht.js      — project status dashboard + project files (Übersicht sub-tab)
     manuals.js         — device manuals: view/fetch/delete (Handbücher sub-tab)
-    zeiterfassung.js   — header start/stop timer, Zeiterfassung tab (edit entries, totals, Stundennachweis PDF download)
+    time_tracking.js   — header start/stop timer (live clock), loads the htmx time tracking tab, timesheet PDF download
     abgangsliste.js    — actor instances + circuit assignment
     geraeteplanung.js  — per-room device planning
     pflichtenheft.js   — Pflichtenheft "Inhalt" card (sections + counts), Vorschau and PDF download
@@ -194,8 +194,9 @@ rarely need to touch anything else.
   server's `detail` message, and auto-parses JSON). File downloads
   (CSV/PDF/JSON exports) bypass it and just set
   `window.location.href = '/api/...'`.
-- **htmx tabs** (so far only the Klärungsliste - a trial; the other tabs
-  are classic JS): the tab's HTML is rendered by the server from Jinja
+- **htmx tabs** (so far the clarification list and time tracking; the
+  other tabs are classic JS and get converted one at a time, in the order
+  under "htmx migration" below): the tab's HTML is rendered by the server from Jinja
   templates in `backend/templates/<tab>/`, returned by `/hx/...` endpoints
   in the tab's router, and `hx-*` attributes in that HTML do the requests
   and swap the answer in - no client-side cache, no `render*()`. The tab's
@@ -211,7 +212,23 @@ rarely need to touch anything else.
   update keeps working); to update it, replace the file with the new
   release's `dist/htmx.min.js` from npm and change the version in its
   name and the `<script>` tag. JSON endpoints stay where other code needs
-  them (exports, badge, tests).
+  them (exports, badge, tests). Shared helpers for all htmx tabs: every
+  htmx request sends the browser's time zone (`X-Timezone`, read with
+  `templating.client_zone(request)` - render times in the user's zone,
+  the container runs on UTC); dialogs are fragments swapped into
+  `#hx-modal` (root element `.modal-overlay`, closed by Escape, a
+  backdrop click, `closeHxModal()` or the server's `HX-Trigger:
+  hx-modal-close`); a list can refresh itself after any mutation via
+  `hx-trigger="<event> from:body"` plus an `HX-Trigger: <event>` header,
+  so mutation endpoints don't need to know the current filters.
+- **htmx migration** (agreed with the user 2026-09-26): one tab per change,
+  each renamed to English in the same change, with pytest coverage for its
+  `/hx/` endpoints and a browser pass; confirm each next tab with the
+  user. Order: ~~clarification list~~, ~~time tracking~~, Setup sub-tabs,
+  device catalog + manuals, overview/specification/documentation,
+  function + handover checklists, functions + group addresses, device
+  planning + distribution board planning + labels, circuit list, building
+  structure (drag & drop stays JS).
 - **User-facing strings are German**; everything else is English: code
   identifiers, comments, file/directory names, database tables/columns,
   API paths, CSS classes, template names, JSON keys, this documentation

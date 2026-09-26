@@ -1,0 +1,29 @@
+{# "Eintrag nachtragen" / "Eintrag bearbeiten" dialog, swapped into #hx-modal. Times are local
+   (browser zone); with a grid (15/30 min) only grid times are offered, plus an existing entry's
+   off-grid time so it can be kept as stored. #}
+{% macro time_field(name, value) %}
+  {% if minutes == 1 %}<input type="time" name="{{ name }}" value="{{ value }}" required>
+  {% else %}<select name="{{ name }}">{% for t in times %}<option{% if t == value %} selected{% endif %}>{{ t }}</option>{% endfor %}</select>{% endif %}
+{% endmacro %}
+<div class="modal-overlay" onclick="if (event.target === this) closeHxModal()">
+  <div class="modal-card wide">
+    <form {% if entry %}hx-put="/hx/time-tracking/entries/{{ entry.id }}"{% else %}hx-post="/hx/time-tracking/entries"{% endif %} hx-swap="none">
+      <h3>{{ "Eintrag bearbeiten" if entry else "Eintrag nachtragen" }}</h3>
+      <div class="row">
+        <select name="project_id" class="flex-input-wide" required>
+          {% for p in projects %}<option value="{{ p.id }}"{% if p.id == selected %} selected{% endif %}>{{ p.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="row mobile-fields">
+        <input type="date" name="date" value="{{ date }}" required>
+        <label class="muted">Von {{ time_field("start", start) }}</label>
+        <label class="muted">Bis {{ time_field("end", end) }}</label>
+      </div>
+      <div class="row"><input type="text" name="note" class="flex-input-wide" placeholder="Notiz (optional)" value="{{ note or '' }}"></div>
+      <div class="row modal-actions">
+        <button type="button" class="btn secondary" onclick="closeHxModal()">Abbrechen</button>
+        <button type="submit" class="btn">Speichern</button>
+      </div>
+    </form>
+  </div>
+</div>

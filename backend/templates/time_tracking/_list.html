@@ -1,0 +1,43 @@
+{# Sum + "mark all shown invoiced", totals per project (all projects only), entries table. #}
+<div class="row" style="margin-top:0;">
+  {% if total %}<span class="muted">Summe: {{ total }}</span>{% endif %}
+  {% if uninvoiced_count %}
+    <button class="btn secondary small" hx-post="/hx/time-tracking/mark-invoiced" hx-include="#tt-filters" hx-swap="none"
+            hx-confirm="{{ uninvoiced_count }} Einträge als abgerechnet markieren?">Alle angezeigten als abgerechnet markieren</button>
+  {% endif %}
+</div>
+{% if totals %}
+  <div style="overflow-x:auto;">
+    <h4>Summe je Projekt</h4>
+    <table class="data-table"><thead><tr><th>Projekt</th><th class="num">Stunden</th></tr></thead><tbody>
+      {% for t in totals %}<tr><td>{{ t.name }}</td><td class="num">{{ t.hours }}</td></tr>{% endfor %}
+    </tbody></table>
+  </div>
+{% endif %}
+<div style="overflow-x:auto;">
+{% if entries %}
+  <h4>Einträge</h4>
+  <table class="data-table"><thead><tr>
+    <th>Datum</th><th>Projekt</th><th>Von</th><th>Bis</th><th class="num">Dauer</th><th>Notiz</th><th>Abgerechnet</th><th></th>
+  </tr></thead><tbody>
+  {% for e in entries %}
+    <tr>
+      <td>{{ e.date }}</td>
+      <td>{{ e.project_name }}</td>
+      <td>{{ e.start }}</td>
+      <td>{% if e.end %}{{ e.end }}{% else %}<span class="pill">läuft</span>{% endif %}</td>
+      <td class="num"{% if e.end %} title="tatsächlich {{ e.raw_minutes | round | int }} Min."{% endif %}>{{ e.hours if e.end else "—" }}</td>
+      <td>{{ e.note or "" }}</td>
+      <td>{% if e.end %}<input type="checkbox" title="Abgerechnet"{% if e.invoiced %} checked{% endif %}
+            hx-post="/hx/time-tracking/entries/{{ e.id }}/invoiced" hx-vals='{{ {"invoiced": "false" if e.invoiced else "true"} | tojson }}' hx-swap="none">{% endif %}</td>
+      <td class="actions">{% if e.end %}
+        <button class="btn secondary small" hx-get="/hx/time-tracking/entries/{{ e.id }}/edit" hx-target="#hx-modal">Bearbeiten</button>
+        <button class="btn danger small" hx-delete="/hx/time-tracking/entries/{{ e.id }}" hx-confirm="Diesen Zeiteintrag löschen?" hx-swap="none">Löschen</button>
+      {% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody></table>
+{% else %}
+  <p class="muted">{{ "Keine Einträge für diese Auswahl." if any_entries else "Noch keine Zeiten erfasst." }}</p>
+{% endif %}
+</div>

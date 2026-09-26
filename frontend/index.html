@@ -22,7 +22,7 @@
       📁 <span id="header-current-project-name"></span>
       <a href="#" onclick="event.preventDefault(); closeProject();" style="margin-left:4px; color:var(--danger); text-decoration:none;" title="Projekt schliessen">×</a>
     </span>
-    <span id="zeit-timer" class="zeit-timer" style="display:none;"></span>
+    <span id="tt-timer" class="tt-timer" style="display:none;"></span>
     <div id="header-company-brand" class="row" style="margin:0; align-items:center; gap:8px; display:none;"></div>
     <button id="theme-toggle" onclick="toggleTheme()">☀️ Hell</button>
   </div>
@@ -37,7 +37,7 @@
     </div>
   </div>
   <button data-tab="aktoren">Geräte Katalog</button>
-  <button data-tab="zeiterfassung" style="display:none;">Zeiterfassung</button>
+  <button data-tab="time-tracking" style="display:none;">Zeiterfassung</button>
   <button data-tab="setup">Setup</button>
   <button data-tab="update">Update</button>
   <button data-tab="hilfe">Hilfe</button>
@@ -474,7 +474,7 @@
       <button data-subtab="dokumentation">Dokumentation</button>
       <button data-subtab="email">E-Mail</button>
       <button data-subtab="backup">Backup</button>
-      <button data-subtab="zeiterfassung">Zeiterfassung</button>
+      <button data-subtab="time-tracking">Zeiterfassung</button>
     </div>
 
     <div class="subtab active" id="setup-subtab-firma">
@@ -682,18 +682,18 @@
     </div>
     </div>
 
-    <div class="subtab" id="setup-subtab-zeiterfassung">
+    <div class="subtab" id="setup-subtab-time-tracking">
     <div class="card">
       <h3>Zeiterfassung</h3>
       <p class="muted">Einfache Arbeitszeiterfassung je Projekt (Start/Stopp in der Kopfzeile, Reiter Zeiterfassung). Rein intern — erscheint in keinem Projekt-Export und keiner Dokumentation.</p>
       <div class="row mobile-fields">
-        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="zeit-enabled"> Aktiv
+        <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" id="tt-enabled"> Aktiv
           <span class="info-icon" tabindex="0" data-tip="Deaktiviert blendet den Reiter Zeiterfassung und den Start/Stopp-Knopf aus. Bereits erfasste Zeiten bleiben gespeichert und sind nach dem Wiedereinschalten wieder da.">i</span>
         </label>
       </div>
       <div class="row mobile-fields">
         <label class="muted" style="display:flex; align-items:center; gap:6px;">Rundung
-          <select id="zeit-rounding-minutes">
+          <select id="tt-rounding-minutes">
             <option value="1">Minutengenau</option>
             <option value="15">15 Minuten</option>
             <option value="30">30 Minuten</option>
@@ -791,29 +791,9 @@
   </div>
 
   <!-- ZEITERFASSUNG TAB (internal only - not part of any export/documentation) -->
-  <div class="tab" id="tab-zeiterfassung">
-    <div class="card">
-      <div class="card-header">
-        <h3>Zeiterfassung</h3>
-        <div class="row" style="margin:0; gap:6px;">
-          <button class="btn secondary" onclick="openTimeEntryModal()">+ Eintrag nachtragen</button>
-          <button class="btn" onclick="exportTimeEntriesPdf()">PDF herunterladen</button>
-        </div>
-      </div>
-      <p class="muted">Arbeitszeit je Projekt — Start/Stopp oben in der Kopfzeile, sobald ein Projekt geöffnet ist. <span id="zeit-rounding-hint"></span> Nur intern: erscheint in keinem Projekt-Export und keiner Dokumentation. <b>PDF herunterladen</b> erzeugt einen Stundennachweis für die aktuelle Auswahl.</p>
-      <div class="row">
-        <select id="zeit-project-filter" class="wide" onchange="loadTimeEntries()"></select>
-        <select id="zeit-invoiced-filter" onchange="renderTimeEntries()">
-          <option value="">Alle Einträge</option>
-          <option value="0">Nicht abgerechnet</option>
-          <option value="1">Abgerechnet</option>
-        </select>
-        <span class="muted" id="zeit-filter-total"></span>
-        <button class="btn secondary small" id="zeit-mark-invoiced-btn" onclick="markShownTimeEntriesInvoiced()" style="display:none;">Alle angezeigten als abgerechnet markieren</button>
-      </div>
-      <div id="zeit-totals" style="overflow-x:auto;"></div>
-      <div id="zeit-entries" style="overflow-x:auto;"></div>
-    </div>
+  <div class="tab" id="tab-time-tracking">
+    <!-- Rendered server-side with htmx (backend/templates/time_tracking/), see time_tracking.js -->
+    <div id="time-tracking-root"></div>
   </div>
 
   <!-- HILFE TAB -->
@@ -824,6 +804,9 @@
   </div>
 
 </main>
+
+<!-- Server-rendered dialogs of the htmx tabs land here (see ui.js closeHxModal) -->
+<div id="hx-modal"></div>
 
 <!-- htmx (vendored, 0BSD - see frontend/vendor/htmx-LICENSE.txt): server-rendered tabs, see DEVELOPMENT.md -->
 <script src="/vendor/htmx-2.0.11.min.js"></script>
@@ -846,7 +829,7 @@
 <script src="/js/uebergabe_checkliste.js"></script>
 <script src="/js/klaerungsliste.js"></script>
 <script src="/js/manuals.js"></script>
-<script src="/js/zeiterfassung.js"></script>
+<script src="/js/time_tracking.js"></script>
 <script src="/js/dokumentation.js"></script>
 <script src="/js/update.js"></script>
 <script src="/js/hilfe.js"></script>

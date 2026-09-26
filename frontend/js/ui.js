@@ -229,3 +229,22 @@ document.addEventListener('htmx:responseError', ev => {
   showToast(message, 'warning');
 });
 document.addEventListener('htmx:sendError', () => showToast('Server nicht erreichbar', 'warning'));
+// Every htmx request tells the server the browser's time zone, so it can
+// render local times (the container usually runs on UTC) - see
+// client_zone() in backend/templating.py.
+document.addEventListener('htmx:configRequest', ev => {
+  ev.detail.headers['X-Timezone'] = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+  ev.detail.headers['X-Timezone-Offset'] = String(new Date().getTimezoneOffset());
+});
+// Server-rendered dialogs: a fragment swapped into #hx-modal (end of
+// index.html) whose root is a .modal-overlay. Closes on Escape, a click on
+// the backdrop, or when the server sends HX-Trigger "hx-modal-close" (e.g.
+// after a successful save).
+function closeHxModal() {
+  const el = document.getElementById('hx-modal');
+  if (el) el.innerHTML = '';
+}
+document.addEventListener('hx-modal-close', closeHxModal);
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape' && document.getElementById('hx-modal')?.innerHTML) closeHxModal();
+});

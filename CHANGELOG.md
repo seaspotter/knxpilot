@@ -32,6 +32,17 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
   "htmx tabs". New dependency `jinja2` - after updating, run
   `docker compose pull && docker compose up -d` once. The entries now sit
   in a white card like the groups on every other tab.
+- **Time tracking rendered server-side with htmx** — the second tab after
+  the clarification list: list, filters, totals, the invoiced checkboxes
+  and the add/edit dialog now come from Jinja templates
+  (`backend/templates/time_tracking/`) via `/hx/time-tracking...`
+  endpoints; the header timer keeps its live clock in the browser. Looks
+  and works the same; times are rendered in the browser's time zone (every
+  htmx request now sends it), and the tab's endpoints are covered by
+  pytest. Renamed to English along the way: `routers/time_tracking.py`,
+  `js/time_tracking.js`, and the `company_profile` columns
+  `time_tracking_enabled`/`time_tracking_rounding_minutes` (renamed
+  automatically on startup, values kept).
 - **English names for everything but UI text** — standing convention:
   file names, identifiers, database tables, API paths, CSS classes and
   JSON keys are English, with a glossary for the domain terms in

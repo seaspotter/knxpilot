@@ -539,7 +539,7 @@ def init_db():
                 UNIQUE(project_id, role)
             );
 
-            -- Personal time tracking (see routers/zeiterfassung.py) - deliberately
+            -- Personal time tracking (see routers/time_tracking.py) - deliberately
             -- global, not part of a project's data: no FK/ON DELETE CASCADE on
             -- project_id, so deleting a project keeps its logged hours
             -- (project_name is a snapshot for exactly that case), and it's never
@@ -608,13 +608,24 @@ def init_db():
                 smtp_password TEXT NOT NULL DEFAULT '',
                 smtp_from_email TEXT NOT NULL DEFAULT '',
                 smtp_cc_self_default INTEGER NOT NULL DEFAULT 1,
-                -- Zeiterfassung (routers/zeiterfassung.py): feature on/off, and
+                -- Time tracking (routers/time_tracking.py): feature on/off, and
                 -- the grid start/stop times snap to - 1 (minutengenau), 15 or 30.
-                zeiterfassung_enabled INTEGER NOT NULL DEFAULT 1,
-                zeiterfassung_rounding_minutes INTEGER NOT NULL DEFAULT 15
+                time_tracking_enabled INTEGER NOT NULL DEFAULT 1,
+                time_tracking_rounding_minutes INTEGER NOT NULL DEFAULT 15
             );
             """
         )
+
+        # Columns renamed to English (DEVELOPMENT.md "Naming") - must run before
+        # the ADD COLUMN migrations below, which only know the new names.
+        # Idempotent: only renames while the old name is still there.
+        for table, old, new in [
+            ("company_profile", "zeiterfassung_enabled", "time_tracking_enabled"),
+            ("company_profile", "zeiterfassung_rounding_minutes", "time_tracking_rounding_minutes"),
+        ]:
+            cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]
+            if old in cols and new not in cols:
+                db.execute(f"ALTER TABLE {table} RENAME COLUMN {old} TO {new}")
 
         # Lightweight migrations for DBs created before these columns existed.
         for table, column, ddl in [
@@ -710,10 +721,10 @@ def init_db():
              "ALTER TABLE company_profile ADD COLUMN smtp_from_email TEXT NOT NULL DEFAULT ''"),
             ("company_profile", "smtp_cc_self_default",
              "ALTER TABLE company_profile ADD COLUMN smtp_cc_self_default INTEGER NOT NULL DEFAULT 1"),
-            ("company_profile", "zeiterfassung_enabled",
-             "ALTER TABLE company_profile ADD COLUMN zeiterfassung_enabled INTEGER NOT NULL DEFAULT 1"),
-            ("company_profile", "zeiterfassung_rounding_minutes",
-             "ALTER TABLE company_profile ADD COLUMN zeiterfassung_rounding_minutes INTEGER NOT NULL DEFAULT 15"),
+            ("company_profile", "time_tracking_enabled",
+             "ALTER TABLE company_profile ADD COLUMN time_tracking_enabled INTEGER NOT NULL DEFAULT 1"),
+            ("company_profile", "time_tracking_rounding_minutes",
+             "ALTER TABLE company_profile ADD COLUMN time_tracking_rounding_minutes INTEGER NOT NULL DEFAULT 15"),
             ("floors", "line_id", "ALTER TABLE floors ADD COLUMN line_id INTEGER REFERENCES knx_lines(id) ON DELETE SET NULL"),
             ("rooms", "line_id", "ALTER TABLE rooms ADD COLUMN line_id INTEGER REFERENCES knx_lines(id) ON DELETE SET NULL"),
             ("actor_instances", "line_id",

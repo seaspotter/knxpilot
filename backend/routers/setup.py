@@ -62,14 +62,14 @@ def get_company_profile():
             "smtp_password": r["smtp_password"],
             "smtp_from_email": r["smtp_from_email"],
             "smtp_cc_self_default": bool(r["smtp_cc_self_default"]),
-            "zeiterfassung_enabled": bool(r["zeiterfassung_enabled"]),
-            "zeiterfassung_rounding_minutes": r["zeiterfassung_rounding_minutes"],
+            "time_tracking_enabled": bool(r["time_tracking_enabled"]),
+            "time_tracking_rounding_minutes": r["time_tracking_rounding_minutes"],
         }
 
 
 @router.put("/api/company-profile")
 def update_company_profile(cp: CompanyProfileIn):
-    if cp.zeiterfassung_rounding_minutes not in (1, 15, 30):
+    if cp.time_tracking_rounding_minutes not in (1, 15, 30):
         raise HTTPException(400, "Rundung muss 1, 15 oder 30 Minuten sein")
     with get_db() as db:
         db.execute(
@@ -88,7 +88,7 @@ def update_company_profile(cp: CompanyProfileIn):
             "backup_nextcloud_username=?, backup_nextcloud_password=?, "
             "smtp_enabled=?, smtp_host=?, smtp_port=?, smtp_encryption=?, "
             "smtp_username=?, smtp_password=?, smtp_from_email=?, smtp_cc_self_default=?, "
-            "zeiterfassung_enabled=?, zeiterfassung_rounding_minutes=? WHERE id=1",
+            "time_tracking_enabled=?, time_tracking_rounding_minutes=? WHERE id=1",
             (cp.name, cp.address, cp.email, cp.website, cp.phone, cp.logo_data_url,
              int(cp.show_on_pdf), cp.pflichtenheft_preamble,
              int(cp.pflichtenheft_include_vorbemerkungen),
@@ -104,7 +104,7 @@ def update_company_profile(cp: CompanyProfileIn):
              cp.backup_nextcloud_username, cp.backup_nextcloud_password,
              int(cp.smtp_enabled), cp.smtp_host, cp.smtp_port, cp.smtp_encryption,
              cp.smtp_username, cp.smtp_password, cp.smtp_from_email, int(cp.smtp_cc_self_default),
-             int(cp.zeiterfassung_enabled), cp.zeiterfassung_rounding_minutes),
+             int(cp.time_tracking_enabled), cp.time_tracking_rounding_minutes),
         )
     return {"ok": True}
 

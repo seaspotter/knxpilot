@@ -1,0 +1,30 @@
+{# The time tracking tab body, swapped into #time-tracking-root. The list re-fetches itself when a
+   filter changes or the server signals "time-entries-changed" (after any save/delete/tick). #}
+<div class="card">
+  <div class="card-header">
+    <h3>Zeiterfassung</h3>
+    <div class="row" style="margin:0; gap:6px;">
+      <button class="btn secondary" hx-get="/hx/time-tracking/entries/new" hx-include="#tt-filters"
+              hx-vals="js:{current_project: CURRENT_PROJECT || ''}" hx-target="#hx-modal">+ Eintrag nachtragen</button>
+      <button class="btn" onclick="exportTimeEntriesPdf()">PDF herunterladen</button>
+    </div>
+  </div>
+  <p class="muted">Arbeitszeit je Projekt — Start/Stopp oben in der Kopfzeile, sobald ein Projekt geöffnet ist.
+    {% if minutes == 1 %}Zeiten werden minutengenau erfasst.{% else %}Start und Stopp werden auf die nächsten {{ minutes }} Minuten gerundet (z.B. 12:04 → 12:00, 12:55 → 13:00), mindestens {{ minutes }} Minuten je Eintrag.{% endif %}
+    Nur intern: erscheint in keinem Projekt-Export und keiner Dokumentation. <b>PDF herunterladen</b> erzeugt einen Stundennachweis für die aktuelle Auswahl.</p>
+  <form id="tt-filters" class="row" onsubmit="return false;">
+    <select name="project_id" class="wide">
+      <option value="">Alle Projekte</option>
+      {% for id, name in projects %}<option value="{{ id }}"{% if project_id == id %} selected{% endif %}>{{ name }}</option>{% endfor %}
+    </select>
+    <select name="invoiced">
+      <option value="">Alle Einträge</option>
+      <option value="0"{% if invoiced == "0" %} selected{% endif %}>Nicht abgerechnet</option>
+      <option value="1"{% if invoiced == "1" %} selected{% endif %}>Abgerechnet</option>
+    </select>
+  </form>
+  <div id="tt-list" hx-get="/hx/time-tracking/list" hx-include="#tt-filters"
+       hx-trigger="time-entries-changed from:body, change from:#tt-filters">
+    {% include "time_tracking/_list.html" %}
+  </div>
+</div>

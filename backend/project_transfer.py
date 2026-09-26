@@ -25,7 +25,7 @@ Two modes:
     untested, unsigned, never exported to ETS, without the original's
     Klärungen or files.
 Zeiterfassung entries are never part of either (internal data, see
-routers/zeiterfassung.py).
+routers/time_tracking.py).
 """
 import base64
 import json

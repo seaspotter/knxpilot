@@ -17,7 +17,7 @@ def test_fresh_install_has_all_columns(db_path):
     assert "group_name" in columns(db_path, "actor_types")
     assert "invoiced" in columns(db_path, "time_entries")
     cp = columns(db_path, "company_profile")
-    for col in ("zeiterfassung_enabled", "zeiterfassung_rounding_minutes", "smtp_enabled", "dokumentation_include_handbuecher"):
+    for col in ("time_tracking_enabled", "time_tracking_rounding_minutes", "smtp_enabled", "dokumentation_include_handbuecher"):
         assert col in cp
     with sqlite3.connect(db_path) as c:
         assert c.execute("SELECT COUNT(*) FROM actor_types").fetchone()[0] > 50  # starter catalog seeded
@@ -58,3 +58,18 @@ def test_upgrades_time_entries_without_invoiced(db_path):
     backend.db.init_db()
     with sqlite3.connect(db_path) as c:
         assert c.execute("SELECT invoiced FROM time_entries").fetchone() == (0,)
+
+
+def test_renames_german_company_profile_columns(db_path):
+    """Columns renamed to English keep their values on an existing install."""
+    backend.db.init_db()
+    with sqlite3.connect(db_path) as c:
+        c.execute("ALTER TABLE company_profile RENAME COLUMN time_tracking_enabled TO zeiterfassung_enabled")
+        c.execute("ALTER TABLE company_profile RENAME COLUMN time_tracking_rounding_minutes TO zeiterfassung_rounding_minutes")
+        c.execute("UPDATE company_profile SET zeiterfassung_enabled=0, zeiterfassung_rounding_minutes=30")
+    backend.db.init_db()
+    backend.db.init_db()  # idempotent
+    cp = columns(db_path, "company_profile")
+    assert "zeiterfassung_enabled" not in cp and "time_tracking_enabled" in cp
+    with sqlite3.connect(db_path) as c:
+        assert c.execute("SELECT time_tracking_enabled, time_tracking_rounding_minutes FROM company_profile").fetchone() == (0, 30)
