@@ -21,6 +21,16 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ### Changed
 
+- **MANUAL.md rewritten much shorter** (~940 → ~330 lines) — cut internal
+  code references (function/file names meaningless to the app's actual
+  users, one of which pointed at `export_csv()`'s stale old location),
+  removed explanations duplicated between the top-level "Die Tabs"
+  summary and the detailed per-tab sections, and trimmed every section's
+  prose down to what's needed to use the feature (dropped worked examples,
+  restated edge cases, and "why it works this way" reasoning beyond the
+  one sentence that answers an actual "why can't I..." question). No
+  content describing an actual button/behavior was cut - same site
+  visited, just fewer words getting there.
 - **Last two German file names renamed to English** — `frontend/js/hilfe.js`
   → `help.js`, `frontend/js/projekte.js` → `projects.js` (identifier-only,
   no behavior change; neither is an htmx tab, so these were outside the
@@ -103,10 +113,6 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ### Fixed
 
-- **MANUAL.md's "Adressierungsmodell"/"GA-CSV-Format"/"Geräte Katalog"/
-  "PDF-Exporte" sections trimmed of internal code references** (function
-  and file names meaningless to the app's actual users) and one now-stale
-  reference to `export_csv()`'s old location fixed.
 - **"Klärungsliste" text/answer fields were narrower than intended** — the
   rename to "clarification list" updated the input classes in the template
   but left the matching CSS selectors on their old `kl-text-input`/
