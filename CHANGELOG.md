@@ -12,6 +12,12 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ### Fixed
 
+- **Unchecking a "Funktionscheckliste" item, or clearing a "Übergabe-
+  Checkliste" answer, no longer leaves a stale "getestet am" timestamp
+  next to it** — the htmx conversion of these two tabs always stamped
+  `updated_at` on every write, checked or not, and the row template showed
+  it unconditionally; it's now hidden when the item is unanswered again,
+  matching the previous behavior.
 - **Clearing the device catalog no longer fails when a device is used as
   a floor device** — "Katalog leeren" skipped devices used in rooms or as
   actuators, but not those planned as "devices without a room", so the

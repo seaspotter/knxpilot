@@ -32,9 +32,12 @@ def test_toggle_item_updates_status_and_returns_row(client, project):
     status = ok(client.get(f"/api/projects/{pid}/checklist-status"))[key]
     assert status["status"] == "ok" and status["updated_at"]
 
-    # toggling again clears it
+    # toggling again clears it - the stale "getestet am" timestamp must not
+    # linger in the unchecked row (regression: updated_at is bumped on every
+    # write, checked or not, so the template must hide it when unchecked)
     r2 = client.put(f"/hx/projects/{pid}/function-checklist/items/{key}?cat=Test&text=Testfunktion")
     assert "checked" not in r2.text
+    assert '<span class="fc-when"></span>' in r2.text
     status2 = ok(client.get(f"/api/projects/{pid}/checklist-status"))[key]
     assert status2["status"] == ""
 

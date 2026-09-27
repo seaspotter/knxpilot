@@ -169,10 +169,11 @@ def _checklist_rows(by_category, status_map):
     for cat_name, items in by_category.items():
         for item in items:
             entry = status_map.get(item["key"], {})
+            checked = entry.get("status") == "ok"
             rows.append({
                 "key": item["key"], "text": item["text"], "cat": cat_name,
-                "checked": entry.get("status") == "ok",
-                "when": local_time_text(entry.get("updated_at")),
+                "checked": checked,
+                "when": local_time_text(entry.get("updated_at")) if checked else "",
                 "dom_id": checklist_dom_id(item["key"]),
             })
     return rows
@@ -232,9 +233,10 @@ def hx_function_checklist_toggle(request: Request, project_id: int, item_key: st
             (project_id, item_key, new_status),
         )
         entry = get_status_map(db, project_id).get(item_key, {})
+    checked = new_status == "ok"
     row = {
         "key": item_key, "text": request.query_params.get("text", ""), "cat": cat,
-        "checked": new_status == "ok", "when": local_time_text(entry.get("updated_at")),
+        "checked": checked, "when": local_time_text(entry.get("updated_at")) if checked else "",
         "dom_id": checklist_dom_id(item_key),
     }
     return templates.TemplateResponse(request, "function_checklist/_row.html", {"project_id": project_id, "row": row})
@@ -472,10 +474,11 @@ UEBERGABE_ITEMS_BY_KEY = {
 
 def _handover_row(item_key, status_map):
     entry = status_map.get(item_key, {})
+    status = entry.get("status", "")
     return {
         "key": item_key, "text": UEBERGABE_ITEMS_BY_KEY[item_key],
-        "status": entry.get("status", ""), "note": entry.get("note", ""),
-        "when": local_time_text(entry.get("updated_at")),
+        "status": status, "note": entry.get("note", ""),
+        "when": local_time_text(entry.get("updated_at")) if status else "",
         "dom_id": checklist_dom_id(item_key),
     }
 
