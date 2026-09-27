@@ -21,9 +21,9 @@ CSV export format (verified against real ETS6 exports):
 
 This file just wires everything together - see backend/routers/ for the
 actual endpoints, grouped by tab (setup, device_catalog, projects, abgangsliste,
-geraeteplanung, verteiler, klaerungsliste, pflichtenheft, system,
-project_files, manuals, checkliste, dokumentation, email, time_tracking,
-linien), backend/db.py for
+geraeteplanung, verteiler, klaerungsliste, specification, system,
+project_files, manuals, checkliste, documentation, email, time_tracking,
+linien, overview), backend/db.py for
 the schema/migrations/seed data, backend/ga_logic.py for GA-tree generation,
 backend/pdf_design.py for the shared PDF look-and-feel, and
 backend/email_sender.py for the SMTP mechanics behind routers/email.py.
@@ -44,8 +44,8 @@ from fastapi.staticfiles import StaticFiles
 from .backup import run_backup_now
 from .db import get_db, init_db
 from .routers import (
-    setup, device_catalog, projects, abgangsliste, geraeteplanung, klaerungsliste, pflichtenheft, system, verteiler,
-    project_files, manuals, checkliste, dokumentation, email, time_tracking, linien,
+    setup, device_catalog, projects, abgangsliste, geraeteplanung, klaerungsliste, specification, system, verteiler,
+    project_files, manuals, checkliste, documentation, email, time_tracking, linien, overview,
 )
 
 logger = logging.getLogger("knxpilot.backup")
@@ -99,15 +99,16 @@ app.include_router(abgangsliste.router)
 app.include_router(geraeteplanung.router)
 app.include_router(verteiler.router)
 app.include_router(klaerungsliste.router)
-app.include_router(pflichtenheft.router)
+app.include_router(specification.router)
 app.include_router(system.router)
 app.include_router(project_files.router)
 app.include_router(manuals.router)
 app.include_router(checkliste.router)
-app.include_router(dokumentation.router)
+app.include_router(documentation.router)
 app.include_router(email.router)
 app.include_router(time_tracking.router)
 app.include_router(linien.router)
+app.include_router(overview.router)
 
 class NoCacheStaticFiles(StaticFiles):
     """Serves frontend/ with Cache-Control: no-cache instead of Starlette's

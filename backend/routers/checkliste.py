@@ -7,9 +7,9 @@ so neither frontend re-derives that filtering/grouping logic itself. Also
 both tabs' PDF exports - kept in this one file rather than split across two
 router files, since they need the exact same status-map-fetching logic
 already written for the JSON endpoints, and the two tabs otherwise share no
-router. See routers/pflichtenheft.py for the early-stage spec document
+router. See routers/specification.py for the early-stage spec document
 these checklists' results eventually feed into (via routers/
-dokumentation.py) and its function_checklist_table(), reused here for the
+documentation.py) and its function_checklist_table(), reused here for the
 Funktionscheckliste PDF export. Also home to the Übergabe-Checkliste's
 digital signature capture (project_signatures table, see db.py) - captured
 via an HTML canvas signature pad in the frontend, embedded into both the
@@ -29,7 +29,7 @@ from ..pdf_design import (
     pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_bytes, pdf_response,
     company_header_block, company_footer_line, checkbox_cell, signature_block,
 )
-from .pflichtenheft import function_checklist_table
+from .specification import function_checklist_table
 from ..utils import local_time_text
 
 router = APIRouter(tags=["checkliste"])
@@ -287,7 +287,7 @@ def delete_signature(project_id: int, role: str):
 
 def build_signature_row(db, project_id, styles, roles=UEBERGABE_SIGNATURES, optional=()):
     """The Systemintegrator/Kunde signature row at the end of the Übergabe-
-    Checkliste / Funktionscheckliste (and, via routers/dokumentation.py, the
+    Checkliste / Funktionscheckliste (and, via routers/documentation.py, the
     Dokumentation) PDF - renders the real captured signature + "signiert am"
     timestamp for whichever roles have one, and a blank paper-style line for
     the rest. Roles in `optional` are left out entirely when unsigned."""

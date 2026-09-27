@@ -15,6 +15,18 @@ def join_parts(*parts):
     return " ".join(p for p in parts if p)
 
 
+def human_file_size(size):
+    """"184.0 KB" - shared by every file listing rendered server-side
+    (Setup -> Backup's file list, the overview tab's Dateien list). "" for
+    a missing/zero size (backup listings don't always know it)."""
+    if not size:
+        return ""
+    for exponent, unit in ((3, "GB"), (2, "MB"), (1, "KB")):
+        if size >= 1024 ** exponent:
+            return f"{size / 1024 ** exponent:.1f} {unit}"
+    return f"{size} B"
+
+
 def channel_letters(n):
     """Spreadsheet-style channel labels: A, B, ..., Z, AA, AB, ... for n channels."""
     result = []

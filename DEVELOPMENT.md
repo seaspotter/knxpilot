@@ -98,7 +98,7 @@ backend/
   ga_logic.py       — group-address tree generation, circuits, per-room/central function listings (used by Pflichtenheft and the checklists)
   pdf_design.py     — shared PDF look (banner, table style, page numbers, letterhead); build_pdf_bytes()/build_pdf_bytes_two_pass() are the raw-bytes builders every export (and email.py's send action) go through
   templating.py     — Jinja2 setup for the htmx tabs (templates/, autoescaped)
-  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: klaerungsliste/, time_tracking/, setup/, device_catalog/, manuals/)
+  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: klaerungsliste/, time_tracking/, setup/, device_catalog/, manuals/, overview/, specification/, documentation/, project_files/)
   project_transfer.py — per-project JSON backup/restore + duplicate (what's included, name/position-based references)
   pa_assign.py      — physical-address auto-assign (bucket convention, per KNX line) + line coupler/power supply detection
   email_sender.py   — SMTP mechanics (stdlib smtplib) behind routers/email.py's send-by-mail action
@@ -110,12 +110,13 @@ backend/
     linien.py          — optional KNX lines (Bereich.Linie) + floor/room/actuator line assignment, per-line device counts/warnings (Gebäudestruktur sub-tab)
     abgangsliste.py    — actor instances, circuit assignment, CSV/PDF export (Abgangsliste sub-tab)
     geraeteplanung.py  — per-room device planning, bill of materials, PDF export (Geräteplanung sub-tab)
-    pflichtenheft.py   — early-stage spec PDF export (Pflichtenheft sub-tab); also home to function_checklist_table(), shared with checkliste.py
+    specification.py   — early-stage spec PDF export, htmx "Inhalt" tab (Pflichtenheft sub-tab); also home to function_checklist_table(), shared with checkliste.py
     checkliste.py      — digital on-site checklists: checklist_status upsert, Funktionscheckliste + Übergabe-Checkliste JSON/PDF (their sub-tabs)
-    dokumentation.py   — end-of-project assembly PDF, combining Pflichtenheft content + both checklists' results + a Handbücher checklist + optional as-built sections; the chapter list (DOKU_CHAPTERS) also drives the tab's "Inhalt" card (Dokumentation sub-tab)
+    documentation.py   — end-of-project assembly PDF, combining Pflichtenheft content + both checklists' results + a Handbücher checklist + optional as-built sections, htmx "Inhalt" tab; the chapter list (DOCUMENTATION_CHAPTERS) also drives it (Dokumentation sub-tab)
     email.py           — "Per E-Mail senden" endpoints, reusing each export's build_*_pdf_bytes() function (Setup → E-Mail + every export tab)
     klaerungsliste.py  — questions/tasks/notes per project + "Offene Punkte" PDF export (Klärungsliste sub-tab)
-    project_files.py   — a handful of reference files per project, stored as a BLOB (Übersicht sub-tab)
+    overview.py        — overview tab (htmx, "Übersicht"): one stat card per sub-tab, aggregated from each sub-tab's own data
+    project_files.py   — a handful of reference files per project, stored as a BLOB, htmx list fragment nested into the overview tab (Übersicht sub-tab)
     manuals.py         — project manuals tab ("Handbücher", htmx): fetches a device's catalog-curated manual_url into the project's own store
     time_tracking.py   — internal per-project time tracking ("Zeiterfassung" tab, htmx): header timer JSON API + /hx/ tab fragments + its own timesheet PDF; never part of any project export
     system.py          — self-update via git, changelog + manual + version endpoints (Update/Hilfe tabs)
@@ -133,16 +134,16 @@ frontend/
     linien.js          — optional KNX lines card + the line <select>s used by projekte.js/abgangsliste.js (Gebäudestruktur sub-tab)
     funktionen.js      — assigning functions to rooms, Sonderadressen (Funktionen sub-tab)
     gruppenadressen.js — GA tree preview + CSV export (Gruppenadressen sub-tab)
-    uebersicht.js      — project status dashboard + project files (Übersicht sub-tab)
+    overview.js        — loads the htmx overview tab, goToSubtab() for the stat cards' onclick (Übersicht sub-tab)
     manuals.js         — loads the htmx project manuals tab
     time_tracking.js   — header start/stop timer (live clock), loads the htmx time tracking tab, timesheet PDF download
     abgangsliste.js    — actor instances + circuit assignment
     geraeteplanung.js  — per-room device planning
-    pflichtenheft.js   — Pflichtenheft "Inhalt" card (sections + counts), Vorschau and PDF download
+    specification.js   — loads the htmx Pflichtenheft tab, Vorschau and PDF download
     funktionscheckliste.js — digital on-site function testing checklist
     uebergabe_checkliste.js — digital handover checklist
     klaerungsliste.js  — questions/tasks/notes, copy/PDF/email of the open points
-    dokumentation.js   — Dokumentation "Inhalt" card (chapters + readiness status), Vorschau and PDF download
+    documentation.js   — loads the htmx Dokumentation tab, Vorschau and PDF download
     update.js          — self-update tab + changelog viewer + version badge
     hilfe.js           — in-app manual (renders MANUAL.md)
     init.js            — page-load bootstrap, must load last (calls functions from the files above)
@@ -226,10 +227,10 @@ rarely need to touch anything else.
   each renamed to English in the same change, with pytest coverage for its
   `/hx/` endpoints and a browser pass; confirm each next tab with the
   user. Order: ~~clarification list~~, ~~time tracking~~, ~~Setup~~,
-  ~~device catalog~~, ~~project manuals~~, overview/specification/documentation,
-  function + handover checklists, functions + group addresses, device
-  planning + distribution board planning + labels, circuit list, building
-  structure (drag & drop stays JS).
+  ~~device catalog~~, ~~project manuals~~, ~~overview~~, ~~specification~~,
+  ~~documentation~~, function + handover checklists, functions + group
+  addresses, device planning + distribution board planning + labels,
+  circuit list, building structure (drag & drop stays JS).
 - **User-facing strings are German**; everything else is English: code
   identifiers, comments, file/directory names, database tables/columns,
   API paths, CSS classes, template names, JSON keys, this documentation

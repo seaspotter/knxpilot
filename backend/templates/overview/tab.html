@@ -1,0 +1,25 @@
+{# Overview ("Übersicht") tab: one stat card per other sub-tab (jumps there on click), plus the
+   project files ("Dateien") section - fetched separately (backend/routers/project_files.py), same
+   nested-fragment pattern Setup -> Backup's file list uses. #}
+<div class="card">
+  <h3>Projektübersicht</h3>
+  <p class="muted">Stand des Projekts auf einen Blick — auf eine Karte klicken, um direkt zum jeweiligen Unterreiter zu springen.</p>
+  <div class="stat-grid">
+    {% for c in cards %}
+      <div class="card stat-card" onclick="goToSubtab('{{ c.subtab }}')">
+        <h4>{{ c.title }}</h4>
+        <p class="{% if not c.warn %}muted{% endif %}" style="margin:0;{% if c.warn %} color:var(--warn);{% endif %}">{{ c.body }}</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+<div class="card">
+  <h3>Dateien</h3>
+  <p class="muted">Ein paar Referenzdateien zu diesem Projekt — z.B. Baupläne, ein ETS-Export. Keine vollständige Dokumentenablage: die Dateien liegen direkt in der Datenbank und sind damit automatisch Teil der Datenbanksicherung (Setup → Backup), erscheinen aber nicht in der JSON-Projektsicherung/-Duplizierung.</p>
+  <form hx-post="/hx/projects/{{ project_id }}/files" hx-target="#project-files-list" hx-swap="innerHTML" hx-encoding="multipart/form-data"
+        hx-on::after-request="if (event.detail.successful) this.reset()" class="row mobile-fields">
+    <input type="file" name="file" required>
+    <button type="submit" class="btn secondary" hx-disabled-elt="this">Hochladen</button>
+  </form>
+  <ul class="list" id="project-files-list" hx-get="/hx/projects/{{ project_id }}/files" hx-trigger="load"><li class="muted">Wird geladen...</li></ul>
+</div>

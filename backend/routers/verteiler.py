@@ -285,7 +285,7 @@ def _verteiler_row_table(row_items, row_width_te, styles):
 def build_verteilerplanung_story(db, project_id, styles):
     """The per-Verteiler/per-row content, as a list of flowables - factored out
     so both the standalone export below and the Pflichtenheft's optional
-    inclusion (see pflichtenheft.py's documentation_include_distribution_boards
+    inclusion (see documentation.py's documentation_include_distribution_boards
     toggle) share one rendering, same pattern as build_abgangsliste_story."""
     floors = {r["id"]: r["name"] for r in db.execute("SELECT * FROM floors WHERE project_id=?", (project_id,)).fetchall()}
     rooms = {r["id"]: r["name"] for r in db.execute(

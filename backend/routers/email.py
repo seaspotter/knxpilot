@@ -7,10 +7,10 @@ automatically (e.g. right after a signature is captured), so the sender
 always sees and confirms exactly who's about to receive what.
 
 Reuses each document's existing PDF-building function (factored out
-alongside its download endpoint - see build_pflichtenheft_pdf_bytes() in
-pflichtenheft.py, build_funktionscheckliste_pdf_bytes()/
+alongside its download endpoint - see build_specification_pdf_bytes() in
+specification.py, build_funktionscheckliste_pdf_bytes()/
 build_uebergabe_checkliste_pdf_bytes() in checkliste.py,
-build_dokumentation_pdf_bytes() in dokumentation.py) so the emailed PDF is
+build_documentation_pdf_bytes() in documentation.py) so the emailed PDF is
 always byte-for-byte the same document you'd get from the download button.
 
 The actual SMTP mechanics live in ../email_sender.py.
@@ -22,9 +22,9 @@ from fastapi import APIRouter, HTTPException
 from ..db import get_db
 from ..email_sender import EmailConfigError, EmailSendError, send_pdf_email, send_test_email
 from ..models import SendEmailIn, TestEmailIn
-from .pflichtenheft import build_pflichtenheft_pdf_bytes
+from .specification import build_specification_pdf_bytes
 from .checkliste import build_funktionscheckliste_pdf_bytes, build_uebergabe_checkliste_pdf_bytes
-from .dokumentation import build_dokumentation_pdf_bytes
+from .documentation import build_documentation_pdf_bytes
 from .klaerungsliste import build_klaerungsliste_pdf_bytes
 
 router = APIRouter(tags=["email"])
@@ -32,10 +32,10 @@ router = APIRouter(tags=["email"])
 # (pdf-bytes builder, document title used in the subject line, a short
 # German noun phrase for "im Anhang finden Sie ___" in the body text).
 DOCUMENT_BUILDERS = {
-    "pflichtenheft": (build_pflichtenheft_pdf_bytes, "Pflichtenheft", "das Pflichtenheft"),
+    "specification": (build_specification_pdf_bytes, "Pflichtenheft", "das Pflichtenheft"),
     "funktionscheckliste": (build_funktionscheckliste_pdf_bytes, "Funktionscheckliste", "die Funktionscheckliste"),
     "uebergabe": (build_uebergabe_checkliste_pdf_bytes, "Übergabe-Checkliste", "die Übergabe-Checkliste"),
-    "dokumentation": (build_dokumentation_pdf_bytes, "Dokumentation", "die vollständige Projektdokumentation"),
+    "documentation": (build_documentation_pdf_bytes, "Dokumentation", "die vollständige Projektdokumentation"),
     "klaerungsliste": (build_klaerungsliste_pdf_bytes, "Offene Punkte", "die offenen Punkte zur Klärung"),
 }
 

@@ -128,7 +128,7 @@
   /* Setup central templates form: fields that only apply to one scope (templates/setup/central_templates.html) */
   .ct-form .ct-only-floor, .ct-form .ct-only-room { display:none; }
   .ct-form[data-scope="floor"] .ct-only-floor, .ct-form[data-scope="room_multi"] .ct-only-room { display:flex; }
-  /* "Inhalt" card, Pflichtenheft/Dokumentation (ui.js renderDocContents) */
+  /* "Inhalt" card, Pflichtenheft/Dokumentation tabs (backend/templates/specification|documentation/tab.html) */
   .doc-contents-heading { margin:14px 0 6px; }
   .doc-contents { border:1px solid var(--border); border-radius:8px; overflow:hidden; }
   .doc-row { display:grid; grid-template-columns:22px minmax(180px, 280px) 1fr; gap:10px; align-items:baseline; padding:7px 10px; font-size:13.5px; }

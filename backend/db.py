@@ -18,14 +18,14 @@ DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 # operating-conventions writeup (glossary, operating philosophy, per-trade
 # overview, priority/safety functions), contributed by the user (final
 # wording pass). Editable/clearable in Setup -> Pflichtenheft. Uses a small
-# markdown-like syntax that backend/routers/pflichtenheft.py's
+# markdown-like syntax that backend/routers/specification.py's
 # _preamble_story() renders into headings/bullets/bold/italic/rule (## or
 # ### / a whole-line **bold** / a whole-line *italic* / "---" / "- " /
 # inline **bold** - see that function's docstring). Seeded once on a fresh
 # install (see the company_profile INSERT below), same "only insert into an
 # empty table" convention as seed_defaults()/seed_default_actor_types() -
 # never overwrites a value the user has since edited or cleared.
-DEFAULT_PFLICHTENHEFT_PREAMBLE = (
+DEFAULT_SPECIFICATION_PREAMBLE = (
     "### Allgemeine Vorbemerkungen und Systemgrundlagen\n\n"
     "Dieses Pflichtenheft beschreibt die grundlegenden Funktionen, die "
     "Bedienphilosophie sowie das gewünschte Zusammenspiel der geplanten "
@@ -100,13 +100,13 @@ DEFAULT_PFLICHTENHEFT_PREAMBLE = (
     "dieses grundlegenden Pflichtenhefts.*"
 )
 
-# Earlier DEFAULT_PFLICHTENHEFT_PREAMBLE texts, most recent first - an
+# Earlier DEFAULT_SPECIFICATION_PREAMBLE texts, most recent first - an
 # install whose preamble still exactly matches one of these (i.e. was never
 # customized, just carried the seeded default forward) gets upgraded to the
-# current DEFAULT_PFLICHTENHEFT_PREAMBLE on next startup. Same "only touch
+# current DEFAULT_SPECIFICATION_PREAMBLE on next startup. Same "only touch
 # text nobody actually wrote" reasoning as the empty-string backfill below,
 # just matched against known-old-default values instead of ''.
-_SUPERSEDED_PFLICHTENHEFT_PREAMBLES = [
+_SUPERSEDED_SPECIFICATION_PREAMBLES = [
     "Dieses Pflichtenheft beschreibt die grundlegenden Funktionen, die "
     "Bedienphilosophie sowie das gewünschte Zusammenspiel der geplanten "
     "KNX-Anlage. Das Dokument dient als Grundlage für die spätere "
@@ -829,7 +829,7 @@ def init_db():
         if count == 0:
             db.execute(
                 "INSERT INTO company_profile (id, specification_preamble) VALUES (1, ?)",
-                (DEFAULT_PFLICHTENHEFT_PREAMBLE,),
+                (DEFAULT_SPECIFICATION_PREAMBLE,),
             )
 
         # Backfill for installs that already had a company_profile row before
@@ -842,12 +842,12 @@ def init_db():
         # covers that.
         db.execute(
             "UPDATE company_profile SET specification_preamble=? WHERE specification_preamble=''",
-            (DEFAULT_PFLICHTENHEFT_PREAMBLE,),
+            (DEFAULT_SPECIFICATION_PREAMBLE,),
         )
-        for old_text in _SUPERSEDED_PFLICHTENHEFT_PREAMBLES:
+        for old_text in _SUPERSEDED_SPECIFICATION_PREAMBLES:
             db.execute(
                 "UPDATE company_profile SET specification_preamble=? WHERE specification_preamble=?",
-                (DEFAULT_PFLICHTENHEFT_PREAMBLE, old_text),
+                (DEFAULT_SPECIFICATION_PREAMBLE, old_text),
             )
 
 

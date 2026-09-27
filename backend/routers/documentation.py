@@ -1,7 +1,7 @@
 """
 Dokumentation tab: the end-of-project assembly - "everything, generated at
 the end." Combines what Pflichtenheft covers (the agreed spec, reused
-verbatim via build_pflichtenheft_spec_story(), explicitly labeled as its
+verbatim via build_specification_story(), explicitly labeled as its
 own "Pflichtenheft" chapter so it doesn't read as if it were written for
 this document) with the two digital checklists' actual recorded results
 (Funktionscheckliste, Übergabe-Checkliste, both with real checked state),
@@ -14,7 +14,7 @@ toggled on in Setup -> Dokumentation. The three checklist-style chapters
 are themselves toggleable via the company_profile columns
 documentation_include_function_checklist/_handover_checklist/_manuals
 (default on), the five as-built sections via documentation_include_*
-(default off) - see DOKU_CHAPTERS below.
+(default off) - see DOCUMENTATION_CHAPTERS below.
 
 The export opens with an Inhaltsverzeichnis whose entries are real
 clickable internal PDF links (ReportLab's `<a href="#anchor">`/
@@ -27,7 +27,7 @@ links.
 """
 from xml.sax.saxutils import escape
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from reportlab.platypus import Paragraph, Spacer, Table, PageBreak, KeepTogether
 from reportlab.lib.units import mm
 
@@ -37,18 +37,19 @@ from ..pdf_design import (
     pdf_styles, pdf_title_banner, pdf_table_style, checkbox_cell, build_pdf_bytes_two_pass, pdf_response,
     company_header_block, company_footer_line,
 )
+from ..templating import templates
 from .abgangsliste import build_abgangsliste_story
 from .verteiler import build_verteilerplanung_story
 from .geraeteplanung import build_geraete_je_raum_story, device_summary
-from .pflichtenheft import build_pflichtenheft_spec_story, function_checklist_table, pflichtenheft_stats
+from .specification import build_specification_story, function_checklist_table, specification_stats
 from .checkliste import (
     get_status_map, CHECKLIST_SECTIONS, checklist_section_table, build_signature_row, FUNKTIONSCHECKLISTE_SIGNATURES,
 )
 
-router = APIRouter(tags=["dokumentation"])
+router = APIRouter(tags=["documentation"])
 
 
-def _gruppenadressen_story(project_id, styles):
+def _group_addresses_story(project_id, styles):
     """Compact table rendering of the GA tree (see build_ga_tree()) for the
     optional Dokumentation "Gruppenadressen" section - Adresse/Name/DPT per
     Middle Group, since a full project can have hundreds of addresses and the
@@ -86,7 +87,7 @@ def _gruppenadressen_story(project_id, styles):
     return story
 
 
-def _klaerungsliste_story(db, project_id, styles):
+def _clarification_list_story(db, project_id, styles):
     """Table rendering of the Klärungsliste for the optional Dokumentation
     section - all entries regardless of status (offen/geklärt/abgelehnt),
     each clearly labeled, so nothing is silently omitted from the record."""
@@ -112,7 +113,7 @@ def _klaerungsliste_story(db, project_id, styles):
     return [table]
 
 
-def _handbuecher_story(db, project_id, styles):
+def _manuals_story(db, project_id, styles):
     """List-only rendering of the project's Handbücher tab: which used
     devices have a manufacturer manual curated in the catalog, and whether
     it's already been fetched into this project (routers/manuals.py). The
@@ -150,7 +151,7 @@ def _handbuecher_story(db, project_id, styles):
     ]
 
 
-def _funktionscheckliste_story(db, project_id, styles, status_map):
+def _function_checklist_story(db, project_id, styles, status_map):
     """Same per-floor/per-room grouping as the standalone Funktionscheckliste
     export (routers/checkliste.py), with real checked state, reused here as
     a section within the full Dokumentation."""
@@ -190,7 +191,7 @@ def _funktionscheckliste_story(db, project_id, styles, status_map):
     return story
 
 
-def _uebergabe_story(db, project_id, styles, status_map):
+def _handover_story(db, project_id, styles, status_map):
     """Same section grouping as the standalone Übergabe-Checkliste export
     (routers/checkliste.py), with the real Ja/Nein/Nicht-nötig answers and
     Bemerkungen text, plus the real captured signatures (if any)."""
@@ -209,14 +210,14 @@ def _uebergabe_story(db, project_id, styles, status_map):
 
 # The chapters in PDF order, with the Setup → Dokumentation toggle that
 # switches each one on (None = always included) and that toggle's default.
-# One list for both the PDF (_build_dokumentation_chapters, whose
+# One list for both the PDF (_build_documentation_chapters, whose
 # Inhaltsverzeichnis is built from its result) and the "Inhalt" card on the
-# Dokumentation tab (dokumentation_contents), so the two can't drift apart.
+# Dokumentation tab (documentation_contents), so the two can't drift apart.
 # Gruppenadressen last, deliberately - it's the longest/most
 # reference-table-like section on a larger project (every GA in a dense
 # table), so it goes at the very back rather than breaking up the more
 # narrative sections above it.
-DOKU_CHAPTERS = [
+DOCUMENTATION_CHAPTERS = [
     ("pflichtenheft", "Pflichtenheft", None, True),
     ("funktionscheckliste", "Funktionscheckliste — Testergebnisse", "documentation_include_function_checklist", True),
     ("uebergabe", "Übergabe-Checkliste — Ergebnisse", "documentation_include_handover_checklist", True),
@@ -233,23 +234,23 @@ def _chapter_enabled(company, toggle, default):
     return toggle is None or bool(company.get(toggle, default))
 
 
-def _build_dokumentation_chapters(db, project_id, company, styles):
+def _build_documentation_chapters(db, project_id, company, styles):
     """(anchor, title, content) for every enabled chapter with content, in
-    DOKU_CHAPTERS order."""
+    DOCUMENTATION_CHAPTERS order."""
     status_map = get_status_map(db, project_id)
     builders = {
-        "pflichtenheft": lambda: build_pflichtenheft_spec_story(db, project_id, company, styles),
-        "funktionscheckliste": lambda: _funktionscheckliste_story(db, project_id, styles, status_map),
-        "uebergabe": lambda: _uebergabe_story(db, project_id, styles, status_map),
-        "handbuecher": lambda: _handbuecher_story(db, project_id, styles),
+        "pflichtenheft": lambda: build_specification_story(db, project_id, company, styles),
+        "funktionscheckliste": lambda: _function_checklist_story(db, project_id, styles, status_map),
+        "uebergabe": lambda: _handover_story(db, project_id, styles, status_map),
+        "handbuecher": lambda: _manuals_story(db, project_id, styles),
         "abgangsliste": lambda: build_abgangsliste_story(db, project_id, styles, page_break_between_floors=False),
         "verteilerplanung": lambda: build_verteilerplanung_story(db, project_id, styles),
         "geraete-je-raum": lambda: build_geraete_je_raum_story(db, project_id, styles),
-        "klaerungsliste": lambda: _klaerungsliste_story(db, project_id, styles),
-        "gruppenadressen": lambda: _gruppenadressen_story(project_id, styles),
+        "klaerungsliste": lambda: _clarification_list_story(db, project_id, styles),
+        "gruppenadressen": lambda: _group_addresses_story(project_id, styles),
     }
     chapters = []
-    for anchor, title, toggle, default in DOKU_CHAPTERS:
+    for anchor, title, toggle, default in DOCUMENTATION_CHAPTERS:
         if not _chapter_enabled(company, toggle, default):
             continue
         content = builders[anchor]()
@@ -258,7 +259,7 @@ def _build_dokumentation_chapters(db, project_id, company, styles):
     return chapters
 
 
-def _assemble_dokumentation_story(chapters, company, project, styles):
+def _assemble_documentation_story(chapters, company, project, styles):
     """Banner + intro + a clickable Inhaltsverzeichnis + the chapters
     themselves, each starting on its own page with a named anchor matching
     its Inhaltsverzeichnis entry."""
@@ -289,7 +290,7 @@ def _assemble_dokumentation_story(chapters, company, project, styles):
     return story
 
 
-def build_dokumentation_pdf_bytes(project_id: int):
+def build_documentation_pdf_bytes(project_id: int):
     """Shared by the HTTP download endpoint below and routers/email.py's
     send-by-mail action."""
     with get_db() as db:
@@ -305,8 +306,8 @@ def build_dokumentation_pdf_bytes(project_id: int):
             # previous call, so this re-queries and rebuilds from scratch
             # every time rather than caching anything from the outer scope.
             styles = pdf_styles()
-            chapters = _build_dokumentation_chapters(db, project_id, company, styles)
-            return _assemble_dokumentation_story(chapters, company, project, styles)
+            chapters = _build_documentation_chapters(db, project_id, company, styles)
+            return _assemble_documentation_story(chapters, company, project, styles)
 
         data = build_pdf_bytes_two_pass(
             build_story,
@@ -317,9 +318,9 @@ def build_dokumentation_pdf_bytes(project_id: int):
         return data, f"{project['name'].replace(' ', '_')}_dokumentation.pdf"
 
 
-@router.get("/api/projects/{project_id}/export-dokumentation.pdf")
-def export_dokumentation_pdf(project_id: int, inline: bool = False):
-    data, filename = build_dokumentation_pdf_bytes(project_id)
+@router.get("/api/projects/{project_id}/export-documentation.pdf")
+def export_documentation_pdf(project_id: int, inline: bool = False):
+    data, filename = build_documentation_pdf_bytes(project_id)
     return pdf_response(data, filename, inline=inline)
 
 
@@ -340,7 +341,7 @@ def _chapter_detail(db, project_id, anchor, status_map):
     """(detail text, warn, has_content) for one chapter - has_content False
     means the PDF leaves the chapter out even though it's switched on."""
     if anchor == "pflichtenheft":
-        s = pflichtenheft_stats(db, project_id)
+        s = specification_stats(db, project_id)
         return (f"{s['rooms']} Räume · {s['functions']} Funktionen · {s['device_types']} Gerätetypen "
                 "(Details im Unterreiter Pflichtenheft)", not s["rooms"], True)
     if anchor == "funktionscheckliste":
@@ -380,7 +381,7 @@ def _chapter_detail(db, project_id, anchor, status_map):
         (n,) = db.execute("SELECT COUNT(*) FROM verteiler WHERE project_id=?", (project_id,)).fetchone()
         return (f"{n} Verteiler" if n else "noch keine Verteiler angelegt"), False, True
     if anchor == "geraete-je-raum":
-        s = pflichtenheft_stats(db, project_id)
+        s = specification_stats(db, project_id)
         (actors,) = db.execute("SELECT COUNT(*) FROM actor_instances WHERE project_id=?", (project_id,)).fetchone()
         (floor_devices,) = db.execute(
             "SELECT COALESCE(SUM(fd.quantity), 0) FROM floor_devices fd JOIN floors f ON fd.floor_id = f.id "
@@ -400,18 +401,25 @@ def _chapter_detail(db, project_id, anchor, status_map):
     return "", False, True
 
 
-@router.get("/api/projects/{project_id}/dokumentation-contents")
-def dokumentation_contents(project_id: int):
-    """DOKU_CHAPTERS with, per chapter, whether it's in the PDF and a short
+@router.get("/api/projects/{project_id}/documentation-contents")
+def documentation_contents(project_id: int):
+    """DOCUMENTATION_CHAPTERS with, per chapter, whether it's in the PDF and a short
     status - doubles as a readiness check before handing the PDF over."""
     with get_db() as db:
         company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
         status_map = get_status_map(db, project_id)
         result = []
-        for anchor, title, toggle, default in DOKU_CHAPTERS:
+        for anchor, title, toggle, default in DOCUMENTATION_CHAPTERS:
             if not _chapter_enabled(company, toggle, default):
                 result.append({"title": title, "included": False, "detail": "aus (Setup → Dokumentation)", "warn": False})
                 continue
             detail, warn, has_content = _chapter_detail(db, project_id, anchor, status_map)
             result.append({"title": title, "included": has_content, "detail": detail, "warn": warn})
         return result
+
+
+# ---------- htmx fragment (backend/templates/documentation/tab.html) ----------
+@router.get("/hx/projects/{project_id}/documentation")
+def hx_tab(request: Request, project_id: int):
+    return templates.TemplateResponse(request, "documentation/tab.html",
+                                      {"sections": documentation_contents(project_id)})

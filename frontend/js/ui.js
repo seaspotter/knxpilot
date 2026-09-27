@@ -200,17 +200,6 @@ function openImportModal(title, hint) {
   });
 }
 
-// "Inhalt" card of the Pflichtenheft/Dokumentation tabs: one row per PDF
-// section, [{title, included, detail, warn}] from the *-contents endpoints.
-function renderDocContents(elementId, sections) {
-  document.getElementById(elementId).innerHTML = `<div class="doc-contents">${sections.map((s, i) => `
-    <div class="doc-row${s.included ? '' : ' off'}">
-      <span class="doc-mark">${s.included ? '✓' : '–'}</span>
-      <span class="doc-title">${s.included ? `${i + 1}. ` : ''}${escapeHtml(s.title)}</span>
-      <span class="doc-detail${s.warn ? ' warn' : ''}">${escapeHtml(s.detail)}</span>
-    </div>`).join('')}</div>`;
-}
-
 function escapeAttr(s) {
   return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 }
@@ -250,11 +239,3 @@ document.addEventListener('keydown', ev => {
 });
 // A server response can show a toast: HX-Trigger {"show-toast": {"message", "level"}}.
 document.addEventListener('show-toast', ev => showToast(ev.detail.message, ev.detail.level || 'info', ev.detail.level === 'error' ? {sticky: true} : undefined));
-
-function humanFileSize(bytes) {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
-  let i = -1;
-  do { bytes /= 1024; i++; } while (bytes >= 1024 && i < units.length - 1);
-  return `${bytes.toFixed(1)} ${units[i]}`;
-}

@@ -6,7 +6,7 @@ and the device bill of materials, as a customer/electrician-facing PDF.
 Deliberately narrow: no "Getestet" checkboxes (nothing's been tested yet at
 this stage - see routers/checkliste.py's Funktionscheckliste for that) and
 no as-built sections like Abgangsliste/Verteilerplanung/Gruppenadressen/
-Klärungsliste (those live in routers/dokumentation.py's end-of-project
+Klärungsliste (those live in routers/documentation.py's end-of-project
 Dokumentation export instead, alongside both checklists' recorded results).
 `function_checklist_table()` below is shared with checkliste.py's
 Funktionscheckliste PDF export - same rendering, with or without a real
@@ -14,7 +14,7 @@ checked-state column.
 """
 import re
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from reportlab.platypus import Paragraph, Spacer, Table, PageBreak, HRFlowable, KeepTogether
 from reportlab.lib.units import mm
 
@@ -24,10 +24,12 @@ from ..pdf_design import (
     pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_bytes, pdf_response,
     company_header_block, company_footer_line, checkbox_cell,
 )
+from ..templating import templates
 from ..utils import join_parts, local_time_text
 from .geraeteplanung import build_stueckliste_story, device_summary
 
-router = APIRouter(tags=["pflichtenheft"])
+
+router = APIRouter(tags=["specification"])
 
 
 def _inline_bold(text):
@@ -145,10 +147,10 @@ def _floor_room_table(styles, floor_rooms):
     return table
 
 
-def build_pflichtenheft_spec_story(db, project_id, company, styles):
+def build_specification_story(db, project_id, company, styles):
     """Vorbemerkungen, Stockwerk-/Raumverzeichnis, per-room functions/
     devices, Zentralfunktionen and Stückliste - factored out of
-    export_pflichtenheft_pdf() so routers/dokumentation.py's end-of-project
+    export_specification_pdf() so routers/documentation.py's end-of-project
     export can include the exact same "what was planned" content verbatim,
     alongside the checklists' actual on-site results."""
     story = []
@@ -258,7 +260,7 @@ def build_pflichtenheft_spec_story(db, project_id, company, styles):
     return story
 
 
-def build_pflichtenheft_pdf_bytes(project_id: int):
+def build_specification_pdf_bytes(project_id: int):
     """The raw PDF bytes + suggested filename - shared by the HTTP download
     endpoint below and routers/email.py's send-by-mail action, so both
     always produce the exact same document."""
@@ -280,7 +282,7 @@ def build_pflichtenheft_pdf_bytes(project_id: int):
             styles["Body"],
         ))
         story.append(Spacer(1, 4 * mm))
-        story += build_pflichtenheft_spec_story(db, project_id, company, styles)
+        story += build_specification_story(db, project_id, company, styles)
 
         data = build_pdf_bytes(
             story,
@@ -291,15 +293,15 @@ def build_pflichtenheft_pdf_bytes(project_id: int):
         return data, f"{project['name'].replace(' ', '_')}_pflichtenheft.pdf"
 
 
-@router.get("/api/projects/{project_id}/export-pflichtenheft.pdf")
-def export_pflichtenheft_pdf(project_id: int, inline: bool = False):
-    data, filename = build_pflichtenheft_pdf_bytes(project_id)
+@router.get("/api/projects/{project_id}/export-specification.pdf")
+def export_specification_pdf(project_id: int, inline: bool = False):
+    data, filename = build_specification_pdf_bytes(project_id)
     return pdf_response(data, filename, inline=inline)
 
 
 # ---------- "Inhalt" card on the Pflichtenheft tab ----------
-def pflichtenheft_stats(db, project_id):
-    """Counts behind the contents card - shared with routers/dokumentation.py,
+def specification_stats(db, project_id):
+    """Counts behind the contents card - shared with routers/documentation.py,
     whose first chapter is this same Pflichtenheft content."""
     floors = db.execute("SELECT id FROM floors WHERE project_id=?", (project_id,)).fetchall()
     rooms = db.execute(
@@ -327,13 +329,13 @@ def _section(title, included, detail, warn=False):
     return {"title": title, "included": included, "detail": detail, "warn": warn}
 
 
-@router.get("/api/projects/{project_id}/pflichtenheft-contents")
-def pflichtenheft_contents(project_id: int):
+@router.get("/api/projects/{project_id}/specification-contents")
+def specification_contents(project_id: int):
     """The PDF's sections in PDF order, with what each one contains - same
-    conditions as build_pflichtenheft_spec_story()."""
+    conditions as build_specification_story()."""
     with get_db() as db:
         company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
-        s = pflichtenheft_stats(db, project_id)
+        s = specification_stats(db, project_id)
     off = "aus (Setup → Pflichtenheft)"
     has_preamble = bool((company.get("specification_preamble") or "").strip())
     sections = []
@@ -359,3 +361,10 @@ def pflichtenheft_contents(project_id: int):
         sections.append(_section("Stückliste", s["device_types"] > 0,
                                  f"{s['device_types']} Gerätetypen · {s['device_total']} Stück" if s["device_types"] else "noch keine Geräte geplant"))
     return sections
+
+
+# ---------- htmx fragment (backend/templates/specification/tab.html) ----------
+@router.get("/hx/projects/{project_id}/specification")
+def hx_tab(request: Request, project_id: int):
+    return templates.TemplateResponse(request, "specification/tab.html",
+                                      {"sections": specification_contents(project_id)})

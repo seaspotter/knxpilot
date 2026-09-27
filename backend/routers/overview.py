@@ -1,0 +1,102 @@
+"""
+Overview tab ("Übersicht"): the project's landing sub-tab, a status
+dashboard - one stat card per other sub-tab, summarizing floors/rooms,
+group addresses, circuit assignment progress, planned devices, both
+checklists' progress, open clarifications and manuals, each card jumping
+straight to its sub-tab on click.
+
+Rendered server-side with htmx (backend/templates/overview/tab.html);
+this router only aggregates figures already computed elsewhere (get_circuits,
+device_summary, build_ga_tree, ...) - no new business logic. The project
+files ("Dateien") section on this same tab is project_files.py's own
+domain and is fetched separately, the same way Setup -> Backup's file list
+is nested into its own page.
+"""
+from fastapi import APIRouter, Request
+
+from ..db import get_db
+from ..ga_logic import build_ga_tree, get_central_functions_overview, get_circuits, get_room_functions_by_category
+from ..templating import templates
+from .checkliste import CHECKLIST_SECTIONS, get_status_map
+from .geraeteplanung import device_summary
+from .klaerungsliste import list_klaerungen
+from .manuals import list_project_manuals
+from .projects import get_project_tree
+from .verteiler import list_verteiler
+
+router = APIRouter(tags=["overview"])
+
+
+def _stat(subtab, title, body, warn=False):
+    return {"subtab": subtab, "title": title, "body": body, "warn": warn}
+
+
+def _overview_cards(project_id):
+    tree = get_project_tree(project_id)
+    rooms = [r for f in tree["floors"] for r in f["rooms"]]
+    floor_count = len(tree["floors"])
+    room_count = len(rooms)
+    point_count = sum(len(r["points"]) for r in rooms)
+
+    ga_tree = build_ga_tree(project_id)
+    ga_count = sum(len(mid["subs"]) for m in ga_tree["main_groups"] for mid in m["middles"])
+
+    with get_db() as db:
+        circuits = get_circuits(db, project_id)
+        status_map = get_status_map(db, project_id)
+        fc_total = fc_checked = 0
+        for room in rooms:
+            for items in get_room_functions_by_category(db, room["id"]).values():
+                for item in items:
+                    fc_total += 1
+                    if status_map.get(item["key"], {}).get("status") == "ok":
+                        fc_checked += 1
+        for _, items in get_central_functions_overview(db, project_id):
+            for item in items:
+                fc_total += 1
+                if status_map.get(item["key"], {}).get("status") == "ok":
+                    fc_checked += 1
+
+    assigned_count = sum(1 for c in circuits if c["assignment"])
+    total_circuits = len(circuits)
+
+    device_total = sum(d["total"] for d in device_summary(project_id))
+    verteiler_count = len(list_verteiler(project_id))
+    manuals = list_project_manuals(project_id)
+    open_klaerungen = sum(1 for k in list_klaerungen(project_id) if k["status"] == "offen")
+
+    uebergabe_items = [f"uebergabe:{slug}" for _, items in CHECKLIST_SECTIONS for slug, _ in items]
+    uebergabe_total = len(uebergabe_items)
+    uebergabe_answered = sum(1 for key in uebergabe_items if status_map.get(key, {}).get("status"))
+
+    return [
+        _stat("struktur", "Gebäudestruktur", f"{floor_count} Geschosse · {room_count} Räume"),
+        _stat("funktionen", "Funktionen",
+              f"{point_count} Punkte definiert" if point_count else "Noch keine Punkte definiert"),
+        _stat("gruppenadressen", "Gruppenadressen",
+              f"{ga_count} Gruppenadressen" if ga_count else "Noch keine Gruppenadressen"),
+        _stat("abgangsliste", "Abgangsliste",
+              f"{assigned_count} / {total_circuits} Abgänge zugeordnet" if total_circuits else "Noch keine Abgänge",
+              warn=assigned_count < total_circuits),
+        _stat("geraeteplanung", "Geräteplanung",
+              f"{device_total} Geräte geplant" if device_total else "Noch keine Geräte geplant"),
+        _stat("verteilerplanung", "Verteilerplanung",
+              f"{verteiler_count} Verteiler angelegt" if verteiler_count else "Noch keine Verteiler angelegt"),
+        _stat("specification", "Pflichtenheft", "Frühe Leistungsbeschreibung (PDF)"),
+        _stat("funktionscheckliste", "Funktionscheckliste",
+              f"{fc_checked} / {fc_total} Funktionen getestet" if fc_total else "Noch keine Funktionen geplant"),
+        _stat("uebergabe", "Übergabe-Checkliste", f"{uebergabe_answered} / {uebergabe_total} Punkte beantwortet"),
+        _stat("klaerungsliste", "Klärungsliste",
+              f"{open_klaerungen} offene Einträge" if open_klaerungen else "Keine offenen Einträge",
+              warn=open_klaerungen > 0),
+        _stat("manuals", "Handbücher",
+              f"{sum(1 for m in manuals if m['file_id'])} / {len(manuals)} heruntergeladen"
+              if manuals else "Keine Handbuch-Links hinterlegt"),
+        _stat("documentation", "Dokumentation", "Abschlussdokumentation (PDF)"),
+    ]
+
+
+@router.get("/hx/projects/{project_id}/overview")
+def hx_tab(request: Request, project_id: int):
+    return templates.TemplateResponse(request, "overview/tab.html",
+                                      {"cards": _overview_cards(project_id), "project_id": project_id})

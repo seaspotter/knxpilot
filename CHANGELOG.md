@@ -28,6 +28,19 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ### Changed
 
+- **Overview, specification and documentation tabs rendered server-side
+  with htmx** — the overview tab's stat cards (one per sub-tab, jumping
+  there on click) and its project files ("Dateien") section, and the
+  Pflichtenheft/Dokumentation tabs' "Inhalt" lists, now come from Jinja
+  templates (`backend/templates/overview/`, `specification/`,
+  `documentation/`, `project_files/`) instead of client-side JavaScript
+  aggregating a dozen API calls; looks and works the same. Renamed to
+  English along the way: `routers/pflichtenheft.py` →
+  `routers/specification.py`, `routers/dokumentation.py` →
+  `routers/documentation.py`, `js/uebersicht.js` → `js/overview.js`, the
+  `Pflichtenheft`/`Dokumentation` sub-tab ids, the export endpoints
+  (`export-specification.pdf`, `export-documentation.pdf`) and the
+  `*-contents` endpoints.
 - **Clarification list rendered server-side with htmx (trial)** — looks
   and works the same, but its HTML now comes from Jinja templates
   (`backend/templates/klaerungsliste/`) via `/hx/...` endpoints, with htmx

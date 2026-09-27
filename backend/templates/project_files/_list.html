@@ -1,0 +1,13 @@
+{# Project files ("Dateien") list - fetched on load and re-fetched after upload/delete
+   (backend/routers/project_files.py's /hx/... endpoints). #}
+{% for f in files %}
+  <li>
+    <div><b>{{ f.filename }}</b> {% if f.size_text %}<span class="pill">{{ f.size_text }}</span>{% endif %} <span class="pill">{{ f.date_text }}</span></div>
+    <div>
+      <button class="btn secondary small" onclick="window.location.href='/api/project-files/{{ f.id }}/download'">Herunterladen</button>
+      <button class="btn danger small" hx-delete="/hx/project-files/{{ f.id }}" hx-target="#project-files-list" hx-swap="innerHTML" hx-confirm="Diese Datei löschen?">Löschen</button>
+    </div>
+  </li>
+{% else %}
+  <li class="muted">Noch keine Dateien</li>
+{% endfor %}

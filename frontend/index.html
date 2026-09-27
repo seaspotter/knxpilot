@@ -110,7 +110,7 @@
       </div>
 
       <div class="subnav" id="workspace-subnav">
-        <button data-subtab="uebersicht" class="active">Übersicht</button>
+        <button data-subtab="overview" class="active">Übersicht</button>
         <button data-subtab="struktur">Gebäudestruktur</button>
         <button data-subtab="funktionen">Funktionen</button>
         <button data-subtab="gruppenadressen">Gruppenadressen</button>
@@ -118,30 +118,16 @@
         <button data-subtab="labels">Labels</button>
         <button data-subtab="geraeteplanung">Geräteplanung</button>
         <button data-subtab="verteilerplanung">Verteilerplanung</button>
-        <button data-subtab="pflichtenheft">Pflichtenheft</button>
+        <button data-subtab="specification">Pflichtenheft</button>
         <button data-subtab="funktionscheckliste">Funktionscheckliste</button>
         <button data-subtab="uebergabe">Übergabe-Checkliste</button>
         <button data-subtab="klaerungsliste">Klärungsliste</button>
         <button data-subtab="manuals">Handbücher</button>
-        <button data-subtab="dokumentation">Dokumentation</button>
+        <button data-subtab="documentation">Dokumentation</button>
       </div>
 
-      <div class="subtab active" id="subtab-uebersicht">
-        <div class="card">
-          <h3>Projektübersicht</h3>
-          <p class="muted">Stand des Projekts auf einen Blick — auf eine Karte klicken, um direkt zum jeweiligen Unterreiter zu springen.</p>
-          <div class="stat-grid" id="uebersicht-cards"></div>
-        </div>
-        <div class="card">
-          <h3>Dateien</h3>
-          <p class="muted">Ein paar Referenzdateien zu diesem Projekt — z.B. Baupläne, ein ETS-Export. Keine vollständige Dokumentenablage: die Dateien liegen direkt in der Datenbank und sind damit automatisch Teil der Datenbanksicherung (Setup → Backup), erscheinen aber nicht in der JSON-Projektsicherung/-Duplizierung.</p>
-          <div class="row mobile-fields">
-            <input type="file" id="project-file-upload">
-            <button class="btn secondary" onclick="uploadProjectFile()">Hochladen</button>
-          </div>
-          <ul class="list" id="project-files-list"></ul>
-        </div>
-      </div>
+      <!-- Rendered server-side with htmx (backend/templates/overview/tab.html), see overview.js -->
+      <div class="subtab active" id="subtab-overview"></div>
 
       <!-- Rendered server-side with htmx (backend/templates/manuals/tab.html), see manuals.js -->
       <div class="subtab" id="subtab-manuals"></div>
@@ -325,21 +311,8 @@
         <div id="verteiler-list"></div>
       </div>
 
-      <div class="subtab" id="subtab-pflichtenheft">
-        <div class="card">
-          <div class="row" style="justify-content:space-between;">
-            <h4 style="margin:0;">Pflichtenheft</h4>
-            <div class="row" style="margin:0; gap:6px;">
-              <button class="btn secondary small" onclick="previewPflichtenheft()">Vorschau</button>
-              <button class="btn secondary small" onclick="openSendEmailModal('pflichtenheft', 'Pflichtenheft')">Per E-Mail senden</button>
-              <button class="btn" onclick="downloadPflichtenheft()">PDF herunterladen</button>
-            </div>
-          </div>
-          <p class="muted">Die frühe, kundenseitige Leistungsbeschreibung: was wurde vereinbart? Vorbemerkungen, Stockwerk-/Raumverzeichnis, geplante Funktionen/Geräte je Raum sowie die Stückliste — bewusst ohne Testergebnisse oder Ausführungsdetails (dafür: Funktionscheckliste, Übergabe-Checkliste, Dokumentation). Inhalt/Abschnitte anpassen: Setup → Pflichtenheft.</p>
-          <h4 class="doc-contents-heading">Inhalt</h4>
-          <div id="pflichtenheft-contents"></div>
-        </div>
-      </div>
+      <!-- Rendered server-side with htmx (backend/templates/specification/tab.html), see specification.js -->
+      <div class="subtab" id="subtab-specification"></div>
 
       <div class="subtab" id="subtab-funktionscheckliste">
         <div class="card">
@@ -374,21 +347,8 @@
         <div id="klaerungsliste-root"></div>
       </div>
 
-      <div class="subtab" id="subtab-dokumentation">
-        <div class="card">
-          <div class="row" style="justify-content:space-between;">
-            <h4 style="margin:0;">Dokumentation</h4>
-            <div class="row" style="margin:0; gap:6px;">
-              <button class="btn secondary small" onclick="previewDokumentation()">Vorschau</button>
-              <button class="btn secondary small" onclick="openSendEmailModal('dokumentation', 'Dokumentation')">Per E-Mail senden</button>
-              <button class="btn" onclick="downloadDokumentation()">PDF herunterladen</button>
-            </div>
-          </div>
-          <p class="muted">Die vollständige Abschlussdokumentation, am Ende des Projekts erzeugt: Pflichtenheft-Inhalt plus die tatsächlichen Ergebnisse der Funktions- und Übergabe-Checkliste, plus optional Abgangsliste/Verteilerplanung/Gruppenadressen/Klärungsliste/Geräte je Raum. Welche Zusatzabschnitte enthalten sind: Setup → Dokumentation.</p>
-          <h4 class="doc-contents-heading">Inhalt</h4>
-          <div id="dokumentation-contents"></div>
-        </div>
-      </div>
+      <!-- Rendered server-side with htmx (backend/templates/documentation/tab.html), see documentation.js -->
+      <div class="subtab" id="subtab-documentation"></div>
     </div>
   </div>
 
@@ -501,18 +461,18 @@
 <script src="/js/linien.js"></script>
 <script src="/js/funktionen.js"></script>
 <script src="/js/gruppenadressen.js"></script>
-<script src="/js/uebersicht.js"></script>
+<script src="/js/overview.js"></script>
 <script src="/js/abgangsliste.js"></script>
 <script src="/js/labels.js"></script>
 <script src="/js/geraeteplanung.js"></script>
 <script src="/js/verteiler.js"></script>
-<script src="/js/pflichtenheft.js"></script>
+<script src="/js/specification.js"></script>
 <script src="/js/funktionscheckliste.js"></script>
 <script src="/js/uebergabe_checkliste.js"></script>
 <script src="/js/klaerungsliste.js"></script>
 <script src="/js/manuals.js"></script>
 <script src="/js/time_tracking.js"></script>
-<script src="/js/dokumentation.js"></script>
+<script src="/js/documentation.js"></script>
 <script src="/js/update.js"></script>
 <script src="/js/hilfe.js"></script>
 <script src="/js/init.js"></script>

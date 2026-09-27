@@ -48,14 +48,14 @@ document.querySelectorAll('#workspace-subnav button').forEach(btn => {
     document.querySelectorAll('#project-detail .subtab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('subtab-' + btn.dataset.subtab).classList.add('active');
-    if (btn.dataset.subtab === 'uebersicht') await loadUebersichtForCurrentProject();
+    if (btn.dataset.subtab === 'overview') await loadOverviewTab();
     if (btn.dataset.subtab === 'gruppenadressen') { await loadGaChanges(); await previewGA(); }
     if (btn.dataset.subtab === 'abgangsliste') await loadAbgangForCurrentProject();
     if (btn.dataset.subtab === 'labels') renderLabelGrid();
     if (btn.dataset.subtab === 'geraeteplanung') await loadGeraeteplanungForCurrentProject();
     if (btn.dataset.subtab === 'verteilerplanung') await loadVerteilerplanungForCurrentProject();
-    if (btn.dataset.subtab === 'pflichtenheft') await loadPflichtenheftForCurrentProject();
-    if (btn.dataset.subtab === 'dokumentation') await loadDokumentationForCurrentProject();
+    if (btn.dataset.subtab === 'specification') await loadSpecificationTab();
+    if (btn.dataset.subtab === 'documentation') await loadDocumentationTab();
     if (btn.dataset.subtab === 'funktionscheckliste') await loadFunktionschecklisteForCurrentProject();
     if (btn.dataset.subtab === 'uebergabe') await loadUebergabeForCurrentProject();
     if (btn.dataset.subtab === 'klaerungsliste') await loadKlaerungslisteForCurrentProject();

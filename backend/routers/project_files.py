@@ -9,12 +9,21 @@ Device manuals are handled separately, in routers/manuals.py - fetched
 from a catalog-curated URL rather than uploaded, and kept in their own
 project_manuals table so this list only ever shows what the user
 themselves uploaded.
+
+The "Dateien" section of the overview tab (routers/overview.py) is
+rendered server-side with htmx: the /hx/... endpoints below render just the
+`<ul>` list fragment (backend/templates/project_files/_list.html), fetched
+on load and re-fetched after upload/delete - the same nested-fragment
+pattern Setup -> Backup's file list uses.
 """
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from datetime import datetime
+
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 from fastapi.responses import Response
 
 from ..db import get_db
-from ..utils import content_disposition
+from ..templating import client_zone, templates
+from ..utils import content_disposition, human_file_size
 
 router = APIRouter(tags=["project_files"])
 
@@ -69,3 +78,44 @@ def delete_project_file(file_id: int):
     with get_db() as db:
         db.execute("DELETE FROM project_files WHERE id=?", (file_id,))
     return {"ok": True}
+
+
+# ---------- htmx fragment (backend/templates/project_files/_list.html) ----------
+def _files_list(request, project_id):
+    zone = client_zone(request)
+    files = list_project_files(project_id)
+    for f in files:
+        f["size_text"] = human_file_size(f["size_bytes"])
+        f["date_text"] = datetime.fromisoformat(f["uploaded_at"]).astimezone(zone).strftime("%d.%m.%Y") if f["uploaded_at"] else ""
+    return templates.TemplateResponse(request, "project_files/_list.html", {"files": files})
+
+
+@router.get("/hx/projects/{project_id}/files")
+def hx_list(request: Request, project_id: int):
+    return _files_list(request, project_id)
+
+
+@router.post("/hx/projects/{project_id}/files")
+async def hx_upload(request: Request, project_id: int, file: UploadFile = File(...)):
+    with get_db() as db:
+        if not db.execute("SELECT 1 FROM projects WHERE id=?", (project_id,)).fetchone():
+            raise HTTPException(404, "Project not found")
+        data = await file.read()
+        if len(data) > MAX_FILE_SIZE:
+            raise HTTPException(400, f"Datei zu gross (max. {MAX_FILE_SIZE // (1024 * 1024)} MB)")
+        db.execute(
+            "INSERT INTO project_files (project_id, filename, content_type, size_bytes, data) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (project_id, file.filename or "Datei", file.content_type or "", len(data), data),
+        )
+    return _files_list(request, project_id)
+
+
+@router.delete("/hx/project-files/{file_id}")
+def hx_delete(request: Request, file_id: int):
+    with get_db() as db:
+        row = db.execute("SELECT project_id FROM project_files WHERE id=?", (file_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "File not found")
+        db.execute("DELETE FROM project_files WHERE id=?", (file_id,))
+    return _files_list(request, row["project_id"])

@@ -249,9 +249,9 @@ async function openProject(id, name) {
   renderProjectMeta();
 
   document.querySelectorAll('#workspace-subnav button').forEach(b => b.classList.remove('active'));
-  document.querySelector('#workspace-subnav button[data-subtab="uebersicht"]').classList.add('active');
+  document.querySelector('#workspace-subnav button[data-subtab="overview"]').classList.add('active');
   document.querySelectorAll('#project-detail .subtab').forEach(t => t.classList.remove('active'));
-  document.getElementById('subtab-uebersicht').classList.add('active');
+  document.getElementById('subtab-overview').classList.add('active');
 
   await renderFloors();
   await renderFunktionenRooms();
@@ -259,7 +259,7 @@ async function openProject(id, name) {
   await renderSpecials();
   await refreshKlaerungsBadge();
   await refreshAbgangslisteBadge();
-  await loadUebersichtForCurrentProject();
+  await loadOverviewTab();
 }
 
 function closeProject() {

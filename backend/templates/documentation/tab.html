@@ -1,0 +1,23 @@
+{# Documentation ("Dokumentation") tab: intro + Vorschau/PDF/email buttons + the chapter-by-chapter
+   "Inhalt" list, which doubles as a readiness check before handing the PDF over. #}
+<div class="card">
+  <div class="row" style="justify-content:space-between;">
+    <h4 style="margin:0;">Dokumentation</h4>
+    <div class="row" style="margin:0; gap:6px;">
+      <button class="btn secondary small" onclick="previewDocumentation()">Vorschau</button>
+      <button class="btn secondary small" onclick="openSendEmailModal('documentation', 'Dokumentation')">Per E-Mail senden</button>
+      <button class="btn" onclick="downloadDocumentation()">PDF herunterladen</button>
+    </div>
+  </div>
+  <p class="muted">Die vollständige Abschlussdokumentation, am Ende des Projekts erzeugt: Pflichtenheft-Inhalt plus die tatsächlichen Ergebnisse der Funktions- und Übergabe-Checkliste, plus optional Abgangsliste/Verteilerplanung/Gruppenadressen/Klärungsliste/Geräte je Raum. Welche Zusatzabschnitte enthalten sind: Setup → Dokumentation.</p>
+  <h4 class="doc-contents-heading">Inhalt</h4>
+  <div class="doc-contents">
+    {% for s in sections %}
+      <div class="doc-row{% if not s.included %} off{% endif %}">
+        <span class="doc-mark">{{ "✓" if s.included else "–" }}</span>
+        <span class="doc-title">{% if s.included %}{{ loop.index }}. {% endif %}{{ s.title }}</span>
+        <span class="doc-detail{% if s.warn %} warn{% endif %}">{{ s.detail }}</span>
+      </div>
+    {% endfor %}
+  </div>
+</div>

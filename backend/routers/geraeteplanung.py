@@ -269,7 +269,7 @@ def export_geraeteliste_pdf(project_id: int):
 
 def build_stueckliste_story(summary, styles):
     """The Stückliste as it appears in every PDF - the Geräteliste (order)
-    export here and the Pflichtenheft/Dokumentation (routers/pflichtenheft.py)
+    export here and the Pflichtenheft/Dokumentation (routers/specification.py)
     - so they're always identical: devices to order in a table (alphabetical,
     see device_summary), devices marked "Nicht bestellen" listed below as
     already present."""

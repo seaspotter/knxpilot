@@ -19,7 +19,7 @@ from ..backup import list_local_backups, list_nextcloud_backups, run_backup_now
 from ..db import get_db
 from ..templating import client_zone, templates
 from ..models import PointTypeIn, CentralTemplateIn, CompanyProfileIn, CategoryRenameIn, Suffix
-from ..utils import content_disposition
+from ..utils import content_disposition, human_file_size
 
 router = APIRouter(tags=["setup"])
 
@@ -729,9 +729,7 @@ def hx_backup_files(request: Request):
             nextcloud_error = str(e)
     zone = client_zone(request)
     for f in files:
-        size = f.get("size") or 0
-        f["size_text"] = next((f"{size / 1024 ** i:.1f} {u}" for i, u in ((3, "GB"), (2, "MB"), (1, "KB")) if size >= 1024 ** i),
-                              f"{size} B") if size else ""
+        f["size_text"] = human_file_size(f.get("size"))
         f["modified_text"] = ""
         if f.get("modified_at"):
             try:

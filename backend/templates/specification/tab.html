@@ -1,0 +1,23 @@
+{# Specification ("Pflichtenheft") tab: intro + Vorschau/PDF/email buttons + the "Inhalt" list -
+   what the PDF's sections contain, doubling as a plausibility check before downloading. #}
+<div class="card">
+  <div class="row" style="justify-content:space-between;">
+    <h4 style="margin:0;">Pflichtenheft</h4>
+    <div class="row" style="margin:0; gap:6px;">
+      <button class="btn secondary small" onclick="previewSpecification()">Vorschau</button>
+      <button class="btn secondary small" onclick="openSendEmailModal('specification', 'Pflichtenheft')">Per E-Mail senden</button>
+      <button class="btn" onclick="downloadSpecification()">PDF herunterladen</button>
+    </div>
+  </div>
+  <p class="muted">Die frühe, kundenseitige Leistungsbeschreibung: was wurde vereinbart? Vorbemerkungen, Stockwerk-/Raumverzeichnis, geplante Funktionen/Geräte je Raum sowie die Stückliste — bewusst ohne Testergebnisse oder Ausführungsdetails (dafür: Funktionscheckliste, Übergabe-Checkliste, Dokumentation). Inhalt/Abschnitte anpassen: Setup → Pflichtenheft.</p>
+  <h4 class="doc-contents-heading">Inhalt</h4>
+  <div class="doc-contents">
+    {% for s in sections %}
+      <div class="doc-row{% if not s.included %} off{% endif %}">
+        <span class="doc-mark">{{ "✓" if s.included else "–" }}</span>
+        <span class="doc-title">{% if s.included %}{{ loop.index }}. {% endif %}{{ s.title }}</span>
+        <span class="doc-detail{% if s.warn %} warn{% endif %}">{{ s.detail }}</span>
+      </div>
+    {% endfor %}
+  </div>
+</div>

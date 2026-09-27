@@ -409,7 +409,7 @@ def build_abgangsliste_story(db, project_id, styles, page_break_between_floors=T
     """The per-floor/per-actuator/per-channel content of the Abgangsliste, as a
     list of flowables - factored out of export_abgangsliste_pdf() so the
     Pflichtenheft export can optionally include the same content (see
-    pflichtenheft.py's documentation_include_circuit_list toggle) without
+    documentation.py's documentation_include_circuit_list toggle) without
     duplicating this query/rendering logic."""
     circuits = get_circuits(db, project_id)
     by_room_point = {(c["room_point_id"], c["channel_seq"]): c for c in circuits}
