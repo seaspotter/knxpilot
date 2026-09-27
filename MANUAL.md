@@ -342,10 +342,10 @@ Karte darin.
   189 Etiketten je Bogen) — weitere Formate lassen sich später ergänzen,
   die Auswahl ist bewusst als Dropdown angelegt.
 - **Inhalt**: ein Etikett je Gerät mit physikalischer Adresse, sortiert
-  nach Adresse — Aktoren mit ihrer Standortbezeichnung (bzw. Hersteller/Typ,
-  falls keine eingetragen ist), Geräte aus der Geräteplanung mit ihrer
-  Notiz (bzw. Raum-/Geschossname und Typ, falls keine eingetragen ist).
-  Geräte ohne physikalische Adresse erscheinen nicht.
+  nach Adresse — als zweite Zeile bewusst nur der Ort (Aktoren mit ihrer
+  Standortbezeichnung, Geräte aus der Geräteplanung mit ihrem Raum- bzw.
+  Geschossnamen), kein Gerätetyp. Geräte ohne physikalische Adresse
+  erscheinen nicht.
 - **Startposition**: auf ein Etikett im Positionsraster klicken, um dort
   mit dem Druck zu beginnen — praktisch, um einen bereits teilweise
   bedruckten Bogen weiter zu nutzen, ohne schon bedruckte Etiketten zu

@@ -17,7 +17,9 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
   (with an optional, rarely-used per-channel mode); now also includes
   room/floor devices planned in Geräteplanung that have a physical
   address, sorted by address across the whole project. The unused
-  per-channel option was removed.
+  per-channel option was removed. The label's second line is deliberately
+  just where the device is (its room/floor, or an actor's location label)
+  - no device type/manufacturer/model.
 - **"Geräteplanung" and "Labels" sub-tabs: rendered server-side with htmx,
   German internal names renamed to English** — per-room/floor device
   add/edit/delete and the "Nicht bestellen" toggle are now server-rendered

@@ -22,7 +22,6 @@ from fastapi import APIRouter, HTTPException, Request
 from ..db import get_db
 from ..labels import LABEL_FORMATS, render_label_sheet
 from ..templating import templates
-from ..utils import join_parts
 
 router = APIRouter(tags=["labels"])
 
@@ -41,10 +40,14 @@ def _pa_sort_key(physical_address):
 def export_labels_pdf(project_id: int, format: str = "l6037", start: int = 1, debug: bool = False):
     """One label per device with a physical address, project-wide - actor
     instances (Abgangsliste) plus room/floor devices (Geräteplanung), sorted
-    by physical address. A room/floor device's quantity is always split into
-    separate rows with their own address at creation time (see
-    routers/device_planning.py's add_room_device), so this never needs to
-    duplicate a label for a shared address."""
+    by physical address. The second line is just where the device is
+    (an actor's location_label, or the room/floor name for a device from
+    Geräteplanung) - deliberately no device type/model, so the label stays
+    short and matches how these are actually read on-site: "which cabinet
+    position is this room's sensor". A room/floor device's quantity is
+    always split into separate rows with their own address at creation time
+    (see routers/device_planning.py's add_room_device), so this never needs
+    to duplicate a label for a shared address."""
     if format not in LABEL_FORMATS:
         raise HTTPException(400, f"Unknown label format '{format}'")
 
@@ -56,39 +59,31 @@ def export_labels_pdf(project_id: int, format: str = "l6037", start: int = 1, de
         entries = []  # (physical_address, line2)
 
         actor_instances = db.execute(
-            "SELECT ai.*, at.manufacturer as at_manufacturer, at.model as at_model "
-            "FROM actor_instances ai JOIN actor_types at ON ai.actor_type_id = at.id "
-            "WHERE ai.project_id=? AND ai.physical_address != ''",
+            "SELECT physical_address, location_label FROM actor_instances "
+            "WHERE project_id=? AND physical_address != ''",
             (project_id,),
         ).fetchall()
         for ai in actor_instances:
-            line2 = ai["location_label"] or join_parts(ai["at_manufacturer"], ai["at_model"])
-            entries.append((ai["physical_address"], line2))
+            entries.append((ai["physical_address"], ai["location_label"] or ""))
 
         room_devices = db.execute(
-            "SELECT rd.physical_address, rd.note, r.name as room_name, "
-            "dt.manufacturer as dt_manufacturer, dt.model as dt_model "
+            "SELECT rd.physical_address, r.name as room_name "
             "FROM room_devices rd JOIN rooms r ON rd.room_id = r.id "
-            "JOIN actor_types dt ON rd.device_type_id = dt.id "
             "JOIN floors f ON r.floor_id = f.id "
             "WHERE f.project_id=? AND rd.physical_address != ''",
             (project_id,),
         ).fetchall()
         for rd in room_devices:
-            line2 = rd["note"] or join_parts(rd["room_name"], rd["dt_model"] or rd["dt_manufacturer"])
-            entries.append((rd["physical_address"], line2))
+            entries.append((rd["physical_address"], rd["room_name"]))
 
         floor_devices = db.execute(
-            "SELECT fd.physical_address, fd.note, f.name as floor_name, "
-            "dt.manufacturer as dt_manufacturer, dt.model as dt_model "
+            "SELECT fd.physical_address, f.name as floor_name "
             "FROM floor_devices fd JOIN floors f ON fd.floor_id = f.id "
-            "JOIN actor_types dt ON fd.device_type_id = dt.id "
             "WHERE f.project_id=? AND fd.physical_address != ''",
             (project_id,),
         ).fetchall()
         for fd in floor_devices:
-            line2 = fd["note"] or join_parts(fd["floor_name"], fd["dt_model"] or fd["dt_manufacturer"])
-            entries.append((fd["physical_address"], line2))
+            entries.append((fd["physical_address"], fd["floor_name"]))
 
         if not entries:
             raise HTTPException(400, "Keine Geräte mit physikalischer Adresse in diesem Projekt")
