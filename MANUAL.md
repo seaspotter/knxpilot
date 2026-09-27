@@ -16,21 +16,16 @@ Jalousien mit Lamelle) und füllt ungenutzte Plätze mit `res` für spätere
 Erweiterungen auf — genau wie in Ihren bestehenden Projekten.
 
 **Dieses Schema ist fest im Tool verankert, nicht nur eine Voreinstellung.**
-Kategorien lassen sich zwar umbenennen (siehe Setup → Kategorien), aber die
+Kategorien lassen sich zwar umbenennen (siehe Setup → Kategorien), die
 Zuordnung Hauptgruppe=Kategorie/Mittelgruppe=Geschoss/Untergruppe=Punkt
-selbst ist es nicht — sie steckt in `backend/ga_logic.py`s
-`build_ga_tree()`, in der Bedeutung von `categories.order_idx` als
-KNX-Hauptgruppennummer (0–5, daher auch keine neuen Kategorien
-hinzufügbar), und im gesamten Zentral-/Allgemeinfunktions-Vorlagensystem
-(`scope: building/floor/room_multi` geht von "Kategorie = Hauptgruppe"
-aus). Ein anderes Schema (z.B. Geschoss als Hauptgruppe, Kategorie als
-Mittelgruppe) wäre kein Setup-Schalter, sondern eine andere
-Adressierungs-Engine — u.a. weil KNX-Hauptgruppen nur 0–31 erlauben,
-Mittelgruppen sogar nur 0–7 (bei 3-Ebenen-Adressierung): mit Geschossen
-als Hauptgruppe bräuchte jede Kategorie eine Mittelgruppennummer
-0–7, was bei mehr als 8 Kategorien nicht mehr aufgeht. Dieses Tool bildet
-bewusst genau ein Schema ab (das der realen Projekte, aus denen es
-entstanden ist), kein Baukasten für beliebige Konventionen.
+selbst aber nicht — ein anderes Schema (z.B. Geschoss als Hauptgruppe)
+wäre keine Einstellung, sondern eine andere Adressierungs-Engine: KNX
+erlaubt nur 0–31 Hauptgruppen und 0–7 Mittelgruppen (3-Ebenen-Adressierung),
+mit Geschossen als Hauptgruppe bräuchte jede Kategorie eine
+Mittelgruppennummer 0–7 — bei mehr als 8 Kategorien geht das nicht mehr
+auf. Dieses Tool bildet bewusst genau ein Schema ab (das der realen
+Projekte, aus denen es entstanden ist), kein Baukasten für beliebige
+Konventionen.
 
 ## GA-CSV-Format für ETS6
 
@@ -45,8 +40,7 @@ importieren**.
 
 Falls sich Ihre Konventionen in ETS jemals ändern und Importe anfangen,
 Zeilen zu überspringen: ein kleines Testprojekt exportieren und mit der
-Ausgabe des Tools vergleichen — der CSV-Schreiber ist in `export_csv()`
-in `backend/routers/projects.py` isoliert.
+Ausgabe des Tools vergleichen.
 
 ## Die Tabs
 
@@ -686,10 +680,8 @@ Busch-Jaeger, Theben, Elsner Elektronik, Gira, Phoenix Contact, Hörmann,
 Enertex), eingelesen aus den mitgelieferten Dateien unter
 `docs/templates/geraete-katalog_<hersteller>.json` im Repository — ein
 File je Hersteller (`_mdt`, `_bj`, `_phoenix`, `_elsner`, `_theben`,
-`_gira`, `_enertex`, `_hoermann`), automatisch eingesammelt beim Start
-(`load_bundled_actor_type_defaults()` in `backend/db.py`) — eine weitere
-Herstellerdatei nach diesem Namensschema abzulegen reicht, ohne
-Codeänderung. Das passiert nur, wenn die Tabelle beim Start leer ist — ein
+`_gira`, `_enertex`, `_hoermann`), automatisch eingesammelt beim Start.
+Das passiert nur, wenn die Tabelle beim Start leer ist — ein
 bereits befüllter Katalog wird dadurch nie automatisch überschrieben, auch
 nicht bei einem späteren Neustart (z.B. nachdem einzelne Standardgeräte
 absichtlich gelöscht wurden).
@@ -911,21 +903,15 @@ Alle PDF-Exporte (Abgangsliste, Geräteliste, Pflichtenheft,
 Funktionscheckliste, Übergabe-Checkliste, Dokumentation, Offene Punkte der
 Klärungsliste, sowie der interne Stundennachweis der Zeiterfassung) nutzen
 dieselbe
-Gestaltung: ein dunkler
-Banner-Titelkopf, eine einheitliche Tabellenoptik, und eine Fusszeile mit
-Projektname sowie **Seite X von Y** auf jeder Seite. Der gemeinsame Code
-dafür liegt in `backend/pdf_design.py` (`pdf_styles()`,
-`pdf_title_banner()`, `pdf_table_style()`, `make_numbered_canvas()`) —
-Änderungen dort wirken sich auf alle Exporte gleichzeitig aus.
+Gestaltung: ein dunkler Banner-Titelkopf, eine einheitliche Tabellenoptik,
+und eine Fusszeile mit Projektname sowie **Seite X von Y** auf jeder Seite.
 
 Ist im Setup-Tab unter *Firma* der Schalter "Firmenlogo/-daten auf
-PDF-Exporten anzeigen" aktiv, ergänzt `company_header_block()` oben auf
-Seite 1 Firmenname und Logo (neben dem Titel-Banner), während
-`company_footer_line()` Adresse, Telefon, E-Mail und Website als
-eigene, zentrierte Zeile unterhalb von "Seite X von Y" auf **jeder**
-Seite einfügt. Ist der Schalter aus oder kein Firmenprofil hinterlegt,
-liefern beide Funktionen einfach nichts zurück — die Aufrufer in den
-drei Router-Dateien brauchen dafür kein `if`.
+PDF-Exporten anzeigen" aktiv, erscheinen zusätzlich Firmenname und Logo
+oben auf Seite 1 (neben dem Titel-Banner), sowie Adresse, Telefon, E-Mail
+und Website als eigene, zentrierte Zeile unterhalb von "Seite X von Y" auf
+**jeder** Seite. Ist der Schalter aus oder kein Firmenprofil hinterlegt,
+bleibt beides einfach weg.
 
 ## Hinweise / Einschränkungen
 

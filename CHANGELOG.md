@@ -103,6 +103,10 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ### Fixed
 
+- **MANUAL.md's "Adressierungsmodell"/"GA-CSV-Format"/"Geräte Katalog"/
+  "PDF-Exporte" sections trimmed of internal code references** (function
+  and file names meaningless to the app's actual users) and one now-stale
+  reference to `export_csv()`'s old location fixed.
 - **"Klärungsliste" text/answer fields were narrower than intended** — the
   rename to "clarification list" updated the input classes in the template
   but left the matching CSS selectors on their old `kl-text-input`/
