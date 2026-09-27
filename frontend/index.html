@@ -282,8 +282,15 @@
 
   <!-- HILFE TAB -->
   <div class="tab" id="tab-hilfe">
-    <div class="card">
-      <div id="manual-content" class="markdown-view"></div>
+    <div class="manual-layout">
+      <div class="card manual-toc-card">
+        <input type="text" id="manual-search" class="manual-search" placeholder="Suchen..." oninput="searchManual(this.value)">
+        <div id="manual-search-status" class="muted manual-search-status"></div>
+        <nav id="manual-toc" class="manual-toc"></nav>
+      </div>
+      <div class="card manual-content-card">
+        <div id="manual-content" class="markdown-view"></div>
+      </div>
     </div>
   </div>
 

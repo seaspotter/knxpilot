@@ -10,6 +10,15 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ## [Unreleased]
 
+### Added
+
+- **"Hilfe" tab: table of contents and search** — a sidebar lists every
+  heading from the manual (click to jump), and a search box highlights
+  matches in the rendered text, with Enter/Shift+Enter stepping to the
+  next/previous match. Entirely client-side (renderMarkdown()/
+  extractHeadings() in `ui.js`) - no server-side search index, the manual
+  is small enough to filter/highlight in the browser.
+
 ### Changed
 
 - **Last two German file names renamed to English** — `frontend/js/hilfe.js`

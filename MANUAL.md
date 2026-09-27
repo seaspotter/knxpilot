@@ -78,7 +78,9 @@ in `backend/routers/projects.py` isoliert.
   Reihenfolge direkt den festen KNX-Hauptgruppennummern entspricht.
 - **Update** — prüft auf Wunsch, ob auf GitHub eine neuere Version vorliegt,
   installiert sie, und zeigt das Änderungsprotokoll dieses Tools an.
-- **Hilfe** — diese Anleitung, direkt in der App.
+- **Hilfe** — diese Anleitung, direkt in der App, mit Inhaltsverzeichnis
+  (links) und Volltextsuche (oben links, hebt Treffer hervor - Eingabetaste/
+  Umschalt+Eingabetaste springt zum nächsten/vorherigen Treffer).
 
 ### Projekte
 

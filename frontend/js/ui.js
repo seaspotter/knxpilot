@@ -90,10 +90,37 @@ function inlineMarkdown(s) {
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 }
 
+// "Gebäudestruktur (Planung)" -> "gebaudestruktur-planung" - used to give
+// every rendered heading a stable #id (for the Hilfe tab's table of
+// contents), unique within one document via a numeric suffix on collision.
+function slugifyHeading(text, seen) {
+  const base = text
+    .normalize('NFKD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'section';
+  let slug = base, n = 2;
+  while (seen.has(slug)) { slug = `${base}-${n}`; n++; }
+  seen.add(slug);
+  return slug;
+}
+
+// {level, text, id} for every heading (level 2+, matching renderMarkdown's
+// own numbering below) - used to build the Hilfe tab's table of contents
+// without re-parsing the rendered HTML.
+function extractHeadings(markdown) {
+  const seen = new Set();
+  const headings = [];
+  for (const line of markdown.split('\n')) {
+    const m = line.match(/^(#{2,6})\s+(.*)/);
+    if (m) headings.push({level: m[1].length, text: m[2], id: slugifyHeading(m[2], seen)});
+  }
+  return headings;
+}
+
 function renderMarkdown(markdown) {
   const lines = markdown.split('\n');
   let html = '';
   let listOpen = false;
+  const seenIds = new Set();
   const closeList = () => { if (listOpen) { html += '</ul>'; listOpen = false; } };
   let i = 0;
   while (i < lines.length) {
@@ -104,7 +131,8 @@ function renderMarkdown(markdown) {
       const level = heading[1].length;
       if (level === 1) { i++; continue; } // top-level title, implied by the card heading
       const tag = 'h' + Math.min(level + 1, 6);
-      html += `<${tag}>${inlineMarkdown(heading[2])}</${tag}>`;
+      const id = slugifyHeading(heading[2], seenIds);
+      html += `<${tag} id="${id}">${inlineMarkdown(heading[2])}</${tag}>`;
       i++;
     } else if (/^```/.test(line)) {
       closeList();
