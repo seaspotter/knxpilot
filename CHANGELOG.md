@@ -12,6 +12,11 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ### Fixed
 
+- **"Klärungsliste" text/answer fields were narrower than intended** — the
+  rename to "clarification list" updated the input classes in the template
+  but left the matching CSS selectors on their old `kl-text-input`/
+  `kl-answer-input` names, so the fields lost their `flex:1`/`min-width`
+  sizing and fell back to the default narrow input width.
 - **Unchecking a "Funktionscheckliste" item, or clearing a "Übergabe-
   Checkliste" answer, no longer leaves a stale "getestet am" timestamp
   next to it** — the htmx conversion of these two tabs always stamped

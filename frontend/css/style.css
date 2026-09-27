@@ -51,8 +51,8 @@
   textarea { font-family:inherit; resize:vertical; }
   input[type=text] { min-width: 140px; }
   input[type=number] { width: 60px; }
-  .kl-text-input { min-width: 320px; flex: 1; }
-  .kl-answer-input { min-width: 220px; flex: 1; }
+  .clarification-text-input { min-width: 320px; flex: 1; }
+  .clarification-answer-input { min-width: 220px; flex: 1; }
   .flex-input { min-width: 220px; flex: 1; }
   .flex-input-wide { min-width: 300px; flex: 1; }
   button.btn { background:var(--accent); border:none; color:var(--btn-text); padding:7px 13px; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px; }
@@ -138,7 +138,7 @@
   .doc-detail { color:var(--muted); font-size:13px; }
   .doc-detail.warn { color:var(--warn); }
   .doc-row.off .doc-mark, .doc-row.off .doc-title { color:var(--muted); font-weight:normal; }
-  /* Funktionscheckliste rows (funktionscheckliste.js) */
+  /* Funktionscheckliste rows (function_checklist.js) */
   .fc-row { display:grid; grid-template-columns:110px 1fr auto; align-items:center; gap:10px; padding:6px 4px; border-bottom:1px solid var(--border); font-size:13.5px; cursor:pointer; }
   .fc-row:last-child { border-bottom:none; }
   .fc-row:hover { background:var(--panel2); }
@@ -148,7 +148,7 @@
   .fc-when { font-size:11px; color:var(--muted); font-weight:normal; margin-right:4px; }
   .fc-row.done .fc-text { color:var(--muted); }
   .fc-row.done .fc-check { color:var(--accent); font-weight:600; }
-  /* Übergabe-Checkliste rows (uebergabe_checkliste.js) - same look as .fc-row */
+  /* Übergabe-Checkliste rows (handover_checklist.js) - same look as .fc-row */
   .ub-row { display:grid; grid-template-columns:1fr auto; gap:4px 12px; align-items:center; padding:7px 4px; border-bottom:1px solid var(--border); font-size:13.5px; }
   .ub-row:last-child { border-bottom:none; }
   .ub-row.done .fc-text { color:var(--muted); }
@@ -385,7 +385,7 @@
        is inherently short; stretching it full-width like a text field
        would just look like an oversized empty box. */
     .mobile-fields > input[type=number] { width:70px; align-self:flex-start; }
-    .kl-text-input, .kl-answer-input, .flex-input, .flex-input-wide { min-width:0; }
+    .clarification-text-input, .clarification-answer-input, .flex-input, .flex-input-wide { min-width:0; }
 
     /* Anchored tooltips can otherwise run off the right edge of a narrow
        viewport. */

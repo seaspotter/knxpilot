@@ -1,5 +1,5 @@
 {# One function-checklist row - tapping anywhere toggles it via htmx PUT,
-   swapped back in place so scroll position isn't lost (see checkliste.py). #}
+   swapped back in place so scroll position isn't lost (see checklists.py). #}
 <label id="{{ row.dom_id }}" class="fc-row{% if row.checked %} done{% endif %}">
   <span class="pill">{{ row.cat }}</span>
   <span class="fc-text">{{ row.text }}</span>
