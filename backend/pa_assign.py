@@ -7,7 +7,7 @@ per indoor Geschoss, then one Sensoren/Bedienelemente block per indoor
 Geschoss, then one Aussen block for anything on a Geschoss marked
 Aussen/unbeheizt (Wetterstation devices first within it). Never touches an
 address that's already set - same "only fill gaps" contract as the
-existing circuit auto-assign (see routers/abgangsliste.py).
+existing circuit auto-assign (see routers/circuit_list.py).
 
 Projects split into several KNX lines (knx_lines, see routers/lines.py)
 run this bucketing once per line, each with its own "Bereich.Linie" prefix:

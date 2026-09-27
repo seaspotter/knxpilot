@@ -38,7 +38,7 @@ from ..pdf_design import (
     company_header_block, company_footer_line,
 )
 from ..templating import templates
-from .abgangsliste import build_abgangsliste_story
+from .circuit_list import build_circuit_list_story
 from .distribution_boards import build_distribution_boards_story
 from .device_planning import build_devices_by_room_story, device_summary
 from .specification import build_specification_story, function_checklist_table, specification_stats
@@ -222,7 +222,7 @@ DOCUMENTATION_CHAPTERS = [
     ("function-checklist", "Funktionscheckliste — Testergebnisse", "documentation_include_function_checklist", True),
     ("handover-checklist", "Übergabe-Checkliste — Ergebnisse", "documentation_include_handover_checklist", True),
     ("handbuecher", "Handbücher", "documentation_include_manuals", True),
-    ("abgangsliste", "Abgangsliste", "documentation_include_circuit_list", False),
+    ("circuit-list", "Abgangsliste", "documentation_include_circuit_list", False),
     ("distribution-boards", "Verteilerplanung", "documentation_include_distribution_boards", False),
     ("devices-by-room", "Geräte je Raum", "documentation_include_devices_per_room", False),
     ("clarification-list", "Klärungsliste", "documentation_include_clarification_list", False),
@@ -243,7 +243,7 @@ def _build_documentation_chapters(db, project_id, company, styles):
         "function-checklist": lambda: _function_checklist_story(db, project_id, styles, status_map),
         "handover-checklist": lambda: _handover_story(db, project_id, styles, status_map),
         "handbuecher": lambda: _manuals_story(db, project_id, styles),
-        "abgangsliste": lambda: build_abgangsliste_story(db, project_id, styles, page_break_between_floors=False),
+        "circuit-list": lambda: build_circuit_list_story(db, project_id, styles, page_break_between_floors=False),
         "distribution-boards": lambda: build_distribution_boards_story(db, project_id, styles),
         "devices-by-room": lambda: build_devices_by_room_story(db, project_id, styles),
         "clarification-list": lambda: _clarification_list_story(db, project_id, styles),
@@ -370,7 +370,7 @@ def _chapter_detail(db, project_id, anchor, status_map):
         if not devices:
             return "keine Handbuch-Links für die verwendeten Geräte", False, True
         return f"{n} / {len(devices)} Handbücher im Projekt abgelegt", n < len(devices), True
-    if anchor == "abgangsliste":
+    if anchor == "circuit-list":
         (actors,) = db.execute("SELECT COUNT(*) FROM actor_instances WHERE project_id=?", (project_id,)).fetchone()
         circuits = get_circuits(db, project_id)
         assigned = sum(1 for c in circuits if c["assignment"])

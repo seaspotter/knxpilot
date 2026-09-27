@@ -1,0 +1,70 @@
+{# Actor instances (physical devices placed in this project): add/edit form
+   + list with each actuator's channel map. Content of #actor-instances-section
+   (see tab.html) - re-rendered in place after every add/edit/delete, and
+   also refreshed on any circuit-assignment change (channel maps depend on
+   the assignments) - so its own scroll position is the only state that can
+   be lost, same as the functions tab's per-room fragments. #}
+  {% if editing %}
+    <form class="row mobile-fields" hx-put="/hx/actor-instances/{{ editing.id }}" hx-target="#actor-instances-section" hx-swap="innerHTML">
+      <select class="wide" disabled title="Aktortyp kann nachträglich nicht geändert werden - löschen und neu anlegen">
+        <option>{{ editing.actor_type_name }}</option>
+      </select>
+      <select name="floor_id">
+        <option value="">(kein Geschoss)</option>
+        {% for f in floors %}<option value="{{ f.id }}"{% if f.id == editing.floor_id %} selected{% endif %}>{{ f.name }}</option>{% endfor %}
+      </select>
+      <input type="text" name="location_label" class="w-220" placeholder="Standort, z.B. EG Technik Verteilung" value="{{ editing.location_label or '' }}">
+      <input type="text" name="physical_address" class="w-140" placeholder="Physikalische Adresse, z.B. 1.1.2" value="{{ editing.physical_address or '' }}">
+      <button class="btn secondary" type="submit">Änderungen speichern</button>
+      <button class="btn secondary small" type="button" hx-get="/hx/projects/{{ project_id }}/actor-instances/cancel-edit" hx-target="#actor-instances-section" hx-swap="innerHTML">Abbrechen</button>
+    </form>
+  {% else %}
+    <form class="row mobile-fields" hx-post="/hx/projects/{{ project_id }}/actor-instances" hx-target="#actor-instances-section" hx-swap="innerHTML">
+      <select name="actor_type_id" class="wide">
+        {% if actor_types %}
+          {% for at in actor_types %}<option value="{{ at.id }}">{{ [at.manufacturer, at.model] | select | join(' ') }} ({{ at.channel_type }}, {{ at.channel_count }} Kanäle)</option>{% endfor %}
+        {% else %}
+          <option value="">Noch keine Aktoren definiert - im Geräte-Katalog-Tab anlegen (Gruppe: Aktor)</option>
+        {% endif %}
+      </select>
+      <select name="floor_id">
+        <option value="">(kein Geschoss)</option>
+        {% for f in floors %}<option value="{{ f.id }}">{{ f.name }}</option>{% endfor %}
+      </select>
+      <input type="text" name="location_label" class="w-220" placeholder="Standort, z.B. EG Technik Verteilung">
+      <input type="text" name="physical_address" class="w-140" placeholder="Physikalische Adresse, z.B. 1.1.2">
+      <button class="btn secondary" type="submit"{% if not actor_types %} disabled{% endif %}>+ Aktor hinzufügen</button>
+    </form>
+  {% endif %}
+  <ul class="list" id="actor-instances-list">
+    {% for ai in actor_instances %}
+      <li style="flex-direction:column; align-items:stretch;">
+        <div class="row" style="justify-content:space-between; margin-bottom:0;">
+          <div><b>{{ ai.actor_type_name }}</b> <span class="pill">{{ ai.channel_type }}</span>
+            {% if ai.floor_name %}<span class="pill">{{ ai.floor_name }}</span>{% endif %}
+            {% if ai.location_label %}<span class="pill">{{ ai.location_label }}</span>{% endif %}
+            {% if ai.physical_address %}<span class="pill">{{ ai.physical_address }}</span>{% endif %}
+            <span class="pill">{{ ai.channels_used }}/{{ ai.channel_count }} belegt</span>
+          </div>
+          <div class="row" style="margin:0; gap:6px;">
+            {% if lines %}
+              <select class="line-select" title="KNX-Linie" onchange="setActorInstanceLine({{ ai.id }}, this.value)">
+                <option value="">Linie wie Geschoss</option>
+                {% for l in lines %}<option value="{{ l.id }}"{% if l.id == ai.line_id %} selected{% endif %}>Linie {{ l.area }}.{{ l.line }}{% if l.name %} {{ l.name }}{% endif %}</option>{% endfor %}
+              </select>
+            {% endif %}
+            <button class="btn secondary small" hx-get="/hx/actor-instances/{{ ai.id }}/edit" hx-target="#actor-instances-section" hx-swap="innerHTML">Bearbeiten</button>
+            <button class="btn danger small" hx-delete="/hx/actor-instances/{{ ai.id }}" hx-target="#actor-instances-section" hx-swap="innerHTML"
+                    hx-confirm="Diesen Aktor löschen? Zugeordnete Abgänge werden dadurch nicht mehr zugeordnet.">Löschen</button>
+          </div>
+        </div>
+        <div class="channel-map">
+          {% for ch in ai.channel_map %}
+            <div class="channel-box {{ 'used' if ch.function else 'free' }}" title="{{ ch.letter }}: {{ ch.function if ch.function else 'Frei' }}">{{ ch.letter }}</div>
+          {% endfor %}
+        </div>
+      </li>
+    {% else %}
+      <li class="muted">Noch keine Aktoren hinzugefügt</li>
+    {% endfor %}
+  </ul>

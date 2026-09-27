@@ -253,7 +253,7 @@ async function openProject(id, name) {
 
   await renderFloors();
   await refreshClarificationBadge();
-  await refreshAbgangslisteBadge();
+  await refreshCircuitListBadge();
   await loadOverviewTab();
 }
 
@@ -323,9 +323,6 @@ async function addFloor() {
   document.getElementById('floor-name').value = '';
   document.getElementById('floor-outdoor').checked = false;
   await renderFloors();
-  await renderActorInstanceForm();
-  await renderCircuits();
-  await renderChannelSummary();
 }
 
 async function renameFloor(id, currentName, currentOutdoor) {
@@ -340,9 +337,6 @@ async function deleteFloor(id) {
   if (!(await showConfirm(`Geschoss "${impact.name}" löschen?${describeDeleteImpact(impact)}`, {danger: true, confirmLabel: 'Löschen'}))) return;
   await api('/floors/' + id, {method:'DELETE'});
   await renderFloors();
-  await renderActorInstanceForm();
-  await renderCircuits();
-  await renderChannelSummary();
 }
 
 // ---------- Gebäudestruktur: tree with drag & drop ----------
@@ -560,9 +554,6 @@ async function moveStructure(url, body, question,
 
 async function refreshAfterStructureMove() {
   await renderFloors();
-  await renderActorInstanceForm();
-  await renderCircuits();
-  await renderChannelSummary();
 }
 
 async function setDistributionBoardLocation(id, body) {
@@ -628,8 +619,6 @@ async function addRoom(floorId) {
   if (!name) return;
   await api(`/floors/${floorId}/rooms`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})});
   await renderFloors();
-  await renderCircuits();
-  await renderChannelSummary();
 }
 
 function toggleBulkRoomInput(floorId) {
@@ -645,8 +634,6 @@ async function addRoomsBulk(floorId) {
     await api(`/floors/${floorId}/rooms`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})});
   }
   await renderFloors();
-  await renderCircuits();
-  await renderChannelSummary();
   showToast(`${names.length} Raum/Räume hinzugefügt.`, 'success');
 }
 
@@ -662,8 +649,6 @@ async function deleteRoom(id) {
   if (!(await showConfirm(`Raum "${impact.name}" löschen?${describeDeleteImpact(impact)}`, {danger: true, confirmLabel: 'Löschen'}))) return;
   await api('/rooms/' + id, {method:'DELETE'});
   await renderFloors();
-  await renderCircuits();
-  await renderChannelSummary();
 }
 
 function exportProjectJson() {

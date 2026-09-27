@@ -114,7 +114,7 @@
         <button data-subtab="struktur">Gebäudestruktur</button>
         <button data-subtab="functions">Funktionen</button>
         <button data-subtab="group-addresses">Gruppenadressen</button>
-        <button data-subtab="abgangsliste">Abgangsliste</button>
+        <button data-subtab="circuit-list">Abgangsliste</button>
         <button data-subtab="labels">Labels</button>
         <button data-subtab="device-planning">Geräteplanung</button>
         <button data-subtab="distribution-boards">Verteilerplanung</button>
@@ -162,48 +162,8 @@
       <!-- Rendered server-side with htmx (backend/templates/group_addresses/tab.html), see group_addresses.js -->
       <div class="subtab" id="subtab-group-addresses"></div>
 
-      <div class="subtab" id="subtab-abgangsliste">
-        <div id="abgang-detail" style="display:none;">
-          <div class="card">
-            <h4>Bedarfsübersicht</h4>
-            <p class="muted">Wie viele Kanäle je Geschoss und Kanaltyp tatsächlich benötigt werden — hilft bei der Wahl der richtigen Aktorgrösse, bevor verdrahtet wird.</p>
-            <ul class="list" id="channel-summary-list"></ul>
-          </div>
-
-          <div class="card">
-            <div class="row" style="justify-content:space-between;">
-              <h4 style="margin:0;">Aktoren in diesem Projekt</h4>
-              <div class="row" style="margin:0;">
-                <input type="text" id="pa-prefix-abgangsliste" value="1.1" style="width:55px;" title="Bereich.Linie-Präfix">
-                <button class="btn secondary" onclick="assignPhysicalAddresses('pa-prefix-abgangsliste')">PA automatisch zuordnen</button>
-                <span class="info-icon" tabindex="0" data-tip="Vergibt physikalische Adressen für alle Geräte im Projekt ohne Adresse - Aktoren hier UND Geräte in der Geräteplanung. Reihenfolge: Systemgeräte (0-5), je Geschoss ein Aktoren-Block, je Geschoss ein Sensoren/Bedienelemente-Block, dann Aussen-Geräte (Wetterstation zuerst). Jeder Block reserviert volle Zehnerblöcke je nach Gerätezahl. Bereits gesetzte Adressen werden nie verändert.">i</span>
-              </div>
-            </div>
-            <div class="row mobile-fields">
-              <select id="ai-actortype" class="wide"></select>
-              <select id="ai-floor"></select>
-              <input type="text" id="ai-location" class="w-220" placeholder="Standort, z.B. EG Technik Verteilung">
-              <input type="text" id="ai-address" class="w-140" placeholder="Physikalische Adresse, z.B. 1.1.2">
-              <button class="btn secondary" id="ai-save-btn" onclick="saveActorInstance()">+ Aktor hinzufügen</button>
-              <button class="btn secondary small" id="ai-cancel-btn" onclick="cancelEditActorInstance()" style="display:none;">Abbrechen</button>
-            </div>
-            <ul class="list" id="actor-instances-list"></ul>
-          </div>
-
-          <div class="card">
-            <h4>Abgänge</h4>
-            <div class="row" style="justify-content:space-between;">
-              <span class="muted" id="circuits-summary"></span>
-              <div class="row" style="margin:0;">
-                <button class="btn secondary" onclick="autoAssignCircuits()">Alle automatisch zuordnen</button><span class="info-icon" tabindex="0" data-tip="Weist jeden noch nicht zugeordneten Abgang dem ersten freien passenden Kanal zu. Mischt dabei nie Geschosse - ein Abgang im EG wird nur einem Aktor im EG zugeordnet, auch wenn dessen Kanäle voll sind. Aktoren ohne zugewiesenes Geschoss werden ebenfalls nicht verwendet.">i</span>
-                <button class="btn secondary" onclick="downloadAbgangsliste()">CSV herunterladen</button>
-                <button class="btn" onclick="downloadAbgangslistePdf()">PDF herunterladen</button>
-              </div>
-            </div>
-            <div id="circuits-list"></div>
-          </div>
-        </div>
-      </div>
+      <!-- Rendered server-side with htmx (backend/templates/circuit_list/tab.html), see circuit_list.js -->
+      <div class="subtab" id="subtab-circuit-list"></div>
 
       <!-- Rendered server-side with htmx (backend/templates/labels/tab.html), see labels.js -->
       <div class="subtab" id="subtab-labels"></div>
@@ -344,7 +304,7 @@
 <script src="/js/functions.js"></script>
 <script src="/js/group_addresses.js"></script>
 <script src="/js/overview.js"></script>
-<script src="/js/abgangsliste.js"></script>
+<script src="/js/circuit_list.js"></script>
 <script src="/js/labels.js"></script>
 <script src="/js/device_planning.js"></script>
 <script src="/js/distribution_boards.js"></script>

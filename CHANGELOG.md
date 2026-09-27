@@ -12,6 +12,34 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ### Changed
 
+- **"Abgangsliste" ("circuit list") is now server-rendered with htmx**,
+  next in the agreed migration order — only "building structure" remains
+  as classic JS now (drag & drop). `routers/abgangsliste.py` ->
+  `routers/circuit_list.py` (router tag "circuit-list"); actor-instance
+  add/edit/delete, the per-channel circuit-assignment selects and their
+  live channel-demand summary are now `/hx/...` endpoints backed by new
+  templates in `backend/templates/circuit_list/`. A single circuit
+  assignment swaps only that row (its select's options depend on the
+  actor-instance list, its channel-demand summary on the assignments, both
+  refreshed via an `HX-Trigger` event rather than a full reload), while
+  actor-instance add/edit/delete and the bulk "PA automatisch zuordnen" /
+  "Alle automatisch zuordnen" actions re-render whole sections. The CSV/PDF
+  exports moved from `/api/projects/{id}/export-abgangsliste.csv/.pdf` to
+  `/export-circuit-list.csv/.pdf` (the downloaded file names and the CSV's
+  columns/content are unchanged - the CSV is the ETS-import format other
+  tools read). `build_abgangsliste_story()` -> `build_circuit_list_story()`,
+  reused unchanged by `documentation.py`'s optional as-built section
+  (chapter anchor `abgangsliste` -> `circuit-list`). `js/abgangsliste.js` ->
+  `js/circuit_list.js`, now only loading the tab, the KNX line-select
+  wiring, the PA/auto-assign preview dialogs (still plain JS - their
+  confirmation dialogs need the computed preview before committing) and
+  the CSV/PDF downloads. Renamed every cross-reference: `main.py`, the
+  overview stat card, the documentation chapter table, `pa_assign.py`'s
+  comment, `index.html`'s sub-tab id/script tag, `lines.js`'s pa-prefix
+  field id. No database schema changes needed - `actor_instances`/
+  `channel_assignments` were already English. Adds
+  `tests/test_circuit_list_hx.py`. Full suite: 153 passed.
+
 - **"Labels" now prints one label per device with a physical address,
   project-wide** — previously only actor instances from the Abgangsliste
   (with an optional, rarely-used per-channel mode); now also includes

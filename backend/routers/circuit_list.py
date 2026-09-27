@@ -1,12 +1,26 @@
 """
-Abgangsliste tab: physical actuator instances placed in a project, the
-circuits (physical outputs) that need wiring to them, channel assignment
-(manual + auto), and the CSV/PDF wiring-list exports.
+Circuit list tab ("Abgangsliste"): physical actuator instances placed in a
+project, the circuits (physical outputs) that need wiring to them, channel
+assignment (manual + auto), and the CSV/PDF wiring-list exports.
+
+Rendered server-side with htmx (see DEVELOPMENT.md "htmx tabs"): the
+/hx/... endpoints below return HTML fragments from
+backend/templates/circuit_list/, and the browser swaps them in. The channel
+summary, actor-instances and circuits sections each refresh independently -
+a single circuit assignment swaps only that one row (hx-trigger
+"circuit-assignments-changed from:body" refreshes the channel summary and
+the actor-instances channel maps without touching the rest of the circuits
+list, so scrolling/select state elsewhere survives), while actor-instance
+add/edit/delete and the bulk PA/auto-assign actions re-render whole
+sections since they can change every row's available options anyway. The
+JSON endpoints stay for the CSV/PDF exports, the Pflichtenheft/Dokumentation
+build_circuit_list_story() reuse, and the tests.
 """
 import csv
 import io
+import json
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from reportlab.platypus import KeepTogether, Paragraph, Spacer, Table, PageBreak
 from reportlab.lib.units import mm
@@ -14,11 +28,12 @@ from reportlab.lib.units import mm
 from ..db import get_db
 from ..ga_logic import get_circuits
 from ..models import ActorInstanceIn, ActorInstanceEditIn, ChannelAssignIn, PhysicalAddressAssignIn
-from ..pa_assign import compute_pa_assignments
+from ..pa_assign import compute_pa_assignments, project_lines
 from ..pdf_design import pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response, company_header_block, company_footer_line, PDF_MUTED_COLOR
+from ..templating import templates
 from ..utils import join_parts, channel_letters, content_disposition
 
-router = APIRouter(tags=["abgangsliste"])
+router = APIRouter(tags=["circuit-list"])
 
 
 # --------------------------------------------------------------------------
@@ -27,66 +42,76 @@ router = APIRouter(tags=["abgangsliste"])
 @router.get("/api/projects/{project_id}/actor-instances")
 def list_actor_instances(project_id: int):
     with get_db() as db:
-        actor_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM actor_types").fetchall()}
-        floors = {r["id"]: r["name"] for r in db.execute("SELECT * FROM floors WHERE project_id=?", (project_id,)).fetchall()}
-        # Same order as the Gebäudestruktur: by Geschoss (tree order), then
-        # the order the actuators were added; actuators without a Geschoss last.
-        rows = db.execute(
-            "SELECT ai.* FROM actor_instances ai LEFT JOIN floors f ON ai.floor_id = f.id "
-            "WHERE ai.project_id=? ORDER BY f.order_idx IS NULL, f.order_idx, ai.order_idx, ai.id",
-            (project_id,),
+        return _actor_instances(db, project_id)
+
+
+def _actor_instances(db, project_id):
+    """Shared by the JSON endpoint above (exports, tests, project transfer)
+    and the /hx/ template context below - one query/shape, no duplication."""
+    actor_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM actor_types").fetchall()}
+    floors = {r["id"]: r["name"] for r in db.execute("SELECT * FROM floors WHERE project_id=?", (project_id,)).fetchall()}
+    # Same order as the building structure: by floor (tree order), then
+    # the order the actuators were added; actuators without a floor last.
+    rows = db.execute(
+        "SELECT ai.* FROM actor_instances ai LEFT JOIN floors f ON ai.floor_id = f.id "
+        "WHERE ai.project_id=? ORDER BY f.order_idx IS NULL, f.order_idx, ai.order_idx, ai.id",
+        (project_id,),
+    ).fetchall()
+
+    # Build (actor_instance_id, channel_letter) -> function name, reusing the same
+    # naming logic get_circuits already uses, so the map always matches the CSV/PDF exports.
+    circuits = get_circuits(db, project_id)
+    function_by_channel = {}
+    for c in circuits:
+        if c["assignment"]:
+            key = (c["assignment"]["actor_instance_id"], c["assignment"]["channel_letter"])
+            function_by_channel[key] = c["function_name"]
+
+    result = []
+    for r in rows:
+        at = actor_types.get(r["actor_type_id"], {})
+        # .get(..., 0) only helps if the key is missing - actor_types always
+        # has a channel_count column, just NULL for non-Aktor groups, so the
+        # default never kicked in and channel_letters(None) below crashed.
+        channel_count = at.get("channel_count") or 0
+        used = db.execute(
+            "SELECT channel_letter FROM channel_assignments WHERE actor_instance_id=?", (r["id"],)
         ).fetchall()
-
-        # Build (actor_instance_id, channel_letter) -> function name, reusing the same
-        # naming logic get_circuits already uses, so the map always matches the CSV/PDF exports.
-        circuits = get_circuits(db, project_id)
-        function_by_channel = {}
-        for c in circuits:
-            if c["assignment"]:
-                key = (c["assignment"]["actor_instance_id"], c["assignment"]["channel_letter"])
-                function_by_channel[key] = c["function_name"]
-
-        result = []
-        for r in rows:
-            at = actor_types.get(r["actor_type_id"], {})
-            # .get(..., 0) only helps if the key is missing - actor_types always
-            # has a channel_count column, just NULL for non-Aktor groups, so the
-            # default never kicked in and channel_letters(None) below crashed.
-            channel_count = at.get("channel_count") or 0
-            used = db.execute(
-                "SELECT channel_letter FROM channel_assignments WHERE actor_instance_id=?", (r["id"],)
-            ).fetchall()
-            used_letters = {u["channel_letter"] for u in used}
-            channel_map = [
-                {"letter": letter, "function": function_by_channel.get((r["id"], letter))}
-                for letter in channel_letters(channel_count)
-            ]
-            result.append(
-                {
-                    "id": r["id"], "actor_type_id": r["actor_type_id"],
-                    "actor_type_name": join_parts(at.get("manufacturer", ""), at.get("model", "")) or "?",
-                    "channel_type": at.get("channel_type", ""), "channel_count": channel_count,
-                    "floor_id": r["floor_id"], "floor_name": floors.get(r["floor_id"], ""), "line_id": r["line_id"],
-                    "location_label": r["location_label"], "physical_address": r["physical_address"],
-                    "channels_used": len(used_letters), "channels_free": channel_count - len(used_letters),
-                    "channel_map": channel_map,
-                }
-            )
-        return result
+        used_letters = {u["channel_letter"] for u in used}
+        channel_map = [
+            {"letter": letter, "function": function_by_channel.get((r["id"], letter))}
+            for letter in channel_letters(channel_count)
+        ]
+        result.append(
+            {
+                "id": r["id"], "actor_type_id": r["actor_type_id"],
+                "actor_type_name": join_parts(at.get("manufacturer", ""), at.get("model", "")) or "?",
+                "channel_type": at.get("channel_type", ""), "channel_count": channel_count,
+                "floor_id": r["floor_id"], "floor_name": floors.get(r["floor_id"], ""), "line_id": r["line_id"],
+                "location_label": r["location_label"], "physical_address": r["physical_address"],
+                "channels_used": len(used_letters), "channels_free": channel_count - len(used_letters),
+                "channel_map": channel_map,
+            }
+        )
+    return result
 
 
 @router.post("/api/projects/{project_id}/actor-instances")
 def add_actor_instance(project_id: int, ai: ActorInstanceIn):
     with get_db() as db:
-        (count,) = db.execute(
-            "SELECT COUNT(*) FROM actor_instances WHERE project_id=?", (project_id,)
-        ).fetchone()
-        cur = db.execute(
-            "INSERT INTO actor_instances (project_id, actor_type_id, floor_id, location_label, physical_address, order_idx) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
-            (project_id, ai.actor_type_id, ai.floor_id, ai.location_label, ai.physical_address, count),
-        )
-        return {"id": cur.lastrowid}
+        return {"id": _add_actor_instance(db, project_id, ai.actor_type_id, ai.floor_id, ai.location_label, ai.physical_address)}
+
+
+def _add_actor_instance(db, project_id, actor_type_id, floor_id, location_label, physical_address):
+    (count,) = db.execute(
+        "SELECT COUNT(*) FROM actor_instances WHERE project_id=?", (project_id,)
+    ).fetchone()
+    cur = db.execute(
+        "INSERT INTO actor_instances (project_id, actor_type_id, floor_id, location_label, physical_address, order_idx) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (project_id, actor_type_id, floor_id, location_label, physical_address, count),
+    )
+    return cur.lastrowid
 
 
 @router.put("/api/actor-instances/{ai_id}")
@@ -145,10 +170,11 @@ def preview_physical_addresses(project_id: int, body: PhysicalAddressAssignIn):
 
 @router.post("/api/projects/{project_id}/assign-physical-addresses")
 def assign_physical_addresses(project_id: int, body: PhysicalAddressAssignIn):
-    """Fills in KNX physical addresses for every actor instance (Abgangsliste)
-    and room/floor device (Geräteplanung) in the project that doesn't have one
-    yet - see pa_assign.py for the bucket/spacing convention. Never touches an
-    address already set; devices with no Geschoss are skipped and reported."""
+    """Fills in KNX physical addresses for every actor instance (circuit
+    list) and room/floor device (device planning) in the project that
+    doesn't have one yet - see pa_assign.py for the bucket/spacing
+    convention. Never touches an address already set; devices with no floor
+    are skipped and reported."""
     prefix = body.prefix.strip() or "1.1"
     with get_db() as db:
         assignments, skipped = compute_pa_assignments(db, project_id, prefix)
@@ -174,44 +200,52 @@ def channel_summary(project_id: int):
     """Per floor, per channel type: how many circuits are needed in total, and how many
     are already assigned - to help pick the right actuator size before wiring anything."""
     with get_db() as db:
-        circuits = get_circuits(db, project_id)
-        summary = {}
-        for c in circuits:
-            key = (c["floor_id"], c["floor_name"], c["channel_type"])
-            entry = summary.setdefault(key, {"needed": 0, "assigned": 0})
-            entry["needed"] += 1
-            if c["assignment"]:
-                entry["assigned"] += 1
-        result = [
-            {
-                "floor_id": floor_id, "floor_name": floor_name, "channel_type": channel_type,
-                "needed": v["needed"], "assigned": v["assigned"], "open": v["needed"] - v["assigned"],
-            }
-            for (floor_id, floor_name, channel_type), v in summary.items()
-        ]
-        result.sort(key=lambda r: (r["floor_name"], r["channel_type"]))
-        return result
+        return _channel_summary(db, project_id)
+
+
+def _channel_summary(db, project_id):
+    circuits = get_circuits(db, project_id)
+    summary = {}
+    for c in circuits:
+        key = (c["floor_id"], c["floor_name"], c["channel_type"])
+        entry = summary.setdefault(key, {"needed": 0, "assigned": 0})
+        entry["needed"] += 1
+        if c["assignment"]:
+            entry["assigned"] += 1
+    result = [
+        {
+            "floor_id": floor_id, "floor_name": floor_name, "channel_type": channel_type,
+            "needed": v["needed"], "assigned": v["assigned"], "open": v["needed"] - v["assigned"],
+        }
+        for (floor_id, floor_name, channel_type), v in summary.items()
+    ]
+    result.sort(key=lambda r: (r["floor_name"], r["channel_type"]))
+    return result
+
+
+def _assign_circuit(db, project_id, room_point_id, channel_seq, actor_instance_id, channel_letter):
+    # Free up this circuit's previous assignment, if any (moving it to a new channel).
+    db.execute(
+        "DELETE FROM channel_assignments WHERE room_point_id=? AND channel_seq=?",
+        (room_point_id, channel_seq),
+    )
+    taken = db.execute(
+        "SELECT 1 FROM channel_assignments WHERE actor_instance_id=? AND channel_letter=?",
+        (actor_instance_id, channel_letter),
+    ).fetchone()
+    if taken:
+        raise HTTPException(400, f"Channel {channel_letter} is already assigned to something else")
+    db.execute(
+        "INSERT INTO channel_assignments (project_id, room_point_id, channel_seq, actor_instance_id, channel_letter) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (project_id, room_point_id, channel_seq, actor_instance_id, channel_letter),
+    )
 
 
 @router.post("/api/projects/{project_id}/circuits/assign")
 def assign_circuit(project_id: int, a: ChannelAssignIn):
     with get_db() as db:
-        # Free up this circuit's previous assignment, if any (moving it to a new channel).
-        db.execute(
-            "DELETE FROM channel_assignments WHERE room_point_id=? AND channel_seq=?",
-            (a.room_point_id, a.channel_seq),
-        )
-        taken = db.execute(
-            "SELECT 1 FROM channel_assignments WHERE actor_instance_id=? AND channel_letter=?",
-            (a.actor_instance_id, a.channel_letter),
-        ).fetchone()
-        if taken:
-            raise HTTPException(400, f"Channel {a.channel_letter} is already assigned to something else")
-        db.execute(
-            "INSERT INTO channel_assignments (project_id, room_point_id, channel_seq, actor_instance_id, channel_letter) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (project_id, a.room_point_id, a.channel_seq, a.actor_instance_id, a.channel_letter),
-        )
+        _assign_circuit(db, project_id, a.room_point_id, a.channel_seq, a.actor_instance_id, a.channel_letter)
     return {"ok": True}
 
 
@@ -348,8 +382,8 @@ def auto_assign_circuits(project_id: int, dry_run: bool = False):
 # --------------------------------------------------------------------------
 # Exports
 # --------------------------------------------------------------------------
-@router.get("/api/projects/{project_id}/export-abgangsliste.csv")
-def export_abgangsliste(project_id: int):
+@router.get("/api/projects/{project_id}/export-circuit-list.csv")
+def export_circuit_list_csv(project_id: int):
     with get_db() as db:
         project = db.execute("SELECT * FROM projects WHERE id=?", (project_id,)).fetchone()
         if not project:
@@ -404,9 +438,9 @@ def export_abgangsliste(project_id: int):
         )
 
 
-def build_abgangsliste_story(db, project_id, styles, page_break_between_floors=True):
-    """The per-floor/per-actuator/per-channel content of the Abgangsliste, as a
-    list of flowables - factored out of export_abgangsliste_pdf() so the
+def build_circuit_list_story(db, project_id, styles, page_break_between_floors=True):
+    """The per-floor/per-actuator/per-channel content of the circuit list, as
+    a list of flowables - factored out of export_circuit_list_pdf() so the
     Pflichtenheft export can optionally include the same content (see
     documentation.py's documentation_include_circuit_list toggle) without
     duplicating this query/rendering logic."""
@@ -489,8 +523,8 @@ def build_abgangsliste_story(db, project_id, styles, page_break_between_floors=T
     return story
 
 
-@router.get("/api/projects/{project_id}/export-abgangsliste.pdf")
-def export_abgangsliste_pdf(project_id: int):
+@router.get("/api/projects/{project_id}/export-circuit-list.pdf")
+def export_circuit_list_pdf(project_id: int):
     with get_db() as db:
         project = db.execute("SELECT * FROM projects WHERE id=?", (project_id,)).fetchone()
         if not project:
@@ -499,7 +533,7 @@ def export_abgangsliste_pdf(project_id: int):
         company = dict(db.execute("SELECT * FROM company_profile WHERE id=1").fetchone())
         styles = pdf_styles()
         story = company_header_block(company) + pdf_title_banner(f"Abgangsliste — {project['name']}", "Aktoren-Verdrahtung je Geschoss")
-        story += build_abgangsliste_story(db, project_id, styles)
+        story += build_circuit_list_story(db, project_id, styles)
 
         return build_pdf_response(
             story,
@@ -510,3 +544,215 @@ def export_abgangsliste_pdf(project_id: int):
         )
 
 
+# --------------------------------------------------------------------------
+# htmx tab
+# --------------------------------------------------------------------------
+def _line_options(db, project_id):
+    """Every KNX line of this project, for the actor-instance line <select> -
+    reuses pa_assign.project_lines() (also used by routers/lines.py), no
+    duplicated query."""
+    return project_lines(db, project_id)
+
+
+def _actor_instances_context(db, project_id, editing_id=None):
+    instances = _actor_instances(db, project_id)
+    return {
+        "actor_instances": instances,
+        "lines": _line_options(db, project_id),
+        "editing_id": editing_id,
+        "editing": next((a for a in instances if a["id"] == editing_id), None) if editing_id else None,
+    }
+
+
+def _actor_type_options(db):
+    return [
+        dict(r) for r in db.execute(
+            "SELECT * FROM actor_types WHERE group_name='Aktor' ORDER BY manufacturer, model"
+        ).fetchall()
+    ]
+
+
+def _floor_options(db, project_id):
+    return db.execute("SELECT id, name FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall()
+
+
+def _instances_with_letters(instances):
+    """Adds each actor instance's list of channel letters (A, B, C, ...) -
+    the circuit-assignment <select>s need one <option> per channel, reusing
+    utils.channel_letters() rather than generating letters in the template."""
+    for ai in instances:
+        ai["letters"] = channel_letters(ai["channel_count"])
+    return instances
+
+
+def _circuit_label(c):
+    """The function name already starts with the room name (see
+    ga_logic.get_circuits) - strip it back off for the short in-row label."""
+    return c["function_name"][len(c["room_name"]):].strip() or "(kein Label)"
+
+
+def _circuits_context(db, project_id):
+    circuits = get_circuits(db, project_id)
+    for c in circuits:
+        c["label"] = _circuit_label(c)
+    instances = _instances_with_letters(_actor_instances(db, project_id))
+    floors = []
+    for c in circuits:
+        floor = next((f for f in floors if f["id"] == c["floor_id"]), None)
+        if not floor:
+            floors.append(floor := {"id": c["floor_id"], "name": c["floor_name"], "rooms": []})
+        room = next((r for r in floor["rooms"] if r["id"] == c["room_id"]), None)
+        if not room:
+            floor["rooms"].append(room := {"id": c["room_id"], "name": c["room_name"], "circuits": []})
+        room["circuits"].append(c)
+    assigned_count = sum(1 for c in circuits if c["assignment"])
+    return {
+        "floors": floors, "instances": instances,
+        "assigned_count": assigned_count, "total_count": len(circuits),
+    }
+
+
+@router.get("/hx/projects/{project_id}/circuit-list")
+def hx_tab(request: Request, project_id: int):
+    with get_db() as db:
+        ctx = {
+            "request": request, "project_id": project_id,
+            "actor_types": _actor_type_options(db), "floors": _floor_options(db, project_id),
+            **_actor_instances_context(db, project_id),
+        }
+        circuits_ctx = _circuits_context(db, project_id)
+        summary_ctx = {"summary": _channel_summary(db, project_id)}
+    return templates.TemplateResponse(request, "circuit_list/tab.html", {**ctx, "project_id": project_id, **circuits_ctx, **summary_ctx})
+
+
+@router.get("/hx/projects/{project_id}/circuit-list/channel-summary")
+def hx_channel_summary(request: Request, project_id: int):
+    """Also tells the page the open-circuits count (HX-Trigger), so the
+    subnav badge "Abgangsliste (n)" stays current - same pattern as
+    clarification_list.py's badge."""
+    with get_db() as db:
+        summary = _channel_summary(db, project_id)
+    response = templates.TemplateResponse(request, "circuit_list/_channel_summary.html", {"summary": summary})
+    open_count = sum(s["open"] for s in summary)
+    response.headers["HX-Trigger"] = json.dumps({"circuit-list-badge": {"open": open_count}})
+    return response
+
+
+def _render_actor_instances(request, db, project_id, editing_id=None):
+    ctx = {
+        "request": request, "project_id": project_id,
+        "actor_types": _actor_type_options(db), "floors": _floor_options(db, project_id),
+        **_actor_instances_context(db, project_id, editing_id),
+    }
+    return templates.TemplateResponse(request, "circuit_list/_actor_instances.html", ctx)
+
+
+@router.get("/hx/projects/{project_id}/circuit-list/actor-instances")
+def hx_actor_instances(request: Request, project_id: int):
+    with get_db() as db:
+        return _render_actor_instances(request, db, project_id)
+
+
+@router.post("/hx/projects/{project_id}/actor-instances")
+def hx_add_actor_instance(
+    request: Request, project_id: int, actor_type_id: int = Form(...), floor_id: str = Form(""),
+    location_label: str = Form(""), physical_address: str = Form(""),
+):
+    with get_db() as db:
+        _add_actor_instance(db, project_id, actor_type_id, int(floor_id) if floor_id else None, location_label.strip(), physical_address.strip())
+        response = _render_actor_instances(request, db, project_id)
+    response.headers["HX-Trigger"] = "actor-instances-changed"
+    return response
+
+
+@router.get("/hx/actor-instances/{ai_id}/edit")
+def hx_edit_actor_instance_form(request: Request, ai_id: int):
+    with get_db() as db:
+        row = db.execute("SELECT project_id FROM actor_instances WHERE id=?", (ai_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "Actor instance not found")
+        return _render_actor_instances(request, db, row["project_id"], editing_id=ai_id)
+
+
+@router.get("/hx/projects/{project_id}/actor-instances/cancel-edit")
+def hx_cancel_edit_actor_instance(request: Request, project_id: int):
+    with get_db() as db:
+        return _render_actor_instances(request, db, project_id)
+
+
+@router.put("/hx/actor-instances/{ai_id}")
+def hx_update_actor_instance(
+    request: Request, ai_id: int, floor_id: str = Form(""), location_label: str = Form(""),
+    physical_address: str = Form(""),
+):
+    with get_db() as db:
+        row = db.execute("SELECT project_id FROM actor_instances WHERE id=?", (ai_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "Actor instance not found")
+        db.execute(
+            "UPDATE actor_instances SET floor_id=?, location_label=?, physical_address=? WHERE id=?",
+            (int(floor_id) if floor_id else None, location_label.strip(), physical_address.strip(), ai_id),
+        )
+        response = _render_actor_instances(request, db, row["project_id"])
+    response.headers["HX-Trigger"] = "actor-instances-changed"
+    return response
+
+
+@router.delete("/hx/actor-instances/{ai_id}")
+def hx_delete_actor_instance(request: Request, ai_id: int):
+    with get_db() as db:
+        row = db.execute("SELECT project_id FROM actor_instances WHERE id=?", (ai_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "Actor instance not found")
+        db.execute("DELETE FROM actor_instances WHERE id=?", (ai_id,))
+        response = _render_actor_instances(request, db, row["project_id"])
+    response.headers["HX-Trigger"] = "actor-instances-changed"
+    return response
+
+
+@router.get("/hx/projects/{project_id}/circuit-list/circuits")
+def hx_circuits(request: Request, project_id: int):
+    with get_db() as db:
+        ctx = {"request": request, "project_id": project_id, **_circuits_context(db, project_id)}
+    return templates.TemplateResponse(request, "circuit_list/_circuits.html", ctx)
+
+
+@router.post("/hx/circuit-list/assign")
+def hx_assign_circuit(
+    request: Request, project_id: int = Form(...), room_point_id: int = Form(...),
+    channel_seq: int = Form(0), value: str = Form(""),
+):
+    with get_db() as db:
+        if value:
+            actor_instance_id_str, channel_letter = value.split("|", 1)
+            try:
+                _assign_circuit(db, project_id, room_point_id, channel_seq, int(actor_instance_id_str), channel_letter)
+            except HTTPException:
+                db.rollback()
+                raise
+        else:
+            db.execute(
+                "DELETE FROM channel_assignments WHERE room_point_id=? AND channel_seq=?",
+                (room_point_id, channel_seq),
+            )
+        circuit = next(
+            c for c in get_circuits(db, project_id)
+            if c["room_point_id"] == room_point_id and c["channel_seq"] == channel_seq
+        )
+        circuit["label"] = _circuit_label(circuit)
+        instances = _instances_with_letters(_actor_instances(db, project_id))
+        response = templates.TemplateResponse(
+            request, "circuit_list/_circuit_row.html",
+            {"project_id": project_id, "c": circuit, "instances": instances},
+        )
+    response.headers["HX-Trigger"] = "circuit-assignments-changed"
+    return response
+
+
+# Bulk actions ("PA automatisch zuordnen", "Alle automatisch zuordnen") keep
+# their existing JSON endpoints above (assign_physical_addresses,
+# auto_assign_circuits) - their confirmation dialogs need the dry-run
+# preview data as JSON anyway (see circuit_list.js), and reusing them here
+# instead of a second htmx-flavored implementation avoids duplicating the
+# Rollo-pairing/dry-run logic. circuit_list.js reloads the three sections
+# below via htmx.ajax once the JSON call completes.

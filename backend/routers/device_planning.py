@@ -324,7 +324,7 @@ def _devices_by_room_rows(db, project_id):
     physical_address}.
     Shared by the standalone Geräte-je-Raum PDF and its optional Pflichtenheft
     section, same pattern as build_distribution_boards_story/
-    build_abgangsliste_story in the sibling routers."""
+    build_circuit_list_story in the sibling routers."""
     rows = []
     floors = db.execute("SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall()
     for floor in floors:

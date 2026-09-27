@@ -1,0 +1,34 @@
+{# Circuit list tab ("Abgangsliste"): channel-demand overview, actor
+   instances, and the circuit/channel assignment. Swapped into
+   #subtab-circuit-list. #}
+<div class="card">
+  <h4>Bedarfsübersicht</h4>
+  <p class="muted">Wie viele Kanäle je Geschoss und Kanaltyp tatsächlich benötigt werden — hilft bei der Wahl der richtigen Aktorgrösse, bevor verdrahtet wird.</p>
+  <div id="channel-summary-section" hx-get="/hx/projects/{{ project_id }}/circuit-list/channel-summary" hx-swap="innerHTML"
+       hx-trigger="actor-instances-changed from:body, circuit-assignments-changed from:body">
+    {% include "circuit_list/_channel_summary.html" %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="row" style="justify-content:space-between;">
+    <h4 style="margin:0;">Aktoren in diesem Projekt</h4>
+    <div class="row" style="margin:0;">
+      <input type="text" id="pa-prefix-circuit-list" value="1.1" style="width:55px;" title="Bereich.Linie-Präfix">
+      <button class="btn secondary" onclick="assignPhysicalAddresses('pa-prefix-circuit-list')">PA automatisch zuordnen</button>
+      <span class="info-icon" tabindex="0" data-tip="Vergibt physikalische Adressen für alle Geräte im Projekt ohne Adresse - Aktoren hier UND Geräte in der Geräteplanung. Reihenfolge: Systemgeräte (0-5), je Geschoss ein Aktoren-Block, je Geschoss ein Sensoren/Bedienelemente-Block, dann Aussen-Geräte (Wetterstation zuerst). Jeder Block reserviert volle Zehnerblöcke je nach Gerätezahl. Bereits gesetzte Adressen werden nie verändert.">i</span>
+    </div>
+  </div>
+  <div id="actor-instances-section" hx-get="/hx/projects/{{ project_id }}/circuit-list/actor-instances" hx-swap="innerHTML"
+       hx-trigger="circuit-assignments-changed from:body">
+    {% include "circuit_list/_actor_instances.html" %}
+  </div>
+</div>
+
+<div class="card">
+  <h4>Abgänge</h4>
+  <div id="circuits-section" hx-get="/hx/projects/{{ project_id }}/circuit-list/circuits" hx-swap="innerHTML"
+       hx-trigger="actor-instances-changed from:body">
+    {% include "circuit_list/_circuits.html" %}
+  </div>
+</div>

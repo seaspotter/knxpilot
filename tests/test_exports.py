@@ -31,7 +31,7 @@ def project(client):
 PDF_ENDPOINTS = [
     "export-function-checklist.pdf", "export-handover-checklist.pdf", "export-device-list.pdf",
     "export-devices-by-room.pdf", "export-specification.pdf", "export-documentation.pdf",
-    "export-clarification-list.pdf", "export-distribution-boards.pdf", "export-abgangsliste.pdf", "export-labels.pdf",
+    "export-clarification-list.pdf", "export-distribution-boards.pdf", "export-circuit-list.pdf", "export-labels.pdf",
 ]
 
 
@@ -47,7 +47,7 @@ def test_time_tracking_pdf(client, project):
     assert r.status_code == 200 and r.content.startswith(b"%PDF")
 
 
-@pytest.mark.parametrize("endpoint", ["export.csv", "export-abgangsliste.csv", "export-json"])
+@pytest.mark.parametrize("endpoint", ["export.csv", "export-circuit-list.csv", "export-json"])
 def test_other_project_exports(client, project, endpoint):
     assert client.get(f"/api/projects/{project}/{endpoint}").status_code == 200
 

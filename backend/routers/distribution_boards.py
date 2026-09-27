@@ -471,7 +471,7 @@ def build_distribution_boards_story(db, project_id, styles):
     """The per-board/per-row content, as a list of flowables - factored out
     so both the standalone export below and the Pflichtenheft's optional
     inclusion (see documentation.py's documentation_include_distribution_boards
-    toggle) share one rendering, same pattern as build_abgangsliste_story."""
+    toggle) share one rendering, same pattern as build_circuit_list_story."""
     floors = {r["id"]: r["name"] for r in db.execute("SELECT * FROM floors WHERE project_id=?", (project_id,)).fetchall()}
     rooms = {r["id"]: r["name"] for r in db.execute(
         "SELECT r.id, r.name FROM rooms r JOIN floors f ON r.floor_id = f.id WHERE f.project_id=?", (project_id,))}

@@ -1,0 +1,24 @@
+{# One circuit's channel-assignment row. Swapped in place
+   (hx-target="closest .rc-row" hx-swap="outerHTML") after every assign/
+   unassign, so the rest of the circuits list (scroll position, other
+   selects' pending choices) is untouched. #}
+{% set matching = instances | selectattr("channel_type", "equalto", c.channel_type) | list %}
+<div class="rc-row rc-row-3">
+  <div class="rc-type">{{ c.point_type_name }}</div>
+  <div><span class="rc-pill">{{ c.label }} <span class="rc-tag">{{ c.channel_type }}</span></span></div>
+  <form hx-post="/hx/circuit-list/assign" hx-target="closest .rc-row" hx-swap="outerHTML" hx-trigger="change from:select">
+    <input type="hidden" name="project_id" value="{{ project_id }}">
+    <input type="hidden" name="room_point_id" value="{{ c.room_point_id }}">
+    <input type="hidden" name="channel_seq" value="{{ c.channel_seq }}">
+    <select name="value"{% if not matching %} disabled title="Noch kein passender Aktor hinzugefügt"{% endif %}>
+      <option value="">— nicht zugeordnet —</option>
+      {% for ai in matching %}
+        {% for letter in ai.letters %}
+          <option value="{{ ai.id }}|{{ letter }}"{% if c.assignment and c.assignment.actor_instance_id == ai.id and c.assignment.channel_letter == letter %} selected{% endif %}>
+            {{ ai.actor_type_name }} ({{ ai.physical_address or ai.location_label or ai.id }}) — {{ letter }}
+          </option>
+        {% endfor %}
+      {% endfor %}
+    </select>
+  </form>
+</div>

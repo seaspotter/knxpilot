@@ -75,7 +75,7 @@ def _overview_cards(project_id):
               f"{point_count} Punkte definiert" if point_count else "Noch keine Punkte definiert"),
         _stat("group-addresses", "Gruppenadressen",
               f"{ga_count} Gruppenadressen" if ga_count else "Noch keine Gruppenadressen"),
-        _stat("abgangsliste", "Abgangsliste",
+        _stat("circuit-list", "Abgangsliste",
               f"{assigned_count} / {total_circuits} Abgänge zugeordnet" if total_circuits else "Noch keine Abgänge",
               warn=assigned_count < total_circuits),
         _stat("device-planning", "Geräteplanung",

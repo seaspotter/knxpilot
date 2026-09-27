@@ -70,7 +70,7 @@ the user to make explicitly, not something to introduce as a side effect of
   done so far: clarification list, time tracking, Setup, device catalog,
   project manuals, overview, specification, documentation, function
   checklist, handover checklist, distribution board planning, functions,
-  group addresses, device planning, labels. See "htmx tabs" and "htmx
+  group addresses, device planning, labels, circuit list. See "htmx tabs" and "htmx
   migration" (order, rules) in
   [`DEVELOPMENT.md`](./DEVELOPMENT.md). Convert only the tab the user
   confirmed next, and don't add other frontend libraries.
@@ -80,7 +80,7 @@ the user to make explicitly, not something to introduce as a side effect of
   tables/columns, API paths, CSS classes, template names, JSON keys. Use
   the English terms from the glossary in [`DEVELOPMENT.md`](./DEVELOPMENT.md)
   ("Naming"). Many existing names are still German (e.g.
-  `routers/abgangsliste.py`); they get renamed tab by tab, together with
+  `frontend/js/projekte.js`); they get renamed tab by tab, together with
   each tab's move to htmx - never add new German names.
 - One router file and one frontend JS file per UI tab/sub-tab — when adding
   a feature to an existing tab, that's almost always the only two files you

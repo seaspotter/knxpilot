@@ -1,6 +1,6 @@
 """
 Label-sheet PDF generator - used by the "Labels" project sub-tab's export
-(backend/routers/abgangsliste.py). LABEL_FORMATS holds the layout for each
+(backend/routers/labels.py). LABEL_FORMATS holds the layout for each
 supported sheet; only Avery Zweckform L6037 exists today, but the registry
 shape means a second format is just a new dict entry here plus a new
 <option> in frontend/index.html's #label-format select (and an entry in

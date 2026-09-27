@@ -1,0 +1,16 @@
+{# Per floor/channel-type demand overview. Re-rendered on any actor-instance
+   or circuit-assignment change (see tab.html's hx-trigger). #}
+<ul class="list" id="channel-summary-list">
+  {% for s in summary %}
+    <li>
+      <div><b>{{ s.floor_name }}</b> <span class="pill">{{ s.channel_type }}</span></div>
+      <div>
+        <span class="pill">{{ s.needed }} benötigt</span>
+        <span class="pill">{{ s.assigned }} zugeordnet</span>
+        <span class="pill"{% if s.open > 0 %} style="color:var(--warn);"{% endif %}>{{ s.open }} offen</span>
+      </div>
+    </li>
+  {% else %}
+    <li class="muted">Noch keine Abgänge vorhanden</li>
+  {% endfor %}
+</ul>
