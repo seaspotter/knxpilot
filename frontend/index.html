@@ -122,7 +122,7 @@
         <button data-subtab="funktionscheckliste">Funktionscheckliste</button>
         <button data-subtab="uebergabe">Übergabe-Checkliste</button>
         <button data-subtab="klaerungsliste">Klärungsliste</button>
-        <button data-subtab="handbuecher">Handbücher</button>
+        <button data-subtab="manuals">Handbücher</button>
         <button data-subtab="dokumentation">Dokumentation</button>
       </div>
 
@@ -143,16 +143,8 @@
         </div>
       </div>
 
-      <div class="subtab" id="subtab-handbuecher">
-        <div class="card">
-          <div class="row" style="justify-content:space-between;">
-            <h3 style="margin:0;">Handbücher</h3>
-            <button class="btn secondary small" onclick="fetchAllProjectManuals()">Alle herunterladen</button>
-          </div>
-          <p class="muted">Hersteller-Handbücher für die im Projekt tatsächlich verwendeten Geräte — Links werden im Geräte-Katalog unter "Handbücher" hinterlegt. Herunterladen speichert eine eigene Kopie in diesem Projekt (getrennt von den Dateien im Unterreiter Übersicht); zum Ansehen öffnet sich das PDF in einem neuen Browser-Tab.</p>
-          <ul class="list" id="project-manuals-list"></ul>
-        </div>
-      </div>
+      <!-- Rendered server-side with htmx (backend/templates/manuals/tab.html), see manuals.js -->
+      <div class="subtab" id="subtab-manuals"></div>
 
       <div class="subtab" id="subtab-struktur">
         <div class="card">

@@ -39,6 +39,12 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
   "htmx tabs". New dependency `jinja2` - after updating, run
   `docker compose pull && docker compose up -d` once. The entries now sit
   in a white card like the groups on every other tab.
+- **Project manuals tab rendered server-side with htmx** — downloading,
+  viewing and deleting a device manual now come from a Jinja template
+  (`backend/templates/manuals/tab.html`); the download buttons are
+  disabled while a download runs, and a failed download (e.g. a link that
+  leads to a web page) is reported with its reason. The project sub-tab ID
+  is now `manuals`.
 - **Device catalog rendered server-side with htmx** — both sub-tabs
   (catalog and manual URLs) come from Jinja templates
   (`backend/templates/device_catalog/`) via `/hx/device-catalog...`

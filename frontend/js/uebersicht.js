@@ -110,7 +110,7 @@ async function loadUebersichtForCurrentProject() {
       warn: openKlaerungen > 0,
     },
     {
-      subtab: 'handbuecher',
+      subtab: 'manuals',
       title: 'Handbücher',
       body: manuals.length ? `${manuals.filter(m => m.file_id).length} / ${manuals.length} heruntergeladen` : 'Keine Handbuch-Links hinterlegt',
     },

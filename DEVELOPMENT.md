@@ -98,7 +98,7 @@ backend/
   ga_logic.py       — group-address tree generation, circuits, per-room/central function listings (used by Pflichtenheft and the checklists)
   pdf_design.py     — shared PDF look (banner, table style, page numbers, letterhead); build_pdf_bytes()/build_pdf_bytes_two_pass() are the raw-bytes builders every export (and email.py's send action) go through
   templating.py     — Jinja2 setup for the htmx tabs (templates/, autoescaped)
-  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: klaerungsliste/, time_tracking/, setup/, device_catalog/)
+  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: klaerungsliste/, time_tracking/, setup/, device_catalog/, manuals/)
   project_transfer.py — per-project JSON backup/restore + duplicate (what's included, name/position-based references)
   pa_assign.py      — physical-address auto-assign (bucket convention, per KNX line) + line coupler/power supply detection
   email_sender.py   — SMTP mechanics (stdlib smtplib) behind routers/email.py's send-by-mail action
@@ -116,7 +116,7 @@ backend/
     email.py           — "Per E-Mail senden" endpoints, reusing each export's build_*_pdf_bytes() function (Setup → E-Mail + every export tab)
     klaerungsliste.py  — questions/tasks/notes per project + "Offene Punkte" PDF export (Klärungsliste sub-tab)
     project_files.py   — a handful of reference files per project, stored as a BLOB (Übersicht sub-tab)
-    manuals.py         — fetches a device's catalog-curated manual_url into the project's own Handbücher store (Handbücher sub-tab)
+    manuals.py         — project manuals tab ("Handbücher", htmx): fetches a device's catalog-curated manual_url into the project's own store
     time_tracking.py   — internal per-project time tracking ("Zeiterfassung" tab, htmx): header timer JSON API + /hx/ tab fragments + its own timesheet PDF; never part of any project export
     system.py          — self-update via git, changelog + manual + version endpoints (Update/Hilfe tabs)
 frontend/
@@ -134,7 +134,7 @@ frontend/
     funktionen.js      — assigning functions to rooms, Sonderadressen (Funktionen sub-tab)
     gruppenadressen.js — GA tree preview + CSV export (Gruppenadressen sub-tab)
     uebersicht.js      — project status dashboard + project files (Übersicht sub-tab)
-    manuals.js         — device manuals: view/fetch/delete (Handbücher sub-tab)
+    manuals.js         — loads the htmx project manuals tab
     time_tracking.js   — header start/stop timer (live clock), loads the htmx time tracking tab, timesheet PDF download
     abgangsliste.js    — actor instances + circuit assignment
     geraeteplanung.js  — per-room device planning
@@ -226,7 +226,7 @@ rarely need to touch anything else.
   each renamed to English in the same change, with pytest coverage for its
   `/hx/` endpoints and a browser pass; confirm each next tab with the
   user. Order: ~~clarification list~~, ~~time tracking~~, ~~Setup~~,
-  ~~device catalog~~ + project manuals, overview/specification/documentation,
+  ~~device catalog~~, ~~project manuals~~, overview/specification/documentation,
   function + handover checklists, functions + group addresses, device
   planning + distribution board planning + labels, circuit list, building
   structure (drag & drop stays JS).

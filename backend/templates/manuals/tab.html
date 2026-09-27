@@ -1,0 +1,29 @@
+{# The project's manuals tab: every used device with a manual link in the catalog; download on click
+   (buttons disabled while the download runs), view in a new tab, delete. #}
+<div class="card">
+  <div class="row" style="justify-content:space-between;">
+    <h3 style="margin:0;">Handbücher</h3>
+    <button class="btn secondary small" hx-post="/hx/projects/{{ project_id }}/manuals/fetch-all" hx-target="#subtab-manuals" hx-swap="innerHTML"
+            hx-disabled-elt="this"{% if not manuals %} disabled{% endif %}>Alle herunterladen</button>
+  </div>
+  <p class="muted">Hersteller-Handbücher für die im Projekt tatsächlich verwendeten Geräte — Links werden im Geräte-Katalog unter "Handbücher" hinterlegt. Herunterladen speichert eine eigene Kopie in diesem Projekt (getrennt von den Dateien im Unterreiter Übersicht); zum Ansehen öffnet sich das PDF in einem neuen Browser-Tab.</p>
+  <ul class="list">
+    {% for m in manuals %}
+      <li>
+        <div><b>{{ m.device_name }}</b>{% if m.description %} <span class="muted">— {{ m.description }}</span>{% endif %}</div>
+        <div class="row" style="margin:0; gap:6px;">
+          {% if m.file_id %}
+            <button class="btn secondary small" onclick="window.open('/api/project-manuals/{{ m.file_id }}/view', '_blank')">Ansehen</button>
+            <button class="btn danger small" hx-delete="/hx/project-manuals/{{ m.file_id }}" hx-target="#subtab-manuals" hx-swap="innerHTML"
+                    hx-confirm="Dieses Handbuch aus dem Projekt löschen?">Löschen</button>
+          {% else %}
+            <button class="btn secondary small" hx-post="/hx/projects/{{ project_id }}/manuals/{{ m.device_type_id }}/fetch"
+                    hx-target="#subtab-manuals" hx-swap="innerHTML" hx-disabled-elt="this">Herunterladen</button>
+          {% endif %}
+        </div>
+      </li>
+    {% else %}
+      <li class="muted">Keine Handbuch-Links für verwendete Geräte hinterlegt</li>
+    {% endfor %}
+  </ul>
+</div>

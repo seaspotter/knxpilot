@@ -59,7 +59,7 @@ document.querySelectorAll('#workspace-subnav button').forEach(btn => {
     if (btn.dataset.subtab === 'funktionscheckliste') await loadFunktionschecklisteForCurrentProject();
     if (btn.dataset.subtab === 'uebergabe') await loadUebergabeForCurrentProject();
     if (btn.dataset.subtab === 'klaerungsliste') await loadKlaerungslisteForCurrentProject();
-    if (btn.dataset.subtab === 'handbuecher') await loadProjectManuals();
+    if (btn.dataset.subtab === 'manuals') await loadProjectManuals();
   };
 });
 

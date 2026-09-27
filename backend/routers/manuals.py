@@ -11,17 +11,23 @@ This is a plain http(s) GET of a URL the user themselves typed into their
 own catalog - not a search/scrape - and only ever runs when the user
 clicks the button, never automatically (matches the same "manual, confirm
 first" choice made for routers/email.py's send action).
+
+The project's manuals tab is rendered server-side with htmx (template
+backend/templates/manuals/tab.html, /hx/... endpoints at the end of this
+file); the JSON endpoints stay for the tests and the view link.
 """
+import json
 import http.client
 import urllib.error
 import urllib.request
 from urllib.parse import urlparse
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
 
 from ..db import get_db
 from .geraeteplanung import device_summary
+from ..templating import templates
 from ..utils import content_disposition
 
 router = APIRouter(tags=["manuals"])
@@ -192,3 +198,46 @@ def delete_project_manual(file_id: int):
     with get_db() as db:
         db.execute("DELETE FROM project_manuals WHERE id=?", (file_id,))
     return {"ok": True}
+
+
+# ---------- htmx fragment (backend/templates/manuals/tab.html) ----------
+def _tab(request, project_id, toast=None, level="success"):
+    response = templates.TemplateResponse(request, "manuals/tab.html", {
+        "project_id": project_id, "manuals": list_project_manuals(project_id)})
+    if toast:
+        response.headers["HX-Trigger"] = json.dumps({"show-toast": {"message": toast, "level": level}})
+    return response
+
+
+@router.get("/hx/projects/{project_id}/manuals")
+def hx_tab(request: Request, project_id: int):
+    return _tab(request, project_id)
+
+
+@router.post("/hx/projects/{project_id}/manuals/{device_type_id}/fetch")
+def hx_fetch(request: Request, project_id: int, device_type_id: int):
+    """Download failures (broken link, not a PDF, ...) come back as an error
+    toast with the reason (502 + detail, see ui.js htmx:responseError)."""
+    fetch_project_manual(project_id, device_type_id)
+    return _tab(request, project_id)
+
+
+@router.post("/hx/projects/{project_id}/manuals/fetch-all")
+def hx_fetch_all(request: Request, project_id: int):
+    result = fetch_all_project_manuals(project_id)
+    if result["failed"]:
+        names = ", ".join(f["device_name"] for f in result["failed"])
+        return _tab(request, project_id, f"{len(result['fetched'])} heruntergeladen, {len(result['failed'])} fehlgeschlagen: {names}", "warning")
+    if result["fetched"]:
+        return _tab(request, project_id, f"{len(result['fetched'])} Handbücher heruntergeladen.")
+    return _tab(request, project_id, "Alle Handbücher bereits gespeichert.")
+
+
+@router.delete("/hx/project-manuals/{file_id}")
+def hx_delete(request: Request, file_id: int):
+    with get_db() as db:
+        row = db.execute("SELECT project_id FROM project_manuals WHERE id=?", (file_id,)).fetchone()
+    if not row:
+        raise HTTPException(404, "Handbuch nicht gefunden")
+    delete_project_manual(file_id)
+    return _tab(request, row["project_id"])
