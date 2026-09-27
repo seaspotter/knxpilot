@@ -9,7 +9,7 @@ Aussen/unbeheizt (Wetterstation devices first within it). Never touches an
 address that's already set - same "only fill gaps" contract as the
 existing circuit auto-assign (see routers/abgangsliste.py).
 
-Projects split into several KNX lines (knx_lines, see routers/linien.py)
+Projects split into several KNX lines (knx_lines, see routers/lines.py)
 run this bucketing once per line, each with its own "Bereich.Linie" prefix:
 a device's line is its room's (or actuator's) own line, else its floor's,
 else the project's first line. A line coupler is placed first among the
@@ -63,7 +63,7 @@ def project_lines(db, project_id):
 def collect_devices(db, project_id):
     """Every device in the project with its effective line_id (None if the
     project/device has no line set) - shared by the PA assignment below and
-    the per-line overview in routers/linien.py."""
+    the per-line overview in routers/lines.py."""
     items = []
     for ai in db.execute(
         "SELECT ai.*, at.group_name, at.model, at.description, at.manufacturer, "

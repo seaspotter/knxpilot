@@ -13,7 +13,7 @@ from ..db import get_db
 from ..models import KnxLineIn, LineAssignIn
 from ..pa_assign import collect_devices, is_bus_power_supply, is_line_coupler, project_lines
 
-router = APIRouter(tags=["linien"])
+router = APIRouter(tags=["lines"])
 
 MAX_DEVICES_PER_LINE = 64   # KNX TP line segment without line repeater
 NEAR_LIMIT = 55

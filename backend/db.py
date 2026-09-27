@@ -528,7 +528,7 @@ def init_db():
             -- {address, name, dpt} incl. main/middle group rows ("1/2/-").
             -- Optional KNX TP lines (Bereich.Linie) - only for projects split into
             -- several lines, e.g. one per apartment plus an outdoor line (see
-            -- routers/linien.py). Without any row here a project is one line
+            -- routers/lines.py). Without any row here a project is one line
             -- and PA auto-assign uses the prefix typed in (default 1.1), as
             -- before. floors/rooms/actor_instances.line_id point here (a room's
             -- or actuator's own line overrides its floor's; ON DELETE SET NULL).

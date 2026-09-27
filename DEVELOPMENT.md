@@ -107,7 +107,7 @@ backend/
     setup.py          — Setup tab (htmx, /hx/setup/...): settings pages on the company profile (SETTINGS_SECTIONS) and the categories/function types/central templates editors, plus their JSON APIs
     device_catalog.py  — device catalog tab (htmx: /hx/device-catalog...): catalog + per-device manual URL, JSON import/export with preview, ACTOR_TYPES API
     projects.py        — projects, floors/rooms/points (incl. tree moves with GA-impact dry run), backup/restore (Projekte tab: Gebäudestruktur sub-tab + project CRUD)
-    linien.py          — optional KNX lines (Bereich.Linie) + floor/room/actuator line assignment, per-line device counts/warnings (Gebäudestruktur sub-tab)
+    lines.py           — optional KNX lines (Bereich.Linie) + floor/room/actuator line assignment, per-line device counts/warnings (Gebäudestruktur sub-tab)
     abgangsliste.py    — actor instances, circuit assignment, CSV/PDF export (Abgangsliste sub-tab)
     geraeteplanung.py  — per-room device planning, bill of materials, PDF export (Geräteplanung sub-tab)
     distribution_boards.py — distribution board planning tab (htmx, /hx/projects/{id}/distribution-boards...): DIN-rail layout per Geschoss, RCD/LS placeholders + placed actor instances, PDF export (Verteilerplanung sub-tab)
@@ -133,7 +133,7 @@ frontend/
     device_catalog.js  — loads the htmx device catalog sub-tabs, ACTOR_TYPES cache for other tabs' pickers, JSON import dialogs
     projekte.js        — project CRUD/meta, Geschoss/Raum/Verteiler tree with drag & drop (Gebäudestruktur sub-tab)
     distribution_boards.js — loads the htmx distribution board planning tab, PDF download
-    linien.js          — optional KNX lines card + the line <select>s used by projekte.js/abgangsliste.js (Gebäudestruktur sub-tab)
+    lines.js           — optional KNX lines card + the line <select>s used by projekte.js/abgangsliste.js (Gebäudestruktur sub-tab)
     funktionen.js      — assigning functions to rooms, Sonderadressen (Funktionen sub-tab)
     gruppenadressen.js — GA tree preview + CSV export (Gruppenadressen sub-tab)
     overview.js        — loads the htmx overview tab, goToSubtab() for the stat cards' onclick (Übersicht sub-tab)

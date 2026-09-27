@@ -39,6 +39,10 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ### Changed
 
+- **KNX lines: remaining German internal name renamed to English** —
+  router `linien.py` → `lines.py`, JS `linien.js` → `lines.js`, router tag
+  `linien` → `lines`; its routes, functions and DB schema (`knx_lines`)
+  were already English. Identifier-only rename, no behavior change.
 - **Function checklist and handover checklist: remaining German internal
   names renamed to English** — router `checkliste.py` → `checklists.py`;
   PDF builders `build_funktionscheckliste_pdf_bytes`/
