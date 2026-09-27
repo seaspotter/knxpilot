@@ -10,6 +10,35 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ## [Unreleased]
 
+### Changed
+
+- **"Geräteplanung" and "Labels" sub-tabs: rendered server-side with htmx,
+  German internal names renamed to English** — per-room/floor device
+  add/edit/delete and the "Nicht bestellen" toggle are now server-rendered
+  fragments (new templates in `backend/templates/device_planning/`), with
+  the project-wide bill of materials ("Stückliste") refreshed as an
+  out-of-band swap on every device change. `routers/geraeteplanung.py` →
+  `routers/device_planning.py` (router tag `device-planning`); its two PDF
+  exports moved from `/api/projects/{id}/export-geraeteliste.pdf` and
+  `/export-geraete-je-raum.pdf` to `/export-device-list.pdf` and
+  `/export-devices-by-room.pdf`, and the documentation chapter anchor
+  `geraete-je-raum` → `devices-by-room`. `js/geraeteplanung.js` →
+  `js/device_planning.js` (now only loads the tab and the PDF downloads).
+  The Labels tab's export endpoint (`/api/projects/{id}/export-labels.pdf`)
+  moved out of `routers/abgangsliste.py` into a new `routers/labels.py`,
+  which also renders the tab (`backend/templates/labels/tab.html`);
+  `backend/labels.py` (the label-sheet layout registry, `LABEL_FORMATS`)
+  is unchanged. `js/labels.js` stays small vanilla JS (the label-position
+  grid and the PDF download need no server round-trip), now reading each
+  format's sheet size from the rendered `<option>`'s `data-size` instead
+  of a duplicated client-side table. Sub-tab id `subtab-geraeteplanung` →
+  `subtab-device-planning`; the overview stat-card id and the
+  `pa-prefix-geraeteplanung` field renamed to match. JSON API paths
+  (`/api/rooms/{id}/devices`, `/api/room-devices/{id}`,
+  `/api/floors/{id}/devices`, `/api/floor-devices/{id}`,
+  `/api/projects/{id}/device-order-flags/{id}`,
+  `/api/projects/{id}/device-summary`) are unchanged.
+
 ### Fixed
 
 - **"Klärungsliste" text/answer fields were narrower than intended** — the

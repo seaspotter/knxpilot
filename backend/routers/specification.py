@@ -26,7 +26,7 @@ from ..pdf_design import (
 )
 from ..templating import templates
 from ..utils import join_parts, local_time_text
-from .geraeteplanung import build_stueckliste_story, device_summary
+from .device_planning import build_stueckliste_story, device_summary
 
 
 router = APIRouter(tags=["specification"])

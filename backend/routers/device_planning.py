@@ -1,21 +1,30 @@
 """
-Geräteplanung tab: which devices (any group - sensor, touch panel, weather
-station, actuator...) are planned per room or floor, a project-wide bill of
-materials, the Geräteliste PDF export (order list), and the Geräte je Raum
-PDF export (installation reference - every device, grouped by Geschoss/Raum).
+Device planning tab ("Geräteplanung"): which devices (any group - sensor,
+touch panel, weather station, actuator...) are planned per room or floor, a
+project-wide bill of materials ("Stückliste"), the device-list PDF export
+(order list), and the devices-by-room PDF export (installation reference -
+every device, grouped by Geschoss/Raum).
+
+Rendered server-side with htmx (see DEVELOPMENT.md "htmx tabs"): the
+/hx/... endpoints below return HTML fragments from
+backend/templates/device_planning/, and the browser swaps them in - no
+client-side cache. The JSON endpoints stay for the delete-impact counts,
+the physical-address auto-assignment (pa_assign.py) and the tests.
 """
 from xml.sax.saxutils import escape
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse
 from reportlab.platypus import KeepTogether, Paragraph, Spacer, Table
 from reportlab.lib.units import mm
 
 from ..db import get_db
 from ..models import RoomDeviceIn, RoomDeviceEditIn, DeviceOrderFlagIn
 from ..pdf_design import pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response, company_header_block, company_footer_line
+from ..templating import templates
 from ..utils import join_parts
 
-router = APIRouter(tags=["geraeteplanung"])
+router = APIRouter(tags=["device-planning"])
 
 
 @router.get("/api/rooms/{room_id}/devices")
@@ -242,8 +251,8 @@ def device_summary(project_id: int):
         return result
 
 
-@router.get("/api/projects/{project_id}/export-geraeteliste.pdf")
-def export_geraeteliste_pdf(project_id: int):
+@router.get("/api/projects/{project_id}/export-device-list.pdf")
+def export_device_list_pdf(project_id: int):
     """Just the order-relevant Stückliste (Gruppe/Hersteller/Typ/Beschreibung/Anzahl) - no
     per-room breakdown, this is meant as a clean list to hand to a supplier.
     Devices marked "nicht bestellen" (see set_device_order_flag) are left out
@@ -307,7 +316,7 @@ def _cell(text, styles):
     return Paragraph(escape(text or ""), styles["TableCell"])
 
 
-def _geraete_je_raum_rows(db, project_id):
+def _devices_by_room_rows(db, project_id):
     """Every device in the project - room_devices, floor_devices ("Ohne
     Raum"), and Abgangsliste's actor_instances (grouped by Standortbezeichnung,
     since they have no room_id) - as (floor_name, room_name, [devices]) tuples,
@@ -374,11 +383,11 @@ def _grouped_actor_rows(actor_rows, floor_name):
     ]
 
 
-def build_geraete_je_raum_story(db, project_id, styles):
+def build_devices_by_room_story(db, project_id, styles):
     """One table per Raum/floor-location: Gruppe/Hersteller/Typ/Beschreibung/Adresse -
     factored out so both the standalone export and the Pflichtenheft's
     optional inclusion share one rendering."""
-    rows = _geraete_je_raum_rows(db, project_id)
+    rows = _devices_by_room_rows(db, project_id)
     story = []
     if not rows:
         story.append(Paragraph("Noch keine Geräte geplant.", styles["BodyMuted"]))
@@ -414,8 +423,8 @@ def build_geraete_je_raum_story(db, project_id, styles):
     return story
 
 
-@router.get("/api/projects/{project_id}/export-geraete-je-raum.pdf")
-def export_geraete_je_raum_pdf(project_id: int):
+@router.get("/api/projects/{project_id}/export-devices-by-room.pdf")
+def export_devices_by_room_pdf(project_id: int):
     """Installation reference: every device in the project, grouped by
     Geschoss/Raum with Gruppe/Hersteller/Typ/Beschreibung/Adresse - the counterpart to
     the order-focused Geräteliste export above."""
@@ -429,7 +438,7 @@ def export_geraete_je_raum_pdf(project_id: int):
         story = company_header_block(company) + pdf_title_banner(
             f"Geräte je Raum — {project['name']}", "Installationsübersicht"
         )
-        story += build_geraete_je_raum_story(db, project_id, styles)
+        story += build_devices_by_room_story(db, project_id, styles)
 
         return build_pdf_response(
             story,
@@ -438,3 +447,206 @@ def export_geraete_je_raum_pdf(project_id: int):
             doc_title=f"Geräte je Raum {project['name']}",
             footer_center_text=company_footer_line(company),
         )
+
+
+# --------------------------------------------------------------------------
+# htmx fragments (backend/templates/device_planning/)
+# --------------------------------------------------------------------------
+def _actor_types_for_pickers(db):
+    """Non-Aktor device types for the room/floor "add device" pickers -
+    Aktoren (devices with physical channels) are placed in the Abgangsliste
+    tab instead, with their own physical address there."""
+    return [
+        dict(r) for r in
+        db.execute("SELECT * FROM actor_types WHERE group_name != 'Aktor' ORDER BY group_name, id").fetchall()
+    ]
+
+
+def _grouped_devices(devices):
+    """devices (as returned by list_room_devices/list_floor_devices), grouped
+    by catalog Gruppe into the shared rc-row layout - same look as the
+    Funktionen sub-tab. Order of first appearance, not alphabetical."""
+    groups = []
+    by_group = {}
+    for d in devices:
+        key = d["group_name"] or "Sonstige"
+        if key not in by_group:
+            by_group[key] = {"group_name": key, "devices": []}
+            groups.append(by_group[key])
+        by_group[key]["devices"].append(d)
+    return groups
+
+
+def _floor_context(db, floor_id, editing_floor_device=None):
+    floor = db.execute("SELECT * FROM floors WHERE id=?", (floor_id,)).fetchone()
+    if not floor:
+        raise HTTPException(404, "Floor not found")
+    return {
+        "floor": dict(floor), "devices": _grouped_devices(list_floor_devices(floor_id)),
+        "actor_types": _actor_types_for_pickers(db), "editing_floor_device": editing_floor_device,
+    }
+
+
+def _room_context(db, room_id, editing_room_device=None):
+    room = db.execute(
+        "SELECT r.*, f.project_id FROM rooms r JOIN floors f ON r.floor_id = f.id WHERE r.id=?", (room_id,)
+    ).fetchone()
+    if not room:
+        raise HTTPException(404, "Room not found")
+    return {
+        "room": dict(room), "devices": _grouped_devices(list_room_devices(room_id)),
+        "actor_types": _actor_types_for_pickers(db), "editing_room_device": editing_room_device,
+    }
+
+
+def _floor_fragment(request, db, floor_id, editing_floor_device=None, with_summary=False):
+    """Renders _floor.html, targeted at #floor-devices-{{ floor.id }}. Every
+    mutation (add/edit/delete) also needs the project-wide Stückliste to
+    stay in sync, so those calls pass with_summary=True to append it as an
+    out-of-band swap (see backend/templates/device_planning/_summary.html) -
+    a plain re-render/cancel-edit doesn't change any totals."""
+    ctx = _floor_context(db, floor_id, editing_floor_device)
+    html = templates.get_template("device_planning/_floor.html").render(**ctx)
+    if not with_summary:
+        return HTMLResponse(html)
+    project_id = ctx["floor"]["project_id"]
+    summary_html = templates.get_template("device_planning/_summary.html").render(
+        summary=device_summary(project_id), project_id=project_id, oob=True,
+    )
+    return HTMLResponse(html + summary_html)
+
+
+def _room_fragment(request, db, room_id, editing_room_device=None, with_summary=False):
+    """Same as _floor_fragment above, for a room's device list
+    (#room-devices-{{ room.id }})."""
+    ctx = _room_context(db, room_id, editing_room_device)
+    html = templates.get_template("device_planning/_room.html").render(**ctx)
+    if not with_summary:
+        return HTMLResponse(html)
+    project_id = ctx["room"]["project_id"]
+    summary_html = templates.get_template("device_planning/_summary.html").render(
+        summary=device_summary(project_id), project_id=project_id, oob=True,
+    )
+    return HTMLResponse(html + summary_html)
+
+
+def _tab_context(db, project_id):
+    floors = db.execute("SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall()
+    floor_list = []
+    for f in floors:
+        rooms = db.execute("SELECT * FROM rooms WHERE floor_id=? ORDER BY order_idx", (f["id"],)).fetchall()
+        floor_list.append({
+            "floor": dict(f),
+            "devices": _grouped_devices(list_floor_devices(f["id"])),
+            "rooms": [{"room": dict(r), "devices": _grouped_devices(list_room_devices(r["id"]))} for r in rooms],
+        })
+    return {
+        "project_id": project_id, "floors": floor_list, "actor_types": _actor_types_for_pickers(db),
+        "summary": device_summary(project_id),
+    }
+
+
+@router.get("/hx/projects/{project_id}/device-planning")
+def hx_tab(request: Request, project_id: int):
+    with get_db() as db:
+        return templates.TemplateResponse(request, "device_planning/tab.html", _tab_context(db, project_id))
+
+
+@router.put("/hx/projects/{project_id}/device-order-flags/{device_type_id}")
+def hx_set_order_flag(request: Request, project_id: int, device_type_id: int, not_ordering: bool = Form(False)):
+    with get_db() as db:
+        set_device_order_flag(project_id, device_type_id, DeviceOrderFlagIn(not_ordering=not_ordering))
+        return templates.TemplateResponse(request, "device_planning/_summary.html",
+                                           {"summary": device_summary(project_id), "project_id": project_id})
+
+
+@router.post("/hx/rooms/{room_id}/devices")
+def hx_add_room_device(request: Request, room_id: int, device_type_id: int = Form(...), quantity: int = Form(1),
+                        note: str = Form(""), physical_address: str = Form("")):
+    with get_db() as db:
+        add_room_device(room_id, RoomDeviceIn(device_type_id=device_type_id, quantity=quantity,
+                                               note=note.strip(), physical_address=physical_address.strip()))
+        return _room_fragment(request, db, room_id, with_summary=True)
+
+
+@router.get("/hx/room-devices/{rd_id}/edit")
+def hx_edit_room_device_form(request: Request, rd_id: int):
+    with get_db() as db:
+        rd = db.execute("SELECT * FROM room_devices WHERE id=?", (rd_id,)).fetchone()
+        if not rd:
+            raise HTTPException(404, "Room device not found")
+        return _room_fragment(request, db, rd["room_id"], editing_room_device=dict(rd))
+
+
+@router.get("/hx/rooms/{room_id}/devices/cancel-edit")
+def hx_cancel_edit_room_device(request: Request, room_id: int):
+    with get_db() as db:
+        return _room_fragment(request, db, room_id)
+
+
+@router.put("/hx/room-devices/{rd_id}")
+def hx_update_room_device(request: Request, rd_id: int, note: str = Form(""), physical_address: str = Form("")):
+    with get_db() as db:
+        rd = db.execute("SELECT * FROM room_devices WHERE id=?", (rd_id,)).fetchone()
+        if not rd:
+            raise HTTPException(404, "Room device not found")
+        update_room_device(rd_id, RoomDeviceEditIn(note=note.strip(), physical_address=physical_address.strip()))
+        return _room_fragment(request, db, rd["room_id"], with_summary=True)
+
+
+@router.delete("/hx/room-devices/{rd_id}")
+def hx_delete_room_device(request: Request, rd_id: int):
+    with get_db() as db:
+        rd = db.execute("SELECT * FROM room_devices WHERE id=?", (rd_id,)).fetchone()
+        if not rd:
+            raise HTTPException(404, "Room device not found")
+    delete_room_device(rd_id)  # own commit-on-exit connection, must run (and commit) before the re-render below
+    with get_db() as db:
+        return _room_fragment(request, db, rd["room_id"], with_summary=True)
+
+
+# Floor-level devices mirror the room-level ones above (same shape/semantics,
+# see list_floor_devices/add_floor_device).
+@router.post("/hx/floors/{floor_id}/devices")
+def hx_add_floor_device(request: Request, floor_id: int, device_type_id: int = Form(...), quantity: int = Form(1),
+                         note: str = Form(""), physical_address: str = Form("")):
+    with get_db() as db:
+        add_floor_device(floor_id, RoomDeviceIn(device_type_id=device_type_id, quantity=quantity,
+                                                 note=note.strip(), physical_address=physical_address.strip()))
+        return _floor_fragment(request, db, floor_id, with_summary=True)
+
+
+@router.get("/hx/floor-devices/{fd_id}/edit")
+def hx_edit_floor_device_form(request: Request, fd_id: int):
+    with get_db() as db:
+        fd = db.execute("SELECT * FROM floor_devices WHERE id=?", (fd_id,)).fetchone()
+        if not fd:
+            raise HTTPException(404, "Floor device not found")
+        return _floor_fragment(request, db, fd["floor_id"], editing_floor_device=dict(fd))
+
+
+@router.get("/hx/floors/{floor_id}/devices/cancel-edit")
+def hx_cancel_edit_floor_device(request: Request, floor_id: int):
+    with get_db() as db:
+        return _floor_fragment(request, db, floor_id)
+
+
+@router.put("/hx/floor-devices/{fd_id}")
+def hx_update_floor_device(request: Request, fd_id: int, note: str = Form(""), physical_address: str = Form("")):
+    with get_db() as db:
+        fd = db.execute("SELECT * FROM floor_devices WHERE id=?", (fd_id,)).fetchone()
+        if not fd:
+            raise HTTPException(404, "Floor device not found")
+        update_floor_device(fd_id, RoomDeviceEditIn(note=note.strip(), physical_address=physical_address.strip()))
+        return _floor_fragment(request, db, fd["floor_id"], with_summary=True)
+
+
+@router.delete("/hx/floor-devices/{fd_id}")
+def hx_delete_floor_device(request: Request, fd_id: int):
+    with get_db() as db:
+        fd = db.execute("SELECT * FROM floor_devices WHERE id=?", (fd_id,)).fetchone()
+        if not fd:
+            raise HTTPException(404, "Floor device not found")
+    delete_floor_device(fd_id)  # own commit-on-exit connection, must run (and commit) before the re-render below
+    with get_db() as db:
+        return _floor_fragment(request, db, fd["floor_id"], with_summary=True)

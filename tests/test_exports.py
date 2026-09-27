@@ -29,8 +29,8 @@ def project(client):
 
 
 PDF_ENDPOINTS = [
-    "export-function-checklist.pdf", "export-handover-checklist.pdf", "export-geraeteliste.pdf",
-    "export-geraete-je-raum.pdf", "export-specification.pdf", "export-documentation.pdf",
+    "export-function-checklist.pdf", "export-handover-checklist.pdf", "export-device-list.pdf",
+    "export-devices-by-room.pdf", "export-specification.pdf", "export-documentation.pdf",
     "export-clarification-list.pdf", "export-distribution-boards.pdf", "export-abgangsliste.pdf", "export-labels.pdf",
 ]
 

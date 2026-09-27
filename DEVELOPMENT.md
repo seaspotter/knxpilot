@@ -98,9 +98,10 @@ backend/
   ga_logic.py       — group-address tree generation, circuits, per-room/central function listings (used by Pflichtenheft and the checklists)
   pdf_design.py     — shared PDF look (banner, table style, page numbers, letterhead); build_pdf_bytes()/build_pdf_bytes_two_pass() are the raw-bytes builders every export (and email.py's send action) go through
   templating.py     — Jinja2 setup for the htmx tabs (templates/, autoescaped)
-  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: clarification_list/, time_tracking/, setup/, device_catalog/, manuals/, overview/, specification/, documentation/, project_files/, function_checklist/, handover_checklist/, distribution_boards/, functions/, group_addresses/)
+  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: clarification_list/, time_tracking/, setup/, device_catalog/, manuals/, overview/, specification/, documentation/, project_files/, function_checklist/, handover_checklist/, distribution_boards/, functions/, group_addresses/, device_planning/, labels/)
   project_transfer.py — per-project JSON backup/restore + duplicate (what's included, name/position-based references)
   pa_assign.py      — physical-address auto-assign (bucket convention, per KNX line) + line coupler/power supply detection
+  labels.py         — label-sheet layout registry (LABEL_FORMATS) + PDF rendering (render_label_sheet), used by routers/labels.py
   email_sender.py   — SMTP mechanics (stdlib smtplib) behind routers/email.py's send-by-mail action
   utils.py          — small dependency-free helpers
   routers/
@@ -111,7 +112,8 @@ backend/
     group_addresses.py  — group addresses tab (htmx, /hx/projects/{id}/group-addresses...): GA tree preview, changes since the last ETS export, ETS6 CSV export (Gruppenadressen sub-tab)
     lines.py           — optional KNX lines (Bereich.Linie) + floor/room/actuator line assignment, per-line device counts/warnings (Gebäudestruktur sub-tab)
     abgangsliste.py    — actor instances, circuit assignment, CSV/PDF export (Abgangsliste sub-tab)
-    geraeteplanung.py  — per-room device planning, bill of materials, PDF export (Geräteplanung sub-tab)
+    device_planning.py — device planning tab (htmx, /hx/projects/{id}/device-planning..., /hx/room(-devices)/..., /hx/floor(-devices)/...): per-room/floor device planning, bill of materials, PDF export (Geräteplanung sub-tab)
+    labels.py          — labels tab (htmx, /hx/projects/{id}/labels): label-sheet PDF export (Labels sub-tab); the sheet layout registry itself is backend/labels.py, a shared helper module
     distribution_boards.py — distribution board planning tab (htmx, /hx/projects/{id}/distribution-boards...): DIN-rail layout per Geschoss, RCD/LS placeholders + placed actor instances, PDF export (Verteilerplanung sub-tab)
     specification.py   — early-stage spec PDF export, htmx "Inhalt" tab (Pflichtenheft sub-tab); also home to function_checklist_table(), shared with checklists.py
     checklists.py      — digital on-site checklists (htmx, /hx/projects/{id}/function-checklist.../handover-checklist...): checklist_status upsert, Funktionscheckliste + Übergabe-Checkliste tab fragments/PDF (their sub-tabs)
@@ -142,7 +144,8 @@ frontend/
     manuals.js         — loads the htmx project manuals tab
     time_tracking.js   — header start/stop timer (live clock), loads the htmx time tracking tab, timesheet PDF download
     abgangsliste.js    — actor instances + circuit assignment
-    geraeteplanung.js  — per-room device planning
+    device_planning.js — loads the htmx device planning tab, PDF downloads (Geräteplanung sub-tab)
+    labels.js          — loads the htmx labels tab, label-position grid + PDF download (client-side only, no persisted state)
     specification.js   — loads the htmx Pflichtenheft tab, Vorschau and PDF download
     function_checklist.js — digital on-site function testing checklist
     handover_checklist.js — digital handover checklist
@@ -235,8 +238,8 @@ rarely need to touch anything else.
   ~~documentation~~, ~~function + handover checklists~~,
   ~~distribution board planning~~ (jumped ahead of functions + group
   addresses by explicit user request), ~~functions + group addresses~~,
-  device planning + labels, circuit list, building structure (drag & drop
-  stays JS).
+  ~~device planning + labels~~, circuit list, building structure (drag &
+  drop stays JS).
 - **User-facing strings are German**; everything else is English: code
   identifiers, comments, file/directory names, database tables/columns,
   API paths, CSS classes, template names, JSON keys, this documentation

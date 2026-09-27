@@ -2,7 +2,7 @@
 Device manuals: Geräte Katalog -> Handbücher lets the user curate a
 manufacturer PDF URL per device type (actor_types.manual_url); this router
 fetches that URL for whichever devices are actually used in a project (via
-geraeteplanung.device_summary()) and stores the result in this project's
+device_planning.device_summary()) and stores the result in this project's
 own Handbücher tab (db.py's project_manuals table) - kept separate from
 project_files.py's Dateien, which is only ever what the user themselves
 uploaded.
@@ -26,7 +26,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
 
 from ..db import get_db
-from .geraeteplanung import device_summary
+from .device_planning import device_summary
 from ..templating import templates
 from ..utils import content_disposition
 

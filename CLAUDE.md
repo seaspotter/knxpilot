@@ -70,7 +70,8 @@ the user to make explicitly, not something to introduce as a side effect of
   done so far: clarification list, time tracking, Setup, device catalog,
   project manuals, overview, specification, documentation, function
   checklist, handover checklist, distribution board planning, functions,
-  group addresses. See "htmx tabs" and "htmx migration" (order, rules) in
+  group addresses, device planning, labels. See "htmx tabs" and "htmx
+  migration" (order, rules) in
   [`DEVELOPMENT.md`](./DEVELOPMENT.md). Convert only the tab the user
   confirmed next, and don't add other frontend libraries.
 - User-facing strings are German; code, comments, and docs are English.

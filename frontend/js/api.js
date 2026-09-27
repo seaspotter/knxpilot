@@ -52,8 +52,8 @@ document.querySelectorAll('#workspace-subnav button').forEach(btn => {
     if (btn.dataset.subtab === 'functions') await loadFunctionsForCurrentProject();
     if (btn.dataset.subtab === 'group-addresses') await loadGroupAddressesForCurrentProject();
     if (btn.dataset.subtab === 'abgangsliste') await loadAbgangForCurrentProject();
-    if (btn.dataset.subtab === 'labels') renderLabelGrid();
-    if (btn.dataset.subtab === 'geraeteplanung') await loadGeraeteplanungForCurrentProject();
+    if (btn.dataset.subtab === 'labels') await loadLabelsForCurrentProject();
+    if (btn.dataset.subtab === 'device-planning') await loadDevicePlanningForCurrentProject();
     if (btn.dataset.subtab === 'distribution-boards') await loadDistributionBoardsForCurrentProject();
     if (btn.dataset.subtab === 'specification') await loadSpecificationTab();
     if (btn.dataset.subtab === 'documentation') await loadDocumentationTab();

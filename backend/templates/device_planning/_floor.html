@@ -1,0 +1,43 @@
+{# Devices without a room ("Geräte ohne Raum") for one floor - re-rendered
+   in place (hx-target="#floor-devices-{{ floor.id }}") after every
+   add/edit/delete. #}
+<div class="room-card rc-room">
+  <div class="rc-room-title"><span>Geräte ohne Raum <span class="info-icon" tabindex="0" data-tip="Für Geräte, die keinem bestimmten Raum zuzuordnen sind - z.B. eine Wetterstation an der Fassade oder ein Aussen-Bewegungsmelder.">i</span></span></div>
+  {% if not devices %}
+    <p class="muted" style="margin:4px 0;">Keine Geräte</p>
+  {% else %}
+    <div class="rc-rows">
+      {% for group in devices %}
+        <div class="rc-row">
+          <div class="rc-type">{{ group.group_name }}</div>
+          <div class="rc-pills">
+            {% for d in group.devices %}
+              <span class="rc-pill">{{ d.device_name }}{% if d.physical_address %} <span class="rc-tag">{{ d.physical_address }}</span>{% endif %}{% if d.note %} <span class="rc-note">{{ d.note }}</span>{% endif %}
+                <a href="#" hx-get="/hx/floor-devices/{{ d.id }}/edit" hx-target="#floor-devices-{{ floor.id }}" hx-swap="innerHTML" class="rc-pill-edit" title="Bearbeiten">✎</a>
+                <a href="#" hx-delete="/hx/floor-devices/{{ d.id }}" hx-target="#floor-devices-{{ floor.id }}" hx-swap="innerHTML" hx-confirm="Dieses Gerät löschen?" class="rc-pill-del" title="Löschen">×</a></span>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% if editing_floor_device and editing_floor_device.floor_id == floor.id %}
+    <form class="quick-add rc-add mobile-fields" hx-put="/hx/floor-devices/{{ editing_floor_device.id }}" hx-target="#floor-devices-{{ floor.id }}" hx-swap="innerHTML">
+      <input type="text" name="note" class="w-160" placeholder="Notiz (optional)" value="{{ editing_floor_device.note or '' }}">
+      <input type="text" name="physical_address" class="w-140" placeholder="Physikalische Adresse" value="{{ editing_floor_device.physical_address or '' }}">
+      <button class="btn secondary small" type="submit">Änderungen speichern</button>
+      <button class="btn secondary small" type="button" hx-get="/hx/floors/{{ floor.id }}/devices/cancel-edit" hx-target="#floor-devices-{{ floor.id }}" hx-swap="innerHTML">Abbrechen</button>
+    </form>
+  {% else %}
+    <form class="quick-add rc-add mobile-fields" hx-post="/hx/floors/{{ floor.id }}/devices" hx-target="#floor-devices-{{ floor.id }}" hx-swap="innerHTML">
+      <select name="device_type_id" class="wide">
+        {% if not actor_types %}<option value="">Zuerst ein Gerät im Geräte-Katalog-Tab anlegen</option>{% endif %}
+        {% for at in actor_types %}<option value="{{ at.id }}">{{ at.group_name }} — {{ [at.manufacturer, at.model] | select | join(' ') }}</option>{% endfor %}
+      </select>
+      <input type="number" name="quantity" value="1" min="1" title="Anzahl">
+      <input type="text" name="note" class="w-160" placeholder="Notiz (optional)">
+      <input type="text" name="physical_address" class="w-140" placeholder="Physikalische Adresse (nur bei Anzahl 1)">
+      <button class="btn secondary small" type="submit">+ Hinzufügen</button>
+    </form>
+  {% endif %}
+</div>

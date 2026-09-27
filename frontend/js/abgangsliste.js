@@ -131,9 +131,9 @@ async function deleteActorInstance(id) {
   await renderChannelSummary();
 }
 
-// Shared by both Abgangsliste and Geräteplanung ("PA automatisch zuordnen"
-// buttons in each) - the assignment itself is project-wide across both
-// actor_instances and room_devices, so it always refreshes both tabs'
+// Shared by both Abgangsliste and device planning ("PA automatisch
+// zuordnen" buttons in each) - the assignment itself is project-wide across
+// both actor_instances and room_devices, so it always refreshes both tabs'
 // device lists regardless of which one triggered it.
 async function assignPhysicalAddresses(prefixInputId) {
   const prefix = document.getElementById(prefixInputId).value.trim() || '1.1';
@@ -153,8 +153,7 @@ async function assignPhysicalAddresses(prefixInputId) {
   });
   await renderActorInstances();
   await renderCircuits();
-  await renderGeraeteplanungRooms();
-  await renderDeviceSummary();
+  await htmx.ajax('GET', `/hx/projects/${CURRENT_PROJECT}/device-planning`, {target: '#subtab-device-planning', swap: 'innerHTML'});
   const skippedText = result.skipped.length ? ` (${result.skipped.length} übersprungen: ${result.skipped.join(', ')})` : '';
   showToast(`${result.assigned} Adresse(n) vergeben${skippedText}.`, result.skipped.length ? 'warning' : 'success');
 }

@@ -1,21 +1,29 @@
 // ---------- Labels (project sub-tab) ----------
-// Per-format sheet size (labels per sheet) - keyed the same as
-// backend/labels.py's LABEL_FORMATS, so adding a new format later means
-// adding an entry here (and an <option> in index.html) alongside the
-// backend registry entry.
-const LABEL_FORMAT_SIZES = { l6037: 189 };
-
+// Rendered server-side with htmx (backend/templates/labels/tab.html,
+// /hx/... endpoint in backend/routers/labels.py) - the tab itself has no
+// persisted state, so this only loads it and handles the label-position
+// grid + PDF download, both purely client-side. The sheet size per format
+// comes from the #label-format option's data-size attribute (set from
+// backend/labels.py's LABEL_FORMATS registry) rather than a duplicated
+// client-side table.
 let LABEL_START_POS = 1;
 
+async function loadLabelsForCurrentProject() {
+  await htmx.ajax('GET', `/hx/projects/${CURRENT_PROJECT}/labels`, {target: '#subtab-labels', swap: 'innerHTML'});
+  renderLabelGrid();
+}
+
 function labelSheetSize() {
-  const format = document.getElementById('label-format').value;
-  return LABEL_FORMAT_SIZES[format] || 189;
+  const select = document.getElementById('label-format');
+  const option = select && select.selectedOptions[0];
+  return option ? parseInt(option.dataset.size, 10) || 189 : 189;
 }
 
 function renderLabelGrid() {
   const sheetSize = labelSheetSize();
   if (LABEL_START_POS > sheetSize) LABEL_START_POS = 1;
   const grid = document.getElementById('label-position-grid');
+  if (!grid) return;
   const cells = [];
   for (let i = 1; i <= sheetSize; i++) {
     cells.push(`<div class="label-cell" data-pos="${i}" title="Etikett ${i}" onclick="setLabelStartPos(${i})"></div>`);

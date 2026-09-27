@@ -18,7 +18,7 @@ from ..db import get_db
 from ..ga_logic import build_ga_tree, get_central_functions_overview, get_circuits, get_room_functions_by_category
 from ..templating import templates
 from .checklists import CHECKLIST_SECTIONS, get_status_map
-from .geraeteplanung import device_summary
+from .device_planning import device_summary
 from .clarification_list import list_clarifications
 from .manuals import list_project_manuals
 from .projects import get_project_tree
@@ -78,7 +78,7 @@ def _overview_cards(project_id):
         _stat("abgangsliste", "Abgangsliste",
               f"{assigned_count} / {total_circuits} Abgänge zugeordnet" if total_circuits else "Noch keine Abgänge",
               warn=assigned_count < total_circuits),
-        _stat("geraeteplanung", "Geräteplanung",
+        _stat("device-planning", "Geräteplanung",
               f"{device_total} Geräte geplant" if device_total else "Noch keine Geräte geplant"),
         _stat("distribution-boards", "Verteilerplanung",
               f"{board_count} Verteiler angelegt" if board_count else "Noch keine Verteiler angelegt"),

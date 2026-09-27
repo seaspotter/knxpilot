@@ -1,0 +1,27 @@
+{# Project-wide bill of materials (Stückliste) - re-rendered after every
+   device add/edit/delete (out-of-band, see device_planning.py's
+   _room_fragment/_floor_fragment) and after toggling "Nicht bestellen". #}
+<div id="device-summary"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% if not summary %}
+    <p class="muted">Noch keine Geräte geplant</p>
+  {% else %}
+    <table class="data-table"><thead><tr>
+        <th>Gerät</th><th>Beschreibung</th><th>Gruppe</th><th class="num">Anzahl</th><th class="actions">Nicht bestellen</th>
+      </tr></thead><tbody>
+      {% for s in summary %}
+        <tr{% if s.not_ordering %} class="muted-row"{% endif %}>
+          <td class="strong">{{ s.device_name }}</td>
+          <td>{{ s.description or "" }}{% if s.not_ordering %} <span class="pill">Bereits vorhanden</span>{% endif %}</td>
+          <td>{{ s.group_name or "" }}</td>
+          <td class="num">{{ s.total }}</td>
+          <td class="actions">
+            <input type="checkbox" {% if s.not_ordering %}checked{% endif %}
+                   hx-put="/hx/projects/{{ project_id }}/device-order-flags/{{ s.device_type_id }}"
+                   hx-vals="js:{not_ordering: event.target.checked}" hx-target="#device-summary" hx-swap="outerHTML"
+                   title="Nicht bestellen (bereits vorhanden)">
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody></table>
+  {% endif %}
+</div>

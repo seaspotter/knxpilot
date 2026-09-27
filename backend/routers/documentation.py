@@ -40,7 +40,7 @@ from ..pdf_design import (
 from ..templating import templates
 from .abgangsliste import build_abgangsliste_story
 from .distribution_boards import build_distribution_boards_story
-from .geraeteplanung import build_geraete_je_raum_story, device_summary
+from .device_planning import build_devices_by_room_story, device_summary
 from .specification import build_specification_story, function_checklist_table, specification_stats
 from .checklists import (
     get_status_map, CHECKLIST_SECTIONS, checklist_section_table, build_signature_row, FUNCTION_CHECKLIST_SIGNATURES,
@@ -224,7 +224,7 @@ DOCUMENTATION_CHAPTERS = [
     ("handbuecher", "Handbücher", "documentation_include_manuals", True),
     ("abgangsliste", "Abgangsliste", "documentation_include_circuit_list", False),
     ("distribution-boards", "Verteilerplanung", "documentation_include_distribution_boards", False),
-    ("geraete-je-raum", "Geräte je Raum", "documentation_include_devices_per_room", False),
+    ("devices-by-room", "Geräte je Raum", "documentation_include_devices_per_room", False),
     ("clarification-list", "Klärungsliste", "documentation_include_clarification_list", False),
     ("group-addresses", "Gruppenadressen", "documentation_include_group_addresses", False),
 ]
@@ -245,7 +245,7 @@ def _build_documentation_chapters(db, project_id, company, styles):
         "handbuecher": lambda: _manuals_story(db, project_id, styles),
         "abgangsliste": lambda: build_abgangsliste_story(db, project_id, styles, page_break_between_floors=False),
         "distribution-boards": lambda: build_distribution_boards_story(db, project_id, styles),
-        "geraete-je-raum": lambda: build_geraete_je_raum_story(db, project_id, styles),
+        "devices-by-room": lambda: build_devices_by_room_story(db, project_id, styles),
         "clarification-list": lambda: _clarification_list_story(db, project_id, styles),
         "group-addresses": lambda: _group_addresses_story(project_id, styles),
     }
@@ -380,7 +380,7 @@ def _chapter_detail(db, project_id, anchor, status_map):
     if anchor == "distribution-boards":
         (n,) = db.execute("SELECT COUNT(*) FROM distribution_boards WHERE project_id=?", (project_id,)).fetchone()
         return (f"{n} Verteiler" if n else "noch keine Verteiler angelegt"), False, True
-    if anchor == "geraete-je-raum":
+    if anchor == "devices-by-room":
         s = specification_stats(db, project_id)
         (actors,) = db.execute("SELECT COUNT(*) FROM actor_instances WHERE project_id=?", (project_id,)).fetchone()
         (floor_devices,) = db.execute(

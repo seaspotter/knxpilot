@@ -105,7 +105,7 @@ async function setLine(kind, id, value) {
 // With lines, "PA automatisch zuordnen" numbers each line on its own - the
 // single prefix field would only confuse, so it's replaced by a hint.
 function updatePaPrefixFields() {
-  ['pa-prefix-abgangsliste', 'pa-prefix-geraeteplanung'].forEach(id => {
+  ['pa-prefix-abgangsliste', 'pa-prefix-device-planning'].forEach(id => {
     const input = document.getElementById(id);
     if (!input) return;
     input.style.display = KNX_LINES.length ? 'none' : '';
