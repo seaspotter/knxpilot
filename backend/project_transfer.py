@@ -145,11 +145,11 @@ def build_project_payload(db, project_id, mode="backup"):
         if device_ref(f["device_type_id"])
     ]
 
-    verteiler_out = []
-    for v in db.execute("SELECT * FROM verteiler WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall():
+    distribution_boards_out = []
+    for board in db.execute("SELECT * FROM distribution_boards WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall():
         items = []
         for it in db.execute(
-            "SELECT * FROM verteiler_items WHERE verteiler_id=? ORDER BY row_idx, position_idx", (v["id"],)
+            "SELECT * FROM distribution_board_items WHERE distribution_board_id=? ORDER BY row_idx, position_idx", (board["id"],)
         ).fetchall():
             if it["item_type"] == "device" and it["actor_instance_id"] not in actor_ref:
                 continue
@@ -157,9 +157,9 @@ def build_project_payload(db, project_id, mode="backup"):
                 "row_idx": it["row_idx"], "position_idx": it["position_idx"], "item_type": it["item_type"],
                 "label": it["label"], "width_te": it["width_te"], "actor": actor_ref.get(it["actor_instance_id"]),
             })
-        verteiler_out.append({
-            "name": v["name"], "row_count": v["row_count"], "floor": floor_ref.get(v["floor_id"]),
-            "room": room_ref.get(v["room_id"]), "items": items,
+        distribution_boards_out.append({
+            "name": board["name"], "row_count": board["row_count"], "floor": floor_ref.get(board["floor_id"]),
+            "room": room_ref.get(board["room_id"]), "items": items,
         })
 
     payload = {
@@ -179,15 +179,15 @@ def build_project_payload(db, project_id, mode="backup"):
         "actors": actors_out,
         "channel_assignments": assignments_out,
         "device_order_flags": order_flags_out,
-        "verteiler": verteiler_out,
+        "distribution_boards": distribution_boards_out,
     }
     if not full:
         return payload
 
-    payload["klaerungen"] = [
-        {"room": room_ref.get(k["room_id"]), "point": point_ref.get(k["room_point_id"]), "text": k["text"],
-         "typ": k["typ"], "status": k["status"], "antwort": k["antwort"], "created_at": k["created_at"]}
-        for k in db.execute("SELECT * FROM klaerungen WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall()
+    payload["clarifications"] = [
+        {"room": room_ref.get(c["room_id"]), "point": point_ref.get(c["room_point_id"]), "text": c["text"],
+         "type": c["type"], "status": c["status"], "answer": c["answer"], "created_at": c["created_at"]}
+        for c in db.execute("SELECT * FROM clarifications WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall()
     ]
 
     checklist_out = []
@@ -357,30 +357,34 @@ def insert_project_from_payload(db, payload, forced_name=None):
             db.execute("INSERT OR IGNORE INTO device_order_flags (project_id, device_type_id, not_ordering) VALUES (?, ?, ?)",
                        (project_id, type_id, int(f.get("not_ordering", False))))
 
-    for v_idx, v in enumerate(payload.get("verteiler", [])):
-        room_id = room_of(v.get("room"))
-        floor_id = floor_map.get(v["room"][0]) if room_id else floor_map.get(v.get("floor"))
-        vcur = db.execute(
-            "INSERT INTO verteiler (project_id, floor_id, room_id, name, row_count, order_idx) VALUES (?, ?, ?, ?, ?, ?)",
-            (project_id, floor_id, room_id, v.get("name", ""), v.get("row_count", 4), v_idx),
+    # "distribution_boards"/"clarifications" - accept the pre-rename payload
+    # keys ("verteiler"/"klaerungen" with "typ"/"antwort" fields) too, so a
+    # backup exported before this rename still restores.
+    for b_idx, board in enumerate(payload.get("distribution_boards", payload.get("verteiler", []))):
+        room_id = room_of(board.get("room"))
+        floor_id = floor_map.get(board["room"][0]) if room_id else floor_map.get(board.get("floor"))
+        bcur = db.execute(
+            "INSERT INTO distribution_boards (project_id, floor_id, room_id, name, row_count, order_idx) VALUES (?, ?, ?, ?, ?, ?)",
+            (project_id, floor_id, room_id, board.get("name", ""), board.get("row_count", 4), b_idx),
         )
-        for it in v.get("items", []):
+        for it in board.get("items", []):
             actor_id = actor_map.get(it.get("actor"))
             if it.get("item_type") == "device" and not actor_id:
                 continue
             db.execute(
-                "INSERT INTO verteiler_items (verteiler_id, row_idx, position_idx, item_type, label, width_te, actor_instance_id) "
+                "INSERT INTO distribution_board_items (distribution_board_id, row_idx, position_idx, item_type, label, width_te, actor_instance_id) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (vcur.lastrowid, it["row_idx"], it["position_idx"], it["item_type"], it.get("label", ""),
+                (bcur.lastrowid, it["row_idx"], it["position_idx"], it["item_type"], it.get("label", ""),
                  it.get("width_te"), actor_id),
             )
 
-    for k_idx, k in enumerate(payload.get("klaerungen", [])):
+    for c_idx, c in enumerate(payload.get("clarifications", payload.get("klaerungen", []))):
         db.execute(
-            "INSERT INTO klaerungen (project_id, room_id, room_point_id, text, typ, status, antwort, order_idx, created_at) "
+            "INSERT INTO clarifications (project_id, room_id, room_point_id, text, type, status, answer, order_idx, created_at) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))",
-            (project_id, room_of(k.get("room")), point_of(k.get("point")), k.get("text", ""), k.get("typ", "Frage"),
-             k.get("status", "offen"), k.get("antwort", ""), k_idx, k.get("created_at")),
+            (project_id, room_of(c.get("room")), point_of(c.get("point")), c.get("text", ""),
+             c.get("type", c.get("typ", "Frage")), c.get("status", "offen"), c.get("answer", c.get("antwort", "")),
+             c_idx, c.get("created_at")),
         )
 
     for c in payload.get("checklist", []):

@@ -39,7 +39,7 @@ from ..pdf_design import (
 )
 from ..templating import templates
 from .abgangsliste import build_abgangsliste_story
-from .verteiler import build_verteilerplanung_story
+from .distribution_boards import build_distribution_boards_story
 from .geraeteplanung import build_geraete_je_raum_story, device_summary
 from .specification import build_specification_story, function_checklist_table, specification_stats
 from .checkliste import (
@@ -92,9 +92,9 @@ def _clarification_list_story(db, project_id, styles):
     section - all entries regardless of status (offen/geklärt/abgelehnt),
     each clearly labeled, so nothing is silently omitted from the record."""
     rows = db.execute(
-        "SELECT k.*, r.name AS room_name FROM klaerungen k "
-        "LEFT JOIN rooms r ON k.room_id = r.id "
-        "WHERE k.project_id=? ORDER BY k.room_id IS NULL DESC, k.order_idx",
+        "SELECT c.*, r.name AS room_name FROM clarifications c "
+        "LEFT JOIN rooms r ON c.room_id = r.id "
+        "WHERE c.project_id=? ORDER BY c.room_id IS NULL DESC, c.order_idx",
         (project_id,),
     ).fetchall()
     if not rows:
@@ -103,10 +103,10 @@ def _clarification_list_story(db, project_id, styles):
     for r in rows:
         table_data.append([
             Paragraph(escape(r["room_name"] or "Allgemein"), styles["Body"]),
-            Paragraph(escape(r["typ"]), styles["Body"]),
+            Paragraph(escape(r["type"]), styles["Body"]),
             Paragraph(escape(r["text"]), styles["Body"]),
             Paragraph(escape(r["status"]), styles["Body"]),
-            Paragraph(escape(r["antwort"] or ""), styles["Body"]),
+            Paragraph(escape(r["answer"] or ""), styles["Body"]),
         ])
     table = Table(table_data, colWidths=[28 * mm, 20 * mm, 55 * mm, 20 * mm, 57 * mm], repeatRows=1)
     table.setStyle(pdf_table_style([("VALIGN", (0, 0), (-1, -1), "MIDDLE")]))
@@ -223,9 +223,9 @@ DOCUMENTATION_CHAPTERS = [
     ("uebergabe", "Übergabe-Checkliste — Ergebnisse", "documentation_include_handover_checklist", True),
     ("handbuecher", "Handbücher", "documentation_include_manuals", True),
     ("abgangsliste", "Abgangsliste", "documentation_include_circuit_list", False),
-    ("verteilerplanung", "Verteilerplanung", "documentation_include_distribution_boards", False),
+    ("distribution-boards", "Verteilerplanung", "documentation_include_distribution_boards", False),
     ("geraete-je-raum", "Geräte je Raum", "documentation_include_devices_per_room", False),
-    ("klaerungsliste", "Klärungsliste", "documentation_include_clarification_list", False),
+    ("clarification-list", "Klärungsliste", "documentation_include_clarification_list", False),
     ("gruppenadressen", "Gruppenadressen", "documentation_include_group_addresses", False),
 ]
 
@@ -244,9 +244,9 @@ def _build_documentation_chapters(db, project_id, company, styles):
         "uebergabe": lambda: _handover_story(db, project_id, styles, status_map),
         "handbuecher": lambda: _manuals_story(db, project_id, styles),
         "abgangsliste": lambda: build_abgangsliste_story(db, project_id, styles, page_break_between_floors=False),
-        "verteilerplanung": lambda: build_verteilerplanung_story(db, project_id, styles),
+        "distribution-boards": lambda: build_distribution_boards_story(db, project_id, styles),
         "geraete-je-raum": lambda: build_geraete_je_raum_story(db, project_id, styles),
-        "klaerungsliste": lambda: _clarification_list_story(db, project_id, styles),
+        "clarification-list": lambda: _clarification_list_story(db, project_id, styles),
         "gruppenadressen": lambda: _group_addresses_story(project_id, styles),
     }
     chapters = []
@@ -377,8 +377,8 @@ def _chapter_detail(db, project_id, anchor, status_map):
         if not actors:
             return "noch keine Aktoren — entfällt", False, False
         return f"{actors} Aktoren · {assigned} / {len(circuits)} Abgänge zugeordnet", assigned < len(circuits), True
-    if anchor == "verteilerplanung":
-        (n,) = db.execute("SELECT COUNT(*) FROM verteiler WHERE project_id=?", (project_id,)).fetchone()
+    if anchor == "distribution-boards":
+        (n,) = db.execute("SELECT COUNT(*) FROM distribution_boards WHERE project_id=?", (project_id,)).fetchone()
         return (f"{n} Verteiler" if n else "noch keine Verteiler angelegt"), False, True
     if anchor == "geraete-je-raum":
         s = specification_stats(db, project_id)
@@ -388,10 +388,10 @@ def _chapter_detail(db, project_id, anchor, status_map):
             "WHERE f.project_id=?", (project_id,)).fetchone()
         total = s["devices"] + floor_devices + actors
         return (f"{total} Geräte" if total else "noch keine Geräte — entfällt"), False, total > 0
-    if anchor == "klaerungsliste":
-        (n,) = db.execute("SELECT COUNT(*) FROM klaerungen WHERE project_id=?", (project_id,)).fetchone()
+    if anchor == "clarification-list":
+        (n,) = db.execute("SELECT COUNT(*) FROM clarifications WHERE project_id=?", (project_id,)).fetchone()
         (open_,) = db.execute(
-            "SELECT COUNT(*) FROM klaerungen WHERE project_id=? AND status='offen'", (project_id,)).fetchone()
+            "SELECT COUNT(*) FROM clarifications WHERE project_id=? AND status='offen'", (project_id,)).fetchone()
         return (f"{n} Einträge · {open_} offen" if n else "keine Einträge"), open_ > 0, True
     if anchor == "gruppenadressen":
         tree = build_ga_tree(project_id, db)

@@ -53,6 +53,38 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
   `build_uebergabe_checkliste_pdf_bytes`, `CHECKLIST_SECTIONS`) are
   unchanged, since `routers/documentation.py` and `routers/email.py`
   already depend on them.
+- **Distribution board planning ("Verteilerplanung") tab rendered
+  server-side with htmx** — creating/editing/deleting a board and
+  placing/removing/moving RCD, LS and device items on it are now `/hx/
+  projects/{id}/distribution-boards...`/`/hx/distribution-boards/{id}...`
+  endpoints in the new `backend/routers/distribution_boards.py` (renamed
+  from `verteiler.py`), rendering Jinja templates in
+  `backend/templates/distribution_boards/`; `frontend/js/verteiler.js` is
+  now `frontend/js/distribution_boards.js` and only loads the tab and the
+  PDF download. Renamed to English throughout, including the database
+  schema: the `verteiler`/`verteiler_items` tables are now
+  `distribution_boards`/`distribution_board_items` (migrated in place on
+  existing installs, keeping every row), and the JSON API/models moved
+  from `/api/verteiler...` (`VerteilerIn` etc.) to
+  `/api/distribution-boards...` (`DistributionBoardIn` etc.) - the
+  Gebäudestruktur tree's JSON (`distribution_boards`/
+  `unplaced_distribution_boards` instead of `verteiler`/
+  `unplaced_verteiler`) and `frontend/js/projekte.js`'s drag & drop for it
+  were updated to match.
+- **Klärungsliste renamed to English throughout** — router
+  `klaerungsliste.py` → `clarification_list.py`, JS
+  `klaerungsliste.js` → `clarification_list.js`, templates
+  `backend/templates/klaerungsliste/` → `clarification_list/`, the sub-tab
+  id/HX-Trigger event/JSON keys (`clarification-list`,
+  `clarifications-changed`, `type`/`answer`), the API
+  (`/api/klaerungen...` → `/api/clarifications...`,
+  `KlaerungIn` → `ClarificationIn`) and the PDF export path
+  (`export-klaerungsliste.pdf` → `export-clarification-list.pdf`). The
+  database table `klaerungen` (with its `typ`/`antwort` columns) is now
+  `clarifications` (`type`/`answer`), migrated in place on existing
+  installs; a project backup/restore JSON still accepts the old
+  `verteiler`/`klaerungen` payload keys from a backup taken before this
+  change. No UI-visible text changed.
 - **Overview, specification and documentation tabs rendered server-side
   with htmx** — the overview tab's stat cards (one per sub-tab, jumping
   there on click) and its project files ("Dateien") section, and the

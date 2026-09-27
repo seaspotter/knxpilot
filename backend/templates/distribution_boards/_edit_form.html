@@ -1,0 +1,14 @@
+{# "Verteiler bearbeiten" dialog, swapped into #hx-modal. #}
+<div class="modal-overlay" onclick="if (event.target === this) closeHxModal()">
+  <div class="modal-card">
+    <form hx-put="/hx/distribution-boards/{{ board.id }}" hx-target="#distribution-boards-list" hx-swap="innerHTML">
+      <h3>Verteiler bearbeiten</h3>
+      <div class="row"><input type="text" name="name" class="flex-input" value="{{ board.name }}"></div>
+      <div class="row"><label style="display:flex; align-items:center; gap:4px;">Reihen <input type="number" name="row_count" min="1" value="{{ board.row_count }}" style="width:60px;"></label></div>
+      <div class="row modal-actions">
+        <button type="button" class="btn secondary" onclick="closeHxModal()">Abbrechen</button>
+        <button type="submit" class="btn">Speichern</button>
+      </div>
+    </form>
+  </div>
+</div>

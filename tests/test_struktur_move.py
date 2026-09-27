@@ -65,40 +65,40 @@ def test_exported_flag_after_ets_export(client):
     assert result["exported"] is True
 
 
-def test_verteiler_in_room_follows_room_and_shows_in_tree(client):
+def test_distribution_board_in_room_follows_room_and_shows_in_tree(client):
     pid = seed_musterhaus(client, wire=False)
     eg, og = tree(client, pid)["floors"]
     flur = next(r for r in eg["rooms"] if r["name"] == "Flur")
-    vid = ok(client.post(f"/api/projects/{pid}/verteiler", json={"floor_id": eg["id"], "name": "UV EG"}))["id"]
-    assert [v["name"] for v in tree(client, pid)["floors"][0]["verteiler"]] == ["UV EG"]
+    vid = ok(client.post(f"/api/projects/{pid}/distribution-boards", json={"floor_id": eg["id"], "name": "UV EG"}))["id"]
+    assert [v["name"] for v in tree(client, pid)["floors"][0]["distribution_boards"]] == ["UV EG"]
 
-    ok(client.put(f"/api/verteiler/{vid}/location", json={"room_id": flur["id"]}))
+    ok(client.put(f"/api/distribution-boards/{vid}/location", json={"room_id": flur["id"]}))
     t = tree(client, pid)
-    assert t["floors"][0]["verteiler"] == []
-    assert [v["name"] for v in next(r for r in t["floors"][0]["rooms"] if r["name"] == "Flur")["verteiler"]] == ["UV EG"]
+    assert t["floors"][0]["distribution_boards"] == []
+    assert [v["name"] for v in next(r for r in t["floors"][0]["rooms"] if r["name"] == "Flur")["distribution_boards"]] == ["UV EG"]
 
     # moving the room to the OG takes the Verteiler along
     ok(client.post(f"/api/rooms/{flur['id']}/move", json={"floor_id": og["id"], "index": 0}))
-    v = next(v for v in ok(client.get(f"/api/projects/{pid}/verteiler")) if v["id"] == vid)
+    v = next(v for v in ok(client.get(f"/api/projects/{pid}/distribution-boards")) if v["id"] == vid)
     assert (v["floor_id"], v["room_id"], v["room_name"]) == (og["id"], flur["id"], "Flur")
 
     # deleting the room keeps the Verteiler on its floor
     ok(client.delete(f"/api/rooms/{flur['id']}"))
-    assert [v["name"] for v in tree(client, pid)["floors"][1]["verteiler"]] == ["UV EG"]
+    assert [v["name"] for v in tree(client, pid)["floors"][1]["distribution_boards"]] == ["UV EG"]
 
     # back to "whole floor" / validation
-    ok(client.put(f"/api/verteiler/{vid}/location", json={"floor_id": eg["id"]}))
-    assert [v["name"] for v in tree(client, pid)["floors"][0]["verteiler"]] == ["UV EG"]
+    ok(client.put(f"/api/distribution-boards/{vid}/location", json={"floor_id": eg["id"]}))
+    assert [v["name"] for v in tree(client, pid)["floors"][0]["distribution_boards"]] == ["UV EG"]
     other = seed_musterhaus(client, name="Anderes", wire=False)
     foreign_room = tree(client, other)["floors"][0]["rooms"][0]
-    assert client.put(f"/api/verteiler/{vid}/location", json={"room_id": foreign_room["id"]}).status_code == 400
+    assert client.put(f"/api/distribution-boards/{vid}/location", json={"room_id": foreign_room["id"]}).status_code == 400
 
 
-def test_verteilerplanung_pdf_with_room(client):
+def test_distribution_boards_pdf_with_room(client):
     pid = seed_musterhaus(client, wire=False)
     room = tree(client, pid)["floors"][0]["rooms"][0]
-    ok(client.post(f"/api/projects/{pid}/verteiler", json={"room_id": room["id"], "name": "UV <Technik> & Co"}))
-    r = client.get(f"/api/projects/{pid}/export-verteilerplanung.pdf")
+    ok(client.post(f"/api/projects/{pid}/distribution-boards", json={"room_id": room["id"], "name": "UV <Technik> & Co"}))
+    r = client.get(f"/api/projects/{pid}/export-distribution-boards.pdf")
     assert r.status_code == 200 and r.content.startswith(b"%PDF")
 
 

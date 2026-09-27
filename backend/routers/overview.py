@@ -19,10 +19,10 @@ from ..ga_logic import build_ga_tree, get_central_functions_overview, get_circui
 from ..templating import templates
 from .checkliste import CHECKLIST_SECTIONS, get_status_map
 from .geraeteplanung import device_summary
-from .klaerungsliste import list_klaerungen
+from .clarification_list import list_clarifications
 from .manuals import list_project_manuals
 from .projects import get_project_tree
-from .verteiler import list_verteiler
+from .distribution_boards import list_distribution_boards
 
 router = APIRouter(tags=["overview"])
 
@@ -61,9 +61,9 @@ def _overview_cards(project_id):
     total_circuits = len(circuits)
 
     device_total = sum(d["total"] for d in device_summary(project_id))
-    verteiler_count = len(list_verteiler(project_id))
+    board_count = len(list_distribution_boards(project_id))
     manuals = list_project_manuals(project_id)
-    open_klaerungen = sum(1 for k in list_klaerungen(project_id) if k["status"] == "offen")
+    open_clarifications = sum(1 for c in list_clarifications(project_id) if c["status"] == "offen")
 
     uebergabe_items = [f"uebergabe:{slug}" for _, items in CHECKLIST_SECTIONS for slug, _ in items]
     uebergabe_total = len(uebergabe_items)
@@ -80,15 +80,15 @@ def _overview_cards(project_id):
               warn=assigned_count < total_circuits),
         _stat("geraeteplanung", "Geräteplanung",
               f"{device_total} Geräte geplant" if device_total else "Noch keine Geräte geplant"),
-        _stat("verteilerplanung", "Verteilerplanung",
-              f"{verteiler_count} Verteiler angelegt" if verteiler_count else "Noch keine Verteiler angelegt"),
+        _stat("distribution-boards", "Verteilerplanung",
+              f"{board_count} Verteiler angelegt" if board_count else "Noch keine Verteiler angelegt"),
         _stat("specification", "Pflichtenheft", "Frühe Leistungsbeschreibung (PDF)"),
         _stat("function-checklist", "Funktionscheckliste",
               f"{fc_checked} / {fc_total} Funktionen getestet" if fc_total else "Noch keine Funktionen geplant"),
         _stat("handover-checklist", "Übergabe-Checkliste", f"{uebergabe_answered} / {uebergabe_total} Punkte beantwortet"),
-        _stat("klaerungsliste", "Klärungsliste",
-              f"{open_klaerungen} offene Einträge" if open_klaerungen else "Keine offenen Einträge",
-              warn=open_klaerungen > 0),
+        _stat("clarification-list", "Klärungsliste",
+              f"{open_clarifications} offene Einträge" if open_clarifications else "Keine offenen Einträge",
+              warn=open_clarifications > 0),
         _stat("manuals", "Handbücher",
               f"{sum(1 for m in manuals if m['file_id'])} / {len(manuals)} heruntergeladen"
               if manuals else "Keine Handbuch-Links hinterlegt"),

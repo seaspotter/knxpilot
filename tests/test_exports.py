@@ -14,8 +14,8 @@ def project(client):
     tree = ok(client.get(f"/api/projects/{pid}/tree"))
     room = tree["floors"][0]["rooms"][0]
     ok(client.put(f"/api/rooms/{room['id']}", json={"name": "Bad & WC <OG>"}))
-    ok(client.post(f"/api/projects/{pid}/klaerungen", json={"text": "Taster <weiss> & schwarz?", "room_id": room["id"]}))
-    ok(client.post(f"/api/projects/{pid}/klaerungen", json={"text": 'Allgemein "Frage"', "typ": "Aufgabe"}))
+    ok(client.post(f"/api/projects/{pid}/clarifications", json={"text": "Taster <weiss> & schwarz?", "room_id": room["id"]}))
+    ok(client.post(f"/api/projects/{pid}/clarifications", json={"text": 'Allgemein "Frage"', "type": "Aufgabe"}))
     at = next(a for a in ok(client.get("/api/actor-types")) if a["model"] == "BE-GT2TW.02")
     ok(client.put(f"/api/actor-types/{at['id']}", json={**at, "description": "Taster & <Glas>"}))
     ok(client.post("/api/time-entries", json={"project_id": pid, "started_at": "2026-09-25T08:00:00Z",
@@ -31,7 +31,7 @@ def project(client):
 PDF_ENDPOINTS = [
     "export-funktionscheckliste.pdf", "export-uebergabe-checkliste.pdf", "export-geraeteliste.pdf",
     "export-geraete-je-raum.pdf", "export-specification.pdf", "export-documentation.pdf",
-    "export-klaerungsliste.pdf", "export-verteilerplanung.pdf", "export-abgangsliste.pdf", "export-labels.pdf",
+    "export-clarification-list.pdf", "export-distribution-boards.pdf", "export-abgangsliste.pdf", "export-labels.pdf",
 ]
 
 

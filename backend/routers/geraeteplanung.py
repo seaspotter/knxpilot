@@ -314,7 +314,7 @@ def _geraete_je_raum_rows(db, project_id):
     device dicts shaped {manufacturer, model, group_name, description,
     physical_address}.
     Shared by the standalone Geräte-je-Raum PDF and its optional Pflichtenheft
-    section, same pattern as build_verteilerplanung_story/
+    section, same pattern as build_distribution_boards_story/
     build_abgangsliste_story in the sibling routers."""
     rows = []
     floors = db.execute("SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall()

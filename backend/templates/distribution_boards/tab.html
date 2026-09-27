@@ -1,0 +1,29 @@
+{# Distribution board planning tab: create form + the boards themselves,
+   swapped into #distribution-boards-root. Mutations return _list.html
+   (see distribution_boards.py) so the create form here always keeps its
+   current values on a validation error. #}
+<div class="card">
+  <h4>Verteiler anlegen</h4>
+  <p class="muted">Ein Verteiler gehört zu einem Geschoss (optional zu einem Raum darin, z.B. Technikraum — auch per Ziehen in der Gebäudestruktur änderbar) und hat eine feste Anzahl Reihen à 12 TE (Teilungseinheiten). RCD/LS-Schalter sind einfache, benannte Platzhalter ohne Bezug zu bestimmten Abgängen. Nur Geräte mit gesetzter TE-Breite im Geräte-Katalog lassen sich platzieren.</p>
+  <form class="row mobile-fields" hx-post="/hx/projects/{{ project_id }}/distribution-boards"
+        hx-target="#distribution-boards-list" hx-swap="innerHTML">
+    <select name="location">
+      {% if not floors %}<option value="">Noch keine Geschosse - zuerst in Gebäudestruktur anlegen</option>{% endif %}
+      {% for f in floors %}
+        <optgroup label="{{ f.name }}">
+          <option value="floor:{{ f.id }}">{{ f.name }} (ganzes Geschoss)</option>
+          {% for r in f.rooms %}<option value="room:{{ r.id }}">{{ r.name }}</option>{% endfor %}
+        </optgroup>
+      {% endfor %}
+    </select>
+    <input type="text" name="name" class="w-200" placeholder="Name, z.B. Verteiler EG">
+    <label style="display:flex; align-items:center; gap:4px;">Reihen <input type="number" name="row_count" value="4" min="1" style="width:55px;"></label>
+    <button class="btn" type="submit">+ Verteiler anlegen</button>
+  </form>
+</div>
+<div class="row" style="justify-content:flex-end;">
+  <button class="btn" onclick="downloadDistributionBoardsPdf()">PDF herunterladen</button>
+</div>
+<div id="distribution-boards-list">
+  {% include "distribution_boards/_list.html" %}
+</div>

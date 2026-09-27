@@ -98,7 +98,7 @@ backend/
   ga_logic.py       — group-address tree generation, circuits, per-room/central function listings (used by Pflichtenheft and the checklists)
   pdf_design.py     — shared PDF look (banner, table style, page numbers, letterhead); build_pdf_bytes()/build_pdf_bytes_two_pass() are the raw-bytes builders every export (and email.py's send action) go through
   templating.py     — Jinja2 setup for the htmx tabs (templates/, autoescaped)
-  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: klaerungsliste/, time_tracking/, setup/, device_catalog/, manuals/, overview/, specification/, documentation/, project_files/, function_checklist/, handover_checklist/)
+  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: clarification_list/, time_tracking/, setup/, device_catalog/, manuals/, overview/, specification/, documentation/, project_files/, function_checklist/, handover_checklist/, distribution_boards/)
   project_transfer.py — per-project JSON backup/restore + duplicate (what's included, name/position-based references)
   pa_assign.py      — physical-address auto-assign (bucket convention, per KNX line) + line coupler/power supply detection
   email_sender.py   — SMTP mechanics (stdlib smtplib) behind routers/email.py's send-by-mail action
@@ -110,11 +110,12 @@ backend/
     linien.py          — optional KNX lines (Bereich.Linie) + floor/room/actuator line assignment, per-line device counts/warnings (Gebäudestruktur sub-tab)
     abgangsliste.py    — actor instances, circuit assignment, CSV/PDF export (Abgangsliste sub-tab)
     geraeteplanung.py  — per-room device planning, bill of materials, PDF export (Geräteplanung sub-tab)
+    distribution_boards.py — distribution board planning tab (htmx, /hx/projects/{id}/distribution-boards...): DIN-rail layout per Geschoss, RCD/LS placeholders + placed actor instances, PDF export (Verteilerplanung sub-tab)
     specification.py   — early-stage spec PDF export, htmx "Inhalt" tab (Pflichtenheft sub-tab); also home to function_checklist_table(), shared with checkliste.py
     checkliste.py      — digital on-site checklists (htmx, /hx/projects/{id}/function-checklist.../handover-checklist...): checklist_status upsert, Funktionscheckliste + Übergabe-Checkliste tab fragments/PDF (their sub-tabs); JSON endpoints and the build_*_pdf_bytes()/CHECKLIST_SECTIONS names stay as-is (still referenced by routers/documentation.py and routers/email.py)
     documentation.py   — end-of-project assembly PDF, combining Pflichtenheft content + both checklists' results + a Handbücher checklist + optional as-built sections, htmx "Inhalt" tab; the chapter list (DOCUMENTATION_CHAPTERS) also drives it (Dokumentation sub-tab)
     email.py           — "Per E-Mail senden" endpoints, reusing each export's build_*_pdf_bytes() function (Setup → E-Mail + every export tab)
-    klaerungsliste.py  — questions/tasks/notes per project + "Offene Punkte" PDF export (Klärungsliste sub-tab)
+    clarification_list.py — questions/tasks/notes per project (htmx, /hx/projects/{id}/clarification-list...) + "Offene Punkte" PDF export (Klärungsliste sub-tab)
     overview.py        — overview tab (htmx, "Übersicht"): one stat card per sub-tab, aggregated from each sub-tab's own data
     project_files.py   — a handful of reference files per project, stored as a BLOB, htmx list fragment nested into the overview tab (Übersicht sub-tab)
     manuals.py         — project manuals tab ("Handbücher", htmx): fetches a device's catalog-curated manual_url into the project's own store
@@ -131,6 +132,7 @@ frontend/
     setup.js           — loads the htmx Setup sub-tabs, header branding, logo auto-crop, backup restore, JSON import (file picker), categories/function types cache for the functions tab
     device_catalog.js  — loads the htmx device catalog sub-tabs, ACTOR_TYPES cache for other tabs' pickers, JSON import dialogs
     projekte.js        — project CRUD/meta, Geschoss/Raum/Verteiler tree with drag & drop (Gebäudestruktur sub-tab)
+    distribution_boards.js — loads the htmx distribution board planning tab, PDF download
     linien.js          — optional KNX lines card + the line <select>s used by projekte.js/abgangsliste.js (Gebäudestruktur sub-tab)
     funktionen.js      — assigning functions to rooms, Sonderadressen (Funktionen sub-tab)
     gruppenadressen.js — GA tree preview + CSV export (Gruppenadressen sub-tab)
@@ -142,7 +144,7 @@ frontend/
     specification.js   — loads the htmx Pflichtenheft tab, Vorschau and PDF download
     funktionscheckliste.js — digital on-site function testing checklist
     uebergabe_checkliste.js — digital handover checklist
-    klaerungsliste.js  — questions/tasks/notes, copy/PDF/email of the open points
+    clarification_list.js — loads the htmx clarification list tab, badge, copy/PDF/email of the open points
     documentation.js   — loads the htmx Dokumentation tab, Vorschau and PDF download
     update.js          — self-update tab + changelog viewer + version badge
     hilfe.js           — in-app manual (renders MANUAL.md)
@@ -228,9 +230,11 @@ rarely need to touch anything else.
   `/hx/` endpoints and a browser pass; confirm each next tab with the
   user. Order: ~~clarification list~~, ~~time tracking~~, ~~Setup~~,
   ~~device catalog~~, ~~project manuals~~, ~~overview~~, ~~specification~~,
-  ~~documentation~~, ~~function + handover checklists~~, functions + group
-  addresses, device planning + distribution board planning + labels,
-  circuit list, building structure (drag & drop stays JS).
+  ~~documentation~~, ~~function + handover checklists~~,
+  ~~distribution board planning~~ (jumped ahead of functions + group
+  addresses by explicit user request), functions + group addresses,
+  device planning + labels, circuit list, building structure (drag & drop
+  stays JS).
 - **User-facing strings are German**; everything else is English: code
   identifiers, comments, file/directory names, database tables/columns,
   API paths, CSS classes, template names, JSON keys, this documentation

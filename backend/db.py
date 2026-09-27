@@ -215,6 +215,22 @@ def get_db():
 # --------------------------------------------------------------------------
 def init_db():
     with get_db() as db:
+        # Tables renamed to English (DEVELOPMENT.md "Naming") - must run before the
+        # CREATE TABLE IF NOT EXISTS block below, which only knows the new names.
+        # Idempotent: only renames while the old table is still there.
+        _tables = {r["name"] for r in db.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+        if "klaerungen" in _tables and "clarifications" not in _tables:
+            db.execute("ALTER TABLE klaerungen RENAME TO clarifications")
+            db.execute("ALTER TABLE clarifications RENAME COLUMN typ TO type")
+            db.execute("ALTER TABLE clarifications RENAME COLUMN antwort TO answer")
+        if "verteiler" in _tables and "distribution_boards" not in _tables:
+            db.execute("ALTER TABLE verteiler RENAME TO distribution_boards")
+        if "verteiler_items" in _tables and "distribution_board_items" not in _tables:
+            db.execute("ALTER TABLE verteiler_items RENAME TO distribution_board_items")
+            db.execute("ALTER TABLE distribution_board_items RENAME COLUMN verteiler_id TO distribution_board_id")
+            db.execute("DROP INDEX IF EXISTS idx_verteiler_items_actor_instance")
+
         db.executescript(
             """
             CREATE TABLE IF NOT EXISTS categories (
@@ -385,13 +401,14 @@ def init_db():
                 UNIQUE(project_id, device_type_id)
             );
 
-            -- Verteilerplanung: a physical DIN-rail cabinet layout for one Geschoss.
-            -- Fixed 12-TE-wide rows (row_count of them); each row holds verteiler_items
-            -- left to right. RCD/LS items are simple labeled/sized blocks (no link to
-            -- specific circuits - that's a possible future refinement, see ROADMAP.md);
-            -- device items reference an existing actor_instance (placed via Abgangsliste),
-            -- whose width comes live from actor_types.width_te, not copied here.
-            CREATE TABLE IF NOT EXISTS verteiler (
+            -- Distribution board planning: a physical DIN-rail cabinet layout for one
+            -- Geschoss. Fixed 12-TE-wide rows (row_count of them); each row holds
+            -- distribution_board_items left to right. RCD/LS items are simple labeled/
+            -- sized blocks (no link to specific circuits - that's a possible future
+            -- refinement, see ROADMAP.md); device items reference an existing
+            -- actor_instance (placed via Abgangsliste), whose width comes live from
+            -- actor_types.width_te, not copied here.
+            CREATE TABLE IF NOT EXISTS distribution_boards (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
                 floor_id INTEGER REFERENCES floors(id) ON DELETE SET NULL,
@@ -400,9 +417,9 @@ def init_db():
                 order_idx INTEGER NOT NULL DEFAULT 0
             );
 
-            CREATE TABLE IF NOT EXISTS verteiler_items (
+            CREATE TABLE IF NOT EXISTS distribution_board_items (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                verteiler_id INTEGER NOT NULL REFERENCES verteiler(id) ON DELETE CASCADE,
+                distribution_board_id INTEGER NOT NULL REFERENCES distribution_boards(id) ON DELETE CASCADE,
                 row_idx INTEGER NOT NULL,
                 position_idx INTEGER NOT NULL DEFAULT 0,
                 item_type TEXT NOT NULL,          -- 'rcd' | 'ls' | 'device'
@@ -410,22 +427,22 @@ def init_db():
                 width_te INTEGER,                 -- only used for rcd/ls; device width is looked up live
                 actor_instance_id INTEGER REFERENCES actor_instances(id) ON DELETE CASCADE
             );
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_verteiler_items_actor_instance
-                ON verteiler_items(actor_instance_id) WHERE actor_instance_id IS NOT NULL;
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_distribution_board_items_actor_instance
+                ON distribution_board_items(actor_instance_id) WHERE actor_instance_id IS NOT NULL;
 
-            -- Klärungsliste: per-project questions/tasks/notes for site visits,
+            -- Clarification list: per-project questions/tasks/notes for site visits,
             -- optionally tied to a room and/or a specific point within it. Internal
             -- working list by default - only appears in the Pflichtenheft export if
             -- explicitly opted into (company_profile.documentation_include_clarification_list).
-            CREATE TABLE IF NOT EXISTS klaerungen (
+            CREATE TABLE IF NOT EXISTS clarifications (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
                 room_id INTEGER REFERENCES rooms(id) ON DELETE CASCADE,
                 room_point_id INTEGER REFERENCES room_points(id) ON DELETE CASCADE,
                 text TEXT NOT NULL,
-                typ TEXT NOT NULL DEFAULT 'Frage',
+                type TEXT NOT NULL DEFAULT 'Frage',
                 status TEXT NOT NULL DEFAULT 'offen',
-                antwort TEXT NOT NULL DEFAULT '',
+                answer TEXT NOT NULL DEFAULT '',
                 order_idx INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
@@ -482,7 +499,7 @@ def init_db():
             -- function), or "uebergabe:<slug>" (a static handover-checklist item,
             -- see CHECKLIST_SECTIONS in routers/checkliste.py). status is
             -- ''/'ok' for function-checklist items, ''/'ja'/'nein'/'nicht_noetig'
-            -- for Übergabe items (mirrors klaerungen.status's German-literal
+            -- for Übergabe items (mirrors clarifications.status's German-literal
             -- convention). note (Bemerkungen) is only ever written for Übergabe
             -- items. A deleted room_point/central_template just leaves an
             -- orphaned, harmless, never-again-read row - ids are never reused
@@ -670,7 +687,6 @@ def init_db():
             ("projects", "email", "ALTER TABLE projects ADD COLUMN email TEXT NOT NULL DEFAULT ''"),
             ("projects", "additional_recipients",
              "ALTER TABLE projects ADD COLUMN additional_recipients TEXT NOT NULL DEFAULT ''"),
-            ("klaerungen", "antwort", "ALTER TABLE klaerungen ADD COLUMN antwort TEXT NOT NULL DEFAULT ''"),
             ("company_profile", "specification_preamble",
              "ALTER TABLE company_profile ADD COLUMN specification_preamble TEXT NOT NULL DEFAULT ''"),
             ("company_profile", "specification_include_preamble",
@@ -743,7 +759,8 @@ def init_db():
              "ALTER TABLE actor_instances ADD COLUMN line_id INTEGER REFERENCES knx_lines(id) ON DELETE SET NULL"),
             ("time_entries", "invoiced", "ALTER TABLE time_entries ADD COLUMN invoiced INTEGER NOT NULL DEFAULT 0"),
             # Optional room a Verteiler sits in (floor_id is kept in sync with the room's floor).
-            ("verteiler", "room_id", "ALTER TABLE verteiler ADD COLUMN room_id INTEGER REFERENCES rooms(id) ON DELETE SET NULL"),
+            ("distribution_boards", "room_id",
+             "ALTER TABLE distribution_boards ADD COLUMN room_id INTEGER REFERENCES rooms(id) ON DELETE SET NULL"),
         ]:
             cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]
             if column not in cols:

@@ -127,12 +127,12 @@ async function loadProjectsDashboard() {
     <span class="pill" style="cursor:pointer;" onclick="filterProjectsByStatus('${status.replace(/'/g, "\\'")}')">${status}: ${count}</span>
   `).join('');
 
-  const klaerungenWarn = d.aged_klaerungen_total > 0;
-  const klaerungenBody = d.open_klaerungen_total
-    ? `${d.open_klaerungen_total} offen${klaerungenWarn ? `, davon ${d.aged_klaerungen_total} seit ${d.aged_threshold_days}+ Tagen` : ''}`
+  const clarificationsWarn = d.aged_clarifications_total > 0;
+  const clarificationsBody = d.open_clarifications_total
+    ? `${d.open_clarifications_total} offen${clarificationsWarn ? `, davon ${d.aged_clarifications_total} seit ${d.aged_threshold_days}+ Tagen` : ''}`
     : 'Keine offenen Klärungen';
-  const klaerungenList = d.projects_with_open_klaerungen.map(p => `
-    <div class="row" style="margin:2px 0; cursor:pointer;" onclick="openProjectToSubtab(${p.id}, '${p.name.replace(/'/g, "\\'")}', 'klaerungsliste')">
+  const clarificationsList = d.projects_with_open_clarifications.map(p => `
+    <div class="row" style="margin:2px 0; cursor:pointer;" onclick="openProjectToSubtab(${p.id}, '${p.name.replace(/'/g, "\\'")}', 'clarification-list')">
       <span>${p.name}</span>
       <span class="pill" style="${p.aged_count > 0 ? 'border-color:var(--warn); color:var(--warn);' : ''}">${p.open_count}${p.aged_count > 0 ? ` (${p.aged_count} alt)` : ''}</span>
     </div>
@@ -153,8 +153,8 @@ async function loadProjectsDashboard() {
     </div>
     <div class="stat-card">
       <h4>Offene Klärungen</h4>
-      <p class="${klaerungenWarn ? '' : 'muted'}" style="margin:0 0 6px; ${klaerungenWarn ? 'color:var(--warn);' : ''}">${klaerungenBody}</p>
-      ${klaerungenList}
+      <p class="${clarificationsWarn ? '' : 'muted'}" style="margin:0 0 6px; ${clarificationsWarn ? 'color:var(--warn);' : ''}">${clarificationsBody}</p>
+      ${clarificationsList}
     </div>
     <div class="stat-card">
       <h4>Ohne Struktur</h4>
@@ -210,14 +210,14 @@ function renderProjectsList() {
 const DELETE_IMPACT_LABELS = [
   ['floors', 'Geschoss(e)'], ['rooms', 'Raum/Räume'], ['points', 'Funktion(en)'],
   ['assignments', 'Kanalzuordnung(en) in der Abgangsliste'], ['devices', 'geplante(s) Gerät(e)'],
-  ['actors', 'Aktor(en)'], ['specials', 'Sonderadresse(n)'], ['klaerungen', 'Klärungslisten-Eintrag/Einträge'],
+  ['actors', 'Aktor(en)'], ['specials', 'Sonderadresse(n)'], ['clarifications', 'Klärungslisten-Eintrag/Einträge'],
   ['files', 'Datei(en)'], ['manuals', 'heruntergeladene(s) Handbuch/Handbücher'],
 ];
 function describeDeleteImpact(impact) {
   const deleted = DELETE_IMPACT_LABELS.filter(([k]) => impact[k]).map(([k, label]) => `• ${impact[k]} ${label}`);
   const detached = [];
   if (impact.actors_detached) detached.push(`• ${impact.actors_detached} Aktor(en) verlieren ihre Geschoss-Zuordnung (bleiben erhalten)`);
-  if (impact.verteiler_detached) detached.push(`• ${impact.verteiler_detached} Verteiler verlieren ihre Geschoss-Zuordnung (bleiben erhalten)`);
+  if (impact.distribution_boards_detached) detached.push(`• ${impact.distribution_boards_detached} Verteiler verlieren ihre Geschoss-Zuordnung (bleiben erhalten)`);
   let text = deleted.length ? `\n\nDabei wird mitgelöscht:\n${deleted.join('\n')}` : '\n\nEs hängt nichts weiter daran.';
   if (detached.length) text += `\n\nAusserdem:\n${detached.join('\n')}`;
   return text;
@@ -257,7 +257,7 @@ async function openProject(id, name) {
   await renderFunktionenRooms();
   await renderSpecialLocationOptions();
   await renderSpecials();
-  await refreshKlaerungsBadge();
+  await refreshClarificationBadge();
   await refreshAbgangslisteBadge();
   await loadOverviewTab();
 }
@@ -363,7 +363,7 @@ async function deleteFloor(id) {
 // the count from a server-side dry run. Touch devices without drag & drop use
 // the ⇄ button instead.
 let STRUCT_TREE = null;
-let STRUCT_DRAG = null;  // {kind: 'room'|'floor'|'verteiler', id}
+let STRUCT_DRAG = null;  // {kind: 'room'|'floor'|'distribution-board', id}
 
 function structCollapsed() {
   try { return JSON.parse(localStorage.getItem('knxpilot-struct-collapsed') || '[]'); } catch (e) { return []; }
@@ -381,9 +381,9 @@ async function renderFloors() {
   STRUCT_TREE = await api(`/projects/${CURRENT_PROJECT}/tree`);
   const collapsed = new Set(structCollapsed());
   const container = document.getElementById('floors-container');
-  const unplaced = STRUCT_TREE.unplaced_verteiler.length
+  const unplaced = STRUCT_TREE.unplaced_distribution_boards.length
     ? `<div class="st-unplaced"><span class="muted">Verteiler ohne Geschoss — auf ein Geschoss oder einen Raum ziehen:</span>
-        ${STRUCT_TREE.unplaced_verteiler.map(v => structVerteilerRow(v)).join('')}</div>` : '';
+        ${STRUCT_TREE.unplaced_distribution_boards.map(b => structDistributionBoardRow(b)).join('')}</div>` : '';
   container.innerHTML = STRUCT_TREE.floors.length ? `<div class="struct-tree">${STRUCT_TREE.floors.map(floor => {
     const points = floor.rooms.reduce((n, r) => n + r.points.length, 0);
     return `
@@ -401,7 +401,7 @@ async function renderFloors() {
         <button class="st-act danger" onclick="deleteFloor(${floor.id})" title="Geschoss löschen">×</button>
       </div>
       <div class="st-children">
-        ${floor.verteiler.map(v => structVerteilerRow(v)).join('')}
+        ${floor.distribution_boards.map(b => structDistributionBoardRow(b)).join('')}
         ${floor.rooms.map(room => structRoomRow(room)).join('') || '<div class="st-empty muted">Noch keine Räume — hier einen Raum hineinziehen oder unten anlegen</div>'}
         <div class="st-add row">
           <input type="text" placeholder="Raumname" id="room-name-${floor.id}" onkeydown="if(event.key==='Enter') addRoom(${floor.id})">
@@ -430,24 +430,24 @@ function structRoomRow(room) {
       <button class="st-act" onclick="renameRoomById(${room.id})" title="Umbenennen">✎</button>
       <button class="st-act danger" onclick="deleteRoom(${room.id})" title="Raum löschen">×</button>
     </div>
-    ${room.verteiler.map(v => structVerteilerRow(v, true)).join('')}`;
+    ${room.distribution_boards.map(b => structDistributionBoardRow(b, true)).join('')}`;
 }
 
-function structVerteilerRow(v, inRoom = false) {
+function structDistributionBoardRow(board, inRoom = false) {
   return `
-    <div class="st-row st-verteiler-row${inRoom ? ' in-room' : ''}" draggable="true" data-kind="verteiler" data-id="${v.id}">
+    <div class="st-row st-board-row${inRoom ? ' in-room' : ''}" draggable="true" data-kind="distribution-board" data-id="${board.id}">
       <span class="st-handle" title="Ziehen: auf ein Geschoss oder in einen Raum">⠿</span>
       <span class="st-icon" aria-hidden="true">▦</span>
-      <a href="#" class="st-name" draggable="false" onclick="event.preventDefault(); openVerteilerplanung()">${escapeHtml(v.name || 'Verteiler')}</a>
-      <span class="st-meta">Verteiler · ${v.row_count} Reihen</span>
+      <a href="#" class="st-name" draggable="false" onclick="event.preventDefault(); openDistributionBoards()">${escapeHtml(board.name || 'Verteiler')}</a>
+      <span class="st-meta">Verteiler · ${board.row_count} Reihen</span>
       <span class="st-spacer"></span>
-      <button class="st-act" onclick="moveVerteilerDialog(${v.id})" title="Ort ändern">⇄</button>
+      <button class="st-act" onclick="moveDistributionBoardDialog(${board.id})" title="Ort ändern">⇄</button>
       <span class="st-act-gap"></span><span class="st-act-gap"></span>
     </div>`;
 }
 
-function openVerteilerplanung() {
-  document.querySelector('#workspace-subnav button[data-subtab="verteilerplanung"]').click();
+function openDistributionBoards() {
+  document.querySelector('#workspace-subnav button[data-subtab="distribution-boards"]').click();
 }
 
 function structFloorOf(roomId) {
@@ -481,7 +481,7 @@ function structDropTarget(row, ev) {
     if (kind === 'floor') return {mode: 'into', row};
   }
   if (STRUCT_DRAG.kind === 'floor' && kind === 'floor') return {mode: upper ? 'before' : 'after', row};
-  if (STRUCT_DRAG.kind === 'verteiler' && (kind === 'room' || kind === 'floor')) return {mode: 'into', row};
+  if (STRUCT_DRAG.kind === 'distribution-board' && (kind === 'room' || kind === 'floor')) return {mode: 'into', row};
   return null;
 }
 
@@ -547,8 +547,8 @@ async function applyStructDrop(drag, target) {
     const floor = STRUCT_TREE.floors.find(f => f.id === drag.id);
     await moveStructure(`/floors/${drag.id}/move`, {index}, `Geschoss "${floor.name}" verschieben?`,
       'Die Mittelgruppen sind nach Geschossen durchnummeriert — die Geschosse zwischen alter und neuer Position bekommen eine andere Mittelgruppe.');
-  } else if (drag.kind === 'verteiler') {
-    await setVerteilerLocation(drag.id, kind === 'room' ? {room_id: id} : {floor_id: id});
+  } else if (drag.kind === 'distribution-board') {
+    await setDistributionBoardLocation(drag.id, kind === 'room' ? {room_id: id} : {floor_id: id});
   }
 }
 
@@ -577,9 +577,9 @@ async function refreshAfterStructureMove() {
   await renderChannelSummary();
 }
 
-async function setVerteilerLocation(id, body) {
+async function setDistributionBoardLocation(id, body) {
   try {
-    await api(`/verteiler/${id}/location`, {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+    await api(`/distribution-boards/${id}/location`, {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
   } catch (e) { return showToast(e.message, 'warning'); }
   await renderFloors();
 }
@@ -623,16 +623,16 @@ async function moveFloorDialog(floorId) {
     'Die Mittelgruppen sind nach Geschossen durchnummeriert — die Geschosse zwischen alter und neuer Position bekommen eine andere Mittelgruppe.');
 }
 
-async function moveVerteilerDialog(verteilerId) {
+async function moveDistributionBoardDialog(boardId) {
   const options = STRUCT_TREE.floors.map(f => `
     <optgroup label="${escapeHtml(f.name)}">
-      <option value="floor:${f.id}"${f.verteiler.some(v => v.id === verteilerId) ? ' selected' : ''}>${escapeHtml(f.name)} (ganzes Geschoss)</option>
-      ${f.rooms.map(r => `<option value="room:${r.id}"${r.verteiler.some(v => v.id === verteilerId) ? ' selected' : ''}>${escapeHtml(r.name)}</option>`).join('')}
+      <option value="floor:${f.id}"${f.distribution_boards.some(b => b.id === boardId) ? ' selected' : ''}>${escapeHtml(f.name)} (ganzes Geschoss)</option>
+      ${f.rooms.map(r => `<option value="room:${r.id}"${r.distribution_boards.some(b => b.id === boardId) ? ' selected' : ''}>${escapeHtml(r.name)}</option>`).join('')}
     </optgroup>`).join('');
   const value = await structSelectModal('Verteiler befindet sich in', options, 'Speichern');
   if (value === null) return;
   const [kind, id] = value.split(':');
-  await setVerteilerLocation(verteilerId, kind === 'room' ? {room_id: parseInt(id, 10)} : {floor_id: parseInt(id, 10)});
+  await setDistributionBoardLocation(boardId, kind === 'room' ? {room_id: parseInt(id, 10)} : {floor_id: parseInt(id, 10)});
 }
 
 async function addRoom(floorId) {

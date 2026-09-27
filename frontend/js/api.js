@@ -53,12 +53,12 @@ document.querySelectorAll('#workspace-subnav button').forEach(btn => {
     if (btn.dataset.subtab === 'abgangsliste') await loadAbgangForCurrentProject();
     if (btn.dataset.subtab === 'labels') renderLabelGrid();
     if (btn.dataset.subtab === 'geraeteplanung') await loadGeraeteplanungForCurrentProject();
-    if (btn.dataset.subtab === 'verteilerplanung') await loadVerteilerplanungForCurrentProject();
+    if (btn.dataset.subtab === 'distribution-boards') await loadDistributionBoardsForCurrentProject();
     if (btn.dataset.subtab === 'specification') await loadSpecificationTab();
     if (btn.dataset.subtab === 'documentation') await loadDocumentationTab();
     if (btn.dataset.subtab === 'function-checklist') await loadFunctionChecklist();
     if (btn.dataset.subtab === 'handover-checklist') await loadHandoverChecklist();
-    if (btn.dataset.subtab === 'klaerungsliste') await loadKlaerungslisteForCurrentProject();
+    if (btn.dataset.subtab === 'clarification-list') await loadClarificationListForCurrentProject();
     if (btn.dataset.subtab === 'manuals') await loadProjectManuals();
   };
 });

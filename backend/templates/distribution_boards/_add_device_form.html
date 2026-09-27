@@ -1,0 +1,23 @@
+{# "Gerät hinzufügen" dialog, swapped into #hx-modal. #}
+<div class="modal-overlay" onclick="if (event.target === this) closeHxModal()">
+  <div class="modal-card">
+    <h3>Gerät hinzufügen</h3>
+    <form hx-post="/hx/distribution-boards/{{ board_id }}/items" hx-target="#distribution-boards-list" hx-swap="innerHTML">
+      <input type="hidden" name="row_idx" value="{{ row_idx }}">
+      <input type="hidden" name="item_type" value="device">
+      <div class="row">
+        <select name="actor_instance_id" class="flex-input-wide">
+          {% if options %}
+            {% for o in options %}<option value="{{ o.id }}">{{ o.label }} ({{ o.width_te }} TE)</option>{% endfor %}
+          {% else %}
+            <option value="">Keine verfügbaren Geräte auf diesem Geschoss (evtl. fehlt die TE-Breite im Geräte-Katalog)</option>
+          {% endif %}
+        </select>
+      </div>
+      <div class="row modal-actions">
+        <button type="button" class="btn secondary" onclick="closeHxModal()">Abbrechen</button>
+        <button type="submit" class="btn">Hinzufügen</button>
+      </div>
+    </form>
+  </div>
+</div>

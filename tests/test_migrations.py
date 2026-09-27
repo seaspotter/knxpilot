@@ -78,3 +78,57 @@ def test_renames_german_company_profile_columns(db_path):
         assert c.execute("SELECT time_tracking_enabled, time_tracking_rounding_minutes FROM company_profile").fetchone() == (0, 30)
         assert c.execute("SELECT specification_preamble, documentation_include_circuit_list FROM company_profile").fetchone() == ("Mein Text", 1)
     assert not [col for col in cp if col.startswith(("pflichtenheft_", "dokumentation_", "zeiterfassung_"))]
+
+
+def test_renames_klaerungen_table_to_clarifications(db_path):
+    """The old German klaerungen table (with its typ/antwort columns) is
+    renamed and keeps its rows and values on an existing install."""
+    with sqlite3.connect(db_path) as c:
+        c.execute(
+            "CREATE TABLE klaerungen (id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER NOT NULL, "
+            "room_id INTEGER, room_point_id INTEGER, text TEXT NOT NULL, typ TEXT NOT NULL DEFAULT 'Frage', "
+            "status TEXT NOT NULL DEFAULT 'offen', antwort TEXT NOT NULL DEFAULT '', order_idx INTEGER NOT NULL DEFAULT 0, "
+            "created_at TEXT DEFAULT CURRENT_TIMESTAMP)"
+        )
+        c.execute("INSERT INTO klaerungen (project_id, text, typ, antwort) VALUES (1, 'Spots dimmbar?', 'Frage', 'Ja')")
+    backend.db.init_db()
+    backend.db.init_db()  # idempotent
+    tables = [r[0] for r in sqlite3.connect(db_path).execute("SELECT name FROM sqlite_master WHERE type='table'")]
+    assert "klaerungen" not in tables and "clarifications" in tables
+    cols = columns(db_path, "clarifications")
+    assert "typ" not in cols and "antwort" not in cols and "type" in cols and "answer" in cols
+    with sqlite3.connect(db_path) as c:
+        assert c.execute("SELECT text, type, answer FROM clarifications").fetchone() == ("Spots dimmbar?", "Frage", "Ja")
+
+
+def test_renames_verteiler_tables_to_distribution_boards(db_path):
+    """The old German verteiler/verteiler_items tables are renamed and keep
+    their rows and the verteiler_id foreign key (renamed too) on an existing
+    install."""
+    with sqlite3.connect(db_path) as c:
+        c.execute(
+            "CREATE TABLE verteiler (id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER NOT NULL, "
+            "floor_id INTEGER, name TEXT NOT NULL DEFAULT '', row_count INTEGER NOT NULL DEFAULT 4, "
+            "order_idx INTEGER NOT NULL DEFAULT 0)"
+        )
+        c.execute(
+            "CREATE TABLE verteiler_items (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "verteiler_id INTEGER NOT NULL REFERENCES verteiler(id) ON DELETE CASCADE, row_idx INTEGER NOT NULL, "
+            "position_idx INTEGER NOT NULL DEFAULT 0, item_type TEXT NOT NULL, label TEXT NOT NULL DEFAULT '', "
+            "width_te INTEGER, actor_instance_id INTEGER)"
+        )
+        c.execute("CREATE UNIQUE INDEX idx_verteiler_items_actor_instance ON verteiler_items(actor_instance_id) WHERE actor_instance_id IS NOT NULL")
+        c.execute("INSERT INTO verteiler (id, project_id, name, row_count) VALUES (1, 1, 'UV EG', 4)")
+        c.execute("INSERT INTO verteiler_items (verteiler_id, row_idx, item_type, label) VALUES (1, 0, 'rcd', 'RCD 40A')")
+    backend.db.init_db()
+    backend.db.init_db()  # idempotent
+    tables = [r[0] for r in sqlite3.connect(db_path).execute("SELECT name FROM sqlite_master WHERE type='table'")]
+    assert "verteiler" not in tables and "distribution_boards" in tables
+    assert "verteiler_items" not in tables and "distribution_board_items" in tables
+    cols = columns(db_path, "distribution_board_items")
+    assert "verteiler_id" not in cols and "distribution_board_id" in cols
+    with sqlite3.connect(db_path) as c:
+        assert c.execute("SELECT name, row_count FROM distribution_boards WHERE id=1").fetchone() == ("UV EG", 4)
+        assert c.execute(
+            "SELECT item_type, label FROM distribution_board_items WHERE distribution_board_id=1"
+        ).fetchone() == ("rcd", "RCD 40A")

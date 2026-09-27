@@ -163,7 +163,7 @@ class SignatureIn(BaseModel):
 
 
 class SendEmailIn(BaseModel):
-    document: str  # "pflichtenheft" | "funktionscheckliste" | "uebergabe" | "dokumentation" | "klaerungsliste"
+    document: str  # "pflichtenheft" | "funktionscheckliste" | "uebergabe" | "dokumentation" | "clarification_list"
     to: str = ""              # comma/semicolon-separated addresses
     cc: str = ""              # comma/semicolon-separated addresses
     note: str = ""            # optional extra line appended to the message body
@@ -173,19 +173,19 @@ class TestEmailIn(BaseModel):
     to: str
 
 
-class VerteilerIn(BaseModel):
+class DistributionBoardIn(BaseModel):
     floor_id: int | None = None
     room_id: int | None = None
     name: str = ""
     row_count: int = 4
 
 
-class VerteilerUpdateIn(BaseModel):
+class DistributionBoardUpdateIn(BaseModel):
     name: str
     row_count: int
 
 
-class VerteilerItemIn(BaseModel):
+class DistributionBoardItemIn(BaseModel):
     row_idx: int
     item_type: str          # 'rcd' | 'ls' | 'device'
     label: str = ""         # only used for rcd/ls
@@ -193,17 +193,17 @@ class VerteilerItemIn(BaseModel):
     actor_instance_id: int | None = None   # required for item_type == 'device'
 
 
-class VerteilerItemMoveIn(BaseModel):
+class DistributionBoardItemMoveIn(BaseModel):
     direction: str   # 'left' | 'right'
 
 
-class KlaerungIn(BaseModel):
+class ClarificationIn(BaseModel):
     room_id: int | None = None
     room_point_id: int | None = None
     text: str
-    typ: str = "Frage"       # "Frage" | "Aufgabe" | "Notiz"
+    type: str = "Frage"      # "Frage" | "Aufgabe" | "Notiz"
     status: str = "offen"    # "offen" | "geklärt" | "abgelehnt"
-    antwort: str = ""
+    answer: str = ""
 
 
 class CompanyProfileIn(BaseModel):
@@ -259,7 +259,7 @@ class StructureMoveIn(BaseModel):
     dry_run: bool = False        # only report how many group addresses would change
 
 
-class VerteilerLocationIn(BaseModel):
+class DistributionBoardLocationIn(BaseModel):
     floor_id: int | None = None
     room_id: int | None = None   # set -> floor_id follows the room's floor
 

@@ -69,7 +69,7 @@ the user to make explicitly, not something to introduce as a side effect of
   `backend/templates/<tab>/`, `/hx/...` endpoints in the tab's router) -
   done so far: clarification list, time tracking, Setup, device catalog,
   project manuals, overview, specification, documentation, function
-  checklist, handover checklist. See "htmx tabs"
+  checklist, handover checklist, distribution board planning. See "htmx tabs"
   and "htmx migration" (order, rules) in [`DEVELOPMENT.md`](./DEVELOPMENT.md).
   Convert only the tab the user confirmed next, and don't add other
   frontend libraries.
@@ -79,7 +79,8 @@ the user to make explicitly, not something to introduce as a side effect of
   tables/columns, API paths, CSS classes, template names, JSON keys. Use
   the English terms from the glossary in [`DEVELOPMENT.md`](./DEVELOPMENT.md)
   ("Naming"). Many existing names are still German (e.g.
-  `routers/abgangsliste.py`, table `klaerungen`); they get renamed tab by
+  `routers/abgangsliste.py`, its `checkliste.py` PDF-builder names still
+  depended on by `documentation.py`/`email.py`); they get renamed tab by
   tab, together with each tab's move to htmx - never add new German names.
 - One router file and one frontend JS file per UI tab/sub-tab — when adding
   a feature to an existing tab, that's almost always the only two files you

@@ -1,0 +1,43 @@
+{# All of a project's distribution boards - re-rendered as a whole after any
+   mutation (create/edit/delete a board, add/remove/move an item). Boards are
+   few and each is small, so this doesn't cost the scroll position the way a
+   per-row re-render matters for the (much longer) function checklist. #}
+{% for board in boards %}
+  <div class="card">
+    <div class="row" style="justify-content:space-between;">
+      <h4 style="margin:0;">{{ board.name or "Verteiler" }} {% if board.floor_name %}<span class="pill">{{ board.floor_name }}{% if board.room_name %} · {{ board.room_name }}{% endif %}</span>{% endif %}</h4>
+      <div class="row" style="margin:0; gap:6px;">
+        <button class="btn secondary small" hx-get="/hx/distribution-boards/{{ board.id }}/edit" hx-target="#hx-modal">Bearbeiten</button>
+        <button class="btn danger small" hx-delete="/hx/distribution-boards/{{ board.id }}" hx-target="#distribution-boards-list"
+                hx-confirm="Diesen Verteiler löschen? Alle platzierten Elemente gehen verloren (die Geräte selbst bleiben in der Abgangsliste erhalten).">Löschen</button>
+      </div>
+    </div>
+    {% for items in board.rows %}
+      {% set row_idx = loop.index0 %}
+      {% set used = items | sum(attribute="width_te") %}
+      {% set free = board.row_width_te - used %}
+      <div class="distribution-board-row-scroll"><div class="distribution-board-row">
+        {% for it in items %}
+          <div class="distribution-board-item {{ it.item_type }}" style="flex:0 0 {{ (it.width_te / board.row_width_te * 100) }}%;"
+               title="{{ it.width_te }} TE{% if it.location_label %} · {{ it.location_label }}{% endif %}">
+            <div>{{ it.label }}</div>
+            {% if it.sublabel %}<div class="muted" style="font-size:10px;">{{ it.sublabel }}</div>{% endif %}
+            <div class="distribution-board-item-actions">
+              {% if not loop.first %}<button hx-post="/hx/distribution-board-items/{{ it.id }}/move" hx-vals='{"direction": "left"}' hx-target="#distribution-boards-list" title="Nach links">‹</button>{% endif %}
+              <button hx-delete="/hx/distribution-board-items/{{ it.id }}" hx-target="#distribution-boards-list" title="Entfernen">×</button>
+              {% if not loop.last %}<button hx-post="/hx/distribution-board-items/{{ it.id }}/move" hx-vals='{"direction": "right"}' hx-target="#distribution-boards-list" title="Nach rechts">›</button>{% endif %}
+            </div>
+          </div>
+        {% endfor %}
+        {% if free > 0 %}<div class="distribution-board-item-empty" style="flex:0 0 {{ (free / board.row_width_te * 100) }}%;">{{ free }} TE frei</div>{% endif %}
+      </div></div>
+      <div class="row" style="margin:0 0 14px; gap:6px;">
+        <button class="btn secondary small" hx-post="/hx/distribution-boards/{{ board.id }}/items" hx-vals='{"row_idx": {{ row_idx }}, "item_type": "rcd"}' hx-target="#distribution-boards-list">+ RCD (4 TE)</button>
+        <button class="btn secondary small" hx-post="/hx/distribution-boards/{{ board.id }}/items" hx-vals='{"row_idx": {{ row_idx }}, "item_type": "ls"}' hx-target="#distribution-boards-list">+ LS (1 TE)</button>
+        <button class="btn secondary small" hx-get="/hx/distribution-boards/{{ board.id }}/rows/{{ row_idx }}/add-device" hx-target="#hx-modal">+ Gerät...</button>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="muted">Noch keine Verteiler angelegt</p>
+{% endfor %}

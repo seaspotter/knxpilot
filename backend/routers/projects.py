@@ -15,7 +15,7 @@ from ..db import get_db
 from ..ga_logic import build_ga_tree
 from ..project_transfer import build_project_payload, insert_project_from_payload
 from ..models import ProjectIn, FloorIn, RoomIn, RoomPointIn, RoomPointEditIn, SpecialItemIn, StructureMoveIn
-from ..utils import AGED_KLAERUNG_DAYS, content_disposition
+from ..utils import AGED_CLARIFICATION_DAYS, content_disposition
 
 router = APIRouter(tags=["projects"])
 
@@ -50,13 +50,13 @@ def projects_dashboard():
         }
         without_structure = [{"id": p["id"], "name": p["name"]} for p in projects if p["id"] not in floor_counts]
 
-        klaerung_rows = db.execute(
+        clarification_rows = db.execute(
             "SELECT project_id, COUNT(*) AS open_count, "
             "SUM(CASE WHEN julianday('now') - julianday(created_at) >= ? THEN 1 ELSE 0 END) AS aged_count "
-            "FROM klaerungen WHERE status='offen' GROUP BY project_id",
-            (AGED_KLAERUNG_DAYS,),
+            "FROM clarifications WHERE status='offen' GROUP BY project_id",
+            (AGED_CLARIFICATION_DAYS,),
         ).fetchall()
-        by_project = {r["project_id"]: r for r in klaerung_rows}
+        by_project = {r["project_id"]: r for r in clarification_rows}
 
         projects_with_open = [
             {
@@ -71,10 +71,10 @@ def projects_dashboard():
         return {
             "total": len(projects),
             "by_status": by_status,
-            "open_klaerungen_total": sum(r["open_count"] for r in klaerung_rows),
-            "aged_klaerungen_total": sum(r["aged_count"] or 0 for r in klaerung_rows),
-            "aged_threshold_days": AGED_KLAERUNG_DAYS,
-            "projects_with_open_klaerungen": projects_with_open,
+            "open_clarifications_total": sum(r["open_count"] for r in clarification_rows),
+            "aged_clarifications_total": sum(r["aged_count"] or 0 for r in clarification_rows),
+            "aged_threshold_days": AGED_CLARIFICATION_DAYS,
+            "projects_with_open_clarifications": projects_with_open,
             "projects_without_structure": without_structure,
         }
 
@@ -126,10 +126,10 @@ def _impact(db, room_ids, floor_ids):
             "(SELECT id FROM room_points WHERE room_id IN ({marks}))", room_ids),
         "devices": count("SELECT COUNT(*) FROM room_devices WHERE room_id IN ({marks})", room_ids)
                    + count("SELECT COUNT(*) FROM floor_devices WHERE floor_id IN ({marks})", floor_ids),
-        "klaerungen": count("SELECT COUNT(*) FROM klaerungen WHERE room_id IN ({marks})", room_ids),
+        "clarifications": count("SELECT COUNT(*) FROM clarifications WHERE room_id IN ({marks})", room_ids),
         "specials": count("SELECT COUNT(*) FROM special_items WHERE location IN ({marks})", [str(f) for f in floor_ids]),
         "actors_detached": count("SELECT COUNT(*) FROM actor_instances WHERE floor_id IN ({marks})", floor_ids),
-        "verteiler_detached": count("SELECT COUNT(*) FROM verteiler WHERE floor_id IN ({marks})", floor_ids),
+        "distribution_boards_detached": count("SELECT COUNT(*) FROM distribution_boards WHERE floor_id IN ({marks})", floor_ids),
     }
 
 
@@ -165,7 +165,7 @@ def project_delete_impact(project_id: int):
         result["actors"] = db.execute("SELECT COUNT(*) FROM actor_instances WHERE project_id=?", (project_id,)).fetchone()[0]
         result["files"] = db.execute("SELECT COUNT(*) FROM project_files WHERE project_id=?", (project_id,)).fetchone()[0]
         result["manuals"] = db.execute("SELECT COUNT(*) FROM project_manuals WHERE project_id=?", (project_id,)).fetchone()[0]
-        for k in ("actors_detached", "verteiler_detached", "specials"):
+        for k in ("actors_detached", "distribution_boards_detached", "specials"):
             result.pop(k)  # the whole project goes, nothing is merely detached
         return result
 
@@ -278,8 +278,8 @@ def move_room(room_id: int, m: StructureMoveIn):
             "SELECT id FROM rooms WHERE floor_id=? ORDER BY order_idx", (target_floor,))]
         target_siblings.insert(max(0, min(m.index, len(target_siblings))), room_id)
         db.execute("UPDATE rooms SET floor_id=? WHERE id=?", (target_floor, room_id))
-        # A Verteiler placed in this room moves along to the new Geschoss.
-        db.execute("UPDATE verteiler SET floor_id=? WHERE room_id=?", (target_floor, room_id))
+        # A distribution board placed in this room moves along to the new Geschoss.
+        db.execute("UPDATE distribution_boards SET floor_id=? WHERE room_id=?", (target_floor, room_id))
         if target_floor != room["floor_id"]:
             _reorder(db, "rooms", old_siblings)
         _reorder(db, "rooms", target_siblings)
@@ -343,19 +343,19 @@ def get_project_tree(project_id: int):
         floors = db.execute(
             "SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)
         ).fetchall()
-        result = {"id": project["id"], "name": project["name"], "floors": [], "unplaced_verteiler": []}
-        verteiler = db.execute(
-            "SELECT id, name, floor_id, room_id, row_count FROM verteiler WHERE project_id=? ORDER BY order_idx",
+        result = {"id": project["id"], "name": project["name"], "floors": [], "unplaced_distribution_boards": []}
+        boards = db.execute(
+            "SELECT id, name, floor_id, room_id, row_count FROM distribution_boards WHERE project_id=? ORDER BY order_idx",
             (project_id,),
         ).fetchall()
-        def verteiler_of(floor_id=None, room_id=None):
+        def distribution_boards_of(floor_id=None, room_id=None):
             return [
-                {"id": v["id"], "name": v["name"], "row_count": v["row_count"]}
-                for v in verteiler
-                if (room_id is not None and v["room_id"] == room_id)
-                or (room_id is None and v["floor_id"] == floor_id and v["room_id"] is None)
+                {"id": b["id"], "name": b["name"], "row_count": b["row_count"]}
+                for b in boards
+                if (room_id is not None and b["room_id"] == room_id)
+                or (room_id is None and b["floor_id"] == floor_id and b["room_id"] is None)
             ]
-        result["unplaced_verteiler"] = verteiler_of(floor_id=None)
+        result["unplaced_distribution_boards"] = distribution_boards_of(floor_id=None)
         for f in floors:
             rooms = db.execute(
                 "SELECT * FROM rooms WHERE floor_id=? ORDER BY order_idx", (f["id"],)
@@ -368,7 +368,7 @@ def get_project_tree(project_id: int):
                 room_list.append(
                     {
                         "id": r["id"], "name": r["name"], "line_id": r["line_id"],
-                        "verteiler": verteiler_of(room_id=r["id"]),
+                        "distribution_boards": distribution_boards_of(room_id=r["id"]),
                         "points": [
                             {
                                 "id": p["id"], "point_type_id": p["point_type_id"], "label": p["label"],
@@ -380,7 +380,7 @@ def get_project_tree(project_id: int):
                 )
             result["floors"].append(
                 {"id": f["id"], "name": f["name"], "is_outdoor": bool(f["is_outdoor"]), "line_id": f["line_id"],
-                 "verteiler": verteiler_of(floor_id=f["id"]), "rooms": room_list}
+                 "distribution_boards": distribution_boards_of(floor_id=f["id"]), "rooms": room_list}
             )
         return result
 

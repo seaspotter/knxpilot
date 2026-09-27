@@ -21,10 +21,10 @@ def rich_project(client, db_path):
     ok(client.post(f"/api/floors/{eg['id']}/devices", json={"device_type_id": at["SCN-IP000.03"], "note": "Router"}))
     ok(client.put(f"/api/projects/{pid}/device-order-flags/{at['SCN-BWM63.02']}", json={"not_ordering": True}))
     actor = ok(client.get(f"/api/projects/{pid}/actor-instances"))[0]
-    vid = ok(client.post(f"/api/projects/{pid}/verteiler", json={"room_id": flur["id"], "name": "UV EG"}))["id"]
-    ok(client.post(f"/api/verteiler/{vid}/items", json={"row_idx": 0, "item_type": "rcd", "label": "RCD 40A"}))
-    ok(client.post(f"/api/verteiler/{vid}/items", json={"row_idx": 1, "item_type": "device", "actor_instance_id": actor["id"]}))
-    ok(client.post(f"/api/projects/{pid}/klaerungen", json={"text": "Spots dimmbar?", "room_id": eg["rooms"][0]["id"], "room_point_id": point["id"]}))
+    vid = ok(client.post(f"/api/projects/{pid}/distribution-boards", json={"room_id": flur["id"], "name": "UV EG"}))["id"]
+    ok(client.post(f"/api/distribution-boards/{vid}/items", json={"row_idx": 0, "item_type": "rcd", "label": "RCD 40A"}))
+    ok(client.post(f"/api/distribution-boards/{vid}/items", json={"row_idx": 1, "item_type": "device", "actor_instance_id": actor["id"]}))
+    ok(client.post(f"/api/projects/{pid}/clarifications", json={"text": "Spots dimmbar?", "room_id": eg["rooms"][0]["id"], "room_point_id": point["id"]}))
     central_key = ok(client.get(f"/api/projects/{pid}/central-functions-checklist"))[0][1][0]["key"]
     for key in (f"room_point:{point['id']}", central_key, "uebergabe:funktionen_geprueft"):
         ok(client.put(f"/api/projects/{pid}/checklist-status/{key}", json={"status": "ok", "note": "n"}))
@@ -56,9 +56,9 @@ def snapshot(client, db_path, pid):
             "circuits": sorted((point_pos[c["room_point_id"]], c["channel_seq"], actor_pos[c["assignment"]["actor_instance_id"]],
                                 c["assignment"]["channel_letter"]) for c in circuits if c["assignment"]),
             "summary": [(d["device_name"], d["total"], d["not_ordering"]) for d in ok(client.get(f"/api/projects/{pid}/device-summary"))],
-            "verteiler": [(v["name"], v["room_name"], [[(i["item_type"], i["label"]) for i in row] for row in v["rows"]])
-                          for v in ok(client.get(f"/api/projects/{pid}/verteiler"))],
-            "klaerungen": [(k["text"], k["room_point_id"] is not None) for k in q("SELECT * FROM klaerungen WHERE project_id=?")],
+            "distribution_boards": [(b["name"], b["room_name"], [[(i["item_type"], i["label"]) for i in row] for row in b["rows"]])
+                          for b in ok(client.get(f"/api/projects/{pid}/distribution-boards"))],
+            "clarifications": [(c["text"], c["room_point_id"] is not None) for c in q("SELECT * FROM clarifications WHERE project_id=?")],
             "checklist": sorted((k.split(":")[0], v["status"], v["note"]) for k, v in status.items()),
             "checklist_point_ok": [point_pos[int(k.split(":")[1])] for k in status if k.startswith("room_point:")],
             "signatures": [r["role"] for r in q("SELECT role FROM project_signatures WHERE project_id=?")],
@@ -79,7 +79,7 @@ def test_backup_restores_everything(client, db_path):
     after = snapshot(client, db_path, restored["id"])
     assert after == before
     # sanity: the comparison really covered the rich parts
-    assert before["circuits"] and before["verteiler"][0][1] == "Flur" and before["files"][0][1] == b"%PDF-1.4 plan"
+    assert before["circuits"] and before["distribution_boards"][0][1] == "Flur" and before["files"][0][1] == b"%PDF-1.4 plan"
     assert len(before["checklist"]) == 3 and before["signatures"] == ["fc_systemintegrator"] and before["manuals"]
 
 
@@ -88,9 +88,9 @@ def test_duplicate_copies_planning_only(client, db_path):
     before = snapshot(client, db_path, pid)
     copy = ok(client.post(f"/api/projects/{pid}/duplicate"))
     after = snapshot(client, db_path, copy["id"])
-    for key in ("tree", "actors", "circuits", "summary", "verteiler"):
+    for key in ("tree", "actors", "circuits", "summary", "distribution_boards"):
         assert after[key] == before[key], key
-    assert after["klaerungen"] == [] and after["checklist"] == [] and after["signatures"] == []
+    assert after["clarifications"] == [] and after["checklist"] == [] and after["signatures"] == []
     assert after["snapshot"] == 0 and after["files"] == [] and after["manuals"] == []
 
 
