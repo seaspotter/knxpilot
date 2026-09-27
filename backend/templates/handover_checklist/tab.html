@@ -1,0 +1,24 @@
+{# Übergabe-Checkliste: static, mostly project-independent sections
+   (CHECKLIST_SECTIONS in checkliste.py), each item a 3-way Ja/Nein/Nicht
+   nötig switch + Bemerkungen, persisted item-by-item via htmx. #}
+<div class="card">
+  <div class="row" style="justify-content:space-between;">
+    <h4 style="margin:0;">Übergabe-Checkliste</h4>
+    <div class="row" style="margin:0; gap:6px;">
+      <button class="btn secondary small" onclick="openSendEmailModal('handover_checklist', 'Übergabe-Checkliste')">Per E-Mail senden</button>
+      <button class="btn" onclick="downloadHandoverChecklist()">PDF herunterladen</button>
+    </div>
+  </div>
+  <p class="muted">Checkliste für das Übergabegespräch vor Ort — digital ausfüllen (Ja/Nein/Nicht nötig + Bemerkungen), kein Papierformular nötig. Der PDF-Export ist nur eine Momentaufnahme zum Weitergeben/Unterschreiben.</p>
+<div id="handover-checklist-content">
+  {% for sec in sections %}
+    <div class="floor-card">
+      <div class="rc-floor-title">{{ sec.section }}</div>
+      {% for row in sec.rows %}
+        {% include "handover_checklist/_row.html" %}
+      {% endfor %}
+    </div>
+  {% endfor %}
+</div>
+{% include "handover_checklist/_signatures.html" %}
+</div>

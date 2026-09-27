@@ -98,7 +98,7 @@ backend/
   ga_logic.py       — group-address tree generation, circuits, per-room/central function listings (used by Pflichtenheft and the checklists)
   pdf_design.py     — shared PDF look (banner, table style, page numbers, letterhead); build_pdf_bytes()/build_pdf_bytes_two_pass() are the raw-bytes builders every export (and email.py's send action) go through
   templating.py     — Jinja2 setup for the htmx tabs (templates/, autoescaped)
-  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: klaerungsliste/, time_tracking/, setup/, device_catalog/, manuals/, overview/, specification/, documentation/, project_files/)
+  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: klaerungsliste/, time_tracking/, setup/, device_catalog/, manuals/, overview/, specification/, documentation/, project_files/, function_checklist/, handover_checklist/)
   project_transfer.py — per-project JSON backup/restore + duplicate (what's included, name/position-based references)
   pa_assign.py      — physical-address auto-assign (bucket convention, per KNX line) + line coupler/power supply detection
   email_sender.py   — SMTP mechanics (stdlib smtplib) behind routers/email.py's send-by-mail action
@@ -111,7 +111,7 @@ backend/
     abgangsliste.py    — actor instances, circuit assignment, CSV/PDF export (Abgangsliste sub-tab)
     geraeteplanung.py  — per-room device planning, bill of materials, PDF export (Geräteplanung sub-tab)
     specification.py   — early-stage spec PDF export, htmx "Inhalt" tab (Pflichtenheft sub-tab); also home to function_checklist_table(), shared with checkliste.py
-    checkliste.py      — digital on-site checklists: checklist_status upsert, Funktionscheckliste + Übergabe-Checkliste JSON/PDF (their sub-tabs)
+    checkliste.py      — digital on-site checklists (htmx, /hx/projects/{id}/function-checklist.../handover-checklist...): checklist_status upsert, Funktionscheckliste + Übergabe-Checkliste tab fragments/PDF (their sub-tabs); JSON endpoints and the build_*_pdf_bytes()/CHECKLIST_SECTIONS names stay as-is (still referenced by routers/documentation.py and routers/email.py)
     documentation.py   — end-of-project assembly PDF, combining Pflichtenheft content + both checklists' results + a Handbücher checklist + optional as-built sections, htmx "Inhalt" tab; the chapter list (DOCUMENTATION_CHAPTERS) also drives it (Dokumentation sub-tab)
     email.py           — "Per E-Mail senden" endpoints, reusing each export's build_*_pdf_bytes() function (Setup → E-Mail + every export tab)
     klaerungsliste.py  — questions/tasks/notes per project + "Offene Punkte" PDF export (Klärungsliste sub-tab)
@@ -228,7 +228,7 @@ rarely need to touch anything else.
   `/hx/` endpoints and a browser pass; confirm each next tab with the
   user. Order: ~~clarification list~~, ~~time tracking~~, ~~Setup~~,
   ~~device catalog~~, ~~project manuals~~, ~~overview~~, ~~specification~~,
-  ~~documentation~~, function + handover checklists, functions + group
+  ~~documentation~~, ~~function + handover checklists~~, functions + group
   addresses, device planning + distribution board planning + labels,
   circuit list, building structure (drag & drop stays JS).
 - **User-facing strings are German**; everything else is English: code

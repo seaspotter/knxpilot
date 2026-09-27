@@ -33,8 +33,8 @@ router = APIRouter(tags=["email"])
 # German noun phrase for "im Anhang finden Sie ___" in the body text).
 DOCUMENT_BUILDERS = {
     "specification": (build_specification_pdf_bytes, "Pflichtenheft", "das Pflichtenheft"),
-    "funktionscheckliste": (build_funktionscheckliste_pdf_bytes, "Funktionscheckliste", "die Funktionscheckliste"),
-    "uebergabe": (build_uebergabe_checkliste_pdf_bytes, "Übergabe-Checkliste", "die Übergabe-Checkliste"),
+    "function_checklist": (build_funktionscheckliste_pdf_bytes, "Funktionscheckliste", "die Funktionscheckliste"),
+    "handover_checklist": (build_uebergabe_checkliste_pdf_bytes, "Übergabe-Checkliste", "die Übergabe-Checkliste"),
     "documentation": (build_documentation_pdf_bytes, "Dokumentation", "die vollständige Projektdokumentation"),
     "klaerungsliste": (build_klaerungsliste_pdf_bytes, "Offene Punkte", "die offenen Punkte zur Klärung"),
 }

@@ -237,5 +237,81 @@ document.addEventListener('hx-modal-close', closeHxModal);
 document.addEventListener('keydown', ev => {
   if (ev.key === 'Escape' && document.getElementById('hx-modal')?.innerHTML) closeHxModal();
 });
+// ---------- Shared digital-signature capture (canvas) ----------
+// Used by both checklist tabs (function_checklist.js, handover_checklist.js)
+// to capture a signature on-site instead of printing the PDF and signing on
+// paper. This only draws the pad and hands the resulting PNG data URL to
+// `onSave` - callers do their own api() PUT (role is project/tab-specific)
+// and then reload their own htmx signature fragment.
+function openSignatureCaptureModal(label, onSave) {
+  const modal = openModal(`
+    <h3>Unterschrift — ${label}</h3>
+    <canvas id="sig-canvas" style="width:100%; height:200px; border:1px solid var(--border); border-radius:6px; touch-action:none; background:#fff; display:block;"></canvas>
+    <div class="row modal-actions">
+      <button class="btn secondary" data-action="clear">Löschen</button>
+      <button class="btn secondary" data-action="cancel">Abbrechen</button>
+      <button class="btn" data-action="save">Speichern</button>
+    </div>
+  `, { wide: true });
+
+  const canvas = modal.overlay.querySelector('#sig-canvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  let cssWidth = 0, cssHeight = 0;
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    cssWidth = rect.width;
+    cssHeight = rect.height;
+    canvas.width = cssWidth * dpr;
+    canvas.height = cssHeight * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#0f172a';
+  }
+  resizeCanvas();
+
+  let drawing = false, lastX = 0, lastY = 0, hasDrawn = false;
+  function pos(ev) {
+    const rect = canvas.getBoundingClientRect();
+    return [ev.clientX - rect.left, ev.clientY - rect.top];
+  }
+  canvas.addEventListener('pointerdown', (ev) => {
+    drawing = true;
+    hasDrawn = true;
+    [lastX, lastY] = pos(ev);
+    canvas.setPointerCapture(ev.pointerId);
+  });
+  canvas.addEventListener('pointermove', (ev) => {
+    if (!drawing) return;
+    const [x, y] = pos(ev);
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    [lastX, lastY] = [x, y];
+  });
+  const stopDrawing = () => { drawing = false; };
+  canvas.addEventListener('pointerup', stopDrawing);
+  canvas.addEventListener('pointerleave', stopDrawing);
+
+  modal.overlay.addEventListener('click', async (ev) => {
+    const action = ev.target.dataset && ev.target.dataset.action;
+    if (action === 'clear') {
+      ctx.clearRect(0, 0, cssWidth, cssHeight);
+      hasDrawn = false;
+    }
+    if (action === 'cancel') modal.close();
+    if (action === 'save') {
+      if (!hasDrawn) { showToast('Bitte zuerst unterschreiben.', 'warning'); return; }
+      const dataUrl = canvas.toDataURL('image/png');
+      await onSave(dataUrl);
+      modal.close();
+    }
+  });
+}
+
 // A server response can show a toast: HX-Trigger {"show-toast": {"message", "level"}}.
 document.addEventListener('show-toast', ev => showToast(ev.detail.message, ev.detail.level || 'info', ev.detail.level === 'error' ? {sticky: true} : undefined));

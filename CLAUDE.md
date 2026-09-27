@@ -68,7 +68,8 @@ the user to make explicitly, not something to introduce as a side effect of
   a time (vendored in `frontend/vendor/`, Jinja templates in
   `backend/templates/<tab>/`, `/hx/...` endpoints in the tab's router) -
   done so far: clarification list, time tracking, Setup, device catalog,
-  project manuals, overview, specification, documentation. See "htmx tabs"
+  project manuals, overview, specification, documentation, function
+  checklist, handover checklist. See "htmx tabs"
   and "htmx migration" (order, rules) in [`DEVELOPMENT.md`](./DEVELOPMENT.md).
   Convert only the tab the user confirmed next, and don't add other
   frontend libraries.

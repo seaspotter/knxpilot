@@ -119,8 +119,8 @@
         <button data-subtab="geraeteplanung">Geräteplanung</button>
         <button data-subtab="verteilerplanung">Verteilerplanung</button>
         <button data-subtab="specification">Pflichtenheft</button>
-        <button data-subtab="funktionscheckliste">Funktionscheckliste</button>
-        <button data-subtab="uebergabe">Übergabe-Checkliste</button>
+        <button data-subtab="function-checklist">Funktionscheckliste</button>
+        <button data-subtab="handover-checklist">Übergabe-Checkliste</button>
         <button data-subtab="klaerungsliste">Klärungsliste</button>
         <button data-subtab="manuals">Handbücher</button>
         <button data-subtab="documentation">Dokumentation</button>
@@ -314,33 +314,11 @@
       <!-- Rendered server-side with htmx (backend/templates/specification/tab.html), see specification.js -->
       <div class="subtab" id="subtab-specification"></div>
 
-      <div class="subtab" id="subtab-funktionscheckliste">
-        <div class="card">
-          <div class="row" style="justify-content:space-between;">
-            <h4 style="margin:0;">Funktionscheckliste</h4>
-            <div class="row" style="margin:0; gap:6px;">
-              <button class="btn secondary small" onclick="openSendEmailModal('funktionscheckliste', 'Funktionscheckliste')">Per E-Mail senden</button>
-              <button class="btn" onclick="downloadFunktionscheckliste()">PDF herunterladen</button>
-            </div>
-          </div>
-          <p class="muted">Jede geplante Funktion vor Ort digital abhaken, sobald sie getestet ist — direkt hier auf dem Handy, kein Ausdrucken/Abhaken auf Papier nötig. Der PDF-Export ist nur eine Momentaufnahme zum Weitergeben, nicht die primäre Arbeitsweise.</p>
-          <div id="funktionscheckliste-content"></div>
-        </div>
-      </div>
+      <!-- Rendered server-side with htmx (backend/templates/function_checklist/tab.html), see function_checklist.js -->
+      <div class="subtab" id="subtab-function-checklist"></div>
 
-      <div class="subtab" id="subtab-uebergabe">
-        <div class="card">
-          <div class="row" style="justify-content:space-between;">
-            <h4 style="margin:0;">Übergabe-Checkliste</h4>
-            <div class="row" style="margin:0; gap:6px;">
-              <button class="btn secondary small" onclick="openSendEmailModal('uebergabe', 'Übergabe-Checkliste')">Per E-Mail senden</button>
-              <button class="btn" onclick="downloadUebergabeChecklist()">PDF herunterladen</button>
-            </div>
-          </div>
-          <p class="muted">Checkliste für das Übergabegespräch vor Ort — digital ausfüllen (Ja/Nein/Nicht nötig + Bemerkungen), kein Papierformular nötig. Der PDF-Export ist nur eine Momentaufnahme zum Weitergeben/Unterschreiben.</p>
-          <div id="uebergabe-content"></div>
-        </div>
-      </div>
+      <!-- Rendered server-side with htmx (backend/templates/handover_checklist/tab.html), see handover_checklist.js -->
+      <div class="subtab" id="subtab-handover-checklist"></div>
 
       <div class="subtab" id="subtab-klaerungsliste">
         <!-- Rendered server-side with htmx (backend/templates/klaerungsliste/), see klaerungsliste.js -->
@@ -467,8 +445,8 @@
 <script src="/js/geraeteplanung.js"></script>
 <script src="/js/verteiler.js"></script>
 <script src="/js/specification.js"></script>
-<script src="/js/funktionscheckliste.js"></script>
-<script src="/js/uebergabe_checkliste.js"></script>
+<script src="/js/function_checklist.js"></script>
+<script src="/js/handover_checklist.js"></script>
 <script src="/js/klaerungsliste.js"></script>
 <script src="/js/manuals.js"></script>
 <script src="/js/time_tracking.js"></script>

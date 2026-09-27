@@ -28,6 +28,25 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ### Changed
 
+- **Function checklist ("Funktionscheckliste") and handover checklist
+  ("Übergabe-Checkliste") tabs rendered server-side with htmx** — looks
+  and works the same, including the digital signature pad, but their HTML
+  now comes from Jinja templates (`backend/templates/function_checklist/`,
+  `backend/templates/handover_checklist/`) via `/hx/projects/{id}/
+  function-checklist...`/`handover-checklist...` endpoints in
+  `routers/checkliste.py`. Tapping a function-checklist row, or a
+  handover-checklist Ja/Nein/Nicht-nötig switch or Bemerkungen field, is
+  now its own htmx request that swaps back just that row - the
+  function checklist still deliberately never re-renders the whole list,
+  so scroll position survives while walking through a building. Renamed
+  to English: `js/funktionscheckliste.js` → `js/function_checklist.js`,
+  `js/uebergabe_checkliste.js` → `js/handover_checklist.js`, the sub-tab
+  ids and the "Per E-Mail senden" document keys (`function_checklist`,
+  `handover_checklist`). `routers/checkliste.py` and its existing JSON/PDF
+  endpoint names/functions (`build_funktionscheckliste_pdf_bytes`,
+  `build_uebergabe_checkliste_pdf_bytes`, `CHECKLIST_SECTIONS`) are
+  unchanged, since `routers/documentation.py` and `routers/email.py`
+  already depend on them.
 - **Overview, specification and documentation tabs rendered server-side
   with htmx** — the overview tab's stat cards (one per sub-tab, jumping
   there on click) and its project files ("Dateien") section, and the

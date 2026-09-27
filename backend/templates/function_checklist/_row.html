@@ -1,0 +1,11 @@
+{# One function-checklist row - tapping anywhere toggles it via htmx PUT,
+   swapped back in place so scroll position isn't lost (see checkliste.py). #}
+<label id="{{ row.dom_id }}" class="fc-row{% if row.checked %} done{% endif %}">
+  <span class="pill">{{ row.cat }}</span>
+  <span class="fc-text">{{ row.text }}</span>
+  <span class="fc-check"><span class="fc-when">{{ row.when }}</span>getestet
+    <input type="checkbox" {% if row.checked %}checked{% endif %}
+      hx-put="/hx/projects/{{ project_id }}/function-checklist/items/{{ row.key|urlencode }}?cat={{ row.cat|urlencode }}&text={{ row.text|urlencode }}"
+      hx-target="#{{ row.dom_id }}" hx-swap="outerHTML">
+  </span>
+</label>

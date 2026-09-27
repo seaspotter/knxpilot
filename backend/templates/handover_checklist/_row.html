@@ -1,0 +1,19 @@
+{# One Übergabe-Checkliste row: a Ja/Nein/Nicht-nötig switch (tapping the
+   active one clears it) plus a Bemerkungen field, each an independent
+   htmx PUT swapped back into just this row. #}
+<div id="{{ row.dom_id }}" class="ub-row{% if row.status %} done{% endif %}">
+  <span class="fc-text">{{ row.text }}</span>
+  <span class="ub-right">
+    <span class="fc-when">{{ row.when }}</span>
+    <span class="ub-seg">
+      {% for value, label in [('ja', 'Ja'), ('nein', 'Nein'), ('nicht_noetig', 'Nicht nötig')] %}
+        <button class="{{ value }}{% if row.status == value %} active{% endif %}"
+          hx-put="/hx/projects/{{ project_id }}/handover-checklist/items/{{ row.key|urlencode }}/status/{{ value }}"
+          hx-target="#{{ row.dom_id }}" hx-swap="outerHTML">{{ label }}</button>
+      {% endfor %}
+    </span>
+  </span>
+  <input type="text" class="ub-note" placeholder="Bemerkungen" value="{{ row.note }}"
+    hx-put="/hx/projects/{{ project_id }}/handover-checklist/items/{{ row.key|urlencode }}/note"
+    hx-trigger="blur" hx-target="#{{ row.dom_id }}" hx-swap="outerHTML" name="note">
+</div>

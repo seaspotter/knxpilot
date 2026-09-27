@@ -16,9 +16,10 @@ via an HTML canvas signature pad in the frontend, embedded into both the
 Übergabe-Checkliste and Dokumentation PDF exports via build_signature_row().
 """
 import base64
+import json
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Form, HTTPException, Request, Response
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, KeepTogether
 from reportlab.lib.units import mm
 
@@ -30,6 +31,7 @@ from ..pdf_design import (
     company_header_block, company_footer_line, checkbox_cell, signature_block,
 )
 from .specification import function_checklist_table
+from ..templating import templates
 from ..utils import local_time_text
 
 router = APIRouter(tags=["checkliste"])
@@ -148,6 +150,108 @@ def build_funktionscheckliste_pdf_bytes(project_id: int):
 def export_funktionscheckliste_pdf(project_id: int):
     data, filename = build_funktionscheckliste_pdf_bytes(project_id)
     return pdf_response(data, filename)
+
+
+# ---------- htmx fragments: Funktionscheckliste (function checklist) ----------
+# Tab id/JS file renamed to English (function_checklist) as part of the
+# htmx migration - the JSON endpoints/PDF builder above keep their existing
+# (German) names since routers/documentation.py and routers/email.py already
+# depend on them; only the newly-added server-rendered surface uses the
+# English naming going forward.
+def checklist_dom_id(key):
+    return "cl-" + "".join(c if c.isalnum() else "-" for c in key)
+
+
+def _checklist_rows(by_category, status_map):
+    """Flattens {category: [{key, text}, ...]} into render-ready rows (with
+    checked/when precomputed) so the templates stay plain loops."""
+    rows = []
+    for cat_name, items in by_category.items():
+        for item in items:
+            entry = status_map.get(item["key"], {})
+            rows.append({
+                "key": item["key"], "text": item["text"], "cat": cat_name,
+                "checked": entry.get("status") == "ok",
+                "when": local_time_text(entry.get("updated_at")),
+                "dom_id": checklist_dom_id(item["key"]),
+            })
+    return rows
+
+
+def _function_checklist_context(db, project_id):
+    status_map = get_status_map(db, project_id)
+    floors_out = []
+    for floor in db.execute("SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall():
+        rooms_out = []
+        for room in db.execute("SELECT * FROM rooms WHERE floor_id=? ORDER BY order_idx", (floor["id"],)).fetchall():
+            by_category = get_room_functions_by_category(db, room["id"])
+            if not by_category:
+                continue
+            rooms_out.append({"name": room["name"], "rows": _checklist_rows(by_category, status_map)})
+        if rooms_out:
+            floors_out.append({"name": floor["name"], "rooms": rooms_out})
+    central = dict(get_central_functions_overview(db, project_id))
+    central_rows = _checklist_rows(central, status_map) if central else []
+    signatures = {
+        r["role"]: {"signed_at": r["signed_at"]}
+        for r in db.execute(
+            "SELECT role, signed_at FROM project_signatures WHERE project_id=?", (project_id,)
+        ).fetchall()
+    }
+    return {
+        "project_id": project_id,
+        "floors": floors_out,
+        "central_rows": central_rows,
+        "signatures": signatures,
+        "local_time_text": local_time_text,
+    }
+
+
+@router.get("/hx/projects/{project_id}/function-checklist")
+def hx_function_checklist_tab(request: Request, project_id: int):
+    with get_db() as db:
+        ctx = _function_checklist_context(db, project_id)
+    return templates.TemplateResponse(request, "function_checklist/tab.html", ctx)
+
+
+@router.put("/hx/projects/{project_id}/function-checklist/items/{item_key}")
+def hx_function_checklist_toggle(request: Request, project_id: int, item_key: str, cat: str = ""):
+    """Toggles a single item's ok/unchecked state and returns just that
+    row's fragment - deliberately not a full-tab re-render (this list can be
+    every room x every function; re-rendering all of it after each tap would
+    reset scroll position while walking through a building)."""
+    with get_db() as db:
+        current = db.execute(
+            "SELECT status FROM checklist_status WHERE project_id=? AND item_key=?", (project_id, item_key)
+        ).fetchone()
+        new_status = "" if current and current["status"] == "ok" else "ok"
+        db.execute(
+            "INSERT INTO checklist_status (project_id, item_key, status, note) VALUES (?, ?, ?, '') "
+            "ON CONFLICT(project_id, item_key) DO UPDATE SET "
+            "status=excluded.status, updated_at=CURRENT_TIMESTAMP",
+            (project_id, item_key, new_status),
+        )
+        entry = get_status_map(db, project_id).get(item_key, {})
+    row = {
+        "key": item_key, "text": request.query_params.get("text", ""), "cat": cat,
+        "checked": new_status == "ok", "when": local_time_text(entry.get("updated_at")),
+        "dom_id": checklist_dom_id(item_key),
+    }
+    return templates.TemplateResponse(request, "function_checklist/_row.html", {"project_id": project_id, "row": row})
+
+
+@router.get("/hx/projects/{project_id}/function-checklist/signatures")
+def hx_function_checklist_signatures(request: Request, project_id: int):
+    with get_db() as db:
+        signatures = {
+            r["role"]: {"signed_at": r["signed_at"]}
+            for r in db.execute(
+                "SELECT role, signed_at FROM project_signatures WHERE project_id=?", (project_id,)
+            ).fetchall()
+        }
+    return templates.TemplateResponse(request, "function_checklist/_signatures.html", {
+        "project_id": project_id, "signatures": signatures, "local_time_text": local_time_text,
+    })
 
 
 # ---------- Übergabe-Checkliste ----------
@@ -355,3 +459,99 @@ def build_uebergabe_checkliste_pdf_bytes(project_id: int):
 def export_uebergabe_checkliste_pdf(project_id: int):
     data, filename = build_uebergabe_checkliste_pdf_bytes(project_id)
     return pdf_response(data, filename)
+
+
+# ---------- htmx fragments: Übergabe-Checkliste (handover checklist) ----------
+# Unlike the Funktionscheckliste, a status click here re-renders just that
+# one row too (not the whole section) - each row's own fragment carries its
+# 3-way Ja/Nein/Nicht-nötig switch and its Bemerkungen field.
+UEBERGABE_ITEMS_BY_KEY = {
+    f"uebergabe:{slug}": text for _section, items in CHECKLIST_SECTIONS for slug, text in items
+}
+
+
+def _handover_row(item_key, status_map):
+    entry = status_map.get(item_key, {})
+    return {
+        "key": item_key, "text": UEBERGABE_ITEMS_BY_KEY[item_key],
+        "status": entry.get("status", ""), "note": entry.get("note", ""),
+        "when": local_time_text(entry.get("updated_at")),
+        "dom_id": checklist_dom_id(item_key),
+    }
+
+
+def _handover_checklist_context(db, project_id):
+    status_map = get_status_map(db, project_id)
+    sections = [
+        {"section": title, "rows": [_handover_row(f"uebergabe:{slug}", status_map) for slug, _text in items]}
+        for title, items in CHECKLIST_SECTIONS
+    ]
+    signatures = {
+        r["role"]: {"signed_at": r["signed_at"]}
+        for r in db.execute(
+            "SELECT role, signed_at FROM project_signatures WHERE project_id=?", (project_id,)
+        ).fetchall()
+    }
+    return {"project_id": project_id, "sections": sections, "signatures": signatures, "local_time_text": local_time_text}
+
+
+@router.get("/hx/projects/{project_id}/handover-checklist")
+def hx_handover_checklist_tab(request: Request, project_id: int):
+    with get_db() as db:
+        ctx = _handover_checklist_context(db, project_id)
+    return templates.TemplateResponse(request, "handover_checklist/tab.html", ctx)
+
+
+@router.put("/hx/projects/{project_id}/handover-checklist/items/{item_key}/status/{status}")
+def hx_handover_checklist_set_status(request: Request, project_id: int, item_key: str, status: str):
+    """Tapping the already-active option clears it (status -> ''), matching
+    the previous classic-JS behavior."""
+    if item_key not in UEBERGABE_ITEMS_BY_KEY:
+        raise HTTPException(404, "Unknown checklist item")
+    with get_db() as db:
+        current = db.execute(
+            "SELECT status, note FROM checklist_status WHERE project_id=? AND item_key=?", (project_id, item_key)
+        ).fetchone()
+        note = current["note"] if current else ""
+        new_status = "" if current and current["status"] == status else status
+        db.execute(
+            "INSERT INTO checklist_status (project_id, item_key, status, note) VALUES (?, ?, ?, ?) "
+            "ON CONFLICT(project_id, item_key) DO UPDATE SET "
+            "status=excluded.status, updated_at=CURRENT_TIMESTAMP",
+            (project_id, item_key, new_status, note),
+        )
+        row = _handover_row(item_key, get_status_map(db, project_id))
+    return templates.TemplateResponse(request, "handover_checklist/_row.html", {"project_id": project_id, "row": row})
+
+
+@router.put("/hx/projects/{project_id}/handover-checklist/items/{item_key}/note")
+def hx_handover_checklist_set_note(request: Request, project_id: int, item_key: str, note: str = Form("")):
+    if item_key not in UEBERGABE_ITEMS_BY_KEY:
+        raise HTTPException(404, "Unknown checklist item")
+    with get_db() as db:
+        current = db.execute(
+            "SELECT status FROM checklist_status WHERE project_id=? AND item_key=?", (project_id, item_key)
+        ).fetchone()
+        status = current["status"] if current else ""
+        db.execute(
+            "INSERT INTO checklist_status (project_id, item_key, status, note) VALUES (?, ?, ?, ?) "
+            "ON CONFLICT(project_id, item_key) DO UPDATE SET "
+            "note=excluded.note, updated_at=CURRENT_TIMESTAMP",
+            (project_id, item_key, status, note),
+        )
+        row = _handover_row(item_key, get_status_map(db, project_id))
+    return templates.TemplateResponse(request, "handover_checklist/_row.html", {"project_id": project_id, "row": row})
+
+
+@router.get("/hx/projects/{project_id}/handover-checklist/signatures")
+def hx_handover_checklist_signatures(request: Request, project_id: int):
+    with get_db() as db:
+        signatures = {
+            r["role"]: {"signed_at": r["signed_at"]}
+            for r in db.execute(
+                "SELECT role, signed_at FROM project_signatures WHERE project_id=?", (project_id,)
+            ).fetchall()
+        }
+    return templates.TemplateResponse(request, "handover_checklist/_signatures.html", {
+        "project_id": project_id, "signatures": signatures, "local_time_text": local_time_text,
+    })

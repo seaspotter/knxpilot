@@ -1,0 +1,43 @@
+{# Funktionscheckliste: every planned function, grouped by floor/room, plus
+   Zentral-/Allgemeinfunktionen, tap-to-check via htmx PUTs on individual
+   rows (see checkliste.py's hx_function_checklist_toggle - never a full-tab
+   re-render, to avoid resetting scroll position). #}
+<div class="card">
+  <div class="row" style="justify-content:space-between;">
+    <h4 style="margin:0;">Funktionscheckliste</h4>
+    <div class="row" style="margin:0; gap:6px;">
+      <button class="btn secondary small" onclick="openSendEmailModal('function_checklist', 'Funktionscheckliste')">Per E-Mail senden</button>
+      <button class="btn" onclick="downloadFunctionChecklist()">PDF herunterladen</button>
+    </div>
+  </div>
+  <p class="muted">Jede geplante Funktion vor Ort digital abhaken, sobald sie getestet ist — direkt hier auf dem Handy, kein Ausdrucken/Abhaken auf Papier nötig. Der PDF-Export ist nur eine Momentaufnahme zum Weitergeben, nicht die primäre Arbeitsweise.</p>
+<div id="function-checklist-content">
+  {% for floor in floors %}
+    <div class="floor-card">
+      <div class="rc-floor-title">{{ floor.name }}</div>
+      {% for room in floor.rooms %}
+        <div class="room-card rc-room">
+          <div class="rc-room-title">{{ room.name }}</div>
+          {% for row in room.rows %}
+            {% include "function_checklist/_row.html" %}
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+
+  {% if central_rows %}
+    <div class="floor-card">
+      <div class="rc-floor-title">Zentral- und Allgemeinfunktionen</div>
+      {% for row in central_rows %}
+        {% include "function_checklist/_row.html" %}
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if not floors and not central_rows %}
+    <p class="muted">Noch keine Funktionen geplant.</p>
+  {% endif %}
+</div>
+{% include "function_checklist/_signatures.html" %}
+</div>
