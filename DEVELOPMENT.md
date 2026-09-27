@@ -136,7 +136,7 @@ frontend/
     send_email.js      — shared "Per E-Mail senden" modal, called from Pflichtenheft/Funktionscheckliste/Übergabe-Checkliste/Dokumentation
     setup.js           — loads the htmx Setup sub-tabs, header branding, logo auto-crop, backup restore, JSON import (file picker), categories/function types cache for the functions tab
     device_catalog.js  — loads the htmx device catalog sub-tabs, ACTOR_TYPES cache for other tabs' pickers, JSON import dialogs
-    projekte.js        — Projekte tab: project list/CRUD, dashboard, meta edit-in-place, JSON backup/restore/duplicate
+    projects.js        — Projekte tab: project list/CRUD, dashboard, meta edit-in-place, JSON backup/restore/duplicate
     building_structure.js — Geschoss/Raum/Verteiler tree with drag & drop (Gebäudestruktur sub-tab; classic JS + JSON calls to building_structure.py, not htmx - see "htmx migration" below)
     distribution_boards.js — loads the htmx distribution board planning tab, PDF download
     lines.js           — optional KNX lines card + the line <select>s used by building_structure.js/circuit_list.js (Gebäudestruktur sub-tab)
@@ -154,7 +154,7 @@ frontend/
     clarification_list.js — loads the htmx clarification list tab, badge, copy/PDF/email of the open points
     documentation.js   — loads the htmx Dokumentation tab, Vorschau and PDF download
     update.js          — self-update tab + changelog viewer + version badge
-    hilfe.js           — in-app manual (renders MANUAL.md)
+    help.js            — in-app manual (renders MANUAL.md)
     init.js            — page-load bootstrap, must load last (calls functions from the files above)
 tests/
   conftest.py       — throwaway database per test, demo-project seed helper
@@ -241,7 +241,7 @@ rarely need to touch anything else.
   ~~distribution board planning~~ (jumped ahead of functions + group
   addresses by explicit user request), ~~functions + group addresses~~,
   ~~device planning + labels~~, ~~circuit list~~, ~~building structure~~
-  (this one done differently: router/JS split out of projects.py/projekte.js
+  (this one done differently: router/JS split out of projects.py/projects.js
   into building_structure.py/building_structure.js, English-renamed, but the
   tree itself stays classic JS + JSON calls rather than htmx fragments - the
   drag & drop interaction needs the whole tree as a JS object client-side, so

@@ -28,7 +28,7 @@ def list_projects():
 @router.get("/api/projects/dashboard")
 def projects_dashboard():
     """Aggregated status across every project, for the all-projects
-    dashboard shown above the Projekte list (frontend/js/projekte.js's
+    dashboard shown above the Projekte list (frontend/js/projects.js's
     loadProjectsDashboard(), called every time loadProjects() is - so it
     stays in sync with every create/delete/duplicate automatically). Kept
     as one query pass per concern rather than N+1 per-project calls,

@@ -71,7 +71,7 @@ the user to make explicitly, not something to introduce as a side effect of
   project manuals, overview, specification, documentation, function
   checklist, handover checklist, distribution board planning, functions,
   group addresses, device planning, labels, circuit list. Building structure
-  (the last tab in the order) was split out of projects.py/projekte.js into
+  (the last tab in the order) was split out of projects.py/projects.js into
   its own router/JS file and English-renamed, but its tree stays classic
   JS + JSON calls rather than htmx fragments, since drag & drop needs the
   whole tree client-side - this closes out the migration list. See "htmx
@@ -83,9 +83,8 @@ the user to make explicitly, not something to introduce as a side effect of
   text is English** - file and directory names, identifiers, database
   tables/columns, API paths, CSS classes, template names, JSON keys. Use
   the English terms from the glossary in [`DEVELOPMENT.md`](./DEVELOPMENT.md)
-  ("Naming"). Many existing names are still German (e.g.
-  `frontend/js/projekte.js`); they get renamed tab by tab, together with
-  each tab's move to htmx - never add new German names.
+  ("Naming"). The htmx migration's tab-by-tab renames are done - every
+  router/JS file name is English now; never add new German names.
 - One router file and one frontend JS file per UI tab/sub-tab — when adding
   a feature to an existing tab, that's almost always the only two files you
   need to touch (see the table in [`DEVELOPMENT.md`](./DEVELOPMENT.md)).
@@ -98,7 +97,7 @@ the user to make explicitly, not something to introduce as a side effect of
 - [`MANUAL.md`](./MANUAL.md) — the detailed usage guide: GA addressing model,
   CSV format, every tab/sub-tab explained. Also served in-app via the **Hilfe**
   tab (`GET /api/system/manual` in `backend/routers/system.py`, rendered by
-  `frontend/js/hilfe.js` using the shared Markdown renderer in
+  `frontend/js/help.js` using the shared Markdown renderer in
   `frontend/js/ui.js`) — keep the file and the in-app rendering in mind
   together, they're the same content.
 - [`DEVELOPMENT.md`](./DEVELOPMENT.md) — local dev setup, project structure,

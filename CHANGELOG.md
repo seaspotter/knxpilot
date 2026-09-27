@@ -12,6 +12,11 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ### Changed
 
+- **Last two German file names renamed to English** — `frontend/js/hilfe.js`
+  → `help.js`, `frontend/js/projekte.js` → `projects.js` (identifier-only,
+  no behavior change; neither is an htmx tab, so these were outside the
+  migration list itself but still covered by the standing English-naming
+  order).
 - **"Gebäudestruktur" ("building structure") split out of the Projekte tab**,
   completing the agreed htmx migration list. `routers/projects.py` and
   `frontend/js/projekte.js` bundled two concerns (project CRUD/list/
