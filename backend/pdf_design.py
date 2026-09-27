@@ -165,7 +165,7 @@ def checkbox_cell(checked=False, box_size=3.2 * mm):
     fonts used throughout this design system (WinAnsi encoding) don't
     reliably render box-drawing characters. Used both for the old-style
     always-blank paper checkbox (checked=False, the default) and for
-    reflecting real persisted checklist state (see routers/checkliste.py)."""
+    reflecting real persisted checklist state (see routers/checklists.py)."""
     t = Table([[""]], colWidths=[box_size], rowHeights=[box_size])
     style = [("BOX", (0, 0), (-1, -1), 0.8, PDF_BORDER_COLOR)]
     if checked:
@@ -178,7 +178,7 @@ def signature_block(label, styles, image_bytes=None, signed_at_text=None):
     """A signature area for the bottom of a handover-style PDF (Übergabe-
     Checkliste, Dokumentation). `label` is the plain role name (e.g.
     "Systemintegrator"). If a real digitally-captured signature exists (see
-    routers/checkliste.py's project_signatures / signature pad), pass its
+    routers/checklists.py's project_signatures / signature pad), pass its
     decoded PNG bytes and a pre-formatted signed_at_text - renders the actual
     signature image with a "signiert am ..." caption. Otherwise falls back
     to a blank underline for signing by hand, captioned "Datum, Unterschrift

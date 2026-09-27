@@ -1,7 +1,7 @@
 """The Übergabe-Checkliste tab rendered server-side (htmx)."""
 import pytest
 
-from backend.routers.checkliste import CHECKLIST_SECTIONS
+from backend.routers.checklists import CHECKLIST_SECTIONS
 from conftest import ok, seed_musterhaus
 
 
@@ -12,7 +12,7 @@ def project(client):
 
 def first_key():
     slug = CHECKLIST_SECTIONS[0][1][0][0]
-    return f"uebergabe:{slug}"
+    return f"handover:{slug}"
 
 
 def test_tab_lists_sections(client, project):

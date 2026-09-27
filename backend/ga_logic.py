@@ -17,7 +17,7 @@ def get_room_functions_by_category(db, room_id):
     """Human-readable GA functions in a room, grouped by category name - for the
     Pflichtenheft and the Funktionscheckliste. Each item carries a stable "key"
     (room_points.id, namespaced) so a checked/tested state can be persisted
-    against it (see checklist_status in db.py, routers/checkliste.py)."""
+    against it (see checklist_status in db.py, routers/checklists.py)."""
     categories = {r["id"]: r["name"] for r in db.execute("SELECT * FROM categories").fetchall()}
     point_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM point_types").fetchall()}
     points = db.execute("SELECT * FROM room_points WHERE room_id=? ORDER BY order_idx", (room_id,)).fetchall()

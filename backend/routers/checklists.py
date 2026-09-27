@@ -34,7 +34,7 @@ from .specification import function_checklist_table
 from ..templating import templates
 from ..utils import local_time_text
 
-router = APIRouter(tags=["checkliste"])
+router = APIRouter(tags=["checklists"])
 
 
 # ---------- Shared checklist-status store ----------
@@ -82,7 +82,7 @@ def central_functions_checklist(project_id: int):
         return get_central_functions_overview(db, project_id)
 
 
-def build_funktionscheckliste_pdf_bytes(project_id: int):
+def build_function_checklist_pdf_bytes(project_id: int):
     """The on-site testing record: every planned function, grouped by
     Geschoss/Raum, with its real checked state - counterpart to
     Pflichtenheft's own "what's planned" listing, which deliberately has no
@@ -135,7 +135,7 @@ def build_funktionscheckliste_pdf_bytes(project_id: int):
                 story.append(central_table)
 
         story.append(Spacer(1, 8 * mm))
-        story.append(build_signature_row(db, project_id, styles, FUNKTIONSCHECKLISTE_SIGNATURES, optional=("fc_kunde",)))
+        story.append(build_signature_row(db, project_id, styles, FUNCTION_CHECKLIST_SIGNATURES, optional=("fc_kunde",)))
 
         data = build_pdf_bytes(
             story,
@@ -143,12 +143,12 @@ def build_funktionscheckliste_pdf_bytes(project_id: int):
             doc_title=f"Funktionscheckliste {project['name']}",
             footer_center_text=company_footer_line(company),
         )
-        return data, f"{project['name'].replace(' ', '_')}_funktionscheckliste.pdf"
+        return data, f"{project['name'].replace(' ', '_')}_function_checklist.pdf"
 
 
-@router.get("/api/projects/{project_id}/export-funktionscheckliste.pdf")
-def export_funktionscheckliste_pdf(project_id: int):
-    data, filename = build_funktionscheckliste_pdf_bytes(project_id)
+@router.get("/api/projects/{project_id}/export-function-checklist.pdf")
+def export_function_checklist_pdf(project_id: int):
+    data, filename = build_function_checklist_pdf_bytes(project_id)
     return pdf_response(data, filename)
 
 
@@ -297,14 +297,14 @@ CHECKLIST_SECTIONS = [
 ]
 
 
-@router.get("/api/uebergabe-checklist-sections")
-def uebergabe_checklist_sections():
+@router.get("/api/handover-checklist-sections")
+def handover_checklist_sections():
     """Project-independent - the frontend always gets its item keys from
     here rather than inventing/hashing them itself."""
     return [
         {
             "section": section_title,
-            "items": [{"key": f"uebergabe:{slug}", "text": text} for slug, text in items],
+            "items": [{"key": f"handover:{slug}", "text": text} for slug, text in items],
         }
         for section_title, items in CHECKLIST_SECTIONS
     ]
@@ -313,7 +313,7 @@ def uebergabe_checklist_sections():
 def checklist_section_table(styles, items, status_map):
     data = [["Aufgabe", "Ja", "Nein", "Nicht nötig", "Bemerkungen"]]
     for slug, text in items:
-        entry = status_map.get(f"uebergabe:{slug}", {})
+        entry = status_map.get(f"handover:{slug}", {})
         status = entry.get("status", "")
         note = entry.get("note", "")
         data.append([
@@ -333,7 +333,7 @@ def checklist_section_table(styles, items, status_map):
 
 # ---------- Digital signatures ----------
 # Captured on-site via an HTML canvas signature pad (frontend/js/
-# uebergabe_checkliste.js) instead of printing the PDF and signing on
+# handover_checklist.js) instead of printing the PDF and signing on
 # paper. Editable/re-signable at any time (UNIQUE(project_id, role) makes
 # re-signing a plain upsert, same idiom as checklist_status/
 # device_order_flags) and independently deletable per role.
@@ -341,8 +341,8 @@ def checklist_section_table(styles, items, status_map):
 # own pair (fc_*) - confirming the functions were tested is a separate act
 # from signing the handover; the customer's is optional there.
 SIGNATURE_ROLES = {"systemintegrator", "kunde", "fc_systemintegrator", "fc_kunde"}
-UEBERGABE_SIGNATURES = (("systemintegrator", "Systemintegrator"), ("kunde", "Kunde/Betreiber"))
-FUNKTIONSCHECKLISTE_SIGNATURES = (("fc_systemintegrator", "Systemintegrator"), ("fc_kunde", "Kunde/Betreiber"))
+HANDOVER_SIGNATURES = (("systemintegrator", "Systemintegrator"), ("kunde", "Kunde/Betreiber"))
+FUNCTION_CHECKLIST_SIGNATURES = (("fc_systemintegrator", "Systemintegrator"), ("fc_kunde", "Kunde/Betreiber"))
 
 
 @router.get("/api/projects/{project_id}/signatures")
@@ -391,7 +391,7 @@ def delete_signature(project_id: int, role: str):
     return {"ok": True}
 
 
-def build_signature_row(db, project_id, styles, roles=UEBERGABE_SIGNATURES, optional=()):
+def build_signature_row(db, project_id, styles, roles=HANDOVER_SIGNATURES, optional=()):
     """The Systemintegrator/Kunde signature row at the end of the Übergabe-
     Checkliste / Funktionscheckliste (and, via routers/documentation.py, the
     Dokumentation) PDF - renders the real captured signature + "signiert am"
@@ -420,7 +420,7 @@ def build_signature_row(db, project_id, styles, roles=UEBERGABE_SIGNATURES, opti
     return sig_row
 
 
-def build_uebergabe_checkliste_pdf_bytes(project_id: int):
+def build_handover_checklist_pdf_bytes(project_id: int):
     """Shared by the HTTP download endpoint below and routers/email.py's
     send-by-mail action."""
     styles = pdf_styles()
@@ -454,12 +454,12 @@ def build_uebergabe_checkliste_pdf_bytes(project_id: int):
         doc_title=f"Übergabe-Checkliste {project['name']}",
         footer_center_text=company_footer_line(company),
     )
-    return data, f"{project['name'].replace(' ', '_')}_uebergabe_checkliste.pdf"
+    return data, f"{project['name'].replace(' ', '_')}_handover_checklist.pdf"
 
 
-@router.get("/api/projects/{project_id}/export-uebergabe-checkliste.pdf")
-def export_uebergabe_checkliste_pdf(project_id: int):
-    data, filename = build_uebergabe_checkliste_pdf_bytes(project_id)
+@router.get("/api/projects/{project_id}/export-handover-checklist.pdf")
+def export_handover_checklist_pdf(project_id: int):
+    data, filename = build_handover_checklist_pdf_bytes(project_id)
     return pdf_response(data, filename)
 
 
@@ -467,8 +467,8 @@ def export_uebergabe_checkliste_pdf(project_id: int):
 # Unlike the Funktionscheckliste, a status click here re-renders just that
 # one row too (not the whole section) - each row's own fragment carries its
 # 3-way Ja/Nein/Nicht-nötig switch and its Bemerkungen field.
-UEBERGABE_ITEMS_BY_KEY = {
-    f"uebergabe:{slug}": text for _section, items in CHECKLIST_SECTIONS for slug, text in items
+HANDOVER_ITEMS_BY_KEY = {
+    f"handover:{slug}": text for _section, items in CHECKLIST_SECTIONS for slug, text in items
 }
 
 
@@ -476,7 +476,7 @@ def _handover_row(item_key, status_map):
     entry = status_map.get(item_key, {})
     status = entry.get("status", "")
     return {
-        "key": item_key, "text": UEBERGABE_ITEMS_BY_KEY[item_key],
+        "key": item_key, "text": HANDOVER_ITEMS_BY_KEY[item_key],
         "status": status, "note": entry.get("note", ""),
         "when": local_time_text(entry.get("updated_at")) if status else "",
         "dom_id": checklist_dom_id(item_key),
@@ -486,7 +486,7 @@ def _handover_row(item_key, status_map):
 def _handover_checklist_context(db, project_id):
     status_map = get_status_map(db, project_id)
     sections = [
-        {"section": title, "rows": [_handover_row(f"uebergabe:{slug}", status_map) for slug, _text in items]}
+        {"section": title, "rows": [_handover_row(f"handover:{slug}", status_map) for slug, _text in items]}
         for title, items in CHECKLIST_SECTIONS
     ]
     signatures = {
@@ -509,7 +509,7 @@ def hx_handover_checklist_tab(request: Request, project_id: int):
 def hx_handover_checklist_set_status(request: Request, project_id: int, item_key: str, status: str):
     """Tapping the already-active option clears it (status -> ''), matching
     the previous classic-JS behavior."""
-    if item_key not in UEBERGABE_ITEMS_BY_KEY:
+    if item_key not in HANDOVER_ITEMS_BY_KEY:
         raise HTTPException(404, "Unknown checklist item")
     with get_db() as db:
         current = db.execute(
@@ -529,7 +529,7 @@ def hx_handover_checklist_set_status(request: Request, project_id: int, item_key
 
 @router.put("/hx/projects/{project_id}/handover-checklist/items/{item_key}/note")
 def hx_handover_checklist_set_note(request: Request, project_id: int, item_key: str, note: str = Form("")):
-    if item_key not in UEBERGABE_ITEMS_BY_KEY:
+    if item_key not in HANDOVER_ITEMS_BY_KEY:
         raise HTTPException(404, "Unknown checklist item")
     with get_db() as db:
         current = db.execute(

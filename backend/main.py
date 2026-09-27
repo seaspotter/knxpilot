@@ -22,7 +22,7 @@ CSV export format (verified against real ETS6 exports):
 This file just wires everything together - see backend/routers/ for the
 actual endpoints, grouped by tab (setup, device_catalog, projects, abgangsliste,
 geraeteplanung, distribution_boards, clarification_list, specification, system,
-project_files, manuals, checkliste, documentation, email, time_tracking,
+project_files, manuals, checklists, documentation, email, time_tracking,
 linien, overview), backend/db.py for
 the schema/migrations/seed data, backend/ga_logic.py for GA-tree generation,
 backend/pdf_design.py for the shared PDF look-and-feel, and
@@ -45,7 +45,7 @@ from .backup import run_backup_now
 from .db import get_db, init_db
 from .routers import (
     setup, device_catalog, projects, abgangsliste, geraeteplanung, clarification_list, specification, system,
-    distribution_boards, project_files, manuals, checkliste, documentation, email, time_tracking, linien, overview,
+    distribution_boards, project_files, manuals, checklists, documentation, email, time_tracking, linien, overview,
 )
 
 logger = logging.getLogger("knxpilot.backup")
@@ -103,7 +103,7 @@ app.include_router(specification.router)
 app.include_router(system.router)
 app.include_router(project_files.router)
 app.include_router(manuals.router)
-app.include_router(checkliste.router)
+app.include_router(checklists.router)
 app.include_router(documentation.router)
 app.include_router(email.router)
 app.include_router(time_tracking.router)

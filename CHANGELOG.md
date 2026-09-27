@@ -34,6 +34,22 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ### Changed
 
+- **Function checklist and handover checklist: remaining German internal
+  names renamed to English** — router `checkliste.py` → `checklists.py`;
+  PDF builders `build_funktionscheckliste_pdf_bytes`/
+  `build_uebergabe_checkliste_pdf_bytes` → `build_function_checklist_pdf_bytes`/
+  `build_handover_checklist_pdf_bytes`; signature constants
+  `UEBERGABE_SIGNATURES`/`FUNKTIONSCHECKLISTE_SIGNATURES` →
+  `HANDOVER_SIGNATURES`/`FUNCTION_CHECKLIST_SIGNATURES`;
+  `UEBERGABE_ITEMS_BY_KEY` → `HANDOVER_ITEMS_BY_KEY`; the PDF export paths
+  `export-funktionscheckliste.pdf`/`export-uebergabe-checkliste.pdf` →
+  `export-function-checklist.pdf`/`export-handover-checklist.pdf`; the
+  `GET /api/uebergabe-checklist-sections` endpoint →
+  `/api/handover-checklist-sections`; and the Dokumentation chapter anchors
+  `funktionscheckliste`/`uebergabe` → `function-checklist`/`handover-checklist`.
+  The `checklist_status.item_key` values stored for handover-checklist
+  items (`uebergabe:<slug>`) are now `handover:<slug>`, migrated in place
+  on existing installs. No UI-visible text changed.
 - **Function checklist ("Funktionscheckliste") and handover checklist
   ("Übergabe-Checkliste") tabs rendered server-side with htmx** — looks
   and works the same, including the digital signature pad, but their HTML

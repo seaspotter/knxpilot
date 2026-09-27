@@ -44,7 +44,7 @@ def test_dokumentation_contents_follow_chapter_spec_and_checklist(client):
     s = by_title(ok(client.get(f"/api/projects/{pid}/documentation-contents")))
     assert s["Funktionscheckliste — Testergebnisse"]["detail"].endswith("· unterschrieben")
     assert "0 / 2 Unterschriften" in s["Übergabe-Checkliste — Ergebnisse"]["detail"]
-    for doc in ("funktionscheckliste", "documentation"):
+    for doc in ("function-checklist", "documentation"):
         r = client.get(f"/api/projects/{pid}/export-{doc}.pdf")
         assert r.status_code == 200 and r.content.startswith(b"%PDF")
 

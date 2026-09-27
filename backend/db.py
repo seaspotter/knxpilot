@@ -492,12 +492,12 @@ def init_db():
             );
 
             -- Shared status store for the two digital on-site checklists
-            -- (Funktionscheckliste, Übergabe-Checkliste - see routers/checkliste.py).
+            -- (Funktionscheckliste, Übergabe-Checkliste - see routers/checklists.py).
             -- item_key is a polymorphic string key, same "no enforced FK" precedent
             -- as special_items.location: "room_point:<room_points.id>" (a planned
             -- function), "central:<central_templates.id>" (a central/Allgemein
-            -- function), or "uebergabe:<slug>" (a static handover-checklist item,
-            -- see CHECKLIST_SECTIONS in routers/checkliste.py). status is
+            -- function), or "handover:<slug>" (a static handover-checklist item,
+            -- see CHECKLIST_SECTIONS in routers/checklists.py). status is
             -- ''/'ok' for function-checklist items, ''/'ja'/'nein'/'nicht_noetig'
             -- for Übergabe items (mirrors clarifications.status's German-literal
             -- convention). note (Bemerkungen) is only ever written for Übergabe
@@ -515,7 +515,7 @@ def init_db():
             );
 
             -- Digital signatures captured on-site for the Übergabe-Checkliste (see
-            -- routers/checkliste.py) - role is 'systemintegrator' or 'kunde', image
+            -- routers/checklists.py) - role is 'systemintegrator' or 'kunde', image
             -- is a PNG captured via an HTML canvas signature pad, signed_at is set
             -- server-side on every (re-)save. Editable/re-signable and deletable at
             -- any time (UNIQUE(project_id, role) makes re-signing a plain upsert) -
@@ -765,6 +765,15 @@ def init_db():
             cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]
             if column not in cols:
                 db.execute(ddl)
+
+        # checklist_status.item_key values for the handover checklist used the
+        # "uebergabe:<slug>" prefix (see CHECKLIST_SECTIONS in
+        # routers/checklists.py) - now "handover:<slug>". Idempotent: once
+        # rewritten, no row ever has the old prefix again.
+        db.execute(
+            "UPDATE checklist_status SET item_key = 'handover:' || substr(item_key, 11) "
+            "WHERE item_key LIKE 'uebergabe:%'"
+        )
 
         # One-time split: room_devices used to be quantity-aggregated (one row =
         # "N x DeviceType"); the per-instance rework needs one row per physical

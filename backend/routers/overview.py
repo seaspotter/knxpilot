@@ -17,7 +17,7 @@ from fastapi import APIRouter, Request
 from ..db import get_db
 from ..ga_logic import build_ga_tree, get_central_functions_overview, get_circuits, get_room_functions_by_category
 from ..templating import templates
-from .checkliste import CHECKLIST_SECTIONS, get_status_map
+from .checklists import CHECKLIST_SECTIONS, get_status_map
 from .geraeteplanung import device_summary
 from .clarification_list import list_clarifications
 from .manuals import list_project_manuals
@@ -65,9 +65,9 @@ def _overview_cards(project_id):
     manuals = list_project_manuals(project_id)
     open_clarifications = sum(1 for c in list_clarifications(project_id) if c["status"] == "offen")
 
-    uebergabe_items = [f"uebergabe:{slug}" for _, items in CHECKLIST_SECTIONS for slug, _ in items]
-    uebergabe_total = len(uebergabe_items)
-    uebergabe_answered = sum(1 for key in uebergabe_items if status_map.get(key, {}).get("status"))
+    handover_items = [f"handover:{slug}" for _, items in CHECKLIST_SECTIONS for slug, _ in items]
+    handover_total = len(handover_items)
+    handover_answered = sum(1 for key in handover_items if status_map.get(key, {}).get("status"))
 
     return [
         _stat("struktur", "Gebäudestruktur", f"{floor_count} Geschosse · {room_count} Räume"),
@@ -85,7 +85,7 @@ def _overview_cards(project_id):
         _stat("specification", "Pflichtenheft", "Frühe Leistungsbeschreibung (PDF)"),
         _stat("function-checklist", "Funktionscheckliste",
               f"{fc_checked} / {fc_total} Funktionen getestet" if fc_total else "Noch keine Funktionen geplant"),
-        _stat("handover-checklist", "Übergabe-Checkliste", f"{uebergabe_answered} / {uebergabe_total} Punkte beantwortet"),
+        _stat("handover-checklist", "Übergabe-Checkliste", f"{handover_answered} / {handover_total} Punkte beantwortet"),
         _stat("clarification-list", "Klärungsliste",
               f"{open_clarifications} offene Einträge" if open_clarifications else "Keine offenen Einträge",
               warn=open_clarifications > 0),

@@ -26,7 +26,7 @@ def rich_project(client, db_path):
     ok(client.post(f"/api/distribution-boards/{vid}/items", json={"row_idx": 1, "item_type": "device", "actor_instance_id": actor["id"]}))
     ok(client.post(f"/api/projects/{pid}/clarifications", json={"text": "Spots dimmbar?", "room_id": eg["rooms"][0]["id"], "room_point_id": point["id"]}))
     central_key = ok(client.get(f"/api/projects/{pid}/central-functions-checklist"))[0][1][0]["key"]
-    for key in (f"room_point:{point['id']}", central_key, "uebergabe:funktionen_geprueft"):
+    for key in (f"room_point:{point['id']}", central_key, "handover:funktionen_geprueft"):
         ok(client.put(f"/api/projects/{pid}/checklist-status/{key}", json={"status": "ok", "note": "n"}))
     ok(client.put(f"/api/projects/{pid}/signatures/fc_systemintegrator", json={"image": PNG}))
     client.get(f"/api/projects/{pid}/export.csv")  # sets the ETS export snapshot

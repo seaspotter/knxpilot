@@ -1,7 +1,7 @@
 // ---------- Funktionscheckliste (project sub-tab "function-checklist") ----------
 // Rendered server-side with htmx (backend/templates/function_checklist/,
 // /hx/projects/{id}/function-checklist... endpoints in backend/routers/
-// checkliste.py). Tapping a row is an htmx PUT on that row alone (see the
+// checklists.py). Tapping a row is an htmx PUT on that row alone (see the
 // template) - deliberately no full-list re-render, so scroll position isn't
 // lost while walking through a building ticking boxes one at a time. Only
 // the signature capture (canvas) stays client-side JS, shared with
@@ -31,5 +31,5 @@ async function deleteFunctionChecklistSignature(role, label) {
 }
 
 function downloadFunctionChecklist() {
-  window.location.href = `/api/projects/${CURRENT_PROJECT}/export-funktionscheckliste.pdf`;
+  window.location.href = `/api/projects/${CURRENT_PROJECT}/export-function-checklist.pdf`;
 }

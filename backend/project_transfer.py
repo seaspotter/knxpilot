@@ -204,7 +204,7 @@ def build_project_payload(db, project_id, mode="backup"):
                 continue
             entry["central"] = {"category_name": categories.get(t["category_id"], ""), "name": t["name"], "scope": t["scope"]}
         else:
-            entry["key"] = c["item_key"]  # e.g. "uebergabe:<slug>" - install-independent already
+            entry["key"] = c["item_key"]  # e.g. "handover:<slug>" - install-independent already
         checklist_out.append(entry)
     payload["checklist"] = checklist_out
 

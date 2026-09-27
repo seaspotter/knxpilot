@@ -4,11 +4,11 @@ customer agreed to. Documents, per room, the agreed functions (from GA
 points) and devices (from Geräteplanung), plus a central-functions overview
 and the device bill of materials, as a customer/electrician-facing PDF.
 Deliberately narrow: no "Getestet" checkboxes (nothing's been tested yet at
-this stage - see routers/checkliste.py's Funktionscheckliste for that) and
+this stage - see routers/checklists.py's Funktionscheckliste for that) and
 no as-built sections like Abgangsliste/Verteilerplanung/Gruppenadressen/
 Klärungsliste (those live in routers/documentation.py's end-of-project
 Dokumentation export instead, alongside both checklists' recorded results).
-`function_checklist_table()` below is shared with checkliste.py's
+`function_checklist_table()` below is shared with checklists.py's
 Funktionscheckliste PDF export - same rendering, with or without a real
 checked-state column.
 """
@@ -100,7 +100,7 @@ def function_checklist_table(styles, rows_by_category, status_map=None):
     for readability. Shared between Pflichtenheft's own "what's planned"
     listing (status_map=None - nothing has been tested yet at the spec
     stage, so no checkbox column at all) and the Funktionscheckliste PDF
-    export (routers/checkliste.py), which passes the real
+    export (routers/checklists.py), which passes the real
     {item_key: {status, note}} map from checklist_status so the checkbox
     reflects what's actually been checked on-site. Returns None if there's
     nothing to list."""

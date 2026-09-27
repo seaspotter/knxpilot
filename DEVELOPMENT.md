@@ -111,8 +111,8 @@ backend/
     abgangsliste.py    — actor instances, circuit assignment, CSV/PDF export (Abgangsliste sub-tab)
     geraeteplanung.py  — per-room device planning, bill of materials, PDF export (Geräteplanung sub-tab)
     distribution_boards.py — distribution board planning tab (htmx, /hx/projects/{id}/distribution-boards...): DIN-rail layout per Geschoss, RCD/LS placeholders + placed actor instances, PDF export (Verteilerplanung sub-tab)
-    specification.py   — early-stage spec PDF export, htmx "Inhalt" tab (Pflichtenheft sub-tab); also home to function_checklist_table(), shared with checkliste.py
-    checkliste.py      — digital on-site checklists (htmx, /hx/projects/{id}/function-checklist.../handover-checklist...): checklist_status upsert, Funktionscheckliste + Übergabe-Checkliste tab fragments/PDF (their sub-tabs); JSON endpoints and the build_*_pdf_bytes()/CHECKLIST_SECTIONS names stay as-is (still referenced by routers/documentation.py and routers/email.py)
+    specification.py   — early-stage spec PDF export, htmx "Inhalt" tab (Pflichtenheft sub-tab); also home to function_checklist_table(), shared with checklists.py
+    checklists.py      — digital on-site checklists (htmx, /hx/projects/{id}/function-checklist.../handover-checklist...): checklist_status upsert, Funktionscheckliste + Übergabe-Checkliste tab fragments/PDF (their sub-tabs)
     documentation.py   — end-of-project assembly PDF, combining Pflichtenheft content + both checklists' results + a Handbücher checklist + optional as-built sections, htmx "Inhalt" tab; the chapter list (DOCUMENTATION_CHAPTERS) also drives it (Dokumentation sub-tab)
     email.py           — "Per E-Mail senden" endpoints, reusing each export's build_*_pdf_bytes() function (Setup → E-Mail + every export tab)
     clarification_list.py — questions/tasks/notes per project (htmx, /hx/projects/{id}/clarification-list...) + "Offene Punkte" PDF export (Klärungsliste sub-tab)
@@ -142,8 +142,8 @@ frontend/
     abgangsliste.js    — actor instances + circuit assignment
     geraeteplanung.js  — per-room device planning
     specification.js   — loads the htmx Pflichtenheft tab, Vorschau and PDF download
-    funktionscheckliste.js — digital on-site function testing checklist
-    uebergabe_checkliste.js — digital handover checklist
+    function_checklist.js — digital on-site function testing checklist
+    handover_checklist.js — digital handover checklist
     clarification_list.js — loads the htmx clarification list tab, badge, copy/PDF/email of the open points
     documentation.js   — loads the htmx Dokumentation tab, Vorschau and PDF download
     update.js          — self-update tab + changelog viewer + version badge

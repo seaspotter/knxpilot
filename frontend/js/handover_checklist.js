@@ -1,7 +1,7 @@
 // ---------- Übergabe-Checkliste (project sub-tab "handover-checklist") ----------
 // Rendered server-side with htmx (backend/templates/handover_checklist/,
 // /hx/projects/{id}/handover-checklist... endpoints in backend/routers/
-// checkliste.py). Each row's Ja/Nein/Nicht-nötig switch and Bemerkungen
+// checklists.py). Each row's Ja/Nein/Nicht-nötig switch and Bemerkungen
 // field are independent htmx PUTs, swapped back into just that row. Only
 // the signature capture (canvas) stays client-side JS, shared with
 // function_checklist.js via ui.js's openSignatureCaptureModal().
@@ -30,5 +30,5 @@ async function deleteHandoverChecklistSignature(role, label) {
 }
 
 function downloadHandoverChecklist() {
-  window.location.href = `/api/projects/${CURRENT_PROJECT}/export-uebergabe-checkliste.pdf`;
+  window.location.href = `/api/projects/${CURRENT_PROJECT}/export-handover-checklist.pdf`;
 }

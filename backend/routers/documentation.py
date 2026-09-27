@@ -42,8 +42,8 @@ from .abgangsliste import build_abgangsliste_story
 from .distribution_boards import build_distribution_boards_story
 from .geraeteplanung import build_geraete_je_raum_story, device_summary
 from .specification import build_specification_story, function_checklist_table, specification_stats
-from .checkliste import (
-    get_status_map, CHECKLIST_SECTIONS, checklist_section_table, build_signature_row, FUNKTIONSCHECKLISTE_SIGNATURES,
+from .checklists import (
+    get_status_map, CHECKLIST_SECTIONS, checklist_section_table, build_signature_row, FUNCTION_CHECKLIST_SIGNATURES,
 )
 
 router = APIRouter(tags=["documentation"])
@@ -153,7 +153,7 @@ def _manuals_story(db, project_id, styles):
 
 def _function_checklist_story(db, project_id, styles, status_map):
     """Same per-floor/per-room grouping as the standalone Funktionscheckliste
-    export (routers/checkliste.py), with real checked state, reused here as
+    export (routers/checklists.py), with real checked state, reused here as
     a section within the full Dokumentation."""
     story = []
     floors = db.execute("SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)).fetchall()
@@ -187,13 +187,13 @@ def _function_checklist_story(db, project_id, styles, status_map):
             story.append(Spacer(1, 2 * mm))
             story.append(central_table)
     story.append(Spacer(1, 8 * mm))
-    story.append(build_signature_row(db, project_id, styles, FUNKTIONSCHECKLISTE_SIGNATURES, optional=("fc_kunde",)))
+    story.append(build_signature_row(db, project_id, styles, FUNCTION_CHECKLIST_SIGNATURES, optional=("fc_kunde",)))
     return story
 
 
 def _handover_story(db, project_id, styles, status_map):
     """Same section grouping as the standalone Übergabe-Checkliste export
-    (routers/checkliste.py), with the real Ja/Nein/Nicht-nötig answers and
+    (routers/checklists.py), with the real Ja/Nein/Nicht-nötig answers and
     Bemerkungen text, plus the real captured signatures (if any)."""
     story = []
     for i, (section_title, items) in enumerate(CHECKLIST_SECTIONS):
@@ -219,8 +219,8 @@ def _handover_story(db, project_id, styles, status_map):
 # narrative sections above it.
 DOCUMENTATION_CHAPTERS = [
     ("pflichtenheft", "Pflichtenheft", None, True),
-    ("funktionscheckliste", "Funktionscheckliste — Testergebnisse", "documentation_include_function_checklist", True),
-    ("uebergabe", "Übergabe-Checkliste — Ergebnisse", "documentation_include_handover_checklist", True),
+    ("function-checklist", "Funktionscheckliste — Testergebnisse", "documentation_include_function_checklist", True),
+    ("handover-checklist", "Übergabe-Checkliste — Ergebnisse", "documentation_include_handover_checklist", True),
     ("handbuecher", "Handbücher", "documentation_include_manuals", True),
     ("abgangsliste", "Abgangsliste", "documentation_include_circuit_list", False),
     ("distribution-boards", "Verteilerplanung", "documentation_include_distribution_boards", False),
@@ -240,8 +240,8 @@ def _build_documentation_chapters(db, project_id, company, styles):
     status_map = get_status_map(db, project_id)
     builders = {
         "pflichtenheft": lambda: build_specification_story(db, project_id, company, styles),
-        "funktionscheckliste": lambda: _function_checklist_story(db, project_id, styles, status_map),
-        "uebergabe": lambda: _handover_story(db, project_id, styles, status_map),
+        "function-checklist": lambda: _function_checklist_story(db, project_id, styles, status_map),
+        "handover-checklist": lambda: _handover_story(db, project_id, styles, status_map),
         "handbuecher": lambda: _manuals_story(db, project_id, styles),
         "abgangsliste": lambda: build_abgangsliste_story(db, project_id, styles, page_break_between_floors=False),
         "distribution-boards": lambda: build_distribution_boards_story(db, project_id, styles),
@@ -344,7 +344,7 @@ def _chapter_detail(db, project_id, anchor, status_map):
         s = specification_stats(db, project_id)
         return (f"{s['rooms']} Räume · {s['functions']} Funktionen · {s['device_types']} Gerätetypen "
                 "(Details im Unterreiter Pflichtenheft)", not s["rooms"], True)
-    if anchor == "funktionscheckliste":
+    if anchor == "function-checklist":
         keys = _function_checklist_keys(db, project_id)
         tested = sum(1 for k in keys if status_map.get(k, {}).get("status") == "ok")
         if not keys:
@@ -354,8 +354,8 @@ def _chapter_detail(db, project_id, anchor, status_map):
         ).fetchone()
         return (f"{tested} / {len(keys)} getestet · " + ("unterschrieben" if signed else "Unterschrift Systemintegrator fehlt"),
                 tested < len(keys) or not signed, True)
-    if anchor == "uebergabe":
-        items = [f"uebergabe:{slug}" for _, section in CHECKLIST_SECTIONS for slug, _ in section]
+    if anchor == "handover-checklist":
+        items = [f"handover:{slug}" for _, section in CHECKLIST_SECTIONS for slug, _ in section]
         answered = sum(1 for k in items if status_map.get(k, {}).get("status") in ("ja", "nein", "nicht_noetig"))
         (signed,) = db.execute(
             "SELECT COUNT(*) FROM project_signatures WHERE project_id=? AND role IN ('systemintegrator', 'kunde')",

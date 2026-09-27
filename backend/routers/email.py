@@ -8,8 +8,8 @@ always sees and confirms exactly who's about to receive what.
 
 Reuses each document's existing PDF-building function (factored out
 alongside its download endpoint - see build_specification_pdf_bytes() in
-specification.py, build_funktionscheckliste_pdf_bytes()/
-build_uebergabe_checkliste_pdf_bytes() in checkliste.py,
+specification.py, build_function_checklist_pdf_bytes()/
+build_handover_checklist_pdf_bytes() in checklists.py,
 build_documentation_pdf_bytes() in documentation.py) so the emailed PDF is
 always byte-for-byte the same document you'd get from the download button.
 
@@ -23,7 +23,7 @@ from ..db import get_db
 from ..email_sender import EmailConfigError, EmailSendError, send_pdf_email, send_test_email
 from ..models import SendEmailIn, TestEmailIn
 from .specification import build_specification_pdf_bytes
-from .checkliste import build_funktionscheckliste_pdf_bytes, build_uebergabe_checkliste_pdf_bytes
+from .checklists import build_function_checklist_pdf_bytes, build_handover_checklist_pdf_bytes
 from .documentation import build_documentation_pdf_bytes
 from .clarification_list import build_clarification_list_pdf_bytes
 
@@ -33,8 +33,8 @@ router = APIRouter(tags=["email"])
 # German noun phrase for "im Anhang finden Sie ___" in the body text).
 DOCUMENT_BUILDERS = {
     "specification": (build_specification_pdf_bytes, "Pflichtenheft", "das Pflichtenheft"),
-    "function_checklist": (build_funktionscheckliste_pdf_bytes, "Funktionscheckliste", "die Funktionscheckliste"),
-    "handover_checklist": (build_uebergabe_checkliste_pdf_bytes, "Übergabe-Checkliste", "die Übergabe-Checkliste"),
+    "function_checklist": (build_function_checklist_pdf_bytes, "Funktionscheckliste", "die Funktionscheckliste"),
+    "handover_checklist": (build_handover_checklist_pdf_bytes, "Übergabe-Checkliste", "die Übergabe-Checkliste"),
     "documentation": (build_documentation_pdf_bytes, "Dokumentation", "die vollständige Projektdokumentation"),
     "clarification_list": (build_clarification_list_pdf_bytes, "Offene Punkte", "die offenen Punkte zur Klärung"),
 }
