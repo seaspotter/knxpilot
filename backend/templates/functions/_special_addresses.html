@@ -1,0 +1,29 @@
+{# Special addresses ("Sonderadressen") list + add form, swapped into
+   #special-addresses after every add/delete. #}
+<form id="sa-add-form" hx-post="/hx/projects/{{ project_id }}/special-addresses" hx-target="#special-addresses" hx-swap="innerHTML">
+  <div class="row mobile-fields">
+    <select name="category_id">
+      {% for c in categories %}<option value="{{ c.id }}">{{ c.order_idx }}. {{ c.name }}</option>{% endfor %}
+    </select>
+    <select name="location" class="wide">
+      <option value="central">Zentralfunktionen (ganze Kategorie)</option>
+      {% for f in floors %}<option value="{{ f.id }}">Geschoss: {{ f.name }}</option>{% endfor %}
+    </select>
+    <input type="text" name="name" placeholder="Name, z.B. Langschläfer Kind1">
+  </div>
+  <div id="sa-suffixes"></div>
+  <button class="btn secondary small" type="button" onclick="addSpecialAddressSuffixRow()">+ Datenpunkt hinzufügen</button>
+  <div style="margin-top:8px;"><button class="btn secondary" type="submit">Sonderadresse hinzufügen</button></div>
+</form>
+<ul class="list" style="margin-top:10px;">
+  {% for s in specials %}
+    <li>
+      <div><b>{{ s.name }}</b> <span class="pill">{{ s.category_name }}</span> <span class="pill">{{ "Zentral" if s.location == "central" else "Geschoss" }}</span>
+        {% for x in s.suffixes %}<span class="pill">{{ x.suffix }} · {{ x.dpt }}</span>{% endfor %}
+      </div>
+      <button class="btn danger small" hx-delete="/hx/special-addresses/{{ s.id }}" hx-target="#special-addresses" hx-swap="innerHTML" hx-confirm="Diese Sonderadresse löschen?">Löschen</button>
+    </li>
+  {% else %}
+    <li class="muted">Noch keine</li>
+  {% endfor %}
+</ul>

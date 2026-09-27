@@ -243,8 +243,6 @@ async function openProject(id, name) {
   document.getElementById('projects-list-card').style.display = 'none';
   document.getElementById('project-detail').style.display = 'block';
   document.getElementById('project-detail-title').textContent = name;
-  document.getElementById('ga-preview').innerHTML = '';
-  document.getElementById('gen-error').textContent = '';
   cancelEditProjectMeta();
   renderProjectMeta();
 
@@ -254,9 +252,6 @@ async function openProject(id, name) {
   document.getElementById('subtab-overview').classList.add('active');
 
   await renderFloors();
-  await renderFunktionenRooms();
-  await renderSpecialLocationOptions();
-  await renderSpecials();
   await refreshClarificationBadge();
   await refreshAbgangslisteBadge();
   await loadOverviewTab();
@@ -328,8 +323,6 @@ async function addFloor() {
   document.getElementById('floor-name').value = '';
   document.getElementById('floor-outdoor').checked = false;
   await renderFloors();
-  await renderFunktionenRooms();
-  await renderSpecialLocationOptions();
   await renderActorInstanceForm();
   await renderCircuits();
   await renderChannelSummary();
@@ -340,7 +333,6 @@ async function renameFloor(id, currentName, currentOutdoor) {
   if (newName === null) return;
   await api('/floors/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: newName, is_outdoor: currentOutdoor})});
   await renderFloors();
-  await renderFunktionenRooms();
 }
 
 async function deleteFloor(id) {
@@ -348,8 +340,6 @@ async function deleteFloor(id) {
   if (!(await showConfirm(`Geschoss "${impact.name}" löschen?${describeDeleteImpact(impact)}`, {danger: true, confirmLabel: 'Löschen'}))) return;
   await api('/floors/' + id, {method:'DELETE'});
   await renderFloors();
-  await renderFunktionenRooms();
-  await renderSpecialLocationOptions();
   await renderActorInstanceForm();
   await renderCircuits();
   await renderChannelSummary();
@@ -570,8 +560,6 @@ async function moveStructure(url, body, question,
 
 async function refreshAfterStructureMove() {
   await renderFloors();
-  await renderFunktionenRooms();
-  await renderSpecialLocationOptions();
   await renderActorInstanceForm();
   await renderCircuits();
   await renderChannelSummary();
@@ -640,7 +628,6 @@ async function addRoom(floorId) {
   if (!name) return;
   await api(`/floors/${floorId}/rooms`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})});
   await renderFloors();
-  await renderFunktionenRooms();
   await renderCircuits();
   await renderChannelSummary();
 }
@@ -658,7 +645,6 @@ async function addRoomsBulk(floorId) {
     await api(`/floors/${floorId}/rooms`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})});
   }
   await renderFloors();
-  await renderFunktionenRooms();
   await renderCircuits();
   await renderChannelSummary();
   showToast(`${names.length} Raum/Räume hinzugefügt.`, 'success');
@@ -669,7 +655,6 @@ async function renameRoom(id, currentName) {
   if (newName === null) return;
   await api('/rooms/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: newName})});
   await renderFloors();
-  await renderFunktionenRooms();
 }
 
 async function deleteRoom(id) {
@@ -677,7 +662,6 @@ async function deleteRoom(id) {
   if (!(await showConfirm(`Raum "${impact.name}" löschen?${describeDeleteImpact(impact)}`, {danger: true, confirmLabel: 'Löschen'}))) return;
   await api('/rooms/' + id, {method:'DELETE'});
   await renderFloors();
-  await renderFunktionenRooms();
   await renderCircuits();
   await renderChannelSummary();
 }

@@ -112,8 +112,8 @@
       <div class="subnav" id="workspace-subnav">
         <button data-subtab="overview" class="active">Übersicht</button>
         <button data-subtab="struktur">Gebäudestruktur</button>
-        <button data-subtab="funktionen">Funktionen</button>
-        <button data-subtab="gruppenadressen">Gruppenadressen</button>
+        <button data-subtab="functions">Funktionen</button>
+        <button data-subtab="group-addresses">Gruppenadressen</button>
         <button data-subtab="abgangsliste">Abgangsliste</button>
         <button data-subtab="labels">Labels</button>
         <button data-subtab="geraeteplanung">Geräteplanung</button>
@@ -156,49 +156,11 @@
         </details>
       </div>
 
-      <div class="subtab" id="subtab-funktionen">
-        <div class="card">
-          <h3>Räume &amp; Funktionen</h3>
-          <p class="muted">Jedem Raum die passenden Funktionen zuweisen (Licht, Dimmen, Heizkreis usw.). Räume selbst werden im Unterreiter Gebäudestruktur angelegt.</p>
-          <div id="funktionen-rooms"></div>
-        </div>
+      <!-- Rendered server-side with htmx (backend/templates/functions/tab.html), see functions.js -->
+      <div class="subtab" id="subtab-functions"></div>
 
-        <div class="card">
-          <h3>Sonder- / Zusatzadressen</h3>
-          <p class="muted">Alles, was nicht ins Standardschema passt — Einzel-Szenen, spezielle Zentralgruppen usw.</p>
-          <div class="row mobile-fields">
-            <select id="special-category"></select>
-            <select id="special-location" class="wide"></select>
-            <input type="text" id="special-name" placeholder="Name, z.B. Langschläfer Kind1">
-          </div>
-          <div id="special-suffixes"></div>
-          <button class="btn secondary small" onclick="addSpecialSuffixRow()">+ Datenpunkt hinzufügen</button>
-          <div style="margin-top:8px;"><button class="btn secondary" onclick="createSpecial()">Sonderadresse hinzufügen</button></div>
-          <ul class="list" id="specials-list" style="margin-top:10px;"></ul>
-        </div>
-      </div>
-
-      <div class="subtab" id="subtab-gruppenadressen">
-        <div class="card">
-          <div class="card-header">
-            <h3 style="margin:0;">Änderungen seit dem letzten ETS-Export</h3>
-            <button class="btn secondary small" id="ga-mark-exported-btn" onclick="markGaExported()">Aktuellen Stand als in ETS übernommen markieren</button>
-          </div>
-          <div id="ga-changes"></div>
-        </div>
-        <div class="card">
-          <div class="row" style="justify-content:space-between;">
-            <h3 style="margin:0;">Vorschau &amp; Export</h3>
-            <div class="row" style="margin:0;">
-              <button class="btn secondary small" onclick="expandAllGaTree(true)">Alle aufklappen</button>
-              <button class="btn secondary small" onclick="expandAllGaTree(false)">Alle einklappen</button>
-              <button class="btn" onclick="downloadCSV()">CSV für ETS6 herunterladen</button>
-            </div>
-          </div>
-          <div class="error" id="gen-error"></div>
-          <div class="ga-tree" id="ga-preview"></div>
-        </div>
-      </div>
+      <!-- Rendered server-side with htmx (backend/templates/group_addresses/tab.html), see group_addresses.js -->
+      <div class="subtab" id="subtab-group-addresses"></div>
 
       <div class="subtab" id="subtab-abgangsliste">
         <div id="abgang-detail" style="display:none;">
@@ -424,8 +386,8 @@
 <script src="/js/device_catalog.js"></script>
 <script src="/js/projekte.js"></script>
 <script src="/js/lines.js"></script>
-<script src="/js/funktionen.js"></script>
-<script src="/js/gruppenadressen.js"></script>
+<script src="/js/functions.js"></script>
+<script src="/js/group_addresses.js"></script>
 <script src="/js/overview.js"></script>
 <script src="/js/abgangsliste.js"></script>
 <script src="/js/labels.js"></script>

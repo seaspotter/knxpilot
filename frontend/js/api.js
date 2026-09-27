@@ -49,7 +49,8 @@ document.querySelectorAll('#workspace-subnav button').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('subtab-' + btn.dataset.subtab).classList.add('active');
     if (btn.dataset.subtab === 'overview') await loadOverviewTab();
-    if (btn.dataset.subtab === 'gruppenadressen') { await loadGaChanges(); await previewGA(); }
+    if (btn.dataset.subtab === 'functions') await loadFunctionsForCurrentProject();
+    if (btn.dataset.subtab === 'group-addresses') await loadGroupAddressesForCurrentProject();
     if (btn.dataset.subtab === 'abgangsliste') await loadAbgangForCurrentProject();
     if (btn.dataset.subtab === 'labels') renderLabelGrid();
     if (btn.dataset.subtab === 'geraeteplanung') await loadGeraeteplanungForCurrentProject();

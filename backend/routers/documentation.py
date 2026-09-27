@@ -226,7 +226,7 @@ DOCUMENTATION_CHAPTERS = [
     ("distribution-boards", "Verteilerplanung", "documentation_include_distribution_boards", False),
     ("geraete-je-raum", "Geräte je Raum", "documentation_include_devices_per_room", False),
     ("clarification-list", "Klärungsliste", "documentation_include_clarification_list", False),
-    ("gruppenadressen", "Gruppenadressen", "documentation_include_group_addresses", False),
+    ("group-addresses", "Gruppenadressen", "documentation_include_group_addresses", False),
 ]
 
 
@@ -247,7 +247,7 @@ def _build_documentation_chapters(db, project_id, company, styles):
         "distribution-boards": lambda: build_distribution_boards_story(db, project_id, styles),
         "geraete-je-raum": lambda: build_geraete_je_raum_story(db, project_id, styles),
         "clarification-list": lambda: _clarification_list_story(db, project_id, styles),
-        "gruppenadressen": lambda: _group_addresses_story(project_id, styles),
+        "group-addresses": lambda: _group_addresses_story(project_id, styles),
     }
     chapters = []
     for anchor, title, toggle, default in DOCUMENTATION_CHAPTERS:
@@ -393,7 +393,7 @@ def _chapter_detail(db, project_id, anchor, status_map):
         (open_,) = db.execute(
             "SELECT COUNT(*) FROM clarifications WHERE project_id=? AND status='offen'", (project_id,)).fetchone()
         return (f"{n} Einträge · {open_} offen" if n else "keine Einträge"), open_ > 0, True
-    if anchor == "gruppenadressen":
+    if anchor == "group-addresses":
         tree = build_ga_tree(project_id, db)
         n = sum(1 for main in tree["main_groups"] for middle in main["middles"]
                 for sub in middle["subs"] if not sub["name"].endswith("res"))

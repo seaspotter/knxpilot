@@ -39,6 +39,30 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ### Changed
 
+- **"Funktionen" and "Gruppenadressen" sub-tabs: rendered server-side with
+  htmx, remaining German internal names renamed to English** — assigning a
+  function to a room, editing/deleting a room point, adding/removing
+  special addresses ("Sonderadressen"), the GA tree preview and the
+  "Aktuellen Stand als in ETS übernommen markieren" action are now
+  server-rendered fragments (new templates in `backend/templates/functions/`
+  and `backend/templates/group_addresses/`, new `/hx/...` endpoints).
+  Room-point/special-address/GA-preview/export logic moved out of
+  `routers/projects.py` (which keeps the building-structure endpoints for
+  its own, still-to-come htmx conversion) into two new router modules,
+  `routers/functions.py` and `routers/group_addresses.py`; the shared
+  `flatten_ga_tree()`/`is_function_row()` helpers moved to `ga_logic.py` so
+  both the new group-addresses router and the building-structure drag & drop
+  GA-impact dry run use the same logic. `js/funktionen.js` → `js/functions.js`,
+  `js/gruppenadressen.js` → `js/group_addresses.js` (now only load their tab
+  and hold the few things that stay client-side: the special-address suffix
+  row helper, the GA tree expand/collapse, the CSV download). Sub-tab ids
+  `subtab-funktionen`/`subtab-gruppenadressen` → `subtab-functions`/
+  `subtab-group-addresses`; the overview stat-card ids and the documentation
+  chapter anchor `gruppenadressen` → `functions`/`group-addresses`. The CSV
+  export, JSON API paths (`/api/rooms/{id}/points`, `/api/room-points/{id}`,
+  `/api/projects/{id}/specials`, `/api/projects/{id}/preview`,
+  `/api/projects/{id}/ga-changes`, `/api/projects/{id}/ga-snapshot`,
+  `/api/projects/{id}/export.csv`) are unchanged.
 - **KNX lines: remaining German internal name renamed to English** —
   router `linien.py` → `lines.py`, JS `linien.js` → `lines.js`, router tag
   `linien` → `lines`; its routes, functions and DB schema (`knx_lines`)

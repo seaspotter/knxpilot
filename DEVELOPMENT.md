@@ -98,7 +98,7 @@ backend/
   ga_logic.py       — group-address tree generation, circuits, per-room/central function listings (used by Pflichtenheft and the checklists)
   pdf_design.py     — shared PDF look (banner, table style, page numbers, letterhead); build_pdf_bytes()/build_pdf_bytes_two_pass() are the raw-bytes builders every export (and email.py's send action) go through
   templating.py     — Jinja2 setup for the htmx tabs (templates/, autoescaped)
-  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: clarification_list/, time_tracking/, setup/, device_catalog/, manuals/, overview/, specification/, documentation/, project_files/, function_checklist/, handover_checklist/, distribution_boards/)
+  templates/<tab>/  — server-rendered HTML fragments of the htmx tabs (so far: clarification_list/, time_tracking/, setup/, device_catalog/, manuals/, overview/, specification/, documentation/, project_files/, function_checklist/, handover_checklist/, distribution_boards/, functions/, group_addresses/)
   project_transfer.py — per-project JSON backup/restore + duplicate (what's included, name/position-based references)
   pa_assign.py      — physical-address auto-assign (bucket convention, per KNX line) + line coupler/power supply detection
   email_sender.py   — SMTP mechanics (stdlib smtplib) behind routers/email.py's send-by-mail action
@@ -106,7 +106,9 @@ backend/
   routers/
     setup.py          — Setup tab (htmx, /hx/setup/...): settings pages on the company profile (SETTINGS_SECTIONS) and the categories/function types/central templates editors, plus their JSON APIs
     device_catalog.py  — device catalog tab (htmx: /hx/device-catalog...): catalog + per-device manual URL, JSON import/export with preview, ACTOR_TYPES API
-    projects.py        — projects, floors/rooms/points (incl. tree moves with GA-impact dry run), backup/restore (Projekte tab: Gebäudestruktur sub-tab + project CRUD)
+    projects.py        — projects, floors/rooms (incl. tree moves with GA-impact dry run), backup/restore (Projekte tab: Gebäudestruktur sub-tab + project CRUD)
+    functions.py        — functions tab (htmx, /hx/projects/{id}/functions...): room point (function) assignment, special addresses ("Sonderadressen") (Funktionen sub-tab)
+    group_addresses.py  — group addresses tab (htmx, /hx/projects/{id}/group-addresses...): GA tree preview, changes since the last ETS export, ETS6 CSV export (Gruppenadressen sub-tab)
     lines.py           — optional KNX lines (Bereich.Linie) + floor/room/actuator line assignment, per-line device counts/warnings (Gebäudestruktur sub-tab)
     abgangsliste.py    — actor instances, circuit assignment, CSV/PDF export (Abgangsliste sub-tab)
     geraeteplanung.py  — per-room device planning, bill of materials, PDF export (Geräteplanung sub-tab)
@@ -134,8 +136,8 @@ frontend/
     projekte.js        — project CRUD/meta, Geschoss/Raum/Verteiler tree with drag & drop (Gebäudestruktur sub-tab)
     distribution_boards.js — loads the htmx distribution board planning tab, PDF download
     lines.js           — optional KNX lines card + the line <select>s used by projekte.js/abgangsliste.js (Gebäudestruktur sub-tab)
-    funktionen.js      — assigning functions to rooms, Sonderadressen (Funktionen sub-tab)
-    gruppenadressen.js — GA tree preview + CSV export (Gruppenadressen sub-tab)
+    functions.js       — loads the htmx functions tab, special-address suffix-row helper (Funktionen sub-tab)
+    group_addresses.js — loads the htmx group addresses tab, GA tree expand/collapse, CSV download (Gruppenadressen sub-tab)
     overview.js        — loads the htmx overview tab, goToSubtab() for the stat cards' onclick (Übersicht sub-tab)
     manuals.js         — loads the htmx project manuals tab
     time_tracking.js   — header start/stop timer (live clock), loads the htmx time tracking tab, timesheet PDF download
@@ -232,7 +234,7 @@ rarely need to touch anything else.
   ~~device catalog~~, ~~project manuals~~, ~~overview~~, ~~specification~~,
   ~~documentation~~, ~~function + handover checklists~~,
   ~~distribution board planning~~ (jumped ahead of functions + group
-  addresses by explicit user request), functions + group addresses,
+  addresses by explicit user request), ~~functions + group addresses~~,
   device planning + labels, circuit list, building structure (drag & drop
   stays JS).
 - **User-facing strings are German**; everything else is English: code

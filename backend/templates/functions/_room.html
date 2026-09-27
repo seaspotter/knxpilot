@@ -1,0 +1,49 @@
+{# One room's function assignments + quick-add/edit form. Re-rendered in
+   place (hx-target="#room-{{ room.id }}") after every add/edit/delete, so
+   the rest of the tab (other rooms, scroll position) stays put. #}
+<div class="room-card rc-room">
+  <div class="rc-room-title">{{ room.name }}</div>
+  <div class="rc-rows">
+    {% if not room.points %}
+      <p class="muted" style="margin:4px 0;">Noch keine Funktionen</p>
+    {% endif %}
+    {% for group in room.points %}
+      <div class="rc-row">
+        <div class="rc-type">{{ group.point_type.name if group.point_type else "?" }}</div>
+        <div class="rc-pills">
+          {% for p in group.points %}
+            <span class="rc-pill">{{ p.label if p.label else "" }}{% if not p.label %}<span class="muted">(kein Label)</span>{% endif %}{% if p.has_bwm %} <span class="rc-tag">+BWM</span>{% endif %}
+              <a href="#" hx-get="/hx/room-points/{{ p.id }}/edit" hx-target="#room-{{ room.id }}" hx-swap="innerHTML" class="rc-pill-edit" title="Bearbeiten">✎</a>
+              <a href="#" hx-delete="/hx/room-points/{{ p.id }}" hx-target="#room-{{ room.id }}" hx-swap="innerHTML" hx-confirm="Diese Funktion löschen?" class="rc-pill-del" title="Löschen">×</a>
+            </span>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% if editing_point and editing_point.room_id == room.id %}
+    <form class="quick-add rc-add mobile-fields" hx-put="/hx/room-points/{{ editing_point.id }}" hx-target="#room-{{ room.id }}" hx-swap="innerHTML">
+      <select name="point_type_id" class="wide">
+        {% for pt in point_types %}
+          <option value="{{ pt.id }}"{% if pt.id == editing_point.point_type_id %} selected{% endif %}>{{ pt.category_name }} — {{ pt.name }}</option>
+        {% endfor %}
+      </select>
+      <input type="text" name="label" class="w-210" placeholder="Label z.B. Decke, Spots, Nord (leer = keins)" value="{{ editing_point.label or '' }}">
+      <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" name="has_bwm"{% if editing_point.has_bwm %} checked{% endif %}> +BWM<span class="info-icon" tabindex="0" data-tip="BWM = Bewegungsmelder. Fügt diesem Punkt eine zusätzliche Bewegungsmelder-Adresse hinzu, zusätzlich zu den normalen Datenpunkten des Funktionstyps.">i</span></label>
+      <button class="btn secondary small" type="submit">Änderungen speichern</button>
+      <button class="btn secondary small" type="button" hx-get="/hx/rooms/{{ room.id }}/cancel-edit" hx-target="#room-{{ room.id }}" hx-swap="innerHTML">Abbrechen</button>
+    </form>
+  {% else %}
+    <form class="quick-add rc-add mobile-fields" hx-post="/hx/rooms/{{ room.id }}/points" hx-target="#room-{{ room.id }}" hx-swap="innerHTML">
+      <select name="point_type_id" class="wide">
+        {% for pt in point_types %}
+          <option value="{{ pt.id }}">{{ pt.category_name }} — {{ pt.name }}</option>
+        {% endfor %}
+      </select>
+      <input type="text" name="label" class="w-210" placeholder="Label z.B. Decke, Spots, Nord (leer = keins)">
+      <input type="number" name="quantity" value="1" min="1" title="Anzahl">
+      <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" name="has_bwm"> +BWM<span class="info-icon" tabindex="0" data-tip="BWM = Bewegungsmelder. Fügt diesem Punkt eine zusätzliche Bewegungsmelder-Adresse hinzu, zusätzlich zu den normalen Datenpunkten des Funktionstyps.">i</span></label>
+      <button class="btn secondary small" type="submit">+ Hinzufügen</button>
+    </form>
+  {% endif %}
+</div>

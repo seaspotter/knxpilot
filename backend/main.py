@@ -46,6 +46,7 @@ from .db import get_db, init_db
 from .routers import (
     setup, device_catalog, projects, abgangsliste, geraeteplanung, clarification_list, specification, system,
     distribution_boards, project_files, manuals, checklists, documentation, email, time_tracking, lines, overview,
+    functions, group_addresses,
 )
 
 logger = logging.getLogger("knxpilot.backup")
@@ -95,6 +96,8 @@ init_db()
 app.include_router(setup.router)
 app.include_router(device_catalog.router)
 app.include_router(projects.router)
+app.include_router(functions.router)
+app.include_router(group_addresses.router)
 app.include_router(abgangsliste.router)
 app.include_router(geraeteplanung.router)
 app.include_router(distribution_boards.router)

@@ -1,20 +1,22 @@
 """
-Gruppenadressen tab: Projects, Floors, Rooms, Points, Special addresses,
-the project tree, JSON backup/restore, and the GA preview/CSV export.
+Building structure ("Gebäudestruktur" sub-tab): Projects, Floors, Rooms, the
+project tree (incl. drag & drop with GA-impact dry run), and JSON backup/
+restore/duplicate. Room points/Sonderadressen live in routers/functions.py,
+the GA preview/CSV export in routers/group_addresses.py - both still read
+the same floors/rooms tables, but their own endpoints moved out when those
+two sub-tabs were converted to htmx.
 """
-import csv
 import io
 import json
 import sqlite3
-from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 from ..db import get_db
-from ..ga_logic import build_ga_tree
+from ..ga_logic import build_ga_tree, flatten_ga_tree, is_function_row
 from ..project_transfer import build_project_payload, insert_project_from_payload
-from ..models import ProjectIn, FloorIn, RoomIn, RoomPointIn, RoomPointEditIn, SpecialItemIn, StructureMoveIn
+from ..models import ProjectIn, FloorIn, RoomIn, StructureMoveIn
 from ..utils import AGED_CLARIFICATION_DAYS, content_disposition
 
 router = APIRouter(tags=["projects"])
@@ -240,7 +242,7 @@ def delete_room(room_id: int):
 # with dry_run=true, which applies the move inside the transaction, compares
 # the GA tree before/after and rolls back - the count goes into the confirm.
 def _function_gas(db, project_id):
-    return {(r["address"], r["name"]) for r in _flatten_ga(build_ga_tree(project_id, db)) if _is_function(r)}
+    return {(r["address"], r["name"]) for r in flatten_ga_tree(build_ga_tree(project_id, db)) if is_function_row(r)}
 
 
 def _reorder(db, table, ids):
@@ -300,40 +302,6 @@ def move_floor(floor_id: int, m: StructureMoveIn):
         return _finish_move(db, floor["project_id"], before, m.dry_run)
 
 
-@router.post("/api/rooms/{room_id}/points")
-def add_room_point(room_id: int, rp: RoomPointIn):
-    with get_db() as db:
-        (count,) = db.execute("SELECT COUNT(*) FROM room_points WHERE room_id=?", (room_id,)).fetchone()
-        ids = []
-        for i in range(max(1, rp.quantity)):
-            label = rp.label
-            if not label and rp.quantity > 1:
-                label = str(i + 1)
-            cur = db.execute(
-                "INSERT INTO room_points (room_id, point_type_id, label, order_idx, has_bwm) VALUES (?, ?, ?, ?, ?)",
-                (room_id, rp.point_type_id, label, count + i, int(rp.has_bwm)),
-            )
-            ids.append(cur.lastrowid)
-        return {"ids": ids}
-
-
-@router.put("/api/room-points/{rp_id}")
-def update_room_point(rp_id: int, rp: RoomPointEditIn):
-    with get_db() as db:
-        db.execute(
-            "UPDATE room_points SET point_type_id=?, label=?, has_bwm=? WHERE id=?",
-            (rp.point_type_id, rp.label, int(rp.has_bwm), rp_id),
-        )
-    return {"ok": True}
-
-
-@router.delete("/api/room-points/{rp_id}")
-def delete_room_point(rp_id: int):
-    with get_db() as db:
-        db.execute("DELETE FROM room_points WHERE id=?", (rp_id,))
-    return {"ok": True}
-
-
 @router.get("/api/projects/{project_id}/tree")
 def get_project_tree(project_id: int):
     with get_db() as db:
@@ -385,40 +353,6 @@ def get_project_tree(project_id: int):
         return result
 
 
-@router.get("/api/projects/{project_id}/specials")
-def list_specials(project_id: int):
-    with get_db() as db:
-        rows = db.execute(
-            "SELECT * FROM special_items WHERE project_id=? ORDER BY category_id, order_idx", (project_id,)
-        ).fetchall()
-        return [
-            {
-                "id": r["id"], "category_id": r["category_id"], "location": r["location"],
-                "name": r["name"], "suffixes": json.loads(r["suffixes_json"]),
-            }
-            for r in rows
-        ]
-
-
-@router.post("/api/projects/{project_id}/specials")
-def add_special(project_id: int, s: SpecialItemIn):
-    with get_db() as db:
-        (count,) = db.execute("SELECT COUNT(*) FROM special_items WHERE project_id=?", (project_id,)).fetchone()
-        cur = db.execute(
-            "INSERT INTO special_items (project_id, category_id, location, name, suffixes_json, order_idx) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
-            (project_id, s.category_id, s.location, s.name, json.dumps([x.dict() for x in s.suffixes]), count),
-        )
-        return {"id": cur.lastrowid}
-
-
-@router.delete("/api/specials/{special_id}")
-def delete_special(special_id: int):
-    with get_db() as db:
-        db.execute("DELETE FROM special_items WHERE id=?", (special_id,))
-    return {"ok": True}
-
-
 # --------------------------------------------------------------------------
 # Project backup / duplicate / transfer (JSON) - separate from the ETS CSV export.
 # The payload itself (what's in it, how references survive another install,
@@ -465,144 +399,3 @@ def duplicate_project(project_id: int):
         return insert_project_from_payload(db, payload, forced_name=name)
 
 
-# --------------------------------------------------------------------------
-# GA preview / ETS CSV export
-# --------------------------------------------------------------------------
-@router.get("/api/projects/{project_id}/preview")
-def preview_ga(project_id: int):
-    return build_ga_tree(project_id)
-
-
-def _flatten_ga(tree):
-    """Every exported row as {address, name, dpt} - main and middle groups
-    ("1/-/-", "1/2/-") included, since ETS needs those created too."""
-    rows = []
-    for main in tree["main_groups"]:
-        rows.append({"address": f"{main['main']}/-/-", "name": main["name"], "dpt": ""})
-        for middle in main["middles"]:
-            rows.append({"address": f"{main['main']}/{middle['middle']}/-", "name": middle["name"], "dpt": ""})
-            for sub in middle["subs"]:
-                rows.append({"address": f"{main['main']}/{middle['middle']}/{sub['sub']}", "name": sub["name"], "dpt": sub["dpt"]})
-    return rows
-
-
-def _save_ga_snapshot(project_id, tree):
-    with get_db() as db:
-        db.execute(
-            "INSERT INTO ga_export_snapshots (project_id, exported_at, data) VALUES (?, ?, ?) "
-            "ON CONFLICT(project_id) DO UPDATE SET exported_at=excluded.exported_at, data=excluded.data",
-            (project_id, datetime.now(timezone.utc).isoformat(timespec="seconds"),
-             json.dumps(_flatten_ga(tree), ensure_ascii=False)),
-        )
-
-
-def _address_key(address):
-    return tuple(-1 if part == "-" else int(part) for part in address.split("/"))
-
-
-def _is_function(row):
-    """A real function's group address - not a main/middle group row and not
-    a reserved "res" placeholder."""
-    return not row["address"].endswith("-") and not row["name"].endswith("res")
-
-
-@router.get("/api/projects/{project_id}/ga-changes")
-def ga_changes(project_id: int):
-    """What changed in the group addresses since the last ETS export - i.e.
-    what still has to be done in ETS.
-
-    Adding or removing a function shifts every later address in its block,
-    so real functions are matched by name first: one that now sits on a
-    different address is "moved" (in ETS: change that group address's
-    address, which keeps its links to devices - not delete + re-create).
-    Moves are listed from the highest target address down, the order that
-    avoids address collisions in ETS. With the moves applied, the rest is
-    compared by address: "added" (create), "changed" (same address, new name
-    or DPT - e.g. a renamed room, or a "res" slot now used by a function)
-    and "removed" (delete)."""
-    current = _flatten_ga(build_ga_tree(project_id))
-    with get_db() as db:
-        snap = db.execute("SELECT * FROM ga_export_snapshots WHERE project_id=?", (project_id,)).fetchone()
-    if not snap:
-        return {"exported_at": None, "total": len(current)}
-    before = json.loads(snap["data"])
-
-    def unique_functions(rows):
-        names = [r["name"] for r in rows if _is_function(r)]
-        return {r["name"]: r for r in rows if _is_function(r) and names.count(r["name"]) == 1}
-    before_fn, now_fn = unique_functions(before), unique_functions(current)
-    moved = [
-        {"name": n, "old_address": before_fn[n]["address"], "address": now_fn[n]["address"],
-         "old_dpt": before_fn[n]["dpt"], "dpt": now_fn[n]["dpt"]}
-        for n in now_fn if n in before_fn and before_fn[n]["address"] != now_fn[n]["address"]
-    ]
-
-    # ETS state once the moves are done: moved functions leave their old
-    # address and take their new one (anything that sat there has to go).
-    state = {r["address"]: r for r in before}
-    displaced = []
-    for m in moved:
-        state.pop(m["old_address"], None)
-    for m in moved:
-        if m["address"] in state:
-            displaced.append(state[m["address"]])
-        state[m["address"]] = {"address": m["address"], "name": m["name"], "dpt": m["old_dpt"]}
-
-    now = {r["address"]: r for r in current}
-    added = [now[a] for a in now if a not in state]
-    removed = [state[a] for a in state if a not in now] + displaced
-    changed = [
-        {"address": a, "old_name": state[a]["name"], "name": now[a]["name"], "old_dpt": state[a]["dpt"], "dpt": now[a]["dpt"]}
-        for a in now if a in state and (state[a]["name"], state[a]["dpt"]) != (now[a]["name"], now[a]["dpt"])
-    ]
-    by_addr = lambda rows: sorted(rows, key=lambda r: _address_key(r["address"]))
-    return {
-        "exported_at": snap["exported_at"], "total": len(current),
-        "moved": sorted(moved, key=lambda r: _address_key(r["address"]), reverse=True),
-        "added": by_addr(added), "changed": by_addr(changed), "removed": by_addr(removed),
-    }
-
-
-@router.post("/api/projects/{project_id}/ga-snapshot")
-def mark_ga_exported(project_id: int):
-    """"Aktuellen Stand als in ETS übernommen markieren" - sets the baseline
-    without downloading (e.g. the ETS project was already brought up to date
-    by hand, or for projects exported before snapshots existed)."""
-    _save_ga_snapshot(project_id, build_ga_tree(project_id))
-    return {"ok": True}
-
-
-@router.get("/api/projects/{project_id}/export.csv")
-def export_csv(project_id: int):
-    data = build_ga_tree(project_id)
-    # This download is "the ETS export" - remember it as the baseline for
-    # the changes view above.
-    _save_ga_snapshot(project_id, data)
-
-    buf = io.StringIO()
-    writer = csv.writer(buf, delimiter="\t", quotechar='"', quoting=csv.QUOTE_ALL)
-
-    writer.writerow(
-        ["Main", "Middle", "Sub", "Address", "Central", "Unfiltered", "Description", "DatapointType", "Security"]
-    )
-
-    for main in data["main_groups"]:
-        writer.writerow([main["name"], "", "", f"{main['main']}/-/-", "", "", "", "", "Auto"])
-        for middle in main["middles"]:
-            writer.writerow(["", middle["name"], "", f"{main['main']}/{middle['middle']}/-", "", "", "", "", "Auto"])
-            for sub in middle["subs"]:
-                writer.writerow(
-                    [
-                        "", "", sub["name"],
-                        f"{main['main']}/{middle['middle']}/{sub['sub']}",
-                        "", "", "", sub["dpt"], "Auto",
-                    ]
-                )
-
-    buf.seek(0)
-    filename = f"{data['project_name'].replace(' ', '_')}_group_addresses.csv"
-    return StreamingResponse(
-        iter([buf.getvalue().encode("iso-8859-1", errors="replace")]),
-        media_type="text/csv",
-        headers={"Content-Disposition": content_disposition(filename)},
-    )

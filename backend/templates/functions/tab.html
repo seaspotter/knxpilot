@@ -1,0 +1,30 @@
+{# Functions tab: rooms with their function assignments, then the special
+   addresses card. Swapped into #subtab-functions. #}
+<div class="card">
+  <h3>Räume &amp; Funktionen</h3>
+  <p class="muted">Jedem Raum die passenden Funktionen zuweisen (Licht, Dimmen, Heizkreis usw.). Räume selbst werden im Unterreiter Gebäudestruktur angelegt.</p>
+  {% if not floors %}
+    <p class="muted">Noch keine Geschosse — zuerst im Unterreiter Gebäudestruktur anlegen.</p>
+  {% endif %}
+  {% for floor in floors %}
+    <div class="floor-card">
+      <div class="rc-floor-title">{{ floor.name }}</div>
+      {% if not floor.rooms %}
+        <p class="muted">Noch keine Räume — zuerst im Unterreiter Gebäudestruktur anlegen.</p>
+      {% endif %}
+      {% for room in floor.rooms %}
+        <div id="room-{{ room.id }}">
+          {% include "functions/_room.html" %}
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <h3>Sonder- / Zusatzadressen</h3>
+  <p class="muted">Alles, was nicht ins Standardschema passt — Einzel-Szenen, spezielle Zentralgruppen usw.</p>
+  <div id="special-addresses">
+    {% include "functions/_special_addresses.html" %}
+  </div>
+</div>

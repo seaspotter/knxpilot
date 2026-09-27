@@ -134,6 +134,27 @@ def get_circuits(db, project_id):
     return circuits
 
 
+def flatten_ga_tree(tree):
+    """Every exported row as {address, name, dpt} - main and middle groups
+    ("1/-/-", "1/2/-") included, since ETS needs those created too. Shared by
+    routers/group_addresses.py (CSV export, ga-changes) and routers/
+    projects.py (building-structure drag & drop's GA-impact dry run)."""
+    rows = []
+    for main in tree["main_groups"]:
+        rows.append({"address": f"{main['main']}/-/-", "name": main["name"], "dpt": ""})
+        for middle in main["middles"]:
+            rows.append({"address": f"{main['main']}/{middle['middle']}/-", "name": middle["name"], "dpt": ""})
+            for sub in middle["subs"]:
+                rows.append({"address": f"{main['main']}/{middle['middle']}/{sub['sub']}", "name": sub["name"], "dpt": sub["dpt"]})
+    return rows
+
+
+def is_function_row(row):
+    """A real function's group address - not a main/middle group row and not
+    a reserved "res" placeholder."""
+    return not row["address"].endswith("-") and not row["name"].endswith("res")
+
+
 def build_ga_tree(project_id: int, db=None):
     """`db` lets a caller evaluate uncommitted changes (e.g. the GA impact
     preview of a drag & drop move in the Gebäudestruktur, which is rolled

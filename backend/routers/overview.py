@@ -71,9 +71,9 @@ def _overview_cards(project_id):
 
     return [
         _stat("struktur", "Gebäudestruktur", f"{floor_count} Geschosse · {room_count} Räume"),
-        _stat("funktionen", "Funktionen",
+        _stat("functions", "Funktionen",
               f"{point_count} Punkte definiert" if point_count else "Noch keine Punkte definiert"),
-        _stat("gruppenadressen", "Gruppenadressen",
+        _stat("group-addresses", "Gruppenadressen",
               f"{ga_count} Gruppenadressen" if ga_count else "Noch keine Gruppenadressen"),
         _stat("abgangsliste", "Abgangsliste",
               f"{assigned_count} / {total_circuits} Abgänge zugeordnet" if total_circuits else "Noch keine Abgänge",

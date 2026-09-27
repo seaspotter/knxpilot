@@ -1,0 +1,45 @@
+{# Group addresses tab: what changed since the last ETS export, then the GA
+   tree preview + CSV export. Swapped into #subtab-group-addresses. #}
+<div class="card">
+  <div class="card-header">
+    <h3 style="margin:0;">Änderungen seit dem letzten ETS-Export</h3>
+    <button class="btn secondary small" hx-post="/hx/projects/{{ project_id }}/group-addresses/snapshot"
+            hx-target="#ga-changes" hx-swap="innerHTML"
+            hx-confirm="Den aktuellen Stand der Gruppenadressen als in ETS übernommen markieren? Die Liste der Änderungen beginnt danach von vorn.">
+      Aktuellen Stand als in ETS übernommen markieren
+    </button>
+  </div>
+  <div id="ga-changes">
+    {% include "group_addresses/_changes.html" %}
+  </div>
+</div>
+<div class="card">
+  <div class="row" style="justify-content:space-between;">
+    <h3 style="margin:0;">Vorschau &amp; Export</h3>
+    <div class="row" style="margin:0;">
+      <button class="btn secondary small" type="button" onclick="expandAllGaTree(true)">Alle aufklappen</button>
+      <button class="btn secondary small" type="button" onclick="expandAllGaTree(false)">Alle einklappen</button>
+      <button class="btn" type="button" onclick="downloadGroupAddressesCsv()">CSV für ETS6 herunterladen</button>
+    </div>
+  </div>
+  <div class="ga-tree" id="ga-preview">
+    {% for m in preview.main_groups %}
+      {% set total_subs = m.middles | map(attribute="subs") | map("length") | sum %}
+      <details class="tree-main" open>
+        <summary><span class="main">{{ m.main }} {{ m.name }}</span> <span class="muted">({{ total_subs }})</span></summary>
+        {% for mid in m.middles %}
+          <details class="tree-middle">
+            <summary><span class="middle">{{ m.main }}/{{ mid.middle }} {{ mid.name }}</span> <span class="muted">({{ mid.subs | length }})</span></summary>
+            <div class="tree-subs">
+              {% for s in mid.subs %}
+                <div class="tree-sub-row">
+                  <span class="{{ 'res' if s.name.endswith('res') else 'sub' }}">{{ m.main }}/{{ mid.middle }}/{{ s.sub }} {{ s.name }}</span>{% if s.dpt %} <span class="addr">({{ s.dpt }})</span>{% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          </details>
+        {% endfor %}
+      </details>
+    {% endfor %}
+  </div>
+</div>

@@ -1,0 +1,42 @@
+{# What's still to do in ETS since the last export - re-rendered after
+   "Aktuellen Stand als in ETS übernommen markieren" and after a CSV
+   download (see downloadGroupAddressesCsv() in group_addresses.js). #}
+{% if not changes.exported_at %}
+  <p class="muted">Für dieses Projekt ist noch kein ETS-Export erfasst. Beim nächsten <b>CSV für ETS6 herunterladen</b> merkt sich KNXpilot den Stand und zeigt danach hier, was in ETS noch nachzutragen ist. Ist das ETS-Projekt bereits auf dem aktuellen Stand, den Stand einfach als übernommen markieren.</p>
+{% else %}
+  {% set total = changes.added | length + changes.changed | length + changes.moved | length + changes.removed | length %}
+  {% if not total %}
+    <p class="muted">✓ Keine Änderungen seit dem Export am {{ exported_at_local }} — das ETS-Projekt ist auf dem aktuellen Stand.</p>
+  {% else %}
+    <p class="muted">Seit dem letzten Export am {{ exported_at_local }} — das ist in ETS noch nachzutragen, am besten in dieser Reihenfolge:</p>
+    {% if changes.moved %}
+      <h4 style="margin:12px 0 4px;">1. Verschoben <span class="pill">{{ changes.moved | length }}</span> <span class="muted" style="font-weight:normal;">in ETS die Adresse ändern (Verknüpfungen bleiben erhalten) — von oben nach unten abarbeiten</span></h4>
+      <table class="data-table"><thead><tr><th>Name</th><th>Bisher</th><th>Neu</th></tr></thead><tbody>
+        {% for r in changes.moved %}<tr><td>{{ r.name }}</td><td class="muted">{{ r.old_address }}</td><td class="strong">{{ r.address }}</td></tr>{% endfor %}
+      </tbody></table>
+    {% endif %}
+    {% if changes.added %}
+      <h4 style="margin:12px 0 4px;">2. Neu <span class="pill">{{ changes.added | length }}</span> <span class="muted" style="font-weight:normal;">in ETS anlegen</span></h4>
+      <table class="data-table"><thead><tr><th>Adresse</th><th>Name</th><th>DPT</th></tr></thead><tbody>
+        {% for r in changes.added %}<tr><td class="strong">{{ r.address }}</td><td>{{ r.name }}</td><td class="muted">{{ r.dpt }}</td></tr>{% endfor %}
+      </tbody></table>
+    {% endif %}
+    {% if changes.changed %}
+      <h4 style="margin:12px 0 4px;">3. Geändert <span class="pill">{{ changes.changed | length }}</span> <span class="muted" style="font-weight:normal;">in ETS umbenennen / DPT anpassen</span></h4>
+      <table class="data-table"><thead><tr><th>Adresse</th><th>Bisher</th><th>Neu</th></tr></thead><tbody>
+        {% for r in changes.changed %}
+          <tr><td class="strong">{{ r.address }}</td>
+            <td class="muted">{{ r.old_name }} {% if r.old_dpt != r.dpt %}<span class="muted">{{ r.old_dpt }}</span>{% endif %}</td>
+            <td>{{ r.name }} {% if r.old_dpt != r.dpt %}<span class="muted">{{ r.dpt }}</span>{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </tbody></table>
+    {% endif %}
+    {% if changes.removed %}
+      <h4 style="margin:12px 0 4px;">4. Entfernt <span class="pill">{{ changes.removed | length }}</span> <span class="muted" style="font-weight:normal;">in ETS löschen</span></h4>
+      <table class="data-table"><thead><tr><th>Adresse</th><th>Name</th><th>DPT</th></tr></thead><tbody>
+        {% for r in changes.removed %}<tr class="muted-row"><td class="strong">{{ r.address }}</td><td>{{ r.name }}</td><td class="muted">{{ r.dpt }}</td></tr>{% endfor %}
+      </tbody></table>
+    {% endif %}
+  {% endif %}
+{% endif %}
