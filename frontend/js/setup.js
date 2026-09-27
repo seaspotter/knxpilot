@@ -157,7 +157,7 @@ async function performRestore(triggerFn) {
 // ---------- Setup: list editors (categories, function types, central templates) ----------
 // Rendered server-side with htmx too (backend/templates/setup/). The
 // functions tab still reads categories/function types from these caches
-// (funktionen.js), refreshed on load and after every change in Setup
+// (functions.js), refreshed on load and after every change in Setup
 // (HX-Trigger "setup-lists-changed").
 async function loadSetupCaches() {
   [CATEGORIES, POINT_TYPES] = await Promise.all([api('/categories'), api('/point-types')]);
