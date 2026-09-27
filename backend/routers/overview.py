@@ -21,7 +21,7 @@ from .checklists import CHECKLIST_SECTIONS, get_status_map
 from .device_planning import device_summary
 from .clarification_list import list_clarifications
 from .manuals import list_project_manuals
-from .projects import get_project_tree
+from .building_structure import get_project_tree
 from .distribution_boards import list_distribution_boards
 
 router = APIRouter(tags=["overview"])
@@ -70,7 +70,7 @@ def _overview_cards(project_id):
     handover_answered = sum(1 for key in handover_items if status_map.get(key, {}).get("status"))
 
     return [
-        _stat("struktur", "Gebäudestruktur", f"{floor_count} Geschosse · {room_count} Räume"),
+        _stat("building-structure", "Gebäudestruktur", f"{floor_count} Geschosse · {room_count} Räume"),
         _stat("functions", "Funktionen",
               f"{point_count} Punkte definiert" if point_count else "Noch keine Punkte definiert"),
         _stat("group-addresses", "Gruppenadressen",

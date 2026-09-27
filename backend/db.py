@@ -524,7 +524,7 @@ def init_db():
             -- The group addresses as they were at the last ETS CSV export (or when
             -- marked "in ETS übernommen"), one row per project - the baseline for
             -- the Gruppenadressen tab's "Änderungen seit dem letzten ETS-Export"
-            -- (see routers/projects.py). data = JSON list of
+            -- (see routers/group_addresses.py). data = JSON list of
             -- {address, name, dpt} incl. main/middle group rows ("1/2/-").
             -- Optional KNX TP lines (Bereich.Linie) - only for projects split into
             -- several lines, e.g. one per apartment plus an outdoor line (see

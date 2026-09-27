@@ -70,10 +70,14 @@ the user to make explicitly, not something to introduce as a side effect of
   done so far: clarification list, time tracking, Setup, device catalog,
   project manuals, overview, specification, documentation, function
   checklist, handover checklist, distribution board planning, functions,
-  group addresses, device planning, labels, circuit list. See "htmx tabs" and "htmx
-  migration" (order, rules) in
-  [`DEVELOPMENT.md`](./DEVELOPMENT.md). Convert only the tab the user
-  confirmed next, and don't add other frontend libraries.
+  group addresses, device planning, labels, circuit list. Building structure
+  (the last tab in the order) was split out of projects.py/projekte.js into
+  its own router/JS file and English-renamed, but its tree stays classic
+  JS + JSON calls rather than htmx fragments, since drag & drop needs the
+  whole tree client-side - this closes out the migration list. See "htmx
+  tabs" and "htmx migration" (order, rules) in
+  [`DEVELOPMENT.md`](./DEVELOPMENT.md). Any further frontend restructuring
+  happens case by case now; don't add other frontend libraries.
 - User-facing strings are German; code, comments, and docs are English.
   **Standing order from the user (2026-09-26): everything that isn't UI
   text is English** - file and directory names, identifiers, database

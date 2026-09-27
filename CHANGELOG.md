@@ -12,6 +12,18 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ### Changed
 
+- **"Gebäudestruktur" ("building structure") split out of the Projekte tab**,
+  completing the agreed htmx migration list. `routers/projects.py` and
+  `frontend/js/projekte.js` bundled two concerns (project CRUD/list/
+  dashboard/backup vs. floors/rooms/the structure tree); the latter moved to
+  a new `routers/building_structure.py` and `frontend/js/building_structure.js`.
+  `routers/overview.py`'s stat card and the "struktur" subtab id were renamed
+  to `building-structure` to match. The tree itself intentionally stays
+  classic JS calling the same JSON APIs (not htmx fragments): drag & drop
+  needs the whole tree as a client-side object to compute drop targets and
+  populate the move dialogs, so there is no safely-separable read-only slice
+  to render server-side without duplicating that fetch. No user-visible
+  behavior changed.
 - **"Abgangsliste" ("circuit list") is now server-rendered with htmx**,
   next in the agreed migration order — only "building structure" remains
   as classic JS now (drag & drop). `routers/abgangsliste.py` ->

@@ -44,9 +44,9 @@ from fastapi.staticfiles import StaticFiles
 from .backup import run_backup_now
 from .db import get_db, init_db
 from .routers import (
-    setup, device_catalog, projects, circuit_list, device_planning, clarification_list, specification, system,
-    distribution_boards, project_files, manuals, checklists, documentation, email, time_tracking, lines, overview,
-    functions, group_addresses, labels,
+    setup, device_catalog, projects, building_structure, circuit_list, device_planning, clarification_list,
+    specification, system, distribution_boards, project_files, manuals, checklists, documentation, email,
+    time_tracking, lines, overview, functions, group_addresses, labels,
 )
 
 logger = logging.getLogger("knxpilot.backup")
@@ -96,6 +96,7 @@ init_db()
 app.include_router(setup.router)
 app.include_router(device_catalog.router)
 app.include_router(projects.router)
+app.include_router(building_structure.router)
 app.include_router(functions.router)
 app.include_router(group_addresses.router)
 app.include_router(circuit_list.router)

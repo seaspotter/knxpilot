@@ -107,7 +107,8 @@ backend/
   routers/
     setup.py          — Setup tab (htmx, /hx/setup/...): settings pages on the company profile (SETTINGS_SECTIONS) and the categories/function types/central templates editors, plus their JSON APIs
     device_catalog.py  — device catalog tab (htmx: /hx/device-catalog...): catalog + per-device manual URL, JSON import/export with preview, ACTOR_TYPES API
-    projects.py        — projects, floors/rooms (incl. tree moves with GA-impact dry run), backup/restore (Projekte tab: Gebäudestruktur sub-tab + project CRUD)
+    projects.py        — Projekte tab: project list/dashboard/CRUD/delete-impact, JSON backup/restore/duplicate (project-level only; floors/rooms moved to building_structure.py)
+    building_structure.py — floors/rooms, the project tree, tree moves with GA-impact dry run, distribution-board placement in the tree (Gebäudestruktur sub-tab; drag & drop stays classic JS, see "htmx migration" below)
     functions.py        — functions tab (htmx, /hx/projects/{id}/functions...): room point (function) assignment, special addresses ("Sonderadressen") (Funktionen sub-tab)
     group_addresses.py  — group addresses tab (htmx, /hx/projects/{id}/group-addresses...): GA tree preview, changes since the last ETS export, ETS6 CSV export (Gruppenadressen sub-tab)
     lines.py           — optional KNX lines (Bereich.Linie) + floor/room/actuator line assignment, per-line device counts/warnings (Gebäudestruktur sub-tab)
@@ -135,9 +136,10 @@ frontend/
     send_email.js      — shared "Per E-Mail senden" modal, called from Pflichtenheft/Funktionscheckliste/Übergabe-Checkliste/Dokumentation
     setup.js           — loads the htmx Setup sub-tabs, header branding, logo auto-crop, backup restore, JSON import (file picker), categories/function types cache for the functions tab
     device_catalog.js  — loads the htmx device catalog sub-tabs, ACTOR_TYPES cache for other tabs' pickers, JSON import dialogs
-    projekte.js        — project CRUD/meta, Geschoss/Raum/Verteiler tree with drag & drop (Gebäudestruktur sub-tab)
+    projekte.js        — Projekte tab: project list/CRUD, dashboard, meta edit-in-place, JSON backup/restore/duplicate
+    building_structure.js — Geschoss/Raum/Verteiler tree with drag & drop (Gebäudestruktur sub-tab; classic JS + JSON calls to building_structure.py, not htmx - see "htmx migration" below)
     distribution_boards.js — loads the htmx distribution board planning tab, PDF download
-    lines.js           — optional KNX lines card + the line <select>s used by projekte.js/circuit_list.js (Gebäudestruktur sub-tab)
+    lines.js           — optional KNX lines card + the line <select>s used by building_structure.js/circuit_list.js (Gebäudestruktur sub-tab)
     functions.js       — loads the htmx functions tab, special-address suffix-row helper (Funktionen sub-tab)
     group_addresses.js — loads the htmx group addresses tab, GA tree expand/collapse, CSV download (Gruppenadressen sub-tab)
     overview.js        — loads the htmx overview tab, goToSubtab() for the stat cards' onclick (Übersicht sub-tab)
@@ -238,8 +240,13 @@ rarely need to touch anything else.
   ~~documentation~~, ~~function + handover checklists~~,
   ~~distribution board planning~~ (jumped ahead of functions + group
   addresses by explicit user request), ~~functions + group addresses~~,
-  ~~device planning + labels~~, ~~circuit list~~, building structure (drag &
-  drop stays JS).
+  ~~device planning + labels~~, ~~circuit list~~, ~~building structure~~
+  (this one done differently: router/JS split out of projects.py/projekte.js
+  into building_structure.py/building_structure.js, English-renamed, but the
+  tree itself stays classic JS + JSON calls rather than htmx fragments - the
+  drag & drop interaction needs the whole tree as a JS object client-side, so
+  there's no read-only slice that htmx-ifies cleanly without duplicating the
+  tree fetch). This completes the htmx migration list.
 - **User-facing strings are German**; everything else is English: code
   identifiers, comments, file/directory names, database tables/columns,
   API paths, CSS classes, template names, JSON keys, this documentation

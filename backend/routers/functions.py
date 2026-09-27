@@ -7,7 +7,7 @@ Rendered server-side with htmx (see DEVELOPMENT.md "htmx tabs"): the
 /hx/... endpoints below return HTML fragments from
 backend/templates/functions/, and the browser swaps them in - no
 client-side cache. The floors/rooms themselves belong to the building
-structure tab (routers/projects.py, still classic JS) - this router only
+structure tab (routers/building_structure.py, still classic JS) - this router only
 reads them to render the rooms list.
 """
 import json

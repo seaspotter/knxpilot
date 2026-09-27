@@ -15,7 +15,7 @@ def test_overview_cards_match_project_state(client):
     body = client.get(f"/hx/projects/{pid}/overview").text
     assert f"{floor_count} Geschosse · {room_count} Räume" in body
     assert f"{assigned} / {len(circuits)} Abgänge zugeordnet" in body
-    assert "goToSubtab('struktur')" in body and "goToSubtab('manuals')" in body
+    assert "goToSubtab('building-structure')" in body and "goToSubtab('manuals')" in body
     assert "goToSubtab('specification')" in body and "goToSubtab('documentation')" in body
     if assigned < len(circuits):
         assert 'color:var(--warn)' in body

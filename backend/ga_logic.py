@@ -138,7 +138,7 @@ def flatten_ga_tree(tree):
     """Every exported row as {address, name, dpt} - main and middle groups
     ("1/-/-", "1/2/-") included, since ETS needs those created too. Shared by
     routers/group_addresses.py (CSV export, ga-changes) and routers/
-    projects.py (building-structure drag & drop's GA-impact dry run)."""
+    building_structure.py (drag & drop's GA-impact dry run)."""
     rows = []
     for main in tree["main_groups"]:
         rows.append({"address": f"{main['main']}/-/-", "name": main["name"], "dpt": ""})
