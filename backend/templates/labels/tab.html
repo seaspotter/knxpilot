@@ -3,16 +3,12 @@
    Swapped into #subtab-labels. #}
 <div class="card">
   <h4>Labels</h4>
-  <p class="muted">Bedruckt einen Etikettenbogen für die Schaltschrankbeschriftung. Startposition wählen, um einen bereits teilweise bedruckten Bogen weiter zu nutzen — Etiketten davor bleiben leer.</p>
+  <p class="muted">Bedruckt einen Etikettenbogen für die Schaltschrankbeschriftung — ein Etikett je Gerät mit physikalischer Adresse (Aktoren aus der Abgangsliste sowie Geräte aus der Geräteplanung). Startposition wählen, um einen bereits teilweise bedruckten Bogen weiter zu nutzen — Etiketten davor bleiben leer.</p>
   <div class="row mobile-fields">
     <select id="label-format" onchange="renderLabelGrid()">
       {% for key, fmt in formats.items() %}
         <option value="{{ key }}" data-size="{{ fmt.cols * fmt.rows }}">{{ fmt.name }} ({{ fmt.cols * fmt.rows }}/Bogen)</option>
       {% endfor %}
-    </select>
-    <select id="label-source">
-      <option value="actors">Aktoren (physikalische Adresse + Standort)</option>
-      <option value="channels">Kanäle (physikalische Adresse.Kanal + Funktion)</option>
     </select>
     <label style="display:flex; align-items:center; gap:4px;">
       <input type="checkbox" id="label-debug">

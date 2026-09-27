@@ -332,18 +332,20 @@ der Busprogrammierung, die andere der Schaltschrank-Verdrahtung.
 
 #### Labels
 
-Bedruckt einen Etikettenbogen für die Schaltschrankbeschriftung — nutzt
-dieselben Aktoren/Kanäle wie die Abgangsliste, deshalb ein eigener
-Unterreiter direkt daneben statt eine Karte darin.
+Bedruckt einen Etikettenbogen für die Schaltschrankbeschriftung — ein
+Etikett je Gerät mit physikalischer Adresse, projektweit: Aktoren aus der
+Abgangsliste sowie Sensoren/Bedienelemente/Wetterstationen usw. aus der
+Geräteplanung, deshalb ein eigener Unterreiter direkt daneben statt eine
+Karte darin.
 
 - **Format**: aktuell nur **Avery Zweckform L6037** (25,4 × 10 mm,
   189 Etiketten je Bogen) — weitere Formate lassen sich später ergänzen,
   die Auswahl ist bewusst als Dropdown angelegt.
-- **Inhalt**: **Aktoren** (ein Etikett je Aktor: physikalische Adresse +
-  Standortbezeichnung — genau die Felder, die beim Aktor-Anlegen in der
-  Abgangsliste eingegeben wurden) oder **Kanäle** (ein Etikett je Kanal:
-  physikalische Adresse + Kanalbuchstabe, plus die zugeordnete Funktion
-  bzw. `RESERVE`).
+- **Inhalt**: ein Etikett je Gerät mit physikalischer Adresse, sortiert
+  nach Adresse — Aktoren mit ihrer Standortbezeichnung (bzw. Hersteller/Typ,
+  falls keine eingetragen ist), Geräte aus der Geräteplanung mit ihrer
+  Notiz (bzw. Raum-/Geschossname und Typ, falls keine eingetragen ist).
+  Geräte ohne physikalische Adresse erscheinen nicht.
 - **Startposition**: auf ein Etikett im Positionsraster klicken, um dort
   mit dem Druck zu beginnen — praktisch, um einen bereits teilweise
   bedruckten Bogen weiter zu nutzen, ohne schon bedruckte Etiketten zu

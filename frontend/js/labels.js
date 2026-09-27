@@ -50,7 +50,6 @@ function updateLabelGridSelection() {
 
 function downloadLabelsPdf() {
   const format = document.getElementById('label-format').value;
-  const source = document.getElementById('label-source').value;
   const debug = document.getElementById('label-debug').checked ? 1 : 0;
-  window.location.href = `/api/projects/${CURRENT_PROJECT}/export-labels.pdf?format=${format}&source=${source}&start=${LABEL_START_POS}&debug=${debug}`;
+  window.location.href = `/api/projects/${CURRENT_PROJECT}/export-labels.pdf?format=${format}&start=${LABEL_START_POS}&debug=${debug}`;
 }
