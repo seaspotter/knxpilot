@@ -10,6 +10,27 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-27
+
+The frontend is now almost entirely rendered server-side with htmx instead
+of client-side JavaScript building HTML strings: every tab has moved over
+(building structure, functions, group addresses, circuit list, device
+planning, distribution boards, labels, both checklists, clarification
+list, overview, specification, documentation, device catalog, manuals,
+time tracking, Setup) - only the building-structure tree's drag & drop
+stays classic JS, since it needs the whole tree client-side. Every
+German-named file, database table/column and API path has been renamed to
+English along the way, with data-preserving migrations for existing
+installs. Along the way: Labels now prints every device with a physical
+address (not just actuators) and shows its location instead of its model;
+the Hilfe tab got a table of contents and search; MANUAL.md was rewritten
+much shorter; and a handful of small bugs found during the rewrite are
+fixed (narrower Klärungsliste fields, a stale checklist timestamp, a
+device-catalog clear that could fail, the Update tab pulling an update it
+then couldn't apply). New dependency `jinja2` - after updating, run
+`docker compose pull && docker compose up -d` once, the Python packages
+changed.
+
 ### Added
 
 - **"Hilfe" tab: table of contents and search** — a sidebar lists every
