@@ -25,15 +25,15 @@ def test_project_delete_impact(client):
 
 def test_open_points_numbered_after_grouping(client):
     from backend.db import get_db
-    from backend.routers.klaerungsliste import open_klaerungen_grouped
+    from backend.routers.clarification_list import open_clarifications_grouped
     pid = seed_musterhaus(client)
     rooms = ok(client.get(f"/api/projects/{pid}/tree"))["floors"][0]["rooms"]
-    ok(client.post(f"/api/projects/{pid}/klaerungen", json={"text": "A", "room_id": rooms[0]["id"]}))
-    ok(client.post(f"/api/projects/{pid}/klaerungen", json={"text": "B", "room_id": rooms[1]["id"]}))
-    ok(client.post(f"/api/projects/{pid}/klaerungen", json={"text": "C", "room_id": rooms[0]["id"]}))
-    ok(client.post(f"/api/projects/{pid}/klaerungen", json={"text": "D"}))
+    ok(client.post(f"/api/projects/{pid}/clarifications", json={"text": "A", "room_id": rooms[0]["id"]}))
+    ok(client.post(f"/api/projects/{pid}/clarifications", json={"text": "B", "room_id": rooms[1]["id"]}))
+    ok(client.post(f"/api/projects/{pid}/clarifications", json={"text": "C", "room_id": rooms[0]["id"]}))
+    ok(client.post(f"/api/projects/{pid}/clarifications", json={"text": "D"}))
     with get_db() as db:
-        groups = open_klaerungen_grouped(db, pid)
+        groups = open_clarifications_grouped(db, pid)
     flat = [(label, e["nr"], e["text"]) for label, es in groups for e in es]
     assert [n for _, n, _ in flat] == [1, 2, 3, 4]
     assert flat[0][0] == "Allgemein" and flat[0][2] == "D"

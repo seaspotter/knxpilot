@@ -24,7 +24,7 @@ def test_overview_cards_match_project_state(client):
 def test_overview_reflects_open_clarifications_and_checklist_progress(client):
     pid = seed_musterhaus(client)
     room = ok(client.get(f"/api/projects/{pid}/tree"))["floors"][0]["rooms"][0]
-    ok(client.post(f"/api/projects/{pid}/klaerungen", json={"text": "offene Frage?", "room_id": room["id"]}))
+    ok(client.post(f"/api/projects/{pid}/clarifications", json={"text": "offene Frage?", "room_id": room["id"]}))
     key = next(iter(ok(client.get(f"/api/rooms/{room['id']}/function-checklist")).values()))[0]["key"]
     ok(client.put(f"/api/projects/{pid}/checklist-status/{key}", json={"status": "ok", "note": ""}))
 

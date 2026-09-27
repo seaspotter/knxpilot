@@ -1,0 +1,22 @@
+{# "Neuer Eintrag" / "Eintrag bearbeiten" - saving re-renders the whole tab (form reset + list). #}
+<form {% if entry %}hx-put="/hx/clarifications/{{ entry.id }}"{% else %}hx-post="/hx/projects/{{ project_id }}/clarifications"{% endif %}
+      hx-target="#clarification-list-root">
+  <h4>{{ "Eintrag bearbeiten" if entry else "Neuer Eintrag" }}</h4>
+  <div class="row mobile-fields">
+    <select name="type">
+      {% for t in types %}<option{% if entry and entry.type == t %} selected{% endif %}>{{ t }}</option>{% endfor %}
+    </select>
+    <select name="room_id" class="wide" hx-get="/hx/clarification-list/points" hx-target="#clarification-point" hx-trigger="change">
+      <option value="">Allgemein (kein Raum)</option>
+      {% for r in rooms %}<option value="{{ r.id }}"{% if entry and entry.room_id == r.id %} selected{% endif %}>{{ r.label }}</option>{% endfor %}
+    </select>
+    <span id="clarification-point">{% include "clarification_list/_points.html" %}</span>
+  </div>
+  <div class="row mobile-fields">
+    <input type="text" name="text" class="clarification-text-input" required placeholder="Frage, Aufgabe oder Notiz..." value="{{ entry.text if entry else '' }}">
+    <button class="btn" type="submit">{{ "Änderungen speichern" if entry else "+ Hinzufügen" }}</button>
+    {% if entry %}
+      <button type="button" class="btn secondary small" hx-get="/hx/projects/{{ project_id }}/clarification-list/form" hx-target="#clarification-form-card">Abbrechen</button>
+    {% endif %}
+  </div>
+</form>

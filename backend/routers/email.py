@@ -25,7 +25,7 @@ from ..models import SendEmailIn, TestEmailIn
 from .specification import build_specification_pdf_bytes
 from .checkliste import build_funktionscheckliste_pdf_bytes, build_uebergabe_checkliste_pdf_bytes
 from .documentation import build_documentation_pdf_bytes
-from .klaerungsliste import build_klaerungsliste_pdf_bytes
+from .clarification_list import build_clarification_list_pdf_bytes
 
 router = APIRouter(tags=["email"])
 
@@ -36,7 +36,7 @@ DOCUMENT_BUILDERS = {
     "function_checklist": (build_funktionscheckliste_pdf_bytes, "Funktionscheckliste", "die Funktionscheckliste"),
     "handover_checklist": (build_uebergabe_checkliste_pdf_bytes, "Übergabe-Checkliste", "die Übergabe-Checkliste"),
     "documentation": (build_documentation_pdf_bytes, "Dokumentation", "die vollständige Projektdokumentation"),
-    "klaerungsliste": (build_klaerungsliste_pdf_bytes, "Offene Punkte", "die offenen Punkte zur Klärung"),
+    "clarification_list": (build_clarification_list_pdf_bytes, "Offene Punkte", "die offenen Punkte zur Klärung"),
 }
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")

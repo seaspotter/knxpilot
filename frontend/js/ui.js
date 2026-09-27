@@ -204,7 +204,7 @@ function escapeAttr(s) {
   return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 }
 
-// ---------- htmx glue (tabs rendered server-side, e.g. klaerungsliste.js) ----------
+// ---------- htmx glue (tabs rendered server-side, e.g. clarification_list.js) ----------
 // hx-confirm="..." uses the app's own confirm dialog instead of the browser's.
 document.addEventListener('htmx:confirm', ev => {
   if (!ev.detail.question) return;

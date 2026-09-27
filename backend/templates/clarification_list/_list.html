@@ -4,31 +4,31 @@
 {% if aged_count %}
   <p style="color:var(--warn); margin:0 0 10px;">⚠ {{ aged_count }} offene{{ "r Eintrag ist" if aged_count == 1 else " Einträge sind" }} seit mehr als {{ aged_days }} Tagen unbeantwortet.</p>
 {% endif %}
-{% include "klaerungsliste/_open_text.html" %}
+{% include "clarification_list/_open_text.html" %}
 {% for label, entries in groups %}
   <div class="floor-card">
     <div class="rc-floor-title">{{ label }}</div>
     {% for k in entries %}
-      <div class="room-card" id="kl-{{ k.id }}">
+      <div class="room-card" id="clarification-{{ k.id }}">
         <div class="row" style="justify-content:space-between;">
           <div>
-            <span class="pill">{{ k.typ }}</span>
+            <span class="pill">{{ k.type }}</span>
             <span class="pill {{ status_class.get(k.status, '') }}">{{ k.status }}</span>
             {% if k.point_label %}<span class="pill">{{ k.point_label }}</span>{% endif %}
             {% if k.aged %}<span class="pill" style="border-color:var(--warn); color:var(--warn);">{{ k.age_days }} Tage offen</span>{% endif %}
           </div>
           <div class="row" style="gap:6px; margin:0;">
             {% for st in statuses if st != k.status %}
-              <button class="btn secondary small" hx-post="/hx/klaerungen/{{ k.id }}/status" hx-vals='{{ {"status": st} | tojson }}' hx-target="#kl-list">{{ status_button[st] }}</button>
+              <button class="btn secondary small" hx-post="/hx/clarifications/{{ k.id }}/status" hx-vals='{{ {"status": st} | tojson }}' hx-target="#clarification-list-items">{{ status_button[st] }}</button>
             {% endfor %}
-            <button class="btn secondary small" hx-get="/hx/klaerungen/{{ k.id }}/edit" hx-target="#kl-form-card">Bearbeiten</button>
-            <button class="btn danger small" hx-delete="/hx/klaerungen/{{ k.id }}" hx-confirm="Diesen Eintrag löschen?" hx-target="#kl-list">Löschen</button>
+            <button class="btn secondary small" hx-get="/hx/clarifications/{{ k.id }}/edit" hx-target="#clarification-form-card">Bearbeiten</button>
+            <button class="btn danger small" hx-delete="/hx/clarifications/{{ k.id }}" hx-confirm="Diesen Eintrag löschen?" hx-target="#clarification-list-items">Löschen</button>
           </div>
         </div>
         <div style="margin-top:4px;">{{ k.text }}</div>
         <div class="row" style="margin-top:6px;">
-          <input type="text" class="kl-answer-input" name="antwort" value="{{ k.antwort or '' }}" placeholder="Antwort/Ergebnis..."
-                 hx-post="/hx/klaerungen/{{ k.id }}/antwort" hx-trigger="change" hx-swap="none">
+          <input type="text" class="clarification-answer-input" name="answer" value="{{ k.answer or '' }}" placeholder="Antwort/Ergebnis..."
+                 hx-post="/hx/clarifications/{{ k.id }}/answer" hx-trigger="change" hx-swap="none">
         </div>
       </div>
     {% endfor %}

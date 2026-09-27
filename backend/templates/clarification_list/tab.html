@@ -1,14 +1,14 @@
-{# The whole Klärungsliste tab body, swapped into #klaerungsliste-root. #}
-<div class="card" id="kl-form-card">
-  {% include "klaerungsliste/_form.html" %}
+{# The whole Klärungsliste tab body, swapped into #clarification-list-root. #}
+<div class="card" id="clarification-form-card">
+  {% include "clarification_list/_form.html" %}
 </div>
 <div class="card">
   <div class="card-header">
     <h4 style="margin:0;">Offene Punkte weitergeben</h4>
     <div class="row" style="margin:0; gap:6px;">
-      <button class="btn secondary small" onclick="copyOpenKlaerungenAsText()">Als Text kopieren</button>
-      <button class="btn secondary small" onclick="openSendEmailModal('klaerungsliste', 'Offene Punkte')">Per E-Mail senden</button>
-      <button class="btn" onclick="downloadKlaerungslistePdf()">PDF herunterladen</button>
+      <button class="btn secondary small" onclick="copyOpenClarificationsAsText()">Als Text kopieren</button>
+      <button class="btn secondary small" onclick="openSendEmailModal('clarification_list', 'Offene Punkte')">Per E-Mail senden</button>
+      <button class="btn" onclick="downloadClarificationListPdf()">PDF herunterladen</button>
     </div>
   </div>
   <p class="muted" style="margin-bottom:0;">Alle noch offenen Einträge nummeriert und nach Raum gruppiert — zum Klären mit Kunde oder Elektriker. Als Text zum Einfügen in eine eigene E-Mail, oder als PDF mit Antwort-Spalte zum Ausfüllen.</p>
@@ -16,7 +16,7 @@
 {# White card around the groups, like every other tab (.card > .floor-card > .room-card). #}
 <div class="card">
   <h4 style="margin:0 0 10px;">Einträge</h4>
-  <div id="kl-list">
-    {% include "klaerungsliste/_list.html" %}
+  <div id="clarification-list-items">
+    {% include "clarification_list/_list.html" %}
   </div>
 </div>
