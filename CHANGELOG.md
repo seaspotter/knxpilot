@@ -10,6 +10,15 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-10-24
+
+### Security
+
+- **Pillow 12.3.0 → 13.0.0** - fixes 30 open advisories (several critical,
+  including TIFF-handling heap overflows and out-of-bounds writes - relevant
+  since logos/signatures are uploaded images). Also FastAPI 0.143.0 →
+  0.156.4 and test tooling httpx2 2.13.1 → 2.15.1.
+
 ## [0.9.0] - 2026-09-27
 
 The frontend is now almost entirely rendered server-side with htmx instead
