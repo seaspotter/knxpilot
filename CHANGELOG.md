@@ -10,6 +10,14 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-10-31
+
+### Changed
+
+- **Routine dependency updates** - FastAPI 0.156.4 → 0.162.0, ReportLab
+  5.0.1 → 5.1.0; test tooling pytest 9.1.1 → 9.2.0 and httpx2 2.15.1 →
+  2.16.0.
+
 ## [0.9.1] - 2026-10-24
 
 ### Security
