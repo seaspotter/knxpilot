@@ -1,4 +1,4 @@
 # Test-only dependencies (not installed in the Docker image) - see DEVELOPMENT.md.
 -r requirements.txt
-pytest==9.1.1
-httpx2==2.15.1
+pytest==9.2.0
+httpx2==2.16.0
