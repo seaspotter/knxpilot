@@ -10,6 +10,13 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-11-09
+
+### Changed
+
+- **Routine dependency update** - python-multipart 0.0.32 → 0.0.33 (form
+  parsing fixes and a perf tweak).
+
 ## [0.9.2] - 2026-10-31
 
 ### Changed
