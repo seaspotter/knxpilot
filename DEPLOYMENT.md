@@ -123,25 +123,16 @@ der alte Prozess ohne die neuen Pakete weiterläuft (halb aktualisierte
 App, z.B. "Not Found" in einem Tab). Stattdessen zeigt der Update-Tab
 schon beim Prüfen den einen Befehl, der alles erledigt und auf dem Server
 im KNXpilot-Verzeichnis auszuführen ist (mit Kopieren-Knopf):
-`git pull && docker compose pull && docker compose up -d` (auf einem
-`dev`-Checkout ergänzt um das Setzen von `KNXPILOT_IMAGE_TAG=dev`, siehe
-unten). Das Image dafür baut GitHub Actions bereits bei jedem
-Push auf `main` (siehe oben) — auf dem Server ist dafür kein lokaler
-Build nötig, nur ein Pull.
+`git pull && docker compose pull && docker compose up -d`. Das Image
+dafür baut GitHub Actions bereits bei jedem Push auf `main` (siehe oben)
+— auf dem Server ist dafür kein lokaler Build nötig, nur ein Pull.
 
-**Server auf dem `dev`-Zweig:** `latest` wird nur aus `main` gebaut; bei
-jedem Push auf `dev` entsteht zusätzlich das Image-Tag `dev`. Ein Server,
-der `dev` verfolgt (`git checkout dev && git branch
---set-upstream-to=origin/dev dev`), braucht einmalig eine Datei `.env`
-neben `docker-compose.yml`:
-```bash
-echo "KNXPILOT_IMAGE_TAG=dev" > .env
-```
-Danach holt `docker compose pull && docker compose up -d` das passende
-Image mit den Abhängigkeiten von `dev`. Nach einem Push erst warten, bis
-der Lauf "Publish Docker image" in GitHub Actions fertig ist (einige
-Minuten, wegen des ARM-Builds). `.env` ist in `.gitignore`, ein `git pull`
-fasst sie also nicht an. Zurück auf `main`: `.env` löschen.
+(Ein `dev`-Zweig mit eigenem Image-Tag existierte früher für Server, die
+den aktiven Entwicklungsstand verfolgen wollten - `main` ist inzwischen
+der einzige Zweig, siehe `DEVELOPMENT.md`. Ein Server, der noch auf
+`dev` ausgecheckt ist: `git checkout main && git branch
+--set-upstream-to=origin/main main`, eine eventuell vorhandene `.env` mit
+`KNXPILOT_IMAGE_TAG=dev` löschen, dann wie oben weiter.)
 
 Der Browser bekommt die aktualisierten HTML/CSS/JS-Dateien nach einem
 Neustart auch **ohne Hard-Refresh** — `backend/main.py` liefert `frontend/`

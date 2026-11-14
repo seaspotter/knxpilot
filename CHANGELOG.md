@@ -10,6 +10,19 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ## [Unreleased]
 
+## [0.9.4] - 2026-11-14
+
+`dev` is retired - `main` is now the only branch (see `DEVELOPMENT.md`).
+Dependabot now opens PRs against `main` directly, GitHub Actions bumps and
+pip patch-level bumps (except fastapi) auto-merge once tests and a new
+PR build-check both pass, and that build-check (builds the Docker image
+on every PR) catches a broken base image before merge instead of after.
+
+### Changed
+
+- **Routine dependency updates** - FastAPI 0.162.0 → 0.162.4, Docker base
+  image python:3.14-slim → 3.15-slim.
+
 ## [0.9.3] - 2026-11-09
 
 ### Changed

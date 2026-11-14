@@ -2,41 +2,49 @@
 
 ## Branches
 
-- **`dev`** — active work happens here. Commit and push freely.
-- **`main`** — what deployments actually run: the Docker image
-  ([`.github/workflows/docker-publish.yml`](./.github/workflows/docker-publish.yml))
+- **`main`** — the only branch. Day-to-day work and fixes land here via a
+  direct commit/push (or a PR). It's what deployments actually run: the
+  Docker image ([`.github/workflows/docker-publish.yml`](./.github/workflows/docker-publish.yml))
   and every server's self-update (`git pull` on `main`, see
-  [`DEPLOYMENT.md`](./DEPLOYMENT.md)) both track it. `main` only moves
-  forward at a release, via a fast-forward merge from `dev`
-  (`git checkout main && git merge --ff-only dev`) plus a `vX.Y.Z` tag —
-  see `CHANGELOG.md` for the version history.
-- **Release routine:** on `dev`, rename `## [Unreleased]` in `CHANGELOG.md`
-  to `## [X.Y.Z] - YYYY-MM-DD` (optionally with a short summary paragraph
-  directly under that heading), commit and push `dev`, and **wait until the
-  Tests workflow has passed for that commit** (`gh run watch`, or the
-  Actions tab); then
-  `git checkout main && git merge --ff-only dev && git tag -a vX.Y.Z -m vX.Y.Z`
-  and `git push origin main vX.Y.Z`. `main` is protected: no force pushes,
-  no deletion, and a push is only accepted if its commit passed the
-  `pytest` check - since `main` is fast-forwarded to the already-tested
-  `dev` commit, that just means "don't release before the tests are
-  green". No pull request is required. Pushing the tag does the rest
-  automatically: [`.github/workflows/docker-publish.yml`](./.github/workflows/docker-publish.yml)
+  [`DEPLOYMENT.md`](./DEPLOYMENT.md)) both track it.
+
+  (This project used a `dev`+`main` split earlier, retired once active
+  htmx-migration-era feature work gave way to maintenance — see
+  `CHANGELOG.md`'s `[Unreleased]`/first post-migration entry for when. If
+  a deployment's self-update is still checked out on `dev`, switch it to
+  `main` per `DEPLOYMENT.md`: `dev` no longer receives new commits.)
+- **Release routine:** rename `## [Unreleased]` in `CHANGELOG.md` to
+  `## [X.Y.Z] - YYYY-MM-DD` (optionally with a short summary paragraph
+  directly under that heading), commit and push `main`, and
+  `git tag -a vX.Y.Z -m vX.Y.Z && git push origin vX.Y.Z`. Pushing the tag
+  does the rest automatically:
+  [`.github/workflows/docker-publish.yml`](./.github/workflows/docker-publish.yml)
   builds and publishes the Docker image, and
   [`.github/workflows/release.yml`](./.github/workflows/release.yml)
   creates the GitHub Release with that version's CHANGELOG section as its
   text (it fails loudly if the section is missing, and skips if a release
-  already exists).
+  already exists). `main` is protected (no force pushes, no deletion,
+  `pytest`+`build` required status checks) but `enforce_admins` is off and
+  there's no push restriction, so the repo owner's own direct
+  `git push origin main` isn't blocked by those checks - they gate merging
+  a PR into `main`, not a direct push. Still, never push an untested
+  commit: wait for the Tests workflow to pass before relying on it.
 - **Dependency updates:** Dependabot ([`.github/dependabot.yml`](./.github/dependabot.yml))
   checks weekly for newer GitHub Actions, Python packages
   (`requirements*.txt`) and the Docker base image, and opens grouped pull
-  requests against `dev`; the Tests workflow runs on each. A new Python
-  minor version in the base image also needs the pinned packages to support
-  it — build the image locally before merging that one.
-- To switch your local checkout between them: `git checkout dev` /
-  `git checkout main` (or `git switch dev` / `git switch main`). `main`
-  only has what's actually been released, so it'll usually look "behind"
-  `dev` day-to-day — that's expected, not a problem to fix.
+  requests against `main`; `tests.yml` and `pr-build-check.yml` (builds the
+  Docker image, amd64 only, never pushed - added after a Docker
+  base-image-bump PR once needed a local check that nothing in CI
+  actually performed) both run on each. GitHub Actions bumps and pip
+  patch-level bumps auto-merge once both pass
+  ([`.github/workflows/dependabot-auto-merge.yml`](./.github/workflows/dependabot-auto-merge.yml))
+  - except fastapi, which still needs a human (see that workflow's own
+    comment for why). The Docker base image is never auto-merged: a new
+  Python minor version also needs the pinned packages re-checked by hand
+  — install `requirements.txt` into a venv built with the real target
+  Python version and run the full test suite + boot a real server before
+  merging (`pr-build-check.yml` only proves the image builds, not that
+  everything still works under it).
 - The running app shows which version it's on in the header (via
   `git describe`, e.g. `v0.1.0` on a release commit, `v0.1.0-3-gabc1234`
   for commits since the last release) — see `/api/system/version` in
@@ -77,8 +85,8 @@ from a demo project whose names contain `&`, `<`, quotes, an en dash and
 server, and the delete-impact counts. Each test runs against its own
 throwaway database (`tests/conftest.py` points `KNXPILOT_DB_PATH` /
 `backend.db.DB_PATH` at a temp file), so the real `backend/data/knx_ga.db`
-is never touched. CI runs it on every push to `dev`/`main`
-([`.github/workflows/tests.yml`](./.github/workflows/tests.yml)).
+is never touched. CI runs it on every push to `main` and on every pull
+request ([`.github/workflows/tests.yml`](./.github/workflows/tests.yml)).
 
 If a change to the addressing logic changes the GA export *on purpose*,
 regenerate the golden file with `KNXPILOT_UPDATE_GOLDEN=1 pytest
