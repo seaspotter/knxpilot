@@ -115,13 +115,8 @@ function showImageUpdateCommand(command) {
   document.getElementById('update-image').style.display = '';
 }
 
-function copyUpdateCommand() {
+async function copyUpdateCommand() {
   const text = document.getElementById('update-image-command').textContent;
-  // Same fallback as the Klärungsliste copy: plain http:// has no navigator.clipboard.
-  const ta = document.createElement('textarea');
-  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-  document.body.appendChild(ta); ta.select();
-  const ok = document.execCommand('copy');
-  ta.remove();
+  const ok = await copyTextToClipboard(text);
   showToast(ok ? 'Befehl kopiert' : 'Kopieren nicht möglich - bitte markieren und kopieren', ok ? 'success' : 'warning');
 }

@@ -331,11 +331,14 @@ def init_db():
             -- only meaningful for devices in the "Aktor" group (see group_name).
             CREATE TABLE IF NOT EXISTS actor_types (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL DEFAULT '',      -- legacy, unused (kept for old-DB compatibility)
                 manufacturer TEXT NOT NULL DEFAULT '',
                 model TEXT NOT NULL DEFAULT '',     -- e.g. "AKS-2016.03"
-                channel_type TEXT NOT NULL,          -- must match a point type's channel_type to be assignable
-                channel_count INTEGER NOT NULL
+                group_name TEXT NOT NULL DEFAULT 'Aktor',
+                description TEXT NOT NULL DEFAULT '',
+                channel_type TEXT NOT NULL DEFAULT '',  -- must match a point type's channel_type to be assignable
+                channel_count INTEGER,              -- only set for the "Aktor" group
+                width_te INTEGER,
+                manual_url TEXT NOT NULL DEFAULT ''
             );
 
             -- A specific physical device placed in a project (a distribution board slot).
@@ -810,14 +813,11 @@ def init_db():
         if "name" in actor_types_cols:
             db.execute("UPDATE actor_types SET model = name WHERE model = '' AND name != ''")
 
-        # One-time table rebuild: add group_name/description and make channel_count nullable
-        # (channels only apply to the "Aktor" group - sensors, weather stations, touch panels
-        # etc. don't have them). SQLite can't relax a NOT NULL constraint via ALTER TABLE, so
-        # this recreates the table, preserving every existing row's id (actor_instances.actor_type_id
-        # keeps pointing at the same rows). Also runs on every fresh install (the CREATE TABLE
-        # above predates group_name), AFTER the ALTER TABLE migration loop - so any column that
-        # loop adds to actor_types must also be in this rebuilt table, or a fresh install ends up
-        # without it (manual_url did: the device catalog 500'd until the next restart).
+        # One-time table rebuild for old databases still missing group_name/description
+        # (the CREATE TABLE above already has the final shape, so this is a no-op on a
+        # fresh install). SQLite can't relax a NOT NULL constraint via ALTER TABLE, so this
+        # recreates the table, preserving every existing row's id (actor_instances.actor_type_id
+        # keeps pointing at the same rows).
         cols = [r["name"] for r in db.execute("PRAGMA table_info(actor_types)").fetchall()]
         if "group_name" not in cols:
             # PRAGMA foreign_keys is a no-op while a transaction is open, so commit first -

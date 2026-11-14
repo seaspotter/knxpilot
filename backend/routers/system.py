@@ -96,12 +96,7 @@ def _image_update():
     whole update is one command on the server."""
     changed = _git("diff", "--name-only", "HEAD", "@{u}").splitlines()
     needed = any(f in IMAGE_FILES for f in changed)
-    command = "git pull && docker compose pull && docker compose up -d"
-    branch = _git("rev-parse", "--abbrev-ref", "HEAD")
-    if needed and branch != "main":
-        # `latest` is built from main only - see docker-compose.yml/DEPLOYMENT.md.
-        command = f'grep -q KNXPILOT_IMAGE_TAG=dev .env 2>/dev/null || echo "KNXPILOT_IMAGE_TAG=dev" >> .env; {command}'
-    return needed, command
+    return needed, "git pull && docker compose pull && docker compose up -d"
 
 
 @router.get("/api/system/status")
@@ -172,17 +167,6 @@ def system_update(background_tasks: BackgroundTasks):
                 "Updated, but requirements.txt or the Dockerfile changed - a new image is needed. "
                 "Run on the server: docker compose pull && docker compose up -d"
             )
-            branch = subprocess.run(
-                ["git", "-C", REPO_DIR, "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True
-            ).stdout.strip()
-            if branch and branch != "main":
-                # `latest` is built from main only - a dev checkout needs the
-                # matching `dev` image, see docker-compose.yml/DEPLOYMENT.md.
-                message += (
-                    f" (branch '{branch}': set KNXPILOT_IMAGE_TAG=dev in the .env file next to "
-                    "docker-compose.yml, and wait until the 'Publish Docker image' run for the "
-                    "latest dev push has finished)"
-                )
             return {"ok": True, "message": message, "restarting": False}
 
         background_tasks.add_task(_restart_process)
