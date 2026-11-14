@@ -19,7 +19,7 @@ from reportlab.platypus import KeepTogether, Paragraph, Spacer, Table
 from reportlab.lib.units import mm
 
 from ..db import get_db
-from ..models import RoomDeviceIn, RoomDeviceEditIn, DeviceOrderFlagIn
+from ..models import RoomDeviceIn, RoomDeviceEditIn, DeviceOrderFlagIn, DeviceOptionalFlagIn
 from ..pdf_design import pdf_styles, pdf_title_banner, pdf_table_style, build_pdf_response, company_header_block, company_footer_line
 from ..templating import templates
 from ..utils import join_parts
@@ -168,6 +168,20 @@ def set_device_order_flag(project_id: int, device_type_id: int, flag: DeviceOrde
     return {"ok": True}
 
 
+@router.put("/api/projects/{project_id}/device-optional-flags/{device_type_id}")
+def set_device_optional_flag(project_id: int, device_type_id: int, flag: DeviceOptionalFlagIn):
+    """Marks (or unmarks) a device type as "optional" for this project only - it's
+    up to the customer whether to order it. Independent of set_device_order_flag:
+    stays in the order table/count either way, just flagged there and in exports."""
+    with get_db() as db:
+        db.execute(
+            "INSERT INTO device_order_flags (project_id, device_type_id, optional) VALUES (?, ?, ?) "
+            "ON CONFLICT(project_id, device_type_id) DO UPDATE SET optional=excluded.optional",
+            (project_id, device_type_id, int(flag.optional)),
+        )
+    return {"ok": True}
+
+
 @router.get("/api/projects/{project_id}/device-summary")
 def device_summary(project_id: int):
     """Project-wide bill of materials: total quantity needed per device type,
@@ -178,7 +192,7 @@ def device_summary(project_id: int):
     with get_db() as db:
         device_types = {r["id"]: dict(r) for r in db.execute("SELECT * FROM actor_types").fetchall()}
         order_flags = {
-            r["device_type_id"]: bool(r["not_ordering"])
+            r["device_type_id"]: (bool(r["not_ordering"]), bool(r["optional"]))
             for r in db.execute(
                 "SELECT * FROM device_order_flags WHERE project_id=?", (project_id,)
             ).fetchall()
@@ -232,6 +246,7 @@ def device_summary(project_id: int):
         result = []
         for device_type_id, entry in totals.items():
             dt = device_types.get(device_type_id, {})
+            not_ordering, optional = order_flags.get(device_type_id, (False, False))
             result.append(
                 {
                     "device_type_id": device_type_id,
@@ -240,7 +255,8 @@ def device_summary(project_id: int):
                     "group_name": dt.get("group_name", ""),
                     "description": dt.get("description", "") or "",
                     "total": entry["total"], "rooms": entry["rooms"],
-                    "not_ordering": order_flags.get(device_type_id, False),
+                    "not_ordering": not_ordering,
+                    "optional": optional,
                     "manual_url": dt.get("manual_url", ""),
                 }
             )
@@ -287,9 +303,10 @@ def build_stueckliste_story(summary, styles):
     heading = Paragraph("Stückliste", styles["SectionHeading"])
     table_data = [["Hersteller", "Typ", "Beschreibung", "Gruppe", "Anzahl"]]
     for s in to_order:
+        description = s["description"] + (" (optional)" if s["optional"] else "")
         table_data.append([
             _cell(v, styles) for v in
-            (s["manufacturer"], s["model"], s["description"], s["group_name"], str(s["total"]))
+            (s["manufacturer"], s["model"], description, s["group_name"], str(s["total"]))
         ])
     story = []
     if len(table_data) == 1:
@@ -556,6 +573,14 @@ def hx_tab(request: Request, project_id: int):
 def hx_set_order_flag(request: Request, project_id: int, device_type_id: int, not_ordering: bool = Form(False)):
     with get_db() as db:
         set_device_order_flag(project_id, device_type_id, DeviceOrderFlagIn(not_ordering=not_ordering))
+        return templates.TemplateResponse(request, "device_planning/_summary.html",
+                                           {"summary": device_summary(project_id), "project_id": project_id})
+
+
+@router.put("/hx/projects/{project_id}/device-optional-flags/{device_type_id}")
+def hx_set_optional_flag(request: Request, project_id: int, device_type_id: int, optional: bool = Form(False)):
+    with get_db() as db:
+        set_device_optional_flag(project_id, device_type_id, DeviceOptionalFlagIn(optional=optional))
         return templates.TemplateResponse(request, "device_planning/_summary.html",
                                            {"summary": device_summary(project_id), "project_id": project_id})
 

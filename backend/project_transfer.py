@@ -140,7 +140,7 @@ def build_project_payload(db, project_id, mode="backup"):
     ]
 
     order_flags_out = [
-        {**device_ref(f["device_type_id"]), "not_ordering": bool(f["not_ordering"])}
+        {**device_ref(f["device_type_id"]), "not_ordering": bool(f["not_ordering"]), "optional": bool(f["optional"])}
         for f in db.execute("SELECT * FROM device_order_flags WHERE project_id=?", (project_id,)).fetchall()
         if device_ref(f["device_type_id"])
     ]
@@ -354,8 +354,9 @@ def insert_project_from_payload(db, payload, forced_name=None):
     for f in payload.get("device_order_flags", []):
         type_id = actor_types_by_name.get((f.get("manufacturer"), f.get("model")))
         if type_id:
-            db.execute("INSERT OR IGNORE INTO device_order_flags (project_id, device_type_id, not_ordering) VALUES (?, ?, ?)",
-                       (project_id, type_id, int(f.get("not_ordering", False))))
+            db.execute("INSERT OR IGNORE INTO device_order_flags (project_id, device_type_id, not_ordering, optional) "
+                       "VALUES (?, ?, ?, ?)",
+                       (project_id, type_id, int(f.get("not_ordering", False)), int(f.get("optional", False))))
 
     # "distribution_boards"/"clarifications" - accept the pre-rename payload
     # keys ("verteiler"/"klaerungen" with "typ"/"antwort" fields) too, so a

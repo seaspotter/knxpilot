@@ -18,6 +18,7 @@ def project(client):
     ok(client.post(f"/api/projects/{pid}/clarifications", json={"text": 'Allgemein "Frage"', "type": "Aufgabe"}))
     at = next(a for a in ok(client.get("/api/actor-types")) if a["model"] == "BE-GT2TW.02")
     ok(client.put(f"/api/actor-types/{at['id']}", json={**at, "description": "Taster & <Glas>"}))
+    ok(client.put(f"/api/projects/{pid}/device-optional-flags/{at['id']}", json={"optional": True}))
     ok(client.post("/api/time-entries", json={"project_id": pid, "started_at": "2026-09-25T08:00:00Z",
                                                "ended_at": "2026-09-25T09:00:00Z", "note": "Notiz & <mehr>"}))
     cp = ok(client.get("/api/company-profile"))
