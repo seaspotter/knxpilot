@@ -36,10 +36,15 @@ function wireSubnav(navSelector, dataKey, panelsSelector, panelIdPrefix, loaders
   });
 }
 
+// Loaders are wrapped in arrow functions (not passed directly) because
+// api.js loads first - the named functions below don't exist yet when this
+// script runs, only once every other <script> tag has loaded; a direct
+// reference here would throw a ReferenceError evaluating the object
+// literal, before a single button ever got wired up.
 wireSubnav('nav', 'tab', '.tab', 'tab-', {
-  'time-tracking': loadTimeTrackingTab,
-  setup: loadActiveSetupSection,
-  'device-catalog': loadActiveDeviceCatalogSection,
+  'time-tracking': () => loadTimeTrackingTab(),
+  setup: () => loadActiveSetupSection(),
+  'device-catalog': () => loadActiveDeviceCatalogSection(),
 });
 
 // ---------- Nav dropdown (Projekte menu) ----------
@@ -55,21 +60,21 @@ function closeNavDropdowns() {
 document.addEventListener('click', closeNavDropdowns);
 
 wireSubnav('#workspace-subnav', 'subtab', '#project-detail .subtab', 'subtab-', {
-  overview: loadOverviewTab,
-  functions: loadFunctionsForCurrentProject,
-  'group-addresses': loadGroupAddressesForCurrentProject,
-  'circuit-list': loadCircuitListForCurrentProject,
-  labels: loadLabelsForCurrentProject,
-  'device-planning': loadDevicePlanningForCurrentProject,
-  'distribution-boards': loadDistributionBoardsForCurrentProject,
-  specification: loadSpecificationTab,
-  documentation: loadDocumentationTab,
-  'function-checklist': loadFunctionChecklist,
-  'handover-checklist': loadHandoverChecklist,
-  'clarification-list': loadClarificationListForCurrentProject,
-  manuals: loadProjectManuals,
+  overview: () => loadOverviewTab(),
+  functions: () => loadFunctionsForCurrentProject(),
+  'group-addresses': () => loadGroupAddressesForCurrentProject(),
+  'circuit-list': () => loadCircuitListForCurrentProject(),
+  labels: () => loadLabelsForCurrentProject(),
+  'device-planning': () => loadDevicePlanningForCurrentProject(),
+  'distribution-boards': () => loadDistributionBoardsForCurrentProject(),
+  specification: () => loadSpecificationTab(),
+  documentation: () => loadDocumentationTab(),
+  'function-checklist': () => loadFunctionChecklist(),
+  'handover-checklist': () => loadHandoverChecklist(),
+  'clarification-list': () => loadClarificationListForCurrentProject(),
+  manuals: () => loadProjectManuals(),
 });
 
-wireSubnav('#setup-subnav', 'subtab', '#tab-setup .subtab', 'setup-subtab-', { default: loadSetupSection });
-wireSubnav('#device-catalog-subnav', 'subtab', '#tab-device-catalog .subtab', 'device-catalog-subtab-', { default: loadDeviceCatalogSection });
+wireSubnav('#setup-subnav', 'subtab', '#tab-setup .subtab', 'setup-subtab-', { default: (key) => loadSetupSection(key) });
+wireSubnav('#device-catalog-subnav', 'subtab', '#tab-device-catalog .subtab', 'device-catalog-subtab-', { default: (key) => loadDeviceCatalogSection(key) });
 
