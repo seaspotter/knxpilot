@@ -10,6 +10,21 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-11-14
+
+### Fixed
+
+- **Broken top-level navigation after updating to 0.10.1** - the 0.10.1
+  nav-wiring cleanup (`wireSubnav()` in `api.js`) referenced per-tab loader
+  functions (e.g. `loadTimeTrackingTab`) directly in an object literal
+  evaluated as soon as `api.js` ran. Since `api.js` loads first (before the
+  files that define those functions), this threw a `ReferenceError` on
+  every page load, aborting the rest of `api.js` before it could wire up
+  any nav button - every tab except the one shown by default appeared
+  unresponsive. Fixed by wrapping each loader in `() => fn()`, so the
+  named function is only looked up when a button is actually clicked, not
+  when the page loads.
+
 ## [0.10.1] - 2026-11-14
 
 ### Changed
