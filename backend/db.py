@@ -390,14 +390,17 @@ def init_db():
                 order_idx INTEGER NOT NULL DEFAULT 0
             );
 
-            -- Per-project "already have this, don't order it" flag on a device type
-            -- (e.g. a spare Wetterstation or Tor-Aktor left over from another job) -
-            -- keeps it visible in the Stückliste but out of the order table/count.
+            -- Per-project order-relevant flags on a device type: "already have this,
+            -- don't order it" (e.g. a spare Wetterstation or Tor-Aktor left over from
+            -- another job) keeps it visible in the Stückliste but out of the order
+            -- table/count; "optional" marks it as the customer's call whether to
+            -- order it at all - still in the order table/count, just flagged.
             CREATE TABLE IF NOT EXISTS device_order_flags (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
                 device_type_id INTEGER NOT NULL REFERENCES actor_types(id),
                 not_ordering INTEGER NOT NULL DEFAULT 0,
+                optional INTEGER NOT NULL DEFAULT 0,
                 UNIQUE(project_id, device_type_id)
             );
 
@@ -761,6 +764,8 @@ def init_db():
             # Optional room a Verteiler sits in (floor_id is kept in sync with the room's floor).
             ("distribution_boards", "room_id",
              "ALTER TABLE distribution_boards ADD COLUMN room_id INTEGER REFERENCES rooms(id) ON DELETE SET NULL"),
+            ("device_order_flags", "optional",
+             "ALTER TABLE device_order_flags ADD COLUMN optional INTEGER NOT NULL DEFAULT 0"),
         ]:
             cols = [r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()]
             if column not in cols:

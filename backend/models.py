@@ -153,6 +153,10 @@ class DeviceOrderFlagIn(BaseModel):
     not_ordering: bool = True
 
 
+class DeviceOptionalFlagIn(BaseModel):
+    optional: bool = True
+
+
 class ChecklistStatusIn(BaseModel):
     status: str = ""
     note: str = ""

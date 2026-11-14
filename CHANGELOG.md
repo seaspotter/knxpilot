@@ -10,6 +10,16 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-14
+
+### Added
+
+- **Device planning: "Optional" flag on a device type** - independent of
+  "Nicht bestellen", marks a device as the customer's call whether to
+  order it at all; stays in the order table/count (unlike "Nicht
+  bestellen", which excludes it), just flagged there and in the Geräteliste/
+  Pflichtenheft/Dokumentation PDF exports that share the same Stückliste.
+
 ## [0.9.4] - 2026-11-14
 
 `dev` is retired - `main` is now the only branch (see `DEVELOPMENT.md`).

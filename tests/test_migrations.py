@@ -30,6 +30,21 @@ def test_init_is_idempotent(db_path):
     assert "manual_url" in columns(db_path, "actor_types")
 
 
+def test_upgrades_device_order_flags_without_optional_column(db_path):
+    """An old install: device_order_flags predates the "optional" column."""
+    with sqlite3.connect(db_path) as c:
+        c.execute(
+            "CREATE TABLE device_order_flags (id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER NOT NULL, "
+            "device_type_id INTEGER NOT NULL, not_ordering INTEGER NOT NULL DEFAULT 0, "
+            "UNIQUE(project_id, device_type_id))"
+        )
+        c.execute("INSERT INTO device_order_flags (project_id, device_type_id, not_ordering) VALUES (1, 1, 1)")
+    backend.db.init_db()
+    assert "optional" in columns(db_path, "device_order_flags")
+    with sqlite3.connect(db_path) as c:
+        assert c.execute("SELECT not_ordering, optional FROM device_order_flags WHERE project_id=1").fetchone() == (1, 0)
+
+
 def test_upgrades_pre_group_name_actor_types(db_path):
     """An old install: actor_types still with the legacy "name" column and
     no group_name - must be rebuilt keeping ids, and end up with every newer

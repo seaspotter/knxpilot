@@ -150,6 +150,9 @@ Aktoren gehören weiterhin in die Abgangsliste.
    Ohne passenden Raum: **Geräte ohne Raum** je Geschoss.
 2. **Stückliste** oben: Gesamtanzahl je Gerät (inkl. Aktoren) fürs
    Bestellen. **Nicht bestellen** markiert bereits vorhandene Geräte.
+   **Optional** markiert Geräte, bei denen die Bestellung in Absprache mit
+   dem Kunden steht — bleibt in Bestellliste/Anzahl enthalten, erscheint
+   aber mit Hinweis.
 3. **PDF herunterladen** exportiert die Bestellliste.
 4. **Geräte je Raum → PDF herunterladen** exportiert alle Geräte gruppiert
    nach Geschoss/Raum als Installationsreferenz.

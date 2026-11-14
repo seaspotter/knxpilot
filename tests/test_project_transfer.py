@@ -20,6 +20,7 @@ def rich_project(client, db_path):
     ok(client.put(f"/api/floors/{eg['id']}/line", json={"line_id": line}))
     ok(client.post(f"/api/floors/{eg['id']}/devices", json={"device_type_id": at["SCN-IP000.03"], "note": "Router"}))
     ok(client.put(f"/api/projects/{pid}/device-order-flags/{at['SCN-BWM63.02']}", json={"not_ordering": True}))
+    ok(client.put(f"/api/projects/{pid}/device-optional-flags/{at['AKD-0401.02']}", json={"optional": True}))
     actor = ok(client.get(f"/api/projects/{pid}/actor-instances"))[0]
     vid = ok(client.post(f"/api/projects/{pid}/distribution-boards", json={"room_id": flur["id"], "name": "UV EG"}))["id"]
     ok(client.post(f"/api/distribution-boards/{vid}/items", json={"row_idx": 0, "item_type": "rcd", "label": "RCD 40A"}))
@@ -55,7 +56,7 @@ def snapshot(client, db_path, pid):
             "actors": [(a["actor_type_id"], a["physical_address"], a["location_label"]) for a in actors],
             "circuits": sorted((point_pos[c["room_point_id"]], c["channel_seq"], actor_pos[c["assignment"]["actor_instance_id"]],
                                 c["assignment"]["channel_letter"]) for c in circuits if c["assignment"]),
-            "summary": [(d["device_name"], d["total"], d["not_ordering"]) for d in ok(client.get(f"/api/projects/{pid}/device-summary"))],
+            "summary": [(d["device_name"], d["total"], d["not_ordering"], d["optional"]) for d in ok(client.get(f"/api/projects/{pid}/device-summary"))],
             "distribution_boards": [(b["name"], b["room_name"], [[(i["item_type"], i["label"]) for i in row] for row in b["rows"]])
                           for b in ok(client.get(f"/api/projects/{pid}/distribution-boards"))],
             "clarifications": [(c["text"], c["room_point_id"] is not None) for c in q("SELECT * FROM clarifications WHERE project_id=?")],
@@ -80,6 +81,7 @@ def test_backup_restores_everything(client, db_path):
     assert after == before
     # sanity: the comparison really covered the rich parts
     assert before["circuits"] and before["distribution_boards"][0][1] == "Flur" and before["files"][0][1] == b"%PDF-1.4 plan"
+    assert any(not_ordering for *_, not_ordering, optional in before["summary"]) and any(optional for *_, not_ordering, optional in before["summary"])
     assert len(before["checklist"]) == 3 and before["signatures"] == ["fc_systemintegrator"] and before["manuals"]
 
 

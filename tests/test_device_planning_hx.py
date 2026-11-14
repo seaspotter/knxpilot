@@ -104,3 +104,26 @@ def test_order_flag_toggle_updates_summary(client):
     body = html(client.put(f"/hx/projects/{pid}/device-order-flags/{device_type_id}",
                             data={"not_ordering": "false"}))
     assert "Bereits vorhanden" not in body
+
+
+def test_optional_flag_toggle_is_independent_of_order_flag(client):
+    pid = ok(client.post("/api/projects", json={"name": "Test"}))["id"]
+    eg = ok(client.post(f"/api/projects/{pid}/floors", json={"name": "EG"}))["id"]
+    room = ok(client.post(f"/api/floors/{eg}/rooms", json={"name": "Flur"}))["id"]
+    device_type_id = _first_bedienelement(client)
+    ok(client.post(f"/api/rooms/{room}/devices", json={"device_type_id": device_type_id, "quantity": 1}))
+
+    body = html(client.put(f"/hx/projects/{pid}/device-optional-flags/{device_type_id}",
+                            data={"optional": "true"}))
+    assert '<span class="pill">Optional</span>' in body
+    summary = ok(client.get(f"/api/projects/{pid}/device-summary"))
+    assert (summary[0]["optional"], summary[0]["not_ordering"]) == (True, False)
+
+    # setting "Nicht bestellen" afterwards doesn't clear "Optional", and vice versa
+    html(client.put(f"/hx/projects/{pid}/device-order-flags/{device_type_id}", data={"not_ordering": "true"}))
+    summary = ok(client.get(f"/api/projects/{pid}/device-summary"))
+    assert (summary[0]["optional"], summary[0]["not_ordering"]) == (True, True)
+
+    body = html(client.put(f"/hx/projects/{pid}/device-optional-flags/{device_type_id}",
+                            data={"optional": "false"}))
+    assert '<span class="pill">Optional</span>' not in body and "Bereits vorhanden" in body
