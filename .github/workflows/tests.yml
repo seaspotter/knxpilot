@@ -1,12 +1,12 @@
 name: Tests
 
-# Runs the pytest suite (tests/) on every push to dev/main and on pull
+# Runs the pytest suite (tests/) on every push to main and on pull
 # requests - catches regressions like a broken fresh-install migration or
 # an export that crashes on special characters before they're released.
 
 on:
   push:
-    branches: [dev, main]
+    branches: [main]
   pull_request:
 
 jobs:
