@@ -16,7 +16,6 @@ via an HTML canvas signature pad in the frontend, embedded into both the
 Übergabe-Checkliste and Dokumentation PDF exports via build_signature_row().
 """
 import base64
-import json
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Form, HTTPException, Request, Response

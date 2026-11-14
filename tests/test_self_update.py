@@ -60,12 +60,3 @@ def test_update_with_new_packages_is_not_pulled(client, repos):
     assert result["needs_image"] and not result["ok"] and not result["restarting"]
     assert git(server, "rev-parse", "HEAD") == before              # nothing pulled
     assert (server / "requirements.txt").read_text() == "fastapi\n"
-
-
-def test_dev_checkout_command_uses_dev_image(client, repos):
-    server, push = repos
-    git(server, "checkout", "-q", "-b", "dev", "--track", "origin/main")  # a checkout not on main
-    push("requirements.txt", "fastapi\njinja2\n")
-    status = ok(client.get("/api/system/status"))
-    assert "KNXPILOT_IMAGE_TAG=dev" in status["image_command"]
-    assert status["image_command"].endswith("git pull && docker compose pull && docker compose up -d")

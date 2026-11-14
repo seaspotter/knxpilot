@@ -6,11 +6,6 @@ layout registry (LABEL_FORMATS) and the PDF rendering itself
 (render_label_sheet), kept there as a shared helper module since it's pure
 print-layout logic with no tab-specific state.
 
-Only used to have a "channels" source too (one label per channel/circuit
-instead of per actor) - dropped since nobody used it and it's the same
-per-actor loop plus a channel_assignments join, easy to bring back from
-git history if ever needed.
-
 Rendered server-side with htmx (see DEVELOPMENT.md "htmx tabs"): the tab is
 just a form (no persisted state of its own), so there's a single /hx/...
 endpoint that renders it - the label-position grid and the PDF download

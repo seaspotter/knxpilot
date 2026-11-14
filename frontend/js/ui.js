@@ -232,6 +232,29 @@ function escapeAttr(s) {
   return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 }
 
+// Copies text to the clipboard, returning whether it worked. Prefers the
+// Clipboard API (HTTPS/localhost only); falls back to a hidden textarea +
+// execCommand, since KNXpilot usually runs on a plain http:// LAN address.
+async function copyTextToClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch (e) {
+    return false;
+  }
+}
+
 // ---------- htmx glue (tabs rendered server-side, e.g. clarification_list.js) ----------
 // hx-confirm="..." uses the app's own confirm dialog instead of the browser's.
 document.addEventListener('htmx:confirm', ev => {

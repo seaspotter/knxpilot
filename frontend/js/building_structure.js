@@ -240,10 +240,6 @@ async function moveStructure(url, body, question,
     if (!(await showConfirm(message, {confirmLabel: 'Verschieben'}))) return;
   }
   await api(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
-  await refreshAfterStructureMove();
-}
-
-async function refreshAfterStructureMove() {
   await renderFloors();
 }
 

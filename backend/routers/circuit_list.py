@@ -382,6 +382,18 @@ def auto_assign_circuits(project_id: int, dry_run: bool = False):
 # --------------------------------------------------------------------------
 # Exports
 # --------------------------------------------------------------------------
+def _actor_instances_with_type(db, project_id):
+    """Actor instances joined with their type's channel info - shared by the
+    CSV export and the Circuit List PDF story (same query, same aliases)."""
+    return db.execute(
+        "SELECT ai.*, at.channel_type as ct, at.channel_count as cc, "
+        "at.manufacturer as at_manufacturer, at.model as at_model "
+        "FROM actor_instances ai JOIN actor_types at ON ai.actor_type_id = at.id "
+        "WHERE ai.project_id=? ORDER BY ai.order_idx",
+        (project_id,),
+    ).fetchall()
+
+
 @router.get("/api/projects/{project_id}/export-circuit-list.csv")
 def export_circuit_list_csv(project_id: int):
     with get_db() as db:
@@ -392,13 +404,7 @@ def export_circuit_list_csv(project_id: int):
         circuits = get_circuits(db, project_id)
         by_room_point = {(c["room_point_id"], c["channel_seq"]): c for c in circuits}
 
-        actor_instances = db.execute(
-            "SELECT ai.*, at.channel_type as ct, at.channel_count as cc, "
-            "at.manufacturer as at_manufacturer, at.model as at_model "
-            "FROM actor_instances ai JOIN actor_types at ON ai.actor_type_id = at.id "
-            "WHERE ai.project_id=? ORDER BY ai.order_idx",
-            (project_id,),
-        ).fetchall()
+        actor_instances = _actor_instances_with_type(db, project_id)
         floors = {r["id"]: r["name"] for r in db.execute("SELECT * FROM floors WHERE project_id=?", (project_id,)).fetchall()}
         assignments = db.execute(
             "SELECT * FROM channel_assignments WHERE project_id=?", (project_id,)
@@ -447,13 +453,7 @@ def build_circuit_list_story(db, project_id, styles, page_break_between_floors=T
     circuits = get_circuits(db, project_id)
     by_room_point = {(c["room_point_id"], c["channel_seq"]): c for c in circuits}
 
-    actor_instances = db.execute(
-        "SELECT ai.*, at.channel_type as ct, at.channel_count as cc, "
-        "at.manufacturer as at_manufacturer, at.model as at_model "
-        "FROM actor_instances ai JOIN actor_types at ON ai.actor_type_id = at.id "
-        "WHERE ai.project_id=? ORDER BY ai.order_idx",
-        (project_id,),
-    ).fetchall()
+    actor_instances = _actor_instances_with_type(db, project_id)
     floors_rows = db.execute(
         "SELECT * FROM floors WHERE project_id=? ORDER BY order_idx", (project_id,)
     ).fetchall()

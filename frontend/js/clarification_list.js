@@ -35,24 +35,6 @@ function downloadClarificationListPdf() {
 async function copyOpenClarificationsAsText() {
   const text = (document.getElementById('clarification-open-text')?.value || '').trim();
   if (!text) return showToast('Keine offenen Punkte', 'warning');
-  // navigator.clipboard only exists on HTTPS/localhost - KNXpilot usually
-  // runs on a plain http:// LAN address, so fall back to execCommand.
-  try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text);
-    } else {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      const ok = document.execCommand('copy');
-      ta.remove();
-      if (!ok) throw new Error('copy failed');
-    }
-    showToast('Offene Punkte in die Zwischenablage kopiert', 'success');
-  } catch (e) {
-    showToast('Kopieren nicht möglich - bitte PDF verwenden', 'warning');
-  }
+  const ok = await copyTextToClipboard(text);
+  showToast(ok ? 'Offene Punkte in die Zwischenablage kopiert' : 'Kopieren nicht möglich - bitte PDF verwenden', ok ? 'success' : 'warning');
 }

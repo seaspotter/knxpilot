@@ -53,6 +53,13 @@ function openCreateProjectModal() {
   });
 }
 
+// Shared by the project picker modal and the main Projekte list filter.
+function filterProjects(query) {
+  return !query ? PROJECTS_LIST : PROJECTS_LIST.filter(p =>
+    [p.name, p.customer, p.location, p.status, p.order_number]
+      .some(field => (field || '').toLowerCase().includes(query)));
+}
+
 // ---------- Project picker modal (used by the "Projekt öffnen" nav item) ----------
 async function openProjectPickerModal() {
   await loadProjects();
@@ -68,10 +75,7 @@ async function openProjectPickerModal() {
 
   const renderPicker = () => {
     const query = document.getElementById('picker-project-filter').value.trim().toLowerCase();
-    const filtered = !query ? PROJECTS_LIST : PROJECTS_LIST.filter(p =>
-      [p.name, p.customer, p.location, p.status, p.order_number]
-        .some(field => (field || '').toLowerCase().includes(query))
-    );
+    const filtered = filterProjects(query);
     document.getElementById('picker-projects-list').innerHTML = filtered.map(p => `
       <li>
         <div>
@@ -180,10 +184,7 @@ function renderProjectsList() {
   const ul = document.getElementById('projects-list');
   const countEl = document.getElementById('project-filter-count');
   const query = document.getElementById('project-filter').value.trim().toLowerCase();
-  const filtered = !query ? PROJECTS_LIST : PROJECTS_LIST.filter(p =>
-    [p.name, p.customer, p.location, p.status, p.order_number]
-      .some(field => (field || '').toLowerCase().includes(query))
-  );
+  const filtered = filterProjects(query);
   countEl.textContent = query ? `${filtered.length} von ${PROJECTS_LIST.length} Projekten` : '';
 
   ul.innerHTML = filtered.map(p => `

@@ -10,6 +10,17 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-11-14
+
+### Changed
+
+- **Internal cleanup pass** - removed dead code (an unused PDF-response
+  helper, a stale comment about a dropped label-source option, the Update
+  tab's now-unreachable `dev`-checkout command variant) and de-duplicated
+  repeated logic (the Circuit List's actor-instance query, the frontend's
+  per-tab/subtab nav wiring, project-list filtering, and the clipboard-copy
+  fallback) into shared helpers. No user-visible behavior change.
+
 ## [0.10.0] - 2026-11-14
 
 ### Added

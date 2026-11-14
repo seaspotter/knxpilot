@@ -208,7 +208,7 @@ def make_numbered_canvas(footer_left_text, footer_center_text="", page_count=Non
     bound to page 1 regardless of which page it's really on. Passing an
     already-known page_count switches to an immediate, non-deferred
     showPage() (draw the footer now, commit the page now) - see
-    build_pdf_response_two_pass() for the caller side that measures the
+    build_pdf_bytes_two_pass() for the caller side that measures the
     count first in a throwaway pass."""
 
     class _NumberedCanvas(pdfcanvas.Canvas):
@@ -310,11 +310,3 @@ def pdf_response(data, filename, inline=False):
 
 def build_pdf_response(story, footer_left_text, filename, doc_title, footer_center_text=""):
     return pdf_response(build_pdf_bytes(story, footer_left_text, doc_title, footer_center_text), filename)
-
-
-def build_pdf_response_two_pass(build_story, footer_left_text, filename, doc_title, footer_center_text=""):
-    """See build_pdf_bytes_two_pass() - this just wraps it as a downloadable
-    HTTP response, same relationship build_pdf_response() has to
-    build_pdf_bytes()."""
-    data = build_pdf_bytes_two_pass(build_story, footer_left_text, doc_title, footer_center_text)
-    return pdf_response(data, filename)
