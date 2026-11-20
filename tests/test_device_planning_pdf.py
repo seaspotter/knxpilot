@@ -6,7 +6,7 @@ text isn't searchable in the raw PDF bytes at all."""
 from reportlab.platypus import KeepTogether
 
 from backend.db import get_db
-from backend.pdf_design import pdf_styles
+from backend.pdf_design import pdf_styles, PDF_WARN_COLOR
 from backend.routers.device_planning import build_devices_by_room_story, build_stueckliste_story, device_summary
 from conftest import ok
 
@@ -70,6 +70,14 @@ def test_stueckliste_splits_optional_into_its_own_table(client):
     assert any(not_ordering_name in t for t in texts)
 
 
+def _tables(flowables):
+    for f in flowables:
+        if hasattr(f, "_cellvalues"):
+            yield f
+        elif hasattr(f, "_content"):  # KeepTogether
+            yield from _tables(f._content)
+
+
 def test_devices_by_room_marks_optional_devices(client):
     pid, normal_id, optional_id, not_ordering_id = _three_devices(client)
     styles = pdf_styles()
@@ -77,5 +85,23 @@ def test_devices_by_room_marks_optional_devices(client):
         story = build_devices_by_room_story(db, pid, styles)
     texts = _texts(story)
 
-    descriptions = [t for t in texts if "(optional)" in t]
+    descriptions = [t for t in texts if "Kundenentscheidung ausstehend" in t]
     assert len(descriptions) == 1  # only the one device marked optional
+
+    # The row is also visually flagged (warn color + bold), not just text -
+    # the whole point of this change was that plain "(optional)" text was
+    # too easy to miss. A Table-level TEXTCOLOR/FONTNAME command has no effect
+    # on a cell that's already a Paragraph (every cell here is, via _cell()) -
+    # it renders with its own style, so that's what must carry the styling.
+    optional_row = next(
+        row for t in _tables(story) for row in t._cellvalues
+        if any(hasattr(c, "text") and "Kundenentscheidung ausstehend" in c.text for c in row)
+    )
+    assert all(cell.style.textColor == PDF_WARN_COLOR and cell.style.fontName == "Helvetica-Bold" for cell in optional_row)
+
+    # A normal row must NOT be warn-styled - otherwise this wouldn't stand out at all.
+    normal_row = next(
+        row for t in _tables(story) for row in t._cellvalues
+        if any(hasattr(c, "text") and "Kundenentscheidung" not in c.text for c in row)
+    )
+    assert all(cell.style.textColor != PDF_WARN_COLOR for cell in normal_row)

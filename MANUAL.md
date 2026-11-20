@@ -158,7 +158,8 @@ Aktoren gehören weiterhin in die Abgangsliste.
    (Stückliste / Optional / Bereits vorhanden).
 4. **Geräte je Raum → PDF herunterladen** exportiert alle Geräte gruppiert
    nach Geschoss/Raum als Installationsreferenz; ein als **Optional**
-   markiertes Gerät ist dort mit "(optional)" gekennzeichnet.
+   markiertes Gerät erscheint dort fett/farbig hervorgehoben mit dem
+   Hinweis "Optional, Kundenentscheidung ausstehend".
 5. **PA automatisch zuordnen** — siehe Abgangsliste, Punkt 7.
 
 #### Verteilerplanung
