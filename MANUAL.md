@@ -149,13 +149,16 @@ Aktoren gehören weiterhin in die Abgangsliste.
    an); physische Adresse bei Anzahl 1 direkt, sonst über **Bearbeiten**.
    Ohne passenden Raum: **Geräte ohne Raum** je Geschoss.
 2. **Stückliste** oben: Gesamtanzahl je Gerät (inkl. Aktoren) fürs
-   Bestellen. **Nicht bestellen** markiert bereits vorhandene Geräte.
+   Bestellen. **Nicht bestellen** markiert bereits vorhandene Geräte - sie
+   erscheinen unten als eigene, kurze Liste statt in der Bestelltabelle.
    **Optional** markiert Geräte, bei denen die Bestellung in Absprache mit
-   dem Kunden steht — bleibt in Bestellliste/Anzahl enthalten, erscheint
-   aber mit Hinweis.
-3. **PDF herunterladen** exportiert die Bestellliste.
+   dem Kunden steht - sie stehen in einer eigenen Tabelle "Optional
+   (Kundenentscheidung)" unterhalb der Bestelltabelle, nicht darin.
+3. **PDF herunterladen** exportiert die Bestellliste in dieser Dreiteilung
+   (Stückliste / Optional / Bereits vorhanden).
 4. **Geräte je Raum → PDF herunterladen** exportiert alle Geräte gruppiert
-   nach Geschoss/Raum als Installationsreferenz.
+   nach Geschoss/Raum als Installationsreferenz; ein als **Optional**
+   markiertes Gerät ist dort mit "(optional)" gekennzeichnet.
 5. **PA automatisch zuordnen** — siehe Abgangsliste, Punkt 7.
 
 #### Verteilerplanung
