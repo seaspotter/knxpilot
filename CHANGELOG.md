@@ -10,6 +10,29 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ## [Unreleased]
 
+## [0.10.3] - 2026-11-20
+
+### Fixed
+
+- **Geräteliste PDF export: blank first page on larger projects** - the
+  Stückliste heading and its order table were one atomic layout group, so
+  ReportLab deferred the whole thing to a fresh page whenever the full
+  table (which can run to many pages) didn't fit in the remaining space
+  on the current one - wasting the rest of that page. Fixed by letting
+  the table paginate normally after its heading, like every other
+  multi-page table in the app already does.
+- **"Optional" devices were missing from Geräte je Raum** - the PDF
+  export's per-room query never looked up the `optional` flag at all, so
+  devices marked **Optional** in Geräteplanung showed no indication there.
+
+### Changed
+
+- **Geräteliste PDF: "Optional" devices now in their own table** - devices
+  marked **Optional** previously stayed in the main order table with an
+  "(optional)" suffix; they now get their own "Optional
+  (Kundenentscheidung)" table below it, matching how "Nicht bestellen"
+  devices already get their own list underneath.
+
 ## [0.10.2] - 2026-11-14
 
 ### Fixed

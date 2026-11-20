@@ -292,29 +292,51 @@ def export_device_list_pdf(project_id: int):
         )
 
 
+def _device_table(rows, styles):
+    table_data = [["Hersteller", "Typ", "Beschreibung", "Gruppe", "Anzahl"]]
+    for s in rows:
+        table_data.append([
+            _cell(v, styles) for v in
+            (s["manufacturer"], s["model"], s["description"], s["group_name"], str(s["total"]))
+        ])
+    table = Table(table_data, colWidths=[28 * mm, 38 * mm, 64 * mm, 34 * mm, 16 * mm], repeatRows=1)
+    table.setStyle(pdf_table_style())
+    return table
+
+
 def build_stueckliste_story(summary, styles):
     """The Stückliste as it appears in every PDF - the Geräteliste (order)
     export here and the Pflichtenheft/Dokumentation (routers/specification.py)
     - so they're always identical: devices to order in a table (alphabetical,
-    see device_summary), devices marked "Nicht bestellen" listed below as
-    already present."""
-    to_order = [s for s in summary if not s["not_ordering"]]
+    see device_summary), devices marked "Optional" in their own table below
+    that (the customer's call whether to order), devices marked "Nicht
+    bestellen" listed below that as already present."""
+    to_order = [s for s in summary if not s["not_ordering"] and not s["optional"]]
+    optional = [s for s in summary if not s["not_ordering"] and s["optional"]]
     already_have = [s for s in summary if s["not_ordering"]]
-    heading = Paragraph("Stückliste", styles["SectionHeading"])
-    table_data = [["Hersteller", "Typ", "Beschreibung", "Gruppe", "Anzahl"]]
-    for s in to_order:
-        description = s["description"] + (" (optional)" if s["optional"] else "")
-        table_data.append([
-            _cell(v, styles) for v in
-            (s["manufacturer"], s["model"], description, s["group_name"], str(s["total"]))
-        ])
+
     story = []
-    if len(table_data) == 1:
+    heading = Paragraph("Stückliste", styles["SectionHeading"])
+    if not to_order:
         story.append(KeepTogether([heading, Paragraph("Noch keine Geräte geplant.", styles["BodyMuted"])]))
     else:
-        table = Table(table_data, colWidths=[28 * mm, 38 * mm, 64 * mm, 34 * mm, 16 * mm], repeatRows=1)
-        table.setStyle(pdf_table_style())
-        story.append(KeepTogether([heading, table]))
+        # heading and table are NOT wrapped in one KeepTogether: this table can run to
+        # many pages, and KeepTogether would then push the whole heading+table group to
+        # a fresh page every time (since the group as a whole never fits in the
+        # remaining space of the current one) - leaving the rest of the current page
+        # blank. Plain sequential flowables let the table paginate normally
+        # (repeatRows repeats the header row), at the minor cost of the heading
+        # occasionally landing alone at the very bottom of a page.
+        story.append(heading)
+        story.append(Spacer(1, 2 * mm))
+        story.append(_device_table(to_order, styles))
+
+    if optional:
+        story.append(Spacer(1, 4 * mm))
+        story.append(Paragraph("Optional (Kundenentscheidung)", styles["SubHeading"]))
+        story.append(Spacer(1, 2 * mm))
+        story.append(_device_table(optional, styles))
+
     if already_have:
         story.append(Spacer(1, 4 * mm))
         text = ", ".join(f"{s['total']}× {s['device_name']}" for s in already_have)
@@ -338,7 +360,7 @@ def _devices_by_room_rows(db, project_id):
     Raum"), and Abgangsliste's actor_instances (grouped by Standortbezeichnung,
     since they have no room_id) - as (floor_name, room_name, [devices]) tuples,
     device dicts shaped {manufacturer, model, group_name, description,
-    physical_address}.
+    physical_address, optional}.
     Shared by the standalone Geräte-je-Raum PDF and its optional Pflichtenheft
     section, same pattern as build_distribution_boards_story/
     build_circuit_list_story in the sibling routers."""
@@ -348,36 +370,44 @@ def _devices_by_room_rows(db, project_id):
         rooms = db.execute("SELECT * FROM rooms WHERE floor_id=? ORDER BY order_idx", (floor["id"],)).fetchall()
         for room in rooms:
             devices = db.execute(
-                "SELECT rd.*, at.manufacturer, at.model, at.group_name, at.description FROM room_devices rd "
+                "SELECT rd.*, at.manufacturer, at.model, at.group_name, at.description, "
+                "COALESCE(dof.optional, 0) as optional FROM room_devices rd "
                 "JOIN actor_types at ON rd.device_type_id = at.id "
+                "LEFT JOIN device_order_flags dof ON dof.project_id=? AND dof.device_type_id=rd.device_type_id "
                 "WHERE rd.room_id=? ORDER BY rd.order_idx",
-                (room["id"],),
+                (project_id, room["id"]),
             ).fetchall()
             if devices:
                 rows.append((floor["name"], room["name"], devices))
 
         floor_devices = db.execute(
-            "SELECT fd.*, at.manufacturer, at.model, at.group_name, at.description FROM floor_devices fd "
+            "SELECT fd.*, at.manufacturer, at.model, at.group_name, at.description, "
+            "COALESCE(dof.optional, 0) as optional FROM floor_devices fd "
             "JOIN actor_types at ON fd.device_type_id = at.id "
+            "LEFT JOIN device_order_flags dof ON dof.project_id=? AND dof.device_type_id=fd.device_type_id "
             "WHERE fd.floor_id=? ORDER BY fd.order_idx",
-            (floor["id"],),
+            (project_id, floor["id"]),
         ).fetchall()
         if floor_devices:
             rows.append((floor["name"], "Ohne Raum", floor_devices))
 
         actor_rows = db.execute(
-            "SELECT ai.*, at.manufacturer, at.model, at.group_name, at.description FROM actor_instances ai "
+            "SELECT ai.*, at.manufacturer, at.model, at.group_name, at.description, "
+            "COALESCE(dof.optional, 0) as optional FROM actor_instances ai "
             "JOIN actor_types at ON ai.actor_type_id = at.id "
+            "LEFT JOIN device_order_flags dof ON dof.project_id=? AND dof.device_type_id=ai.actor_type_id "
             "WHERE ai.project_id=? AND ai.floor_id=? ORDER BY ai.order_idx",
-            (project_id, floor["id"]),
+            (project_id, project_id, floor["id"]),
         ).fetchall()
         rows += _grouped_actor_rows(actor_rows, floor["name"])
 
     actor_no_floor = db.execute(
-        "SELECT ai.*, at.manufacturer, at.model, at.group_name, at.description FROM actor_instances ai "
+        "SELECT ai.*, at.manufacturer, at.model, at.group_name, at.description, "
+        "COALESCE(dof.optional, 0) as optional FROM actor_instances ai "
         "JOIN actor_types at ON ai.actor_type_id = at.id "
+        "LEFT JOIN device_order_flags dof ON dof.project_id=? AND dof.device_type_id=ai.actor_type_id "
         "WHERE ai.project_id=? AND ai.floor_id IS NULL ORDER BY ai.order_idx",
-        (project_id,),
+        (project_id, project_id),
     ).fetchall()
     rows += _grouped_actor_rows(actor_no_floor, "Ohne Geschoss")
 
@@ -393,7 +423,8 @@ def _grouped_actor_rows(actor_rows, floor_name):
     return [
         (floor_name, label, [
             {"manufacturer": ai["manufacturer"], "model": ai["model"], "group_name": ai["group_name"],
-             "description": ai["description"], "physical_address": ai["physical_address"]}
+             "description": ai["description"], "physical_address": ai["physical_address"],
+             "optional": ai["optional"]}
             for ai in group
         ])
         for label, group in by_label.items()
@@ -421,9 +452,10 @@ def build_devices_by_room_story(db, project_id, styles):
         group.append(Paragraph(room_name, styles["RoomHeading"]))
         table_data = [["Gruppe", "Hersteller", "Typ", "Beschreibung", "Adresse"]]
         for d in devices:
+            description = d["description"] + (" (optional)" if d["optional"] else "")
             table_data.append([
                 _cell(v, styles) for v in
-                (d["group_name"], d["manufacturer"], d["model"], d["description"], d["physical_address"] or "—")
+                (d["group_name"], d["manufacturer"], d["model"], description, d["physical_address"] or "—")
             ])
         table = Table(table_data, colWidths=[34 * mm, 26 * mm, 36 * mm, 60 * mm, 24 * mm], repeatRows=1)
         table.setStyle(pdf_table_style())
