@@ -10,6 +10,15 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ## [Unreleased]
 
+## [0.10.4] - 2026-11-20
+
+### Changed
+
+- **"Optional" devices now visually stand out in Geräte je Raum** - instead
+  of a plain "(optional)" text suffix that was easy to miss on a long
+  printout, the whole row now renders bold in a warning color, with the
+  clearer label "Optional, Kundenentscheidung ausstehend".
+
 ## [0.10.3] - 2026-11-20
 
 ### Fixed

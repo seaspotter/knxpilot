@@ -23,6 +23,7 @@ PDF_ACCENT_COLOR = colors.HexColor("#16a34a")
 PDF_MUTED_COLOR = colors.HexColor("#64748b")
 PDF_BORDER_COLOR = colors.HexColor("#cbd5e1")
 PDF_STRIPE_COLOR = colors.HexColor("#f1f5f9")
+PDF_WARN_COLOR = colors.HexColor("#b45309")  # same amber as the frontend's --warn
 
 
 def pdf_styles():
@@ -35,6 +36,11 @@ def pdf_styles():
     styles.add(ParagraphStyle("Body", fontName="Helvetica", fontSize=9.5, textColor=colors.HexColor("#0f172a"), leading=13))
     styles.add(ParagraphStyle("BodyBullet", fontName="Helvetica", fontSize=9.5, textColor=colors.HexColor("#0f172a"), leading=13, leftIndent=4 * mm, spaceAfter=2))
     styles.add(ParagraphStyle("TableCell", fontName="Helvetica", fontSize=9, textColor=colors.HexColor("#0f172a"), leading=11))
+    # For a table cell that needs to stand out (e.g. "Optional, decision pending") -
+    # a Table-level TEXTCOLOR/FONTNAME command has no effect once a cell's value is
+    # already a Paragraph (as _cell() always makes it): the Paragraph renders with
+    # its own style, ignoring the table's per-cell defaults. Use this style instead.
+    styles.add(ParagraphStyle("TableCellWarn", parent=styles["TableCell"], fontName="Helvetica-Bold", textColor=PDF_WARN_COLOR))
     styles.add(ParagraphStyle("BodyMuted", fontName="Helvetica-Oblique", fontSize=9, textColor=PDF_MUTED_COLOR, leading=12))
     styles.add(ParagraphStyle("TinyMuted", fontName="Helvetica", fontSize=7, textColor=PDF_MUTED_COLOR, leading=8, alignment=1))
     styles.add(ParagraphStyle("CompanyName", fontName="Helvetica-Bold", fontSize=13, textColor=PDF_BANNER_COLOR, leading=16))

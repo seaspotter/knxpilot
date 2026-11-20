@@ -347,12 +347,14 @@ def build_stueckliste_story(summary, styles):
     return story
 
 
-def _cell(text, styles):
+def _cell(text, styles, style_name="TableCell"):
     """Wrapping table cell - needed for the free-text Beschreibung column (a
     plain string cell would just overflow into the neighbouring column), and
     used for every body cell of the device tables so all cells of a row share
-    the same vertical alignment."""
-    return Paragraph(escape(text or ""), styles["TableCell"])
+    the same vertical alignment. style_name picks a different look (e.g.
+    "TableCellWarn") - a Table-level TEXTCOLOR/FONTNAME command has no effect
+    once a cell is already a Paragraph, which every cell here always is."""
+    return Paragraph(escape(text or ""), styles[style_name])
 
 
 def _devices_by_room_rows(db, project_id):
@@ -452,9 +454,13 @@ def build_devices_by_room_story(db, project_id, styles):
         group.append(Paragraph(room_name, styles["RoomHeading"]))
         table_data = [["Gruppe", "Hersteller", "Typ", "Beschreibung", "Adresse"]]
         for d in devices:
-            description = d["description"] + (" (optional)" if d["optional"] else "")
+            # Optional devices use the "TableCellWarn" style (warn color + bold) for
+            # the whole row, not just appended text - this needs to stand out as
+            # "still pending a decision", not blend in as a regular ordered device.
+            style_name = "TableCellWarn" if d["optional"] else "TableCell"
+            description = d["description"] + (" — Optional, Kundenentscheidung ausstehend" if d["optional"] else "")
             table_data.append([
-                _cell(v, styles) for v in
+                _cell(v, styles, style_name) for v in
                 (d["group_name"], d["manufacturer"], d["model"], description, d["physical_address"] or "—")
             ])
         table = Table(table_data, colWidths=[34 * mm, 26 * mm, 36 * mm, 60 * mm, 24 * mm], repeatRows=1)
