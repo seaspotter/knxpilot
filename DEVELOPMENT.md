@@ -13,9 +13,20 @@
   `CHANGELOG.md`'s `[Unreleased]`/first post-migration entry for when. If
   a deployment's self-update is still checked out on `dev`, switch it to
   `main` per `DEPLOYMENT.md`: `dev` no longer receives new commits.)
-- **Release routine:** rename `## [Unreleased]` in `CHANGELOG.md` to
-  `## [X.Y.Z] - YYYY-MM-DD` (optionally with a short summary paragraph
-  directly under that heading), commit and push `main`, and
+- **Every change lands via a short-lived branch + PR, never a direct push
+  to `main`.** `main` is protected (no force pushes, no deletion,
+  `pytest`+`build` required status checks, `enforce_admins` on) - a
+  required status check must already be passing on a commit's exact SHA
+  before it can land on `main`, and a brand-new commit can never satisfy
+  that from a direct push, so even the repo owner's own `git push origin
+  main` is rejected. Workflow: `git checkout -b <branch>`, commit, push,
+  `gh pr create --base main`, wait for `pytest`+`build` to go green,
+  `gh pr merge <n> --merge` (a plain merge commit, matching this repo's
+  history - not squash), then delete the branch.
+- **Release routine:** on a branch, rename `## [Unreleased]` in
+  `CHANGELOG.md` to `## [X.Y.Z] - YYYY-MM-DD` (optionally with a short
+  summary paragraph directly under that heading), commit, PR into `main`
+  as above, merge, then on local `main` (after `git pull --ff-only`):
   `git tag -a vX.Y.Z -m vX.Y.Z && git push origin vX.Y.Z`. Pushing the tag
   does the rest automatically:
   [`.github/workflows/docker-publish.yml`](./.github/workflows/docker-publish.yml)
@@ -23,12 +34,7 @@
   [`.github/workflows/release.yml`](./.github/workflows/release.yml)
   creates the GitHub Release with that version's CHANGELOG section as its
   text (it fails loudly if the section is missing, and skips if a release
-  already exists). `main` is protected (no force pushes, no deletion,
-  `pytest`+`build` required status checks) but `enforce_admins` is off and
-  there's no push restriction, so the repo owner's own direct
-  `git push origin main` isn't blocked by those checks - they gate merging
-  a PR into `main`, not a direct push. Still, never push an untested
-  commit: wait for the Tests workflow to pass before relying on it.
+  already exists).
 - **Dependency updates:** Dependabot ([`.github/dependabot.yml`](./.github/dependabot.yml))
   checks weekly for newer GitHub Actions, Python packages
   (`requirements*.txt`) and the Docker base image, and opens grouped pull
