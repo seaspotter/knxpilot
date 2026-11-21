@@ -10,6 +10,17 @@ from the glossary in `DEVELOPMENT.md` ("Naming").
 
 ## [Unreleased]
 
+## [0.10.5] - 2026-11-21
+
+### Changed
+
+- **Routine dependency updates** - fastapi 0.162.4 → 0.165.0 (verified past
+  what Dependabot's grouped PR proposed - checked both new releases'
+  changes before bumping further), python-multipart 0.0.33 → 0.0.34,
+  httpx2 2.16.0 → 2.16.2.
+- `DEVELOPMENT.md`'s branch-protection description corrected to match
+  reality (`enforce_admins` is on; every change lands via a branch + PR).
+
 ## [0.10.4] - 2026-11-20
 
 ### Changed
